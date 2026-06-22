@@ -20,4 +20,4 @@ jobs:
         run: npm install
 
       - name: Run bot
-        run: node index.js
+        run: node bot.js
