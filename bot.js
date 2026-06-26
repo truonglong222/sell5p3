@@ -26,11 +26,20 @@ function saveCooldown(data) {
 async function sendTelegram(msg) {
   const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
-  await axios.post(url, {
-    chat_id: CHAT_ID,
-    text: msg,
-    parse_mode: "Markdown"
-  });
+  try {
+    const res = await axios.post(url, {
+      chat_id: CHAT_ID,
+      text: msg,
+      parse_mode: "Markdown"
+    });
+
+    console.log("Telegram OK:", res.data);
+  } catch (err) {
+    console.error(
+      "Telegram Error:",
+      err.response?.data || err.message
+    );
+  }
 }
 
 // ----------------- MAIN LOGIC -----------------
