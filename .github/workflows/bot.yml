@@ -3,7 +3,7 @@ name: OKX Coin Alert
 on:
   repository_dispatch:
     types: [run-bot]
-
+  workflow_dispatch:
 
 jobs:
   run:
