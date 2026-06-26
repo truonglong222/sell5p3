@@ -1,133 +1,112 @@
+
 import axios from "axios";
 import fs from "fs";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
-const CACHE_FILE = "cache.json";
-const COOLDOWN_HOURS = 4;
+const STATE_FILE = "./state.json";
+const COOLDOWN = 4 * 60 * 60 * 1000;
 
-function loadCache() {
+function loadState() {
   try {
-    return JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
+    return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
   } catch {
     return {};
   }
 }
 
-function saveCache(data) {
-  fs.writeFileSync(CACHE_FILE, JSON.stringify(data, null, 2));
+function saveState(data) {
+  fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
 }
 
 async function sendTelegram(text) {
-  await axios.post(
-    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-    {
-      chat_id: CHAT_ID,
-      text,
-      disable_web_page_preview: true
-    }
-  );
+  await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    chat_id: CHAT_ID,
+    text,
+    disable_web_page_preview: true
+  });
 }
 
-async function getCandles(instId, bar) {
+// Futures USDT tickers
+async function getTickers() {
+  const res = await axios.get("https://www.okx.com/api/v5/market/tickers?instType=SWAP");
+  return res.data.data.filter(x => x.instId.includes("USDT-SWAP"));
+}
+
+// candle change
+async function getChange(instId, bar) {
   try {
-    const url =
-      `https://www.okx.com/api/v5/market/history-candles?instId=${instId}&bar=${bar}&limit=2`;
+    const res = await axios.get(
+      `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=${bar}&limit=2`
+    );
 
-    const res = await axios.get(url);
+    const data = res.data.data;
+    if (!data || data.length < 2) return null;
 
-    if (!res.data?.data || res.data.data.length < 2) {
-      return null;
-    }
+    const latest = Number(data[0][4]);
+    const prev = Number(data[1][4]);
 
-    const latest = parseFloat(res.data.data[0][4]);
-    const previous = parseFloat(res.data.data[1][4]);
-
-    return ((latest - previous) / previous) * 100;
+    return ((latest - prev) / prev) * 100;
   } catch {
     return null;
   }
 }
 
-async function main() {
-  const cache = loadCache();
+async function run() {
+  const state = loadState();
   const now = Date.now();
 
-  const tickers = await axios.get(
-    "https://www.okx.com/api/v5/market/tickers?instType=SWAP"
-  );
+  const tickers = await getTickers();
 
-  let coins = [];
+  // sort 24h losers
+  const ranked = tickers
+    .map(t => {
+      const last = Number(t.last);
+      const open = Number(t.open24h);
+      const change = ((last - open) / open) * 100;
 
-  for (const t of tickers.data.data) {
+      return { symbol: t.instId, change24h: change };
+    })
+    .sort((a, b) => a.change24h - b.change24h)
+    .slice(0, 20);
 
-    if (!t.instId.endsWith("-USDT-SWAP")) continue;
+  const results = [];
 
-    const last = parseFloat(t.last);
-    const open24h = parseFloat(t.open24h);
+  for (const c of ranked) {
+    const chg15m = await getChange(c.symbol, "15m");
+    if (chg15m === null || chg15m <= 2) continue;
 
-    if (!last || !open24h) continue;
+    const chg2h = await getChange(c.symbol, "2H");
+    if (chg2h === null || chg2h <= 5) continue;
 
-    const drop24h = ((last - open24h) / open24h) * 100;
+    const lastSent = state[c.symbol] || 0;
+    if (now - lastSent < COOLDOWN) continue;
 
-    coins.push({
-      instId: t.instId,
-      drop24h
-    });
+    results.push({ ...c, chg15m, chg2h });
   }
 
-  coins.sort((a, b) => a.drop24h - b.drop24h);
+  if (results.length === 0) return;
 
-  const top10 = coins.slice(0, 10);
+  for (const r of results) {
+    const link = `https://www.okx.com/trade-swap/${r.symbol.toLowerCase()}`;
 
-  let messages = [];
+    const msg =
+`🚨 OKX FUTURES SIGNAL
 
-  for (const coin of top10) {
+${r.symbol}
+24H: ${r.change24h.toFixed(2)}%
+15M: +${r.chg15m.toFixed(2)}%
+2H: +${r.chg2h.toFixed(2)}%
 
-    const chg15m = await getCandles(coin.instId, "15m");
-    const chg4h = await getCandles(coin.instId, "4H");
+Link:
+${link}`;
 
-    if (chg15m === null || chg4h === null) continue;
-
-    // 15m giảm trên 3%
-    if (chg15m > -3) continue;
-
-    const diff = chg4h - chg15m;
-
-    if (diff < -5 || diff > 5) continue;
-
-    const symbol = coin.instId;
-
-    if (
-      cache[symbol] &&
-      now - cache[symbol] < COOLDOWN_HOURS * 60 * 60 * 1000
-    ) {
-      continue;
-    }
-
-    cache[symbol] = now;
-
-    const appLink =
-      `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-
-    messages.push(
-`🪙 ${symbol}
-
-24H: ${coin.drop24h.toFixed(2)}%
-15M: ${chg15m.toFixed(2)}%
-4H: ${chg4h.toFixed(2)}%
-
-Future:
-${appLink}`
-    );
+    await sendTelegram(msg);
+    state[r.symbol] = now;
   }
 
-  if (messages.length > 0) {
-    await sendTelegram(messages.join("\n\n====================\n\n"));
-  }
-
-  saveCache(cache);
+  saveState(state);
 }
 
-main().catch(console.error);
+run().catch(console.error);
