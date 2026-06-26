@@ -6,7 +6,7 @@ import {
   getChange24h
 } from "./okx.js";
 
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
 const COOLDOWN_FILE = "./cooldown.json";
