@@ -17,7 +17,7 @@ export async function getAllUSDTFutures() {
 
 // Lấy candles để tính EMA20
 export async function getEMA20(instId) {
-  const url = `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=15m&limit=50`;
+  const url = `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=1h&limit=50`;
   const res = await axios.get(url);
 
   const closes = res.data.data
