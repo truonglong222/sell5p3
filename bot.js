@@ -1,124 +1,98 @@
-import axios from "axios";
 import fs from "fs";
+import axios from "axios";
+import {
+  getAllUSDTFutures,
+  getEMA20,
+  getChange24h
+} from "./okx.js";
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
-const STATE_FILE = "./state.json";
-const COOLDOWN = 4 * 60 * 60 * 1000;
+const COOLDOWN_FILE = "./cooldown.json";
+const COOLDOWN_HOURS = 2;
 
-function loadState() {
-  try {
-    return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
-  } catch {
-    return {};
-  }
+// ----------------- LOAD COOLDOWN -----------------
+function loadCooldown() {
+  if (!fs.existsSync(COOLDOWN_FILE)) return {};
+  return JSON.parse(fs.readFileSync(COOLDOWN_FILE));
 }
 
-function saveState(data) {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
+function saveCooldown(data) {
+  fs.writeFileSync(COOLDOWN_FILE, JSON.stringify(data, null, 2));
 }
 
-// 👉 OKX universal link (mở app nếu có)
-function buildOkxLink(instId) {
-  try {
-    if (!instId || !instId.includes("USDT-SWAP")) return null;
+// ----------------- TELEGRAM -----------------
+async function sendTelegram(msg) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
-    // OKX universal link (deep link chuẩn hiện tại)
-    return `https://www.okx.com/trade-swap/${instId.toLowerCase()}`;
-  } catch {
-    return null;
-  }
-}
-
-async function sendTelegram(text) {
-  await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+  await axios.post(url, {
     chat_id: CHAT_ID,
-    text,
-    disable_web_page_preview: true
+    text: msg,
+    parse_mode: "Markdown"
   });
 }
 
-// Futures USDT tickers
-async function getTickers() {
-  const res = await axios.get("https://www.okx.com/api/v5/market/tickers?instType=SWAP");
-  return res.data.data.filter(x => x.instId.includes("USDT-SWAP"));
-}
+// ----------------- MAIN LOGIC -----------------
+async function runBot() {
+  let coins = await getAllUSDTFutures();
 
-// candle change
-async function getChange(instId, bar) {
-  try {
-    const res = await axios.get(
-      `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=${bar}&limit=2`
-    );
+  // Tính % giảm 24h
+  coins = coins.map(c => ({
+    ...c,
+    change24h: getChange24h(c)
+  }));
 
-    const data = res.data.data;
-    if (!data || data.length < 2) return null;
+  // Sort giảm mạnh nhất
+  coins.sort((a, b) => a.change24h - b.change24h);
 
-    const latest = Number(data[0][4]);
-    const prev = Number(data[1][4]);
+  const top10 = coins.slice(0, 10);
 
-    return ((latest - prev) / prev) * 100;
-  } catch {
-    return null;
-  }
-}
-
-async function run() {
-  const state = loadState();
+  const cooldown = loadCooldown();
   const now = Date.now();
 
-  const tickers = await getTickers();
+  let results = [];
 
-  const ranked = tickers
-    .map(t => {
-      const last = Number(t.last);
-      const open = Number(t.open24h);
-      const change = ((last - open) / open) * 100;
+  for (const coin of top10) {
+    try {
+      const ema20 = await getEMA20(coin.instId);
 
-      return { symbol: t.instId, change24h: change };
-    })
-    .sort((a, b) => a.change24h - b.change24h)
-    .slice(0, 20);
+      const diff =
+        ((coin.last - ema20) / coin.last) * 100;
 
-  const results = [];
+      const isValid = diff > -1;
 
-  for (const c of ranked) {
-    const chg15m = await getChange(c.symbol, "15m");
-    if (chg15m === null || chg15m <= 2) continue;
+      const lastSent = cooldown[coin.instId] || 0;
+      const isCooldown = now - lastSent < COOLDOWN_HOURS * 3600 * 1000;
 
-    const chg2h = await getChange(c.symbol, "2H");
-    if (chg2h === null || chg2h <= 5) continue;
+      if (isValid && !isCooldown) {
+        results.push({
+          ...coin,
+          diff
+        });
 
-    const lastSent = state[c.symbol] || 0;
-    if (now - lastSent < COOLDOWN) continue;
-
-    results.push({ ...c, chg15m, chg2h });
+        cooldown[coin.instId] = now;
+      }
+    } catch (e) {
+      // bỏ coin lỗi
+      continue;
+    }
   }
+
+  saveCooldown(cooldown);
 
   if (results.length === 0) return;
 
-  for (const r of results) {
-    const link = buildOkxLink(r.symbol);
+  let msg = `📉 *TOP COIN GIẢM MẠNH + EMA FILTER*\n\n`;
 
-    let msg =
-`🚨 OKX FUTURES SIGNAL
+  results.forEach(c => {
+    msg += `🔻 ${c.instId}\n`;
+    msg += `24h: ${c.change24h.toFixed(2)}%\n`;
+    msg += `EMA diff: ${c.diff.toFixed(2)}%\n\n`;
+  });
 
-${r.symbol}
-24H: ${r.change24h.toFixed(2)}%
-15M: +${r.chg15m.toFixed(2)}%
-2H: +${r.chg2h.toFixed(2)}%`;
-
-    // 👉 chỉ gắn link nếu tạo được
-    if (link) {
-      msg += `\n\n🔗 Open OKX:\n${link}`;
-    }
-
-    await sendTelegram(msg);
-    state[r.symbol] = now;
-  }
-
-  saveState(state);
+  await sendTelegram(msg);
 }
 
-run().catch(console.error);
+// ----------------- RUN (GitHub cron) -----------------
+runBot().catch(console.error);
