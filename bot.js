@@ -81,7 +81,10 @@ async function runBot() {
 
   saveCooldown(cooldown);
 
-  if (results.length === 0) return;
+if (results.length === 0) {
+  await sendTelegram("❌ Không có coin thỏa điều kiện.");
+  return;
+}
 
   let msg = `📉 *TOP COIN GIẢM MẠNH + EMA FILTER*\n\n`;
 
