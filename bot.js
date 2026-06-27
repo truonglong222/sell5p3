@@ -1,12 +1,17 @@
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Cấu hình từ Biến môi trường (GitHub Secrets)
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
 const BASE_URL = 'https://www.okx.com';
+
+// Định nghĩa __dirname cho ES Module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const COOLDOWN_FILE = path.join(__dirname, 'cooldowns.json');
 const COOLDOWN_TIME = 2 * 60 * 60 * 1000; // 2 giờ tính bằng miligiây
 
@@ -96,7 +101,6 @@ async function main() {
             }
 
             // 2. Lấy nến 4h để tính % giảm
-            // OKX trả về nến sắp xếp từ mới nhất đến cũ nhất
             const bar4hResponse = await axios.get(`${BASE_URL}/api/v5/market/candles?instId=${coin.instId}&bar=4H&limit=2`);
             const candles4h = bar4hResponse.data.data;
             if (!candles4h || candles4h.length < 1) continue;
@@ -110,7 +114,7 @@ async function main() {
                 continue; 
             }
 
-            // 4. Lấy nến 15m để tính EMA20 (Cần tối thiểu 20 nến, lấy 50 nến cho chính xác)
+            // 4. Lấy nến 15m để tính EMA20
             const bar15mResponse = await axios.get(`${BASE_URL}/api/v5/market/candles?instId=${coin.instId}&bar=15m&limit=50`);
             const candles15m = bar15mResponse.data.data;
             if (!candles15m || candles15m.length < 20) continue;
