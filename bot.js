@@ -1,162 +1,161 @@
-import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import axios from "axios";
+import fs from "fs";
 
-// Cấu hình từ Biến môi trường (GitHub Secrets)
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHAT_ID = process.env.CHAT_ID;
+const BOT_TOKEN = process.env.BOT_TOKEN || "BOT_TOKEN";
+const CHAT_ID = process.env.CHAT_ID || "CHAT_ID";
 
-const BASE_URL = 'https://www.okx.com';
+const TELEGRAM_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+const CACHE_FILE = "./sent_cache.json";
 
-// Định nghĩa __dirname cho ES Module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const COOLDOWN_FILE = path.join(__dirname, 'cooldowns.json');
-const COOLDOWN_TIME = 2 * 60 * 60 * 1000; // 2 giờ tính bằng miligiây
+// =======================
+// Load cache
+// =======================
+function loadCache() {
+  if (!fs.existsSync(CACHE_FILE)) return {};
 
-// Hàm tính EMA
-function calculateEMA(prices, period) {
-    if (prices.length < period) return null;
-    let k = 2 / (period + 1);
-    let ema = prices[0];
-    for (let i = 1; i < prices.length; i++) {
-        ema = prices[i] * k + ema * (1 - k);
-    }
-    return ema;
-}
-
-// Hàm gửi tin nhắn Telegram
-async function sendTelegram(message) {
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-    try {
-        await axios.post(url, {
-            chat_id: CHAT_ID,
-            text: message,
-            parse_mode: 'Markdown'
-        });
-        console.log('Đã gửi thông báo đến Telegram.');
-    } catch (error) {
-        console.error('Lỗi gửi Telegram:', error.message);
-    }
-}
-
-// Quản lý Cooldown (Đọc và ghi file để giữ trạng thái trên GitHub)
-function loadCooldowns() {
-    if (fs.existsSync(COOLDOWN_FILE)) {
-        try {
-            return JSON.parse(fs.readFileSync(COOLDOWN_FILE, 'utf8'));
-        } catch (e) {
-            return {};
-        }
-    }
+  try {
+    return JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
+  } catch {
     return {};
+  }
 }
 
-function saveCooldowns(cooldowns) {
-    fs.writeFileSync(COOLDOWN_FILE, JSON.stringify(cooldowns, null, 2));
+function saveCache(cache) {
+  fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
 }
 
-async function main() {
+// =======================
+// Telegram
+// =======================
+async function sendTelegram(text) {
+  try {
+    await axios.post(TELEGRAM_URL, {
+      chat_id: CHAT_ID,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: true
+    });
+
+    console.log("Telegram sent");
+  } catch (e) {
+    console.log("Telegram Error:", e.response?.data || e.message);
+  }
+}
+
+// =======================
+// Lấy toàn bộ Future USDT
+// =======================
+async function getAllUSDTFutures() {
+  const url =
+    "https://www.okx.com/api/v5/market/tickers?instType=SWAP";
+
+  const res = await axios.get(url);
+
+  return res.data.data.filter(i => i.instId.endsWith("-USDT-SWAP"));
+}
+
+// =======================
+// % tăng 1h
+// =======================
+async function get1hChange(instId) {
+  const url =
+    `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=1H&limit=2`;
+
+  const res = await axios.get(url);
+
+  const data = res.data.data;
+
+  if (data.length < 2) return null;
+
+  // dữ liệu trả về mới nhất trước
+  const latest = data[0];
+  const prev = data[1];
+
+  const close = parseFloat(latest[4]);
+  const prevClose = parseFloat(prev[4]);
+
+  return ((close - prevClose) / prevClose) * 100;
+}
+
+// =======================
+// 3 nến 15p liên tiếp tăng
+// =======================
+async function check3Bullish15m(instId) {
+  const url =
+    `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=15m&limit=3`;
+
+  const res = await axios.get(url);
+
+  const candles = res.data.data;
+
+  if (candles.length < 3) return false;
+
+  // API trả nến mới nhất trước -> đảo lại
+  candles.reverse();
+
+  for (const c of candles) {
+    const open = parseFloat(c[1]);
+    const close = parseFloat(c[4]);
+
+    if (close <= open) return false;
+  }
+
+  return true;
+}
+
+// =======================
+// MAIN
+// =======================
+async function runBot() {
+
+  const cache = loadCache();
+  const now = Date.now();
+
+  const futures = await getAllUSDTFutures();
+
+  for (const coin of futures) {
+
     try {
-        if (!BOT_TOKEN || !CHAT_ID) {
-            console.error("Thiếu cấu hình BOT_TOKEN hoặc CHAT_ID trong Environment Variables.");
-            return;
-        }
 
-        console.log('1. Đang lấy dữ liệu ticker từ OKX...');
-        const tickersResponse = await axios.get(`${BASE_URL}/api/v5/market/tickers?instType=SPOT`);
-        const tickers = tickersResponse.data.data;
+      const change1h = await get1hChange(coin.instId);
 
-        // Tính % giảm 24h và lọc các cặp có đuôi -USDT
-        let usdtPairs = tickers
-            .filter(t => t.instId.endsWith('-USDT'))
-            .map(t => {
-                const open24h = parseFloat(t.sod24h); // Giá mở cửa 24h trước
-                const last = parseFloat(t.last);
-                // % Thay đổi = ((Last - Open) / Open) * 100
-                const change24h = open24h ? ((last - open24h) / open24h) * 100 : 0;
-                return {
-                    instId: t.instId,
-                    last: last,
-                    change24h: change24h
-                };
-            });
+      if (change1h === null) continue;
 
-        // Lấy Top 20 giảm mạnh nhất 24h
-        usdtPairs.sort((a, b) => a.change24h - b.change24h);
-        const top20Losers = usdtPairs.slice(0, 20);
+      if (change1h <= 3) continue;
 
-        console.log(`Tìm thấy 20 coin giảm mạnh nhất 24h. Đang kiểm tra khung 4h và 15m...`);
-        
-        let cooldowns = loadCooldowns();
-        const now = Date.now();
-        let alertMessages = [];
+      const bullish = await check3Bullish15m(coin.instId);
 
-        for (const coin of top20Losers) {
-            // Kiểm tra cooldown trước để tiết kiệm số lượng gọi API
-            if (cooldowns[coin.instId] && (now - cooldowns[coin.instId] < COOLDOWN_TIME)) {
-                console.log(`-> ${coin.instId} đang trong thời gian cooldown, bỏ qua.`);
-                continue;
-            }
+      if (!bullish) continue;
 
-            // 2. Lấy nến 4h để tính % giảm
-            const bar4hResponse = await axios.get(`${BASE_URL}/api/v5/market/candles?instId=${coin.instId}&bar=4H&limit=2`);
-            const candles4h = bar4hResponse.data.data;
-            if (!candles4h || candles4h.length < 1) continue;
+      const lastSent = cache[coin.instId] || 0;
 
-            const open4h = parseFloat(candles4h[0][1]); // Giá mở cửa nến 4h hiện tại
-            const close4h = parseFloat(candles4h[0][4]); // Giá hiện tại (đóng cửa tạm thời)
-            const change4h = ((close4h - open4h) / open4h) * 100;
+      // Không gửi lại trong 2 giờ
+      if (now - lastSent < 2 * 60 * 60 * 1000)
+        continue;
 
-            // 3. Lọc ra những coin giảm 4h lớn hơn 4% (tức là change4h < -4)
-            if (change4h > -4) {
-                continue; 
-            }
+      const price = Number(coin.last).toFixed(6);
 
-            // 4. Lấy nến 15m để tính EMA20
-            const bar15mResponse = await axios.get(`${BASE_URL}/api/v5/market/candles?instId=${coin.instId}&bar=15m&limit=50`);
-            const candles15m = bar15mResponse.data.data;
-            if (!candles15m || candles15m.length < 20) continue;
+      const msg =
+`🟢 <b>Coin thỏa điều kiện</b>
 
-            // Mảng giá đóng cửa xếp từ cũ đến mới để tính EMA
-            const closePrices15m = candles15m.map(c => parseFloat(c[4])).reverse();
-            const ema20_15m = calculateEMA(closePrices15m, 20);
-            const currentPrice = coin.last;
+💰 ${coin.instId}
 
-            if (!ema20_15m) continue;
+📈 Tăng 1H: <b>${change1h.toFixed(2)}%</b>
 
-            // 5. Kiểm tra điều kiện: (Giá - EMA20) / Giá * 100 > -1.5
-            const conditionValue = ((currentPrice - ema20_15m) / currentPrice) * 100;
+✅ Có ít nhất 3 nến 15 phút tăng liên tiếp
 
-            if (conditionValue > -1.5) {
-                // Thỏa mãn điều kiện gửi Telegram
-                alertMessages.push(
-                    `🚨 *Tín hiệu OKX Đạt Điều Kiện* 🚨\n\n` +
-                    `• *Coin:* ${coin.instId.replace('-USDT', '')}\n` +
-                    `• *Giá hiện tại:* ${currentPrice}\n` +
-                    `• *Giảm 24h:* ${coin.change24h.toFixed(2)}%\n` +
-                    `• *Giảm 4h:* ${change4h.toFixed(2)}%\n` +
-                    `• *EMA20 (15m):* ${ema20_15m.toFixed(4)}\n` +
-                    `• *Độ lệch điều kiện:* ${conditionValue.toFixed(2)}%`
-                );
-                // Cập nhật thời gian cooldown cho coin này
-                cooldowns[coin.instId] = now;
-            }
-        }
+💵 Giá hiện tại: ${price}`;
 
-        // 6. Xử lý gửi tin nhắn tổng hợp
-        if (alertMessages.length > 0) {
-            const finalMessage = alertMessages.join('\n\n------------------------\n\n');
-            await sendTelegram(finalMessage);
-            saveCooldowns(cooldowns); // Lưu lại trạng thái cooldown mới
-        } else {
-            console.log('Không có coin nào thỏa mãn tất cả các điều kiện trong chu kỳ này.');
-        }
+      await sendTelegram(msg);
 
-    } catch (error) {
-        console.error('Đã xảy ra lỗi hệ thống:', error.message);
+      cache[coin.instId] = now;
+
+    } catch (e) {
+      console.log(coin.instId, e.message);
     }
+  }
+
+  saveCache(cache);
 }
 
-main();
+runBot();
