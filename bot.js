@@ -111,13 +111,13 @@ async function get1hChange(instId) {
 }
 
 // ========================================
-// 3 nến 15m tăng liên tiếp
+// 4 nến 15m tăng liên tiếp
 // ========================================
 
-async function check3Bullish15m(instId) {
+async function check4Bullish15m(instId) {
 
     const url =
-        `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=15m&limit=3`;
+        `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=15m&limit=4`;
 
     const res = await axios.get(url, {
         timeout: 15000
@@ -125,7 +125,7 @@ async function check3Bullish15m(instId) {
 
     const candles = res.data.data;
 
-    if (candles.length < 3) return false;
+    if (candles.length < 4) return false;
 
     candles.reverse();
 
@@ -171,10 +171,10 @@ async function runBot() {
 
             if (change1h === null) continue;
 
-            if (change1h <= 3) continue;
+            if (change1h <= 5) continue;
 
             const bullish =
-                await check3Bullish15m(coin.instId);
+                await check4Bullish15m(coin.instId);
 
             if (!bullish) continue;
 
@@ -201,7 +201,7 @@ async function runBot() {
 
 📈 Tăng 1H: <b>${change1h.toFixed(2)}%</b>
 
-✅ Có ít nhất 3 nến 15 phút tăng liên tiếp
+✅ Có ít nhất 4 nến 15 phút tăng liên tiếp
 
 💵 Giá hiện tại: ${price}`;
 
