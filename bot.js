@@ -44,6 +44,32 @@ async function sendTelegram(text) {
 
 // =======================
 // Lấy toàn bộ Future
+async function getAllUSDTFutures() {
+
+    const url = "https://www.okx.com/api/v5/market/tickers?instType=SWAP";
+
+    const res = await axios.get(url);
+
+    return res.data.data
+        .filter(i => i.instId.endsWith("-USDT-SWAP"))
+        .map(i => {
+
+            const last = Number(i.last);
+            const open24 = Number(i.sodUtc8);
+
+            const change24h =
+                open24 > 0
+                    ? ((last - open24) / open24) * 100
+                    : 0;
+
+            return {
+                instId: i.instId,
+                last: last,
+                change24h: Math.abs(change24h)
+            };
+        });
+
+}
 let futures = await getAllUSDTFutures();
 
 // Tính độ biến động 24h
