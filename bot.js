@@ -7,16 +7,18 @@ const CHAT_ID = process.env.CHAT_ID || "CHAT_ID";
 const TELEGRAM_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 const CACHE_FILE = "./sent_cache.json";
 
-const OKX_TICKERS =
-  "https://www.okx.com/api/v5/market/tickers?instType=SWAP";
-const OKX_CANDLES =
-  "https://www.okx.com/api/v5/market/history-candles";
+const OKX_TICKERS = "https://www.okx.com/api/v5/market/tickers?instType=SWAP";
+const OKX_CANDLES = "https://www.okx.com/api/v5/market/history-candles";
+
+// Đổi thời gian cache thành 30 phút (30 phút * 60 giây * 1000 mili-giây)
+const CACHE_EXPIRE = 30 * 60 * 1000; 
 
 // ======================
 // Cache
 // ======================
 function loadCache() {
   try {
+    if (!fs.existsSync(CACHE_FILE)) return {};
     return JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
   } catch {
     return {};
@@ -24,10 +26,12 @@ function loadCache() {
 }
 
 function saveCache(cache) {
-  fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
+  try {
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
+  } catch (e) {
+    console.error("Lỗi khi ghi file cache:", e.message);
+  }
 }
-
-const cache = loadCache();
 
 // ======================
 // Telegram
@@ -45,9 +49,9 @@ async function sendTelegram(text) {
 }
 
 // ======================
-// Get top 5 strongest 24h movers
+// Get top 10 strongest 24h movers
 // ======================
-async function getTop5Coins() {
+async function getTop10Coins() {
   const res = await axios.get(OKX_TICKERS);
 
   return res.data.data
@@ -67,7 +71,7 @@ async function getTop5Coins() {
       };
     })
     .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
-    .slice(0, 5);
+    .slice(0, 10); // Đã sửa: Lấy top 10 con biến động lớn nhất
 }
 
 // ======================
@@ -84,15 +88,13 @@ async function getPrevious5m(instId) {
 
   const candles = res.data.data;
 
-  if (candles.length < 2) return null;
+  if (!candles || candles.length < 2) return null;
 
-  // data[0]=current candle
-  // data[1]=previous closed candle
   const c = candles[1];
 
   return {
-    high: Number(c[2]),
-    low: Number(c[3]),
+    open: Number(c[1]),  
+    close: Number(c[4]), 
   };
 }
 
@@ -101,43 +103,56 @@ async function getPrevious5m(instId) {
 // ======================
 async function main() {
   try {
-    const topCoins = await getTop5Coins();
+    const cache = loadCache();
+    const now = Date.now();
+
+    // Dọn dẹp cache quá 30 phút
+    for (const symbol in cache) {
+      if (now - cache[symbol] >= CACHE_EXPIRE) {
+        delete cache[symbol];
+      }
+    }
+
+    const topCoins = await getTop10Coins();
 
     for (const coin of topCoins) {
+      // 1. Điều kiện biến động 24h > 30%
       if (coin.change24h <= 30) continue;
+
+      // 2. Kiểm tra trùng coin trong vòng 30 phút
+      if (cache[coin.instId] && (now - cache[coin.instId] < CACHE_EXPIRE)) {
+        continue;
+      }
 
       const candle = await getPrevious5m(coin.instId);
       if (!candle) continue;
 
-      // Theo yêu cầu:
-      // (low - high) / high *100 < -3%
-      const drop5m =
-        ((candle.low - candle.high) / candle.high) * 100;
+      // Tính % thay đổi nến 5m chuẩn đóng cửa
+      const change5m = ((candle.close - candle.open) / candle.open) * 100;
 
-      if (drop5m > -3) continue;
+      // 3. Điều kiện biến động 5 phút > 6%
+      if (change5m <= 6) continue;
 
-      const now = Date.now();
+      // Đổi tiêu đề thành BUY vì coin đang pump mạnh trong 5 phút
+      const msg = `BUY\n\nCoin: ${coin.instId}\n5m: +${change5m.toFixed(2)}%\n24h: ${coin.change24h.toFixed(2)}%\n\nhttps://www.okx.com/trade-swap/${coin.instId.toLowerCase()}`;
 
-      if (
-        cache[coin.instId] &&
-        now - cache[coin.instId] < 2 * 60 * 60 * 1000
-      ) {
-        continue;
-      }
-
-      const msg =
-`Coin: ${coin.instId}
-5m: ${drop5m.toFixed(2)}%
-24h: ${coin.change24h.toFixed(2)}%`;
-
+      // Gửi tín hiệu
       await sendTelegram(msg);
 
-      cache[coin.instId] = now;
+      // Lưu cache tức thời
+      cache[coin.instId] = Date.now();
+      saveCache(cache); 
+
+      console.log(`${coin.instId} tăng mạnh +${change5m.toFixed(2)}% trong 5m. Đã gửi Telegram.`);
+      
+      // Nghỉ chống spam Telegram API
+      await new Promise(r => setTimeout(r, 500));
     }
 
     saveCache(cache);
+
   } catch (e) {
-    console.error(e.response?.data || e.message);
+    console.error("Lỗi hệ thống chính:", e.response?.data || e.message);
   }
 }
 
