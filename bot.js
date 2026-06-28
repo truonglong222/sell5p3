@@ -1,20 +1,16 @@
-import fetch from 'node-fetch'; // Nếu chạy Node.js < 18, cần cài 'node-fetch'. Từ Node 18+ có thể xóa dòng này và dùng fetch mặc định.
-
 // 1. Cấu hình biến môi trường từ GitHub Secrets
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
 // Bộ nhớ tạm để lưu các coin đã gửi nhằm tránh trùng lặp trong 2 giờ (120 phút)
-// Lưu ý: Nếu chạy bằng GitHub Actions theo lịch (cron), bộ nhớ tạm này sẽ bị xóa sau mỗi lần chạy.
-// Để tối ưu nhất, code hỗ trợ cơ chế check thời gian dựa trên dữ liệu hiện tại nếu lưu file, 
-// nhưng dưới đây là logic lưu vết tiêu chuẩn trong một phiên chạy liên tục.
+// Lưu ý: Nếu chạy bằng GitHub Actions theo lịch (cron), bộ nhớ tạm này sẽ bị xóa sau mỗi lần chạy độc lập.
 const sentCache = new Map(); 
 const CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 giờ tính bằng mili-giây
 
 // Hàm hỗ trợ delay giữa các request để tránh bị sàn chặn (Rate limit)
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Hàm gửi tin nhắn về Telegram
+// Hàm gửi tin nhắn về Telegram (Sử dụng fetch mặc định của Node v24)
 async function sendTelegram(message) {
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
     try {
@@ -52,7 +48,6 @@ async function getTopVolatileFutures() {
             .map(ticker => {
                 const high = parseFloat(ticker.high24h);
                 const low = parseFloat(ticker.low24h);
-                const open = parseFloat(ticker.open24h);
                 // Biến động % tuyệt đối trong ngày = ((High - Low) / Low) * 100
                 const volatility = low > 0 ? ((high - low) / low) * 100 : 0;
                 return {
@@ -86,12 +81,12 @@ async function checkCandleConditions(instId) {
 
         if (change1h < 3) return false;
 
-        // 2. Kiểm tra ít nhất 3 cây nến 15p liên tiếp tăng giá (nến đã đóng hoặc gồm cả nến hiện tại)
+        // 2. Kiểm tra ít nhất 3 cây nến 15p liên tiếp tăng giá
         const res15m = await fetch(`https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=15m&limit=4`);
         const data15m = await res15m.json();
         if (!data15m.data || data15m.data.length < 3) return false;
 
-        // OKX trả về nến mới nhất xếp đầu tiên (index 0 là nến đang chạy, 1, 2, 3 là các nến trước)
+        // OKX trả về nến mới nhất xếp đầu tiên (index 0 là nến đang chạy)
         const isGrowing15m = data15m.data.slice(0, 3).every(candle => {
             const open = parseFloat(candle[1]);
             const close = parseFloat(candle[4]);
@@ -138,11 +133,11 @@ async function main() {
             }
 
             alertCoins.push(result);
-            sentCache.set(cleanName, now); // Cập nhật thời gian gửi
+            sentCache.set(cleanName, now);
         }
     }
 
-    // Nếu có coin thỏa mãn thì gom lại gửi 1 tin nhắn Telegram duy nhất
+    // Nếu có coin thỏa mãn thì gom lại gửi về Telegram
     if (alertCoins.length > 0) {
         let message = `🔔 *TÍN HIỆU OKX FUTURES CẢNH BÁO*\n\n`;
         alertCoins.forEach(c => {
