@@ -1,159 +1,212 @@
-import axios from "axios";
-import fs from "fs";
+// Các thư viện bắt buộc - Cài đặt bằng: npm install axios
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
-const BOT_TOKEN = process.env.BOT_TOKEN || "BOT_TOKEN";
-const CHAT_ID = process.env.CHAT_ID || "CHAT_ID";
+// Cấu hình lấy từ biến môi trường (Environment Variables trên GitHub Secrets)
+const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.CHAT_ID;
 
-const TELEGRAM_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-const CACHE_FILE = "./sent_cache.json";
+const OKX_BASE_URL = 'https://www.okx.com';
+const DB_FILE = path.join(__dirname, 'sentCoins.json');
 
-const OKX_TICKERS = "https://www.okx.com/api/v5/market/tickers?instType=SWAP";
-const OKX_CANDLES = "https://www.okx.com/api/v5/market/history-candles";
-
-// Đổi thời gian cache thành 30 phút (30 phút * 60 giây * 1000 mili-giây)
-const CACHE_EXPIRE = 30 * 60 * 1000; 
-
-// ======================
-// Cache
-// ======================
-function loadCache() {
-  try {
-    if (!fs.existsSync(CACHE_FILE)) return {};
-    return JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
-  } catch {
+// Hàm đọc lịch sử gửi từ file JSON
+function loadSentLog() {
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            const data = fs.readFileSync(DB_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (error) {
+        console.error('Lỗi khi đọc file json log:', error.message);
+    }
     return {};
-  }
 }
 
-function saveCache(cache) {
-  try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-  } catch (e) {
-    console.error("Lỗi khi ghi file cache:", e.message);
-  }
+// Hàm ghi lịch sử gửi vào file JSON (Xóa bớt log cũ sau 30 phút để nhẹ file)
+function saveSentLog(logData) {
+    try {
+        const now = Date.now();
+        const cleanedLog = {};
+        for (const [coin, timestamp] of Object.entries(logData)) {
+            if (now - timestamp < 30 * 60 * 1000) {
+                cleanedLog[coin] = timestamp;
+            }
+        }
+        fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
+    } catch (error) {
+        console.error('Lỗi khi ghi file json log:', error.message);
+    }
 }
 
-// ======================
-// Telegram
-// ======================
-async function sendTelegram(text) {
-  try {
-    await axios.post(TELEGRAM_URL, {
-      chat_id: CHAT_ID,
-      text,
-    });
-    console.log("Telegram sent");
-  } catch (e) {
-    console.error("Telegram error:", e.response?.data || e.message);
-  }
+// Hàm trì hoãn (ngủ cơ học) để tránh bị sàn chặn lỗi 429 Too Many Requests
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Công thức tính RSI chuẩn kỹ thuật với chu kỳ mặc định là 20
+function calculateRSI(prices, period = 20) {
+    if (prices.length <= period) return 0;
+    
+    let gains = 0;
+    let losses = 0;
+
+    for (let i = 1; i <= period; i++) {
+        let difference = prices[i] - prices[i - 1];
+        if (difference >= 0) gains += difference;
+        else losses -= difference;
+    }
+
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+
+    for (let i = period + 1; i < prices.length; i++) {
+        let difference = prices[i] - prices[i - 1];
+        let gain = difference >= 0 ? difference : 0;
+        let loss = difference < 0 ? -difference : 0;
+
+        avgGain = (avgGain * (period - 1) + gain) / period;
+        avgLoss = (avgLoss * (period - 1) + loss) / period;
+    }
+
+    if (avgLoss === 0) return 100;
+    let rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
 }
 
-// ======================
-// Get top 10 strongest 24h movers
-// ======================
-async function getTop10Coins() {
-  const res = await axios.get(OKX_TICKERS);
-
-  return res.data.data
-    .filter(
-      (x) =>
-        x.instId.endsWith("-USDT-SWAP") &&
-        Number(x.volCcy24h || 0) > 0 &&
-        Number(x.open24h || 0) > 0
-    )
-    .map((x) => {
-      const open = Number(x.open24h);
-      const last = Number(x.last);
-
-      return {
-        instId: x.instId,
-        change24h: ((last - open) / open) * 100,
-      };
-    })
-    .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
-    .slice(0, 10); // Đã sửa: Lấy top 10 con biến động lớn nhất
+// Gọi API lấy dữ liệu nến của OKX và đẩy qua hàm tính toán RSI-20
+async function getRSI(symbol, bar) {
+    try {
+        // Nghỉ 250ms trước mỗi request để tối ưu Rate Limit của OKX
+        await sleep(250); 
+        // Lấy 70 nến để đảm bảo dữ liệu mượt và tính RSI-20 chuẩn xác nhất
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=70`;
+        const response = await axios.get(url);
+        
+        if (response.data && response.data.code === '0' && response.data.data.length > 0) {
+            // OKX trả về nến từ mới đến cũ, cần đảo ngược lại mảng để tính RSI theo thứ tự thời gian tăng dần
+            const candles = response.data.data.reverse();
+            const closePrices = candles.map(c => parseFloat(c[4])); // Giá đóng cửa nằm ở phần tử index số 4
+            return calculateRSI(closePrices, 20); 
+        }
+        return 0;
+    } catch (error) {
+        console.error(`Lỗi khi lấy RSI (${bar}) cho ${symbol}:`, error.message);
+        return 0;
+    }
 }
 
-// ======================
-// Previous 5m candle
-// ======================
-async function getPrevious5m(instId) {
-  const res = await axios.get(OKX_CANDLES, {
-    params: {
-      instId,
-      bar: "5m",
-      limit: 2,
-    },
-  });
-
-  const candles = res.data.data;
-
-  if (!candles || candles.length < 2) return null;
-
-  const c = candles[1];
-
-  return {
-    open: Number(c[1]),  
-    close: Number(c[4]), 
-  };
+// Hàm gửi nội dung tin nhắn về Telegram Chat thông qua HTTP POST
+async function sendTelegramMessage(message) {
+    try {
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        await axios.post(url, {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'HTML',
+            disable_web_page_preview: false
+        });
+        console.log('Đã gửi thông báo Telegram thành công.');
+    } catch (error) {
+        console.error('Lỗi khi gửi Telegram:', error.message);
+    }
 }
 
-// ======================
-// Main
-// ======================
+// Luồng xử lý dữ liệu chính
 async function main() {
-  try {
-    const cache = loadCache();
-    const now = Date.now();
-
-    // Dọn dẹp cache quá 30 phút
-    for (const symbol in cache) {
-      if (now - cache[symbol] >= CACHE_EXPIRE) {
-        delete cache[symbol];
-      }
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+        console.error('Thiếu cấu hình BOT_TOKEN hoặc CHAT_ID trong Environment Variables!');
+        return;
     }
 
-    const topCoins = await getTop10Coins();
+    try {
+        console.log('Đang lấy danh sách các cặp coin Future trên OKX...');
+        // Lấy toàn bộ Market Tickers của thị trường SWAP (Future vĩnh cửu)
+        const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
+        const response = await axios.get(tickersUrl);
 
-    for (const coin of topCoins) {
-      // 1. Điều kiện biến động 24h > 30%
-      if (coin.change24h <= 30) continue;
+        if (!response.data || response.data.code !== '0') {
+            console.error('Không thể lấy dữ liệu từ OKX');
+            return;
+        }
 
-      // 2. Kiểm tra trùng coin trong vòng 30 phút
-      if (cache[coin.instId] && (now - cache[coin.instId] < CACHE_EXPIRE)) {
-        continue;
-      }
+        const sentLog = loadSentLog();
+        const currentTime = Date.now();
 
-      const candle = await getPrevious5m(coin.instId);
-      if (!candle) continue;
+        // Lọc ra các cặp phái sinh thanh toán bằng cặp USDT (Ví dụ: BTC-USDT-SWAP)
+        let tickers = response.data.data
+            .filter(t => t.instId.endsWith('-USDT-SWAP'))
+            .map(t => {
+                const open24h = parseFloat(t.open24h);
+                const lastPrice = parseFloat(t.last);
+                // Tính toán phần trăm tăng giảm giá dựa trên open24h và giá khớp lệnh cuối
+                const change24h = open24h ? ((lastPrice - open24h) / open24h) * 100 : 0;
+                return {
+                    instId: t.instId, 
+                    change24h: change24h,
+                    lastPrice: lastPrice
+                };
+            });
 
-      // Tính % thay đổi nến 5m chuẩn đóng cửa
-      const change5m = ((candle.close - candle.open) / candle.open) * 100;
+        // Sắp xếp danh sách giảm dần theo tỷ lệ tăng trưởng phần trăm và cắt lấy top 10
+        tickers.sort((a, b) => b.change24h - a.change24h);
+        const top10Fastest = tickers.slice(0, 10);
 
-      // 3. Điều kiện biến động 5 phút > 6%
-      if (change5m <= 6) continue;
+        console.log('Top 10 coin tăng mạnh nhất 24h qua:');
+        console.table(top10Fastest);
 
-      // Đổi tiêu đề thành BUY vì coin đang pump mạnh trong 5 phút
-      const msg = `BUY\n\nCoin: ${coin.instId}\n5m: +${change5m.toFixed(2)}%\n24h: ${coin.change24h.toFixed(2)}%\n\nhttps://www.okx.com/trade-swap/${coin.instId.toLowerCase()}`;
+        let hasNewAlert = false;
 
-      // Gửi tín hiệu
-      await sendTelegram(msg);
+        // Vòng lặp quét kiểm tra RSI đối với từng đồng coin trong danh sách top 10
+        for (const coin of top10Fastest) {
+            const symbol = coin.instId;
 
-      // Lưu cache tức thời
-      cache[coin.instId] = Date.now();
-      saveCache(cache); 
+            // Kiểm tra bộ nhớ file chống trùng trong khoảng thời gian 30 phút
+            if (sentLog[symbol]) {
+                const lastSentTime = sentLog[symbol];
+                if (currentTime - lastSentTime < 30 * 60 * 1000) {
+                    console.log(`-> Bỏ qua ${symbol} vì đã gửi thông báo trong vòng 30 phút trước.`);
+                    continue;
+                }
+            }
 
-      console.log(`${coin.instId} tăng mạnh +${change5m.toFixed(2)}% trong 5m. Đã gửi Telegram.`);
-      
-      // Nghỉ chống spam Telegram API
-      await new Promise(r => setTimeout(r, 500));
+            console.log(`Đang kiểm tra RSI-20 cho ${symbol}...`);
+            const rsi15m = await getRSI(symbol, '15m');
+            const rsi1h = await getRSI(symbol, '1H');
+
+            console.log(`> ${symbol} | RSI 15m (20): ${rsi15m.toFixed(2)}% | RSI 1h (20): ${rsi1h.toFixed(2)}%`);
+
+            // Đưa ra điều kiện lọc: Nếu cả hai khung thời gian RSI-20 đều vượt ngưỡng quá mua 80%
+            if (rsi15m > 80 && rsi1h > 80) {
+                
+                // Định dạng chuỗi viết thường để chèn vào URL đích dạng: https://www.okx.com/trade-swap/act-usdt-swap
+                const lowerSymbol = symbol.toLowerCase();
+                const targetLink = `https://www.okx.com/trade-swap/${lowerSymbol}`;
+
+                const message = `🚨 <b>BOT BÁO QUÁ MUA (RSI 20 > 80)</b> 🚨\n\n` +
+                                `• <b>Coin:</b> #${symbol.replace('-SWAP', '')}\n` +
+                                `• <b>Tăng 24h:</b> +${coin.change24h.toFixed(2)}%\n` +
+                                `• <b>Giá hiện tại:</b> ${coin.lastPrice}\n` +
+                                `• <b>RSI 20 (15m):</b> ${rsi15m.toFixed(2)}%\n` +
+                                `• <b>RSI 20 (1h):</b> ${rsi1h.toFixed(2)}%\n\n` +
+                                `👉 <a href="${targetLink}">Click để vào trực tiếp giao diện Future OKX</a>`;
+
+                await sendTelegramMessage(message);
+                
+                // Đánh dấu thời gian đã gửi để phục vụ lần chạy tiếp theo
+                sentLog[symbol] = currentTime;
+                hasNewAlert = true;
+            }
+        }
+
+        // Thực hiện lưu tệp JSON nếu có dữ liệu tín hiệu mới phát sinh
+        if (hasNewAlert) {
+            saveSentLog(sentLog);
+        }
+        console.log('Hoàn thành chu kỳ kiểm tra.');
+
+    } catch (error) {
+        console.error('Lỗi hệ thống trong hàm main:', error.message);
     }
-
-    saveCache(cache);
-
-  } catch (e) {
-    console.error("Lỗi hệ thống chính:", e.response?.data || e.message);
-  }
 }
 
+// Thực thi chạy chương trình chính
 main();
