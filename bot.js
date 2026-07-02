@@ -193,7 +193,7 @@ async function main() {
             console.log(`> ${symbol} | Nến 1h: ${change1h.toFixed(2)}% | RSI 15m (20): ${rsi15m.toFixed(2)}% | RSI 1h (20): ${rsi1h.toFixed(2)}%`);
 
             // --- ĐOẠN ĐỔI MAIN LOGIC THEO YÊU CẦU ---
-            const condition1 = change1h > 10 && rsi15m > 85 && rsi1h > 85;
+            const condition1 = change1h > 10 && rsi15m > 85 && rsi1h > 80;
             const condition2 = change1h <= 10 && rsi15m > 80 && rsi1h > 80;
 
             if (condition1 || condition2) {
