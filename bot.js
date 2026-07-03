@@ -77,25 +77,32 @@ function calculateRSI(prices, period = 20) {
     return 100 - (100 / (1 + rs));
 }
 
-// Gọi API lấy dữ liệu nến của OKX và đẩy qua hàm tính toán RSI-20
-async function getRSI(symbol, bar) {
+// Gọi API lấy dữ liệu nến của OKX, trả về RSI và % thay đổi của nến vừa đóng cửa
+async function getCandleData(symbol, bar) {
     try {
-        // Nghỉ 250ms trước mỗi request để tối ưu Rate Limit của OKX
-        await sleep(250); 
-        // Lấy 70 nến để đảm bảo dữ liệu mượt và tính RSI-20 chuẩn xác nhất
+        await sleep(250); // Nghỉ 250ms tối ưu Rate Limit
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=70`;
         const response = await axios.get(url);
         
         if (response.data && response.data.code === '0' && response.data.data.length > 0) {
-            // OKX trả về nến từ mới đến cũ, cần đảo ngược lại mảng để tính RSI theo thứ tự thời gian tăng dần
             const candles = response.data.data.reverse();
-            const closePrices = candles.map(c => parseFloat(c[4])); // Giá đóng cửa nằm ở phần tử index số 4
-            return calculateRSI(closePrices, 20); 
+            const closePrices = candles.map(c => parseFloat(c[4]));
+            
+            const rsi = calculateRSI(closePrices, 20); 
+
+            // Lấy nến vừa đóng cửa (nến sát cuối cùng index length - 2) vì nến cuối cùng (length - 1) là nến đang chạy
+            // Tuy nhiên nếu bạn muốn lấy cây nến hiện tại đang nhảy giá, đổi thành candles[candles.length - 1]
+            const closedCandle = candles.length >= 2 ? candles[candles.length - 2] : candles[0];
+            const openPrice = parseFloat(closedCandle[1]); // Giá mở cửa
+            const closePrice = parseFloat(closedCandle[4]); // Giá đóng cửa
+            const candleChange = openPrice ? ((closePrice - openPrice) / openPrice) * 100 : 0;
+
+            return { rsi, candleChange };
         }
-        return 0;
+        return { rsi: 0, candleChange: 0 };
     } catch (error) {
-        console.error(`Lỗi khi lấy RSI (${bar}) cho ${symbol}:`, error.message);
-        return 0;
+        console.error(`Lỗi khi lấy dữ liệu (${bar}) cho ${symbol}:`, error.message);
+        return { rsi: 0, candleChange: 0 };
     }
 }
 
@@ -124,7 +131,6 @@ async function main() {
 
     try {
         console.log('Đang lấy danh sách các cặp coin Future trên OKX...');
-        // Lấy toàn bộ Market Tickers của thị trường SWAP (Future vĩnh cửu)
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
 
@@ -150,17 +156,17 @@ async function main() {
                 };
             });
 
-        // Sắp xếp danh sách giảm dần theo tỷ lệ tăng trưởng phần trăm và cắt lấy top 10
+        // --- ĐỔI THÀNH LẤY TOP 20 COIN TĂNG MẠNH NHẤT ---
         tickers.sort((a, b) => b.change24h - a.change24h);
-        const top10Fastest = tickers.slice(0, 10);
+        const top20Fastest = tickers.slice(0, 20);
 
-        console.log('Top 10 coin tăng mạnh nhất 24h qua:');
-        console.table(top10Fastest);
+        console.log('Top 20 coin tăng mạnh nhất 24h qua:');
+        console.table(top20Fastest);
 
         let hasNewAlert = false;
 
-        // Vòng lặp quét kiểm tra RSI đối với từng đồng coin trong danh sách top 10
-        for (const coin of top10Fastest) {
+        // Vòng lặp quét kiểm tra đối với từng đồng coin trong danh sách top 20
+        for (const coin of top20Fastest) {
             const symbol = coin.instId;
 
             // Kiểm tra bộ nhớ file chống trùng trong khoảng thời gian 30 phút
@@ -172,34 +178,59 @@ async function main() {
                 }
             }
 
-            console.log(`Đang kiểm tra RSI-20 cho ${symbol}...`);
-            const rsi15m = await getRSI(symbol, '15m');
+            console.log(`Đang kiểm tra thông số kỹ thuật cho ${symbol}...`);
+            
+            // Lấy dữ liệu nến 15m (RSI và % tăng giá nến vừa đóng)
+            const data15m = await getCandleData(symbol, '15m');
+            // Lấy dữ liệu nến 4h
+            const data4h = await getCandleData(symbol, '4H');
 
-            console.log(`> ${symbol} | RSI 15m (20): ${rsi15m.toFixed(2)}%`);
+            const rsi15m = data15m.rsi;
+            const change15m = data15m.candleChange; // % tăng giá nến 15m vừa đóng
+            const change4h = data4h.candleChange;   // % tăng giá nến 4h vừa đóng
+            const change24h = coin.change24h;       // % tăng giá 24h từ ticker
 
-            // --- THAY ĐỔI ĐIỀU KIỆN MAIN LOGIC TẠI ĐÂY ---
+            console.log(`> ${symbol} | RSI 15m: ${rsi15m.toFixed(2)} | Nến 15m: ${change15m.toFixed(2)}% | Nến 4h: ${change4h.toFixed(2)}% | Tăng 24h: ${change24h.toFixed(2)}%`);
+
+            // --- THIẾT LẬP MAIN LOGIC THEO YÊU CẦU MỚI ---
+            let signalType = null; // Biến lưu loại tín hiệu: "Long" hoặc "Short"
+
+            // Điều kiện SHORT: RSI20 của 15m > 90
             if (rsi15m > 90) {
+                signalType = "Short";
+            } 
+            // Điều kiện LONG: nến 15m vừa đóng > 5% VÀ nến 4h < 10% VÀ 10% < tăng 24h < 25%
+            else if (change15m > 5 && change4h < 10 && change24h > 10 && change24h < 25) {
+                signalType = "Long";
+            }
+
+            // Nếu thỏa mãn 1 trong 2 điều kiện trên thì tiến hành gửi Telegram
+            if (signalType) {
                 
-                // Định dạng chuỗi viết thường để chèn vào URL đích dạng: https://www.okx.com/trade-swap/act-usdt-swap
                 const lowerSymbol = symbol.toLowerCase();
                 const targetLink = `https://www.okx.com/trade-swap/${lowerSymbol}`;
 
-                const message = `🚨 <b>BOT BÁO SIÊU QUÁ MUA (RSI 15m > 90)</b> 🚨\n\n` +
+                // Chọn icon và màu sắc hiển thị tương ứng với loại lệnh
+                const alertIcon = signalType === "Long" ? "🟢 [LONG ALERT]" : "🔴 [SHORT ALERT]";
+
+                const message = `${alertIcon} <b>TÍN HIỆU CHIẾN LƯỢC MỚI</b>\n\n` +
                                 `• <b>Coin:</b> #${symbol.replace('-SWAP', '')}\n` +
-                                `• <b>Tăng 24h:</b> +${coin.change24h.toFixed(2)}%\n` +
+                                `• <b>Khuyến nghị:</b> <b>${signalType.toUpperCase()}</b>\n` +
                                 `• <b>Giá hiện tại:</b> ${coin.lastPrice}\n` +
-                                `• <b>RSI 20 (15m):</b> ${rsi15m.toFixed(2)}%\n\n` +
+                                `• <b>RSI 20 (15m):</b> ${rsi15m.toFixed(2)}%\n` +
+                                `• <b>Tăng nến 15m vừa đóng:</b> ${change15m.toFixed(2)}%\n` +
+                                `• <b>Tăng nến 4h vừa đóng:</b> ${change4h.toFixed(2)}%\n` +
+                                `• <b>Tăng trưởng 24h:</b> ${change24h.toFixed(2)}%\n\n` +
                                 `👉 <a href="${targetLink}">Click để vào trực tiếp giao diện Future OKX</a>`;
 
                 await sendTelegramMessage(message);
                 
-                // Đánh dấu thời gian đã gửi để phục vụ lần chạy tiếp theo
+                // Đánh dấu thời gian đã gửi để chống spam
                 sentLog[symbol] = currentTime;
                 hasNewAlert = true;
             }
         }
 
-        // Thực hiện lưu tệp JSON nếu có dữ liệu tín hiệu mới phát sinh
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
