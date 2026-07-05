@@ -83,11 +83,9 @@ async function fetchGithubCache() {
     try {
         const response = await axios.get(GITHUB_CACHE_URL);
         if (response.data) {
-            // Đảm bảo dữ liệu trả về dạng mảng, nếu là object thì lấy mảng bên trong (tùy cấu trúc file của bạn)
             if (Array.isArray(response.data)) {
                 return response.data.map(item => String(item).toUpperCase());
             } else if (typeof response.data === 'object') {
-                // Trường hợp cấu trúc file json có key chứa mảng, ví dụ: { "coins": ["BTC", "ETH"] }
                 const keys = Object.keys(response.data);
                 for (let key of keys) {
                     if (Array.isArray(response.data[key])) {
@@ -98,13 +96,13 @@ async function fetchGithubCache() {
         }
         return [];
     } catch (error) {
-        console.error('Lỗi khi tải file cache từ GitHub:', error.message);
+        console.error('Lỗi khi đọc danh sách cache từ GitHub:', error.message);
         return [];
     }
 }
 
-// Gọi API lấy dữ liệu nến của OKX, trả về RSI và % biến động giá của nến vừa đóng
-async function getMarketMetrics(symbol, bar) {
+// Gọi API lấy dữ liệu nến của OKX, trả về RSI và % biến động giá theo từng khung giờ chuyên biệt
+async function getMarketMetrics(symbol, bar, lastPrice = 0) {
     try {
         await sleep(250); // Nghỉ 250ms tối ưu Rate Limit
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=75`;
@@ -112,19 +110,35 @@ async function getMarketMetrics(symbol, bar) {
         
         if (response.data && response.data.code === '0' && response.data.data.length > 25) {
             const candles = response.data.data.reverse();
-            const closedIndex = candles.length - 2; // Nến vừa đóng cửa
             
-            // 1. Tính RSI 20 cho nến vừa đóng (chỉ áp dụng/phù hợp khi bar = '15m')
-            const historyForRSI = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
-            const rsi20 = calculateRSI(historyForRSI, 20);
+            // Đối với OKX sau khi reverse():
+            // - candles[candles.length - 1] là nến HIỆN TẠI đang chạy.
+            // - candles[candles.length - 2] là nến VỪA ĐÓNG.
+            // - candles[candles.length - 3] là nến TRƯỚC CỦA CÂY NẾN VỪA ĐÓNG (nến trước).
+            
+            if (bar === '4H') {
+                // SỬA ĐỔI THEO YÊU CẦU: Tính biến động 4h từ Giá mở cửa của cây nến trước (index length - 3) đến giá hiện tại
+                // Nếu mảng nến không đủ độ dài thì dự phòng lấy nến cũ hơn
+                const prevCandleIndex = candles.length >= 3 ? candles.length - 3 : candles.length - 2;
+                const prevOpenPrice = parseFloat(candles[prevCandleIndex][1]); // Giá mở cửa của nến trước
+                
+                // Tính toán tỷ lệ dựa trên giá khớp lệnh hiện tại (lastPrice truyền từ ticker)
+                const changePct4h = prevOpenPrice ? ((lastPrice - prevOpenPrice) / prevOpenPrice) * 100 : 0;
+                
+                return { rsi20: 0, changePct: changePct4h };
+            } else {
+                // Giữ nguyên logic cho khung 15m cũ
+                const closedIndex = candles.length - 2;
+                const historyForRSI = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
+                const rsi20 = calculateRSI(historyForRSI, 20);
 
-            // 2. Tính % biến động tăng trưởng giá của nến vừa đóng: (Close - Open) / Open * 100
-            const closedCandle = candles[closedIndex];
-            const o = parseFloat(closedCandle[1]);
-            const c = parseFloat(closedCandle[4]);
-            const changePct = o ? ((c - o) / o) * 100 : 0;
+                const closedCandle = candles[closedIndex];
+                const o = parseFloat(closedCandle[1]);
+                const c = parseFloat(closedCandle[4]);
+                const changePct15m = o ? ((c - o) / o) * 100 : 0;
 
-            return { rsi20, changePct };
+                return { rsi20, changePct: changePct15m };
+            }
         }
         return { rsi20: 0, changePct: 0 };
     } catch (error) {
@@ -187,10 +201,10 @@ async function main() {
                 };
             });
 
-        // Sắp xếp giảm dần theo tăng trưởng giá 24h để lấy bảng xếp hạng top
+        // Sắp xếp giảm dần theo tăng trưởng giá 24h
         tickers.sort((a, b) => b.change24h - a.change24h);
         
-        // Quét tối đa đến top 30 vì yêu cầu điều kiện Short cần kiểm tra đến top 30
+        // Cắt lấy top 30 phục vụ cho cả điều kiện lọc Long (Top 10) và Short (Top 4 - Top 30)
         const targetList = tickers.slice(0, 30);
 
         console.log('Bảng xếp hạng tăng mạnh nhất OKX (Top 30):');
@@ -202,7 +216,7 @@ async function main() {
         for (let i = 0; i < targetList.length; i++) {
             const coin = targetList[i];
             const symbol = coin.instId;
-            const rank = i + 1; // Vị trí xếp hạng thực tế (bắt đầu từ 1)
+            const rank = i + 1;
 
             // Kiểm tra bộ nhớ file chống trùng trong khoảng thời gian 30 phút
             if (sentLog[symbol]) {
@@ -220,19 +234,19 @@ async function main() {
             const rsi15m = metrics15m.rsi20;
             const change15m = metrics15m.changePct;
 
-            // Lấy dữ liệu 4h (% biến động nến vừa đóng)
-            const metrics4h = await getMarketMetrics(symbol, '4H');
+            // Lấy dữ liệu 4h (% biến động tính từ giá mở nến trước đến giá ticker hiện tại)
+            const metrics4h = await getMarketMetrics(symbol, '4H', coin.lastPrice);
             const change4h = metrics4h.changePct;
 
             const change24h = coin.change24h;
 
-            console.log(`> ${symbol} | Rank: ${rank} | Nến 15m: ${change15m.toFixed(2)}% | Nến 4h: ${change4h.toFixed(2)}% | RSI 15m: ${rsi15m.toFixed(2)}`);
+            console.log(`> ${symbol} | Rank: ${rank} | Nến 15m: ${change15m.toFixed(2)}% | Biến động 4h sửa đổi: ${change4h.toFixed(2)}% | RSI 15m: ${rsi15m.toFixed(2)}`);
 
-            // --- THIẾT LẬP MAIN LOGIC THEO YÊU CẦU MỚI ---
+            // --- MAIN LOGIC KIỂM TRA BÁO TÍN HIỆU ---
             let signalType = null;
-            const cleanName = symbol.replace('-USDT-SWAP', '').toUpperCase(); // Ví dụ: "BTC"
+            const cleanName = symbol.replace('-USDT-SWAP', '').toUpperCase();
 
-            // 1. Logic LONG: Nằm trong top 10 VÀ tăng nến 15m > 3% VÀ -7% < tăng nến 4h < 5%
+            // 1. Logic LONG: Nằm trong top 10 VÀ tăng nến 15m vừa đóng > 3% VÀ -7% < biến động 4h sửa đổi < 5%
             if (rank <= 10 && change15m > 3 && change4h > -7 && change4h < 5) {
                 signalType = "Long";
             }
@@ -241,7 +255,7 @@ async function main() {
                 signalType = "Short";
             }
 
-            // Gửi tin nhắn nếu thỏa mãn điều kiện lọc
+            // Tiến hành kích hoạt gửi thông báo
             if (signalType) {
                 const lowerSymbol = symbol.toLowerCase();
                 const targetLink = `https://www.okx.com/trade-swap/${lowerSymbol}`;
@@ -253,7 +267,7 @@ async function main() {
                                 `• <b>Khuyến nghị:</b> <b>${signalType.toUpperCase()}</b>\n` +
                                 `• <b>Giá hiện tại:</b> ${coin.lastPrice}\n` +
                                 `• <b>Biến động nến 15m vừa đóng:</b> ${change15m.toFixed(2)}%\n` +
-                                `• <b>Biến động nến 4h vừa đóng:</b> ${change4h.toFixed(2)}%\n` +
+                                `• <b>Biến động 4h (Mở nến trước -> Hiện tại):</b> ${change4h.toFixed(2)}%\n` +
                                 `• <b>RSI 20 (15m):</b> ${rsi15m.toFixed(2)}%\n` +
                                 `• <b>Tăng trưởng 24h:</b> ${change24h.toFixed(2)}%\n\n` +
                                 `👉 <a href="${targetLink}">Vào lệnh ngay trên OKX Future</a>`;
