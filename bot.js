@@ -101,7 +101,7 @@ async function getMarketMetrics(symbol, bar = '15m') {
             const cClose = parseFloat(closedCandle[4]);
             const currentVol = cOpen ? (Math.abs(cClose - cOpen) / cOpen) * 100 : 0;
 
-            // 3. SỬA ĐỔI: Tính biến động trung bình của 20 nến trước đó dựa trên |Close - Open|
+            // 3. Tính biến động trung bình của 20 nến trước đó dựa trên |Close - Open|
             let totalVol20 = 0;
             for (let i = closedIndex - 20; i < closedIndex; i++) {
                 const o = parseFloat(candles[i][1]);
