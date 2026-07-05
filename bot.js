@@ -77,7 +77,7 @@ function calculateRSI(prices, period = 20) {
     return 100 - (100 / (1 + rs));
 }
 
-// Gọi API lấy dữ liệu nến của OKX và tính toán các thông số theo logic đồng bộ trị tuyệt đối |Close - Open|
+// Gọi API lấy dữ liệu nến của OKX và tính toán các thông số theo logic mới
 async function getMarketMetrics(symbol, bar = '15m') {
     try {
         await sleep(250); // Nghỉ 250ms tối ưu Rate Limit
@@ -85,8 +85,11 @@ async function getMarketMetrics(symbol, bar = '15m') {
         const response = await axios.get(url);
         
         if (response.data && response.data.code === '0' && response.data.data.length > 25) {
+            // Đảo mảng từ cũ đến mới
             const candles = response.data.data.reverse();
-            const closedIndex = candles.length - 2; // Nến 15m vừa đóng
+            
+            // Nến cuối cùng (candles.length - 1) là nến đang chạy, nến vừa đóng là (candles.length - 2)
+            const closedIndex = candles.length - 2;
             
             // 1. Tính RSI 20 cho nến 15m vừa đóng
             const historyForRSI = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
@@ -98,25 +101,31 @@ async function getMarketMetrics(symbol, bar = '15m') {
             const cClose = parseFloat(closedCandle[4]);
             const currentVol = cOpen ? (Math.abs(cClose - cOpen) / cOpen) * 100 : 0;
 
-            // 3. ĐỒNG BỘ TOÀN BỘ: Tính các thông số của 20 nến trước đó đều dựa trên |Close - Open|
-            let totalVol20 = 0;      // Tổng biến động để tính trung bình
-            let accumulatedVol20 = 0;  // Tổng biến động tích lũy (thay thế cho range High/Low cũ) để check độ nén < 7%
-            
+            // 3. SỬA ĐỔI: Tính biến động trung bình của 20 nến trước đó dựa trên |Close - Open|
+            let totalVol20 = 0;
             for (let i = closedIndex - 20; i < closedIndex; i++) {
                 const o = parseFloat(candles[i][1]);
                 const c = parseFloat(candles[i][4]);
-                const candleBodyVol = o ? (Math.abs(c - o) / o) * 100 : 0;
-                
-                totalVol20 += candleBodyVol;
-                accumulatedVol20 += candleBodyVol; 
+                totalVol20 += o ? (Math.abs(c - o) / o) * 100 : 0;
             }
-            
-            const avgVol20 = totalVol20 / 20; // Biến động trung bình thân nến của 20 phiên trước
+            const avgVol20 = totalVol20 / 20;
+
+            // Tính tổng biến động tích lũy (độ rộng vùng giá) của 20 nến trước để check điều kiện < 7%
+            const initialOpen = parseFloat(candles[closedIndex - 20][1]);
+            let highestIn20 = -Infinity;
+            let lowestIn20 = Infinity;
+            for (let i = closedIndex - 20; i < closedIndex; i++) {
+                const h = parseFloat(candles[i][2]); // Vẫn giữ High/Low cho biên độ vùng tích lũy
+                const l = parseFloat(candles[i][3]);
+                if (h > highestIn20) highestIn20 = h;
+                if (l < lowestIn20) lowestIn20 = l;
+            }
+            const rangeVol20 = initialOpen ? ((highestIn20 - lowestIn20) / initialOpen) * 100 : 0;
 
             // 4. Tính toán hệ số đột biến x
             const x = avgVol20 > 0 ? (currentVol / avgVol20) : 0;
 
-            return { rsi20, x, rangeVol20: accumulatedVol20 };
+            return { rsi20, x, rangeVol20 };
         }
         return { rsi20: 0, x: 0, rangeVol20: 0 };
     } catch (error) {
@@ -175,7 +184,7 @@ async function main() {
                 };
             });
 
-        // Lấy top 50 cặp tăng mạnh nhất
+        // --- ĐÃ ĐỔI THÀNH LẤY TOP 50 CẶP TĂNG MẠNH NHẤT ---
         tickers.sort((a, b) => b.change24h - a.change24h);
         const top50Fastest = tickers.slice(0, 50);
 
@@ -205,7 +214,7 @@ async function main() {
             const rangeVol20 = metrics.rangeVol20; 
             const change24h = coin.change24h;     
 
-            console.log(`> ${symbol} | Hệ số x: ${x.toFixed(2)} | BĐ thân nến 20 phiên: ${rangeVol20.toFixed(2)}% | RSI 15m: ${rsi15m.toFixed(2)} | Tăng 24h: ${change24h.toFixed(2)}%`);
+            console.log(`> ${symbol} | Hệ số x: ${x.toFixed(2)} | BĐ vùng 20 nến trước: ${rangeVol20.toFixed(2)}% | RSI 15m: ${rsi15m.toFixed(2)} | Tăng 24h: ${change24h.toFixed(2)}%`);
 
             // --- MAIN LOGIC BÁO LỆNH ---
             let signalType = null;
@@ -221,36 +230,4 @@ async function main() {
 
             // Gửi tin nhắn nếu thỏa mãn
             if (signalType) {
-                const lowerSymbol = symbol.toLowerCase();
-                const targetLink = `https://www.okx.com/trade-swap/${lowerSymbol}`;
-                const alertIcon = signalType === "Long" ? "🟢 [LONG SIGNAL]" : "🔴 [SHORT SIGNAL]";
-
-                const message = `${alertIcon} <b>PHÁT HIỆN ĐỘT BIẾN THÂN NẾN TÍCH LŨY</b>\n\n` +
-                                `• <b>Coin:</b> #${symbol.replace('-SWAP', '')}\n` +
-                                `• <b>Khuyến nghị:</b> <b>${signalType.toUpperCase()}</b>\n` +
-                                `• <b>Giá hiện tại:</b> ${coin.lastPrice}\n` +
-                                `• <b>Hệ số đột biến thân nến (x):</b> ${x.toFixed(2)} lần\n` +
-                                `• <b>Biến động thân nến 20 phiên:</b> ${rangeVol20.toFixed(2)}%\n` +
-                                `• <b>RSI 20 (15m):</b> ${rsi15m.toFixed(2)}%\n` +
-                                `• <b>Tăng trưởng 24h:</b> ${change24h.toFixed(2)}%\n\n` +
-                                `👉 <a href="${targetLink}">Vào lệnh ngay trên OKX Future</a>`;
-
-                await sendTelegramMessage(message);
-                
-                sentLog[symbol] = currentTime;
-                hasNewAlert = true;
-            }
-        }
-
-        if (hasNewAlert) {
-            saveSentLog(sentLog);
-        }
-        console.log('Hoàn thành chu kỳ kiểm tra.');
-
-    } catch (error) {
-        console.error('Lỗi hệ thống trong hàm main:', error.message);
-    }
-}
-
-// Thực thi chạy chương trình chính
-main();
+                const lowerSymbol = symbol.toLowerCase
