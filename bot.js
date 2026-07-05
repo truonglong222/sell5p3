@@ -20,7 +20,7 @@ function loadSentLog() {
     try {
         if (fs.existsSync(DB_FILE)) {
             const data = fs.readFileSync(DB_FILE, 'utf8');
-            return JSON.parse(data);
+            return data.trim() ? JSON.parse(data) : {};
         }
     } catch (error) {
         console.error('Lỗi khi đọc file json log:', error.message);
@@ -184,7 +184,7 @@ async function main() {
                 };
             });
 
-        // --- ĐÃ ĐỔI THÀNH LẤY TOP 50 CẶP TĂNG MẠNH NHẤT ---
+        // Lấy top 50 cặp tăng mạnh nhất
         tickers.sort((a, b) => b.change24h - a.change24h);
         const top50Fastest = tickers.slice(0, 50);
 
@@ -230,4 +230,36 @@ async function main() {
 
             // Gửi tin nhắn nếu thỏa mãn
             if (signalType) {
-                const lowerSymbol = symbol.toLowerCase
+                const lowerSymbol = symbol.toLowerCase();
+                const targetLink = `https://www.okx.com/trade-swap/${lowerSymbol}`;
+                const alertIcon = signalType === "Long" ? "🟢 [LONG SIGNAL]" : "🔴 [SHORT SIGNAL]";
+
+                const message = `${alertIcon} <b>PHÁT HIỆN ĐỘT BIẾN THỂ TÍCH GIÁ (MỚI)</b>\n\n` +
+                                `• <b>Coin:</b> #${symbol.replace('-SWAP', '')}\n` +
+                                `• <b>Khuyến nghị:</b> <b>${signalType.toUpperCase()}</b>\n` +
+                                `• <b>Giá hiện tại:</b> ${coin.lastPrice}\n` +
+                                `• <b>Hệ số đột biến thân nến (x):</b> ${x.toFixed(2)} lần\n` +
+                                `• <b>Biến động vùng 20 nến trước:</b> ${rangeVol20.toFixed(2)}%\n` +
+                                `• <b>RSI 20 (15m):</b> ${rsi15m.toFixed(2)}%\n` +
+                                `• <b>Tăng trưởng 24h:</b> ${change24h.toFixed(2)}%\n\n` +
+                                `👉 <a href="${targetLink}">Vào lệnh ngay trên OKX Future</a>`;
+
+                await sendTelegramMessage(message);
+                
+                sentLog[symbol] = currentTime;
+                hasNewAlert = true;
+            }
+        }
+
+        if (hasNewAlert) {
+            saveSentLog(sentLog);
+        }
+        console.log('Hoàn thành chu kỳ kiểm tra.');
+
+    } catch (error) {
+        console.error('Lỗi hệ thống trong hàm main:', error.message);
+    }
+}
+
+// Thực thi chạy chương trình chính
+main();
