@@ -77,11 +77,10 @@ function calculateRSI(prices, period = 20) {
     return 100 - (100 / (1 + rs));
 }
 
-// Gọi API lấy dữ liệu nến của OKX và tính toán các thông số volatility, rsi, tỷ lệ đột biến x
+// Gọi API lấy dữ liệu nến của OKX và tính toán các thông số theo logic mới
 async function getMarketMetrics(symbol, bar = '15m') {
     try {
         await sleep(250); // Nghỉ 250ms tối ưu Rate Limit
-        // Lấy 75 nến để dư dả dữ liệu tính toán cho 20 nến trước đó + nến vừa đóng
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=75`;
         const response = await axios.get(url);
         
@@ -89,40 +88,34 @@ async function getMarketMetrics(symbol, bar = '15m') {
             // Đảo mảng từ cũ đến mới
             const candles = response.data.data.reverse();
             
-            // 1. Tính RSI 20 cho nến 15m vừa đóng (sử dụng close price đến nến vừa đóng)
             // Nến cuối cùng (candles.length - 1) là nến đang chạy, nến vừa đóng là (candles.length - 2)
             const closedIndex = candles.length - 2;
+            
+            // 1. Tính RSI 20 cho nến 15m vừa đóng
             const historyForRSI = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
             const rsi20 = calculateRSI(historyForRSI, 20);
 
-            // 2. Tính biến động tăng giá của nến 15m vừa đóng (Closed Candle)
+            // 2. Tính biến động nến vừa đóng: |Close - Open| / Open * 100
             const closedCandle = candles[closedIndex];
             const cOpen = parseFloat(closedCandle[1]);
-            const cHigh = parseFloat(closedCandle[2]);
-            const cLow = parseFloat(closedCandle[3]);
             const cClose = parseFloat(closedCandle[4]);
-            
-            // Biến động nến vừa đóng (Tính theo tỷ lệ % biên độ High-Low so với Open)
-            const currentVol = cOpen ? ((cHigh - cLow) / cOpen) * 100 : 0;
+            const currentVol = cOpen ? (Math.abs(cClose - cOpen) / cOpen) * 100 : 0;
 
-            // 3. Tính biến động trung bình của 20 nến 15m trước đó
-            // Vị trí của 20 nến này sẽ từ (closedIndex - 20) đến (closedIndex - 1)
+            // 3. SỬA ĐỔI: Tính biến động trung bình của 20 nến trước đó dựa trên |Close - Open|
             let totalVol20 = 0;
             for (let i = closedIndex - 20; i < closedIndex; i++) {
                 const o = parseFloat(candles[i][1]);
-                const h = parseFloat(candles[i][2]);
-                const l = parseFloat(candles[i][3]);
-                totalVol20 += o ? ((h - l) / o) * 100 : 0;
+                const c = parseFloat(candles[i][4]);
+                totalVol20 += o ? (Math.abs(c - o) / o) * 100 : 0;
             }
             const avgVol20 = totalVol20 / 20;
 
-            // Tính tổng biến động giá (Cumulative Volatility) của 20 nến này xem có cô đặc (< 7%) không
-            // Lấy giá cao nhất và thấp nhất trong vùng 20 nến này so với giá mở cửa nến đầu tiên trong chuỗi
+            // Tính tổng biến động tích lũy (độ rộng vùng giá) của 20 nến trước để check điều kiện < 7%
             const initialOpen = parseFloat(candles[closedIndex - 20][1]);
             let highestIn20 = -Infinity;
             let lowestIn20 = Infinity;
             for (let i = closedIndex - 20; i < closedIndex; i++) {
-                const h = parseFloat(candles[i][2]);
+                const h = parseFloat(candles[i][2]); // Vẫn giữ High/Low cho biên độ vùng tích lũy
                 const l = parseFloat(candles[i][3]);
                 if (h > highestIn20) highestIn20 = h;
                 if (l < lowestIn20) lowestIn20 = l;
@@ -218,15 +211,15 @@ async function main() {
 
             const x = metrics.x;
             const rsi15m = metrics.rsi20;
-            const rangeVol20 = metrics.rangeVol20; // tổng biến động vùng giá 20 nến trước đó
-            const change24h = coin.change24h;     // biến động giá 24h từ ticker
+            const rangeVol20 = metrics.rangeVol20; 
+            const change24h = coin.change24h;     
 
-            console.log(`> ${symbol} | Hệ số x: ${x.toFixed(2)} | BĐ 20 nến trước: ${rangeVol20.toFixed(2)}% | RSI 15m: ${rsi15m.toFixed(2)} | Tăng 24h: ${change24h.toFixed(2)}%`);
+            console.log(`> ${symbol} | Hệ số x: ${x.toFixed(2)} | BĐ vùng 20 nến trước: ${rangeVol20.toFixed(2)}% | RSI 15m: ${rsi15m.toFixed(2)} | Tăng 24h: ${change24h.toFixed(2)}%`);
 
-            // --- THIẾT LẬP MAIN LOGIC THEO YÊU CẦU MỚI ---
+            // --- MAIN LOGIC BÁO LỆNH ---
             let signalType = null;
 
-            // Điều kiện LONG: x > 4 VÀ biến động vùng 20 nến trước < 7% VÀ 5% < tăng 24h < 25%
+            // Điều kiện LONG: x > 4 VÀ biến động giá vùng 20 nến trước < 7% VÀ 5% < tăng 24h < 25%
             if (x > 4 && rangeVol20 < 7 && change24h > 5 && change24h < 25) {
                 signalType = "Long";
             } 
@@ -235,18 +228,18 @@ async function main() {
                 signalType = "Short";
             }
 
-            // Gửi tin nhắn nếu thỏa mãn hệ thống lọc
+            // Gửi tin nhắn nếu thỏa mãn
             if (signalType) {
                 const lowerSymbol = symbol.toLowerCase();
                 const targetLink = `https://www.okx.com/trade-swap/${lowerSymbol}`;
                 const alertIcon = signalType === "Long" ? "🟢 [LONG SIGNAL]" : "🔴 [SHORT SIGNAL]";
 
-                const message = `${alertIcon} <b>PHÁT HIỆN ĐỘT BIẾN THỂ TÍCH GIÁ</b>\n\n` +
+                const message = `${alertIcon} <b>PHÁT HIỆN ĐỘT BIẾN THỂ TÍCH GIÁ (MỚI)</b>\n\n` +
                                 `• <b>Coin:</b> #${symbol.replace('-SWAP', '')}\n` +
                                 `• <b>Khuyến nghị:</b> <b>${signalType.toUpperCase()}</b>\n` +
                                 `• <b>Giá hiện tại:</b> ${coin.lastPrice}\n` +
-                                `• <b>Hệ số đột biến (x):</b> ${x.toFixed(2)} lần\n` +
-                                `• <b>Biến động 20 nến trước:</b> ${rangeVol20.toFixed(2)}%\n` +
+                                `• <b>Hệ số đột biến thân nến (x):</b> ${x.toFixed(2)} lần\n` +
+                                `• <b>Biến động vùng 20 nến trước:</b> ${rangeVol20.toFixed(2)}%\n` +
                                 `• <b>RSI 20 (15m):</b> ${rsi15m.toFixed(2)}%\n` +
                                 `• <b>Tăng trưởng 24h:</b> ${change24h.toFixed(2)}%\n\n` +
                                 `👉 <a href="${targetLink}">Vào lệnh ngay trên OKX Future</a>`;
