@@ -91,13 +91,7 @@ async function getTechnicalIndicators(symbol, bar = '15m') {
             const ema20 = calculateEMA(historyPrices, 20);
             const bb = calculateBollingerBands(historyPrices, 20, 2);
             
-            const lastCandle = candles[closedIndex];
-            const open = parseFloat(lastCandle[1]);
-            const high = parseFloat(lastCandle[2]);
-            const low = parseFloat(lastCandle[3]);
-            const close = parseFloat(lastCandle[4]);
-
-            return { ema20, ub: bb.ub, lb: bb.lb, open, high, low, close };
+            return { ema20, ub: bb.ub, lb: bb.lb };
         }
         return null;
     } catch (error) {
@@ -106,17 +100,16 @@ async function getTechnicalIndicators(symbol, bar = '15m') {
     }
 }
 
-// Hàm kiểm tra xem giá có chạm hoặc cắt qua đường chỉ báo hay không (Dung sai 1%)
-function isPriceTouching(indicatorVal, candle) {
-    if (!indicatorVal || !candle) return false;
-    // Điều kiện 1: Chỉ báo nằm hẳn trong lòng cây nến vừa đóng (Giá đi xuyên qua)
-    const insideCandle = indicatorVal >= candle.low && indicatorVal <= candle.high;
+// Hàm kiểm tra dải dung sai bất đối xứng theo đúng tỷ lệ % yêu cầu
+// pctMin và pctMax là giá trị thực tế (Ví dụ: -0.1% -> -0.001, +1% -> 0.01)
+function checkTolerance(indicatorVal, price, pctMin, pctMax) {
+    if (!indicatorVal || !price) return false;
     
-    // Điều kiện 2: --- ĐÃ ĐỔI THÀNH SAI SỐ 1% (0.01) ---
-    // Kiểm tra xem giá đóng cửa có lệch so với chỉ báo dưới 1% hay không để tăng độ nhạy
-    const closeDeviation = Math.abs(candle.close - indicatorVal) / indicatorVal <= 0.01;
+    // Tính khoảng cách: Chỉ báo - Giá Coin
+    const diffPct = (indicatorVal - price) / indicatorVal;
     
-    return insideCandle || closeDeviation;
+    // Kiểm tra xem khoảng cách có nằm trong phạm vi cho phép không
+    return diffPct >= pctMin && diffPct <= pctMax;
 }
 
 // Hàm gửi nội dung tin nhắn về Telegram Chat dạng rút gọn tối giản
@@ -169,14 +162,14 @@ async function main() {
         // 2. Tạo danh sách Top Giảm (Sắp xếp tăng dần)
         let topLosers = [...tickers].sort((a, b) => a.change24h - b.change24h);
 
-        // Gom danh sách các coin cần check: Top 10 Tăng và Top 10 Giảm
+        // Gom danh sách các coin cần check: Top 3 Tăng và Top 3 Giảm
         let poolToCheck = new Map();
         
-        topGainers.slice(0, 10).forEach((coin, idx) => {
+        topGainers.slice(0, 3).forEach((coin, idx) => {
             poolToCheck.set(coin.instId, { ...coin, type: 'gainer', rank: idx + 1 });
         });
         
-        topLosers.slice(0, 10).forEach((coin, idx) => {
+        topLosers.slice(0, 3).forEach((coin, idx) => {
             if(!poolToCheck.has(coin.instId)) {
                 poolToCheck.set(coin.instId, { ...coin, type: 'loser', rank: idx + 1 });
             }
@@ -191,28 +184,30 @@ async function main() {
                 if (currentTime - sentLog[symbol] < 30 * 60 * 1000) continue;
             }
 
-            const data = await getTechnicalIndicators(symbol, '15m');
-            if (!data) continue;
+            const indicators = await getTechnicalIndicators(symbol, '15m');
+            if (!indicators) continue;
 
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN ---
+            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAI MỚI ---
             if (coin.type === 'gainer') {
-                if (coin.rank <= 3 && isPriceTouching(data.ema20, data)) {
+                // LONG: Top 3 Tăng. Dung sai (Chỉ báo - Giá) là: [-0.1%, +1%] tương đương [-0.001, 0.01]
+                if (checkTolerance(indicators.ema20, coin.lastPrice, -0.001, 0.01)) {
                     signal = "Long";
-                    reason = "Top " + coin.rank + " Tăng + Tiệm cận EMA20";
-                } else if (coin.rank >= 4 && coin.rank <= 10 && isPriceTouching(data.lb, data)) {
+                    reason = `Top ${coin.rank} Tăng + Sát EMA20`;
+                } else if (checkTolerance(indicators.lb, coin.lastPrice, -0.001, 0.01)) {
                     signal = "Long";
-                    reason = "Top " + coin.rank + " Tăng + Tiệm cận BB Lower";
+                    reason = `Top ${coin.rank} Tăng + Sát BB Lower`;
                 }
             } else if (coin.type === 'loser') {
-                if (coin.rank <= 3 && isPriceTouching(data.ema20, data)) {
+                // SHORT: Top 3 Giảm. Dung sai (Chỉ báo - Giá) là: [-1%, +0.1%] tương đương [-0.01, 0.001]
+                if (checkTolerance(indicators.ema20, coin.lastPrice, -0.01, 0.001)) {
                     signal = "Short";
-                    reason = "Top " + coin.rank + " Giảm + Tiệm cận EMA20";
-                } else if (coin.rank >= 4 && coin.rank <= 10 && isPriceTouching(data.ub, data)) {
+                    reason = `Top ${coin.rank} Giảm + Sát EMA20`;
+                } else if (checkTolerance(indicators.ub, coin.lastPrice, -0.01, 0.001)) {
                     signal = "Short";
-                    reason = "Top " + coin.rank + " Giảm + Tiệm cận BB Upper";
+                    reason = `Top ${coin.rank} Giảm + Sát BB Upper`;
                 }
             }
 
