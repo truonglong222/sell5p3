@@ -59,56 +59,51 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Hàm tính Bollinger Bands (Trả về Mid, Upper Band, Lower Band)
-function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
-    if (prices.length < period) return { mid: 0, ub: 0, lb: 0 };
-    
-    const targetPrices = prices.slice(-period);
-    const mid = targetPrices.reduce((sum, p) => sum + p, 0) / period;
-    
-    const variance = targetPrices.reduce((sum, p) => sum + Math.pow(p - mid, 2), 0) / period;
-    const stdDev = Math.sqrt(variance);
-    
-    const ub = mid + stdDevMultiplier * stdDev;
-    const lb = mid - stdDevMultiplier * stdDev;
-    
-    return { mid, ub, lb };
-}
-
-// Gọi API lấy dữ liệu nến của OKX và bóc tách EMA20, Bollinger Bands
-async function getTechnicalIndicators(symbol, bar = '15m') {
+// Hàm lấy dữ liệu nến 15m để tính EMA20
+async function getEMA20_15m(symbol) {
     try {
-        await sleep(250); // Nghỉ 250ms tối ưu Rate Limit
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=100`;
+        await sleep(250);
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
         const response = await axios.get(url);
         
         if (response.data && response.data.code === '0' && response.data.data.length > 25) {
             const candles = response.data.data.reverse();
             const closedIndex = candles.length - 2; // Nến vừa đóng cửa
-            
             const historyPrices = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
-            
-            const ema20 = calculateEMA(historyPrices, 20);
-            const bb = calculateBollingerBands(historyPrices, 20, 2);
-            
-            return { ema20, ub: bb.ub, lb: bb.lb };
+            return calculateEMA(historyPrices, 20);
         }
-        return null;
+        return 0;
     } catch (error) {
-        console.error(`Lỗi tính chỉ báo cho ${symbol}:`, error.message);
-        return null;
+        console.error(`Lỗi tính EMA20 cho ${symbol}:`, error.message);
+        return 0;
+    }
+}
+
+// Hàm lấy % thay đổi giá trong 8 giờ qua (Dùng nến 4H, lùi lại 2 cây nến trước để tính mốc 8h)
+async function getChange8h(symbol, lastPrice) {
+    try {
+        await sleep(250);
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=4H&limit=5`;
+        const response = await axios.get(url);
+        
+        if (response.data && response.data.code === '0' && response.data.data.length >= 3) {
+            const candles = response.data.data.reverse();
+            // candles[length-1] là nến 4h hiện tại, candles[length-2] là nến 4h trước.
+            // Giá mở cửa của candles[length-2] chính xác là mốc bắt đầu của 8 giờ trước so với hiện tại.
+            const open8hAgo = parseFloat(candles[candles.length - 2][1]);
+            return open8hAgo ? ((lastPrice - open8hAgo) / open8hAgo) * 100 : 0;
+        }
+        return 0;
+    } catch (error) {
+        console.error(`Lỗi lấy thay đổi 8h cho ${symbol}:`, error.message);
+        return 0;
     }
 }
 
 // Hàm kiểm tra dải dung sai bất đối xứng theo đúng tỷ lệ % yêu cầu
-// pctMin và pctMax là giá trị thực tế (Ví dụ: -0.1% -> -0.001, +1% -> 0.01)
 function checkTolerance(indicatorVal, price, pctMin, pctMax) {
     if (!indicatorVal || !price) return false;
-    
-    // Tính khoảng cách: Chỉ báo - Giá Coin
     const diffPct = (indicatorVal - price) / indicatorVal;
-    
-    // Kiểm tra xem khoảng cách có nằm trong phạm vi cho phép không
     return diffPct >= pctMin && diffPct <= pctMax;
 }
 
@@ -135,7 +130,7 @@ async function main() {
     }
 
     try {
-        console.log('Đang quét tín hiệu thị trường OKX...');
+        console.log('Đang quét dữ liệu thị trường OKX...');
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
 
@@ -156,62 +151,70 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // 1. Tạo danh sách Top Tăng (Sắp xếp giảm dần)
-        let topGainers = [...tickers].sort((a, b) => b.change24h - a.change24h);
-        
-        // 2. Tạo danh sách Top Giảm (Sắp xếp tăng dần)
-        let topLosers = [...tickers].sort((a, b) => a.change24h - b.change24h);
+        // BƯỚC 1: Lọc ra Top 10 Tăng 24h và Top 10 Giảm 24h
+        let top10Gainers24h = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
+        let top10Losers24h = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 10);
 
-        // Gom danh sách các coin cần check: Top 3 Tăng và Top 3 Giảm
-        let poolToCheck = new Map();
-        
-        topGainers.slice(0, 3).forEach((coin, idx) => {
-            poolToCheck.set(coin.instId, { ...coin, type: 'gainer', rank: idx + 1 });
-        });
-        
-        topLosers.slice(0, 3).forEach((coin, idx) => {
-            if(!poolToCheck.has(coin.instId)) {
-                poolToCheck.set(coin.instId, { ...coin, type: 'loser', rank: idx + 1 });
+        // BƯỚC 2: Tính toán % thay đổi giá 8h cho danh sách Top 10 Tăng 24h để lọc lấy Top 5 Tăng 8h
+        console.log('Đang tính toán dữ liệu 8h cho Top 10 Tăng 24h...');
+        let poolGainers8h = [];
+        for (const coin of top10Gainers24h) {
+            const change8h = await getChange8h(coin.instId, coin.lastPrice);
+            poolGainers8h.push({ ...coin, change8h });
+        }
+        // Sắp xếp giảm dần theo tăng trưởng 8h và cắt lấy Top 5
+        let top5Gainers8h = poolGainers8h.sort((a, b) => b.change8h - a.change8h).slice(0, 5);
+
+        // BƯỚC 3: Tính toán % thay đổi giá 8h cho danh sách Top 10 Giảm 24h để lọc lấy Top 5 Giảm 8h
+        console.log('Đang tính toán dữ liệu 8h cho Top 10 Giảm 24h...');
+        let poolLosers8h = [];
+        for (const coin of top10Losers24h) {
+            const change8h = await getChange8h(coin.instId, coin.lastPrice);
+            poolLosers8h.push({ ...coin, change8h });
+        }
+        // Sắp xếp tăng dần theo tăng trưởng 8h (âm nhất/giảm mạnh nhất lên đầu) và cắt lấy Top 5
+        let top5Losers8h = poolLosers8h.sort((a, b) => a.change8h - b.change8h).slice(0, 5);
+
+        // Gom 2 nhóm Top 5 lại để tiến hành check chỉ báo EMA20 15m
+        let finalPool = new Map();
+        top5Gainers8h.forEach((coin, idx) => finalPool.set(coin.instId, { ...coin, type: 'gainer', rank8h: idx + 1 }));
+        top5Losers8h.forEach((coin, idx) => {
+            if (!finalPool.has(coin.instId)) {
+                finalPool.set(coin.instId, { ...coin, type: 'loser', rank8h: idx + 1 });
             }
         });
 
         let hasNewAlert = false;
 
-        // Vòng lặp quét kiểm tra các chỉ báo kỹ thuật
-        for (const [symbol, coin] of poolToCheck) {
+        // BƯỚC 4: Quét kiểm tra điều kiện dung sai EMA20
+        for (const [symbol, coin] of finalPool) {
 
             if (sentLog[symbol]) {
                 if (currentTime - sentLog[symbol] < 30 * 60 * 1000) continue;
             }
 
-            const indicators = await getTechnicalIndicators(symbol, '15m');
-            if (!indicators) continue;
+            const ema20 = await getEMA20_15m(symbol);
+            if (!ema20) continue;
 
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAI MỚI ---
+            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAI ---
             if (coin.type === 'gainer') {
-                // LONG: Top 3 Tăng. Dung sai (Chỉ báo - Giá) là: [-0.1%, +1%] tương đương [-0.001, 0.01]
-                if (checkTolerance(indicators.ema20, coin.lastPrice, -0.001, 0.01)) {
+                // LONG: Dung sai (EMA20 - Giá) nằm trong khoảng [-0.1%, +1%] -> [-0.001, 0.01]
+                if (checkTolerance(ema20, coin.lastPrice, -0.001, 0.01)) {
                     signal = "Long";
-                    reason = `Top ${coin.rank} Tăng + Sát EMA20`;
-                } else if (checkTolerance(indicators.lb, coin.lastPrice, -0.001, 0.01)) {
-                    signal = "Long";
-                    reason = `Top ${coin.rank} Tăng + Sát BB Lower`;
+                    reason = `Top ${coin.rank8h} Tăng 8H + Sát EMA20`;
                 }
             } else if (coin.type === 'loser') {
-                // SHORT: Top 3 Giảm. Dung sai (Chỉ báo - Giá) là: [-1%, +0.1%] tương đương [-0.01, 0.001]
-                if (checkTolerance(indicators.ema20, coin.lastPrice, -0.01, 0.001)) {
+                // SHORT: Dung sai (EMA20 - Giá) nằm trong khoảng [-1%, +0.1%] -> [-0.01, 0.001]
+                if (checkTolerance(ema20, coin.lastPrice, -0.01, 0.001)) {
                     signal = "Short";
-                    reason = `Top ${coin.rank} Giảm + Sát EMA20`;
-                } else if (checkTolerance(indicators.ub, coin.lastPrice, -0.01, 0.001)) {
-                    signal = "Short";
-                    reason = `Top ${coin.rank} Giảm + Sát BB Upper`;
+                    reason = `Top ${coin.rank8h} Giảm 8H + Sát EMA20`;
                 }
             }
 
-            // Gửi thông báo ngắn gọn về Telegram nếu khớp điều kiện
+            // Gửi tin nhắn rút gọn siêu tốc nếu thỏa mãn
             if (signal) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const lowerSymbol = symbol.toLowerCase();
@@ -219,7 +222,7 @@ async function main() {
                 const icon = signal === "Long" ? "🟢" : "🔴";
 
                 const message = `${icon} <b>${signal.toUpperCase()} #${coinName}</b>\n` +
-                                `• Giá: ${coin.lastPrice} (${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)\n` +
+                                `• Giá: ${coin.lastPrice} (8h: ${coin.change8h >= 0 ? '+' : ''}${coin.change8h.toFixed(2)}% | 24h: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)\n` +
                                 `• Cản: ${reason}\n` +
                                 `👉 <a href="${link}">Giao dịch ngay</a>`;
 
@@ -233,7 +236,7 @@ async function main() {
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
-        console.log('Hoàn thành chu kỳ quét chỉ báo.');
+        console.log('Hoàn thành chu kỳ quét.');
 
     } catch (error) {
         console.error('Lỗi hệ thống hàm main:', error.message);
