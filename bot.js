@@ -197,4 +197,41 @@ async function main() {
                     reason = `6h Tăng (${change6h.toFixed(1)}%) + Sát EMA20`;
                 }
             } else if (isShortLoserZone) {
-                // SHORT: thỏa mãn -15% < change6h < -5% VÀ Dung sai (EMA20 - Giá) nằm
+                // SHORT: thỏa mãn -15% < change6h < -5% VÀ Dung sai (EMA20 - Giá) nằm trong khoảng [-1%, +0.1%] -> [-0.01, 0.001]
+                if (checkTolerance(ema20, coin.lastPrice, -0.01, 0.001)) {
+                    signal = "Short";
+                    reason = `6h Giảm (${change6h.toFixed(1)}%) + Sát EMA20`;
+                }
+            }
+
+            // Gửi tin nhắn rút gọn nếu thỏa mãn toàn bộ hệ thống lọc
+            if (signal) {
+                const coinName = symbol.replace('-USDT-SWAP', '');
+                const lowerSymbol = symbol.toLowerCase();
+                const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
+                const icon = signal === "Long" ? "🟢" : "🔴";
+
+                const message = `${icon} <b>${signal.toUpperCase()} #${coinName}</b>\n` +
+                                `• Giá: ${coin.lastPrice} (6h: ${change6h >= 0 ? '+' : ''}${change6h.toFixed(2)}% | 24h: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)\n` +
+                                `• Cản: ${reason}\n` +
+                                `👉 <a href="${link}">Giao dịch ngay</a>`;
+
+                await sendTelegramMessage(message);
+                
+                sentLog[symbol] = currentTime;
+                hasNewAlert = true;
+            }
+        }
+
+        if (hasNewAlert) {
+            saveSentLog(sentLog);
+        }
+        console.log('Hoàn thành chu kỳ quét.');
+
+    } catch (error) {
+        console.error('Lỗi hệ thống hàm main:', error.message);
+    }
+}
+
+// Thực thi chạy chương trình chính
+main();
