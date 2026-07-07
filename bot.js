@@ -175,9 +175,11 @@ async function main() {
             // Lấy % thay đổi giá trong 6h qua
             const change6h = await getChange6h(symbol, coin.lastPrice);
 
-            // Kiểm tra xem % 6h có nằm trong vùng biên độ yêu cầu không để tối ưu hóa việc gọi API tiếp theo
-            const isLongGainerZone = coin.type === 'gainer' && change6h > 5 && change6h < 15;
-            const isShortLoserZone = coin.type === 'loser' && change6h > -15 && change6h < -5;
+            // --- THAY ĐỔI ĐIỀU KIỆN KHOẢNG PHẦN TRĂM 6H THEO YÊU CẦU MỚI ---
+            // Long Gainer Zone: 1.5% < change6h < 15%
+            const isLongGainerZone = coin.type === 'gainer' && change6h > 1.5 && change6h < 15;
+            // Short Loser Zone: -15% < change6h < -1.5%
+            const isShortLoserZone = coin.type === 'loser' && change6h > -15 && change6h < -1.5;
 
             // Nếu không nằm trong dải % 6h của cả hai chiều thì bỏ qua luôn để tiết kiệm request
             if (!isLongGainerZone && !isShortLoserZone) continue;
@@ -189,18 +191,18 @@ async function main() {
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN KHOẢNG % VÀ DUNG SAI THEO YÊU CẦU MỚI ---
+            // --- THAY ĐỔI MAIN LOGIC DUNG SAI THEO YÊU CẦU MỚI ---
             if (isLongGainerZone) {
-                // LONG: thỏa mãn 5% < change6h < 15% VÀ Dung sai (EMA20 - Giá) nằm trong khoảng [-0.1%, +1%] -> [-0.001, 0.01]
-                if (checkTolerance(ema20, coin.lastPrice, -0.001, 0.01)) {
+                // LONG: Dung sai (EMA20 - Giá) nằm trong khoảng [-0.2%, +1%] -> [-0.002, 0.01]
+                if (checkTolerance(ema20, coin.lastPrice, -0.002, 0.01)) {
                     signal = "Long";
-                    reason = `6h Tăng (${change6h.toFixed(1)}%) + Sát EMA20`;
+                    reason = `6h Tăng (${change6h.toFixed(1)}%) + Sát EMA20 (-0.2%/+1%)`;
                 }
             } else if (isShortLoserZone) {
-                // SHORT: thỏa mãn -15% < change6h < -5% VÀ Dung sai (EMA20 - Giá) nằm trong khoảng [-1%, +0.1%] -> [-0.01, 0.001]
-                if (checkTolerance(ema20, coin.lastPrice, -0.01, 0.001)) {
+                // SHORT: Dung sai (EMA20 - Giá) nằm trong khoảng [-1%, +1%] -> [-0.01, 0.01]
+                if (checkTolerance(ema20, coin.lastPrice, -0.01, 0.01)) {
                     signal = "Short";
-                    reason = `6h Giảm (${change6h.toFixed(1)}%) + Sát EMA20`;
+                    reason = `6h Giảm (${change6h.toFixed(1)}%) + Sát EMA20 (-1%/+1%)`;
                 }
             }
 
