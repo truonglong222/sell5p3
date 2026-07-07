@@ -79,23 +79,23 @@ async function getEMA20_15m(symbol) {
     }
 }
 
-// Hàm lấy % thay đổi giá trong 8 giờ qua (Dùng nến 4H, lùi lại 2 cây nến trước để tính mốc 8h)
-async function getChange8h(symbol, lastPrice) {
+// Hàm lấy % thay đổi giá trong 4 giờ qua (Dùng giá mở cửa của cây nến 4H hiện tại làm mốc)
+async function getChange4h(symbol, lastPrice) {
     try {
         await sleep(250);
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=4H&limit=5`;
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=4H&limit=3`;
         const response = await axios.get(url);
         
-        if (response.data && response.data.code === '0' && response.data.data.length >= 3) {
+        if (response.data && response.data.code === '0' && response.data.data.length > 0) {
             const candles = response.data.data.reverse();
-            // candles[length-1] là nến 4h hiện tại, candles[length-2] là nến 4h trước.
-            // Giá mở cửa của candles[length-2] chính xác là mốc bắt đầu của 8 giờ trước so với hiện tại.
-            const open8hAgo = parseFloat(candles[candles.length - 2][1]);
-            return open8hAgo ? ((lastPrice - open8hAgo) / open8hAgo) * 100 : 0;
+            // candles[length-1] chính là cây nến 4H hiện tại đang chạy.
+            // Lấy giá mở cửa của cây nến này để tính phần trăm thay đổi trong chu kỳ 4h hiện tại.
+            const open4hAgo = parseFloat(candles[candles.length - 1][1]);
+            return open4hAgo ? ((lastPrice - open4hAgo) / open4hAgo) * 100 : 0;
         }
         return 0;
     } catch (error) {
-        console.error(`Lỗi lấy thay đổi 8h cho ${symbol}:`, error.message);
+        console.error(`Lỗi lấy thay đổi 4h cho ${symbol}:`, error.message);
         return 0;
     }
 }
@@ -155,32 +155,32 @@ async function main() {
         let top10Gainers24h = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
         let top10Losers24h = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 10);
 
-        // BƯỚC 2: Tính toán % thay đổi giá 8h cho danh sách Top 10 Tăng 24h để lọc lấy Top 5 Tăng 8h
-        console.log('Đang tính toán dữ liệu 8h cho Top 10 Tăng 24h...');
-        let poolGainers8h = [];
+        // BƯỚC 2: Tính toán % thay đổi giá 4h cho danh sách Top 10 Tăng 24h để lọc lấy Top 5 Tăng 4h
+        console.log('Đang tính toán dữ liệu 4h cho Top 10 Tăng 24h...');
+        let poolGainers4h = [];
         for (const coin of top10Gainers24h) {
-            const change8h = await getChange8h(coin.instId, coin.lastPrice);
-            poolGainers8h.push({ ...coin, change8h });
+            const change4h = await getChange4h(coin.instId, coin.lastPrice);
+            poolGainers4h.push({ ...coin, change4h });
         }
-        // Sắp xếp giảm dần theo tăng trưởng 8h và cắt lấy Top 5
-        let top5Gainers8h = poolGainers8h.sort((a, b) => b.change8h - a.change8h).slice(0, 5);
+        // Sắp xếp giảm dần theo tăng trưởng 4h và cắt lấy Top 5
+        let top5Gainers4h = poolGainers4h.sort((a, b) => b.change4h - a.change4h).slice(0, 5);
 
-        // BƯỚC 3: Tính toán % thay đổi giá 8h cho danh sách Top 10 Giảm 24h để lọc lấy Top 5 Giảm 8h
-        console.log('Đang tính toán dữ liệu 8h cho Top 10 Giảm 24h...');
-        let poolLosers8h = [];
+        // BƯỚC 3: Tính toán % thay đổi giá 4h cho danh sách Top 10 Giảm 24h để lọc lấy Top 5 Giảm 4h
+        console.log('Đang tính toán dữ liệu 4h cho Top 10 Giảm 24h...');
+        let poolLosers4h = [];
         for (const coin of top10Losers24h) {
-            const change8h = await getChange8h(coin.instId, coin.lastPrice);
-            poolLosers8h.push({ ...coin, change8h });
+            const change4h = await getChange4h(coin.instId, coin.lastPrice);
+            poolLosers4h.push({ ...coin, change4h });
         }
-        // Sắp xếp tăng dần theo tăng trưởng 8h (âm nhất/giảm mạnh nhất lên đầu) và cắt lấy Top 5
-        let top5Losers8h = poolLosers8h.sort((a, b) => a.change8h - b.change8h).slice(0, 5);
+        // Sắp xếp tăng dần theo tăng trưởng 4h (âm nhất/giảm mạnh nhất lên đầu) và cắt lấy Top 5
+        let top5Losers4h = poolLosers4h.sort((a, b) => a.change4h - b.change4h).slice(0, 5);
 
         // Gom 2 nhóm Top 5 lại để tiến hành check chỉ báo EMA20 15m
         let finalPool = new Map();
-        top5Gainers8h.forEach((coin, idx) => finalPool.set(coin.instId, { ...coin, type: 'gainer', rank8h: idx + 1 }));
-        top5Losers8h.forEach((coin, idx) => {
+        top5Gainers4h.forEach((coin, idx) => finalPool.set(coin.instId, { ...coin, type: 'gainer', rank4h: idx + 1 }));
+        top5Losers4h.forEach((coin, idx) => {
             if (!finalPool.has(coin.instId)) {
-                finalPool.set(coin.instId, { ...coin, type: 'loser', rank8h: idx + 1 });
+                finalPool.set(coin.instId, { ...coin, type: 'loser', rank4h: idx + 1 });
             }
         });
 
@@ -199,49 +199,8 @@ async function main() {
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAI ---
+            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAU CHO KHUNG 4H ---
             if (coin.type === 'gainer') {
                 // LONG: Dung sai (EMA20 - Giá) nằm trong khoảng [-0.1%, +1%] -> [-0.001, 0.01]
                 if (checkTolerance(ema20, coin.lastPrice, -0.001, 0.01)) {
                     signal = "Long";
-                    reason = `Top ${coin.rank8h} Tăng 8H + Sát EMA20`;
-                }
-            } else if (coin.type === 'loser') {
-                // SHORT: Dung sai (EMA20 - Giá) nằm trong khoảng [-1%, +0.1%] -> [-0.01, 0.001]
-                if (checkTolerance(ema20, coin.lastPrice, -0.01, 0.001)) {
-                    signal = "Short";
-                    reason = `Top ${coin.rank8h} Giảm 8H + Sát EMA20`;
-                }
-            }
-
-            // Gửi tin nhắn rút gọn siêu tốc nếu thỏa mãn
-            if (signal) {
-                const coinName = symbol.replace('-USDT-SWAP', '');
-                const lowerSymbol = symbol.toLowerCase();
-                const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
-                const icon = signal === "Long" ? "🟢" : "🔴";
-
-                const message = `${icon} <b>${signal.toUpperCase()} #${coinName}</b>\n` +
-                                `• Giá: ${coin.lastPrice} (8h: ${coin.change8h >= 0 ? '+' : ''}${coin.change8h.toFixed(2)}% | 24h: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)\n` +
-                                `• Cản: ${reason}\n` +
-                                `👉 <a href="${link}">Giao dịch ngay</a>`;
-
-                await sendTelegramMessage(message);
-                
-                sentLog[symbol] = currentTime;
-                hasNewAlert = true;
-            }
-        }
-
-        if (hasNewAlert) {
-            saveSentLog(sentLog);
-        }
-        console.log('Hoàn thành chu kỳ quét.');
-
-    } catch (error) {
-        console.error('Lỗi hệ thống hàm main:', error.message);
-    }
-}
-
-// Khởi chạy chương trình
-main();
