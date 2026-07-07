@@ -79,23 +79,24 @@ async function getEMA20_15m(symbol) {
     }
 }
 
-// Hàm lấy % thay đổi giá trong 4 giờ qua (Dùng giá mở cửa của cây nến 4H hiện tại làm mốc)
-async function getChange4h(symbol, lastPrice) {
+// --- HÀM SỬA ĐỔI: Lấy % thay đổi giá trong 6 giờ qua dựa trên nến 2H ---
+async function getChange6h(symbol, lastPrice) {
     try {
         await sleep(250);
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=4H&limit=3`;
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=2H&limit=5`;
         const response = await axios.get(url);
         
-        if (response.data && response.data.code === '0' && response.data.data.length > 0) {
+        if (response.data && response.data.code === '0' && response.data.data.length >= 3) {
             const candles = response.data.data.reverse();
-            // candles[length-1] chính là cây nến 4H hiện tại đang chạy.
-            // Lấy giá mở cửa của cây nến này để tính phần trăm thay đổi trong chu kỳ 4h hiện tại.
-            const open4hAgo = parseFloat(candles[candles.length - 1][1]);
-            return open4hAgo ? ((lastPrice - open4hAgo) / open4hAgo) * 100 : 0;
+            // candles[length-1] là nến 2H hiện tại, candles[length-2] là nến 2H trước.
+            // candles[length-3] chính là cây nến 2H trước đó nữa. 
+            // Giá mở cửa của nến [length-3] chính là mốc khởi đầu của chu kỳ 6 giờ trước tính đến hiện tại.
+            const open6hAgo = parseFloat(candles[candles.length - 3][1]);
+            return open6hAgo ? ((lastPrice - open6hAgo) / open6hAgo) * 100 : 0;
         }
         return 0;
     } catch (error) {
-        console.error(`Lỗi lấy thay đổi 4h cho ${symbol}:`, error.message);
+        console.error(`Lỗi lấy thay đổi 6h cho ${symbol}:`, error.message);
         return 0;
     }
 }
@@ -155,32 +156,32 @@ async function main() {
         let top10Gainers24h = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
         let top10Losers24h = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 10);
 
-        // BƯỚC 2: Tính toán % thay đổi giá 4h cho danh sách Top 10 Tăng 24h để lọc lấy Top 5 Tăng 4h
-        console.log('Đang tính toán dữ liệu 4h cho Top 10 Tăng 24h...');
-        let poolGainers4h = [];
+        // BƯỚC 2: Tính toán % thay đổi giá 6h cho danh sách Top 10 Tăng 24h để lọc lấy Top 5 Tăng 6h
+        console.log('Đang tính toán dữ liệu 6h cho Top 10 Tăng 24h...');
+        let poolGainers6h = [];
         for (const coin of top10Gainers24h) {
-            const change4h = await getChange4h(coin.instId, coin.lastPrice);
-            poolGainers4h.push({ ...coin, change4h });
+            const change6h = await getChange6h(coin.instId, coin.lastPrice);
+            poolGainers6h.push({ ...coin, change6h });
         }
-        // Sắp xếp giảm dần theo tăng trưởng 4h và cắt lấy Top 5
-        let top5Gainers4h = poolGainers4h.sort((a, b) => b.change4h - a.change4h).slice(0, 5);
+        // Sắp xếp giảm dần theo tăng trưởng 6h và cắt lấy Top 5
+        let top5Gainers6h = poolGainers6h.sort((a, b) => b.change6h - a.change6h).slice(0, 5);
 
-        // BƯỚC 3: Tính toán % thay đổi giá 4h cho danh sách Top 10 Giảm 24h để lọc lấy Top 5 Giảm 4h
-        console.log('Đang tính toán dữ liệu 4h cho Top 10 Giảm 24h...');
-        let poolLosers4h = [];
+        // BƯỚC 3: Tính toán % thay đổi giá 6h cho danh sách Top 10 Giảm 24h để lọc lấy Top 5 Giảm 6h
+        console.log('Đang tính toán dữ liệu 6h cho Top 10 Giảm 24h...');
+        let poolLosers6h = [];
         for (const coin of top10Losers24h) {
-            const change4h = await getChange4h(coin.instId, coin.lastPrice);
-            poolLosers4h.push({ ...coin, change4h });
+            const change6h = await getChange6h(coin.instId, coin.lastPrice);
+            poolLosers6h.push({ ...coin, change6h });
         }
-        // Sắp xếp tăng dần theo tăng trưởng 4h (âm nhất/giảm mạnh nhất lên đầu) và cắt lấy Top 5
-        let top5Losers4h = poolLosers4h.sort((a, b) => a.change4h - b.change4h).slice(0, 5);
+        // Sắp xếp tăng dần theo tăng trưởng 6h (giảm mạnh nhất lên đầu) và cắt lấy Top 5
+        let top5Losers6h = poolLosers6h.sort((a, b) => a.change6h - b.change6h).slice(0, 5);
 
         // Gom 2 nhóm Top 5 lại để tiến hành check chỉ báo EMA20 15m
         let finalPool = new Map();
-        top5Gainers4h.forEach((coin, idx) => finalPool.set(coin.instId, { ...coin, type: 'gainer', rank4h: idx + 1 }));
-        top5Losers4h.forEach((coin, idx) => {
+        top5Gainers6h.forEach((coin, idx) => finalPool.set(coin.instId, { ...coin, type: 'gainer', rank6h: idx + 1 }));
+        top5Losers6h.forEach((coin, idx) => {
             if (!finalPool.has(coin.instId)) {
-                finalPool.set(coin.instId, { ...coin, type: 'loser', rank4h: idx + 1 });
+                finalPool.set(coin.instId, { ...coin, type: 'loser', rank6h: idx + 1 });
             }
         });
 
@@ -199,18 +200,18 @@ async function main() {
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAU CHO KHUNG 4H ---
+            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAI CHO KHUNG 6H ---
             if (coin.type === 'gainer') {
                 // LONG: Dung sai (EMA20 - Giá) nằm trong khoảng [-0.1%, +1%] -> [-0.001, 0.01]
                 if (checkTolerance(ema20, coin.lastPrice, -0.001, 0.01)) {
                     signal = "Long";
-                    reason = `Top ${coin.rank4h} Tăng 4H + Sát EMA20`;
+                    reason = `Top ${coin.rank6h} Tăng 6H + Sát EMA20`;
                 }
             } else if (coin.type === 'loser') {
                 // SHORT: Dung sai (EMA20 - Giá) nằm trong khoảng [-1%, +0.1%] -> [-0.01, 0.001]
                 if (checkTolerance(ema20, coin.lastPrice, -0.01, 0.001)) {
                     signal = "Short";
-                    reason = `Top ${coin.rank4h} Giảm 4H + Sát EMA20`;
+                    reason = `Top ${coin.rank6h} Giảm 6H + Sát EMA20`;
                 }
             }
 
@@ -222,7 +223,7 @@ async function main() {
                 const icon = signal === "Long" ? "🟢" : "🔴";
 
                 const message = `${icon} <b>${signal.toUpperCase()} #${coinName}</b>\n` +
-                                `• Giá: ${coin.lastPrice} (4h: ${coin.change4h >= 0 ? '+' : ''}${coin.change4h.toFixed(2)}% | 24h: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)\n` +
+                                `• Giá: ${coin.lastPrice} (6h: ${coin.change6h >= 0 ? '+' : ''}${coin.change6h.toFixed(2)}% | 24h: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)\n` +
                                 `• Cản: ${reason}\n` +
                                 `👉 <a href="${link}">Giao dịch ngay</a>`;
 
