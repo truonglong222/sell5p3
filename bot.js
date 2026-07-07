@@ -79,7 +79,7 @@ async function getEMA20_15m(symbol) {
     }
 }
 
-// --- HÀM SỬA ĐỔI: Lấy % thay đổi giá trong 6 giờ qua dựa trên nến 2H ---
+// Lấy % thay đổi giá trong 6 giờ qua dựa trên nến 2H (so với giá mở cửa 3 cây nến trước)
 async function getChange6h(symbol, lastPrice) {
     try {
         await sleep(250);
@@ -88,8 +88,6 @@ async function getChange6h(symbol, lastPrice) {
         
         if (response.data && response.data.code === '0' && response.data.data.length >= 3) {
             const candles = response.data.data.reverse();
-            // candles[length-1] là nến 2H hiện tại, candles[length-2] là nến 2H trước.
-            // candles[length-3] chính là cây nến 2H trước đó nữa. 
             // Giá mở cửa của nến [length-3] chính là mốc khởi đầu của chu kỳ 6 giờ trước tính đến hiện tại.
             const open6hAgo = parseFloat(candles[candles.length - 3][1]);
             return open6hAgo ? ((lastPrice - open6hAgo) / open6hAgo) * 100 : 0;
@@ -152,97 +150,51 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 1: Lọc ra Top 10 Tăng 24h và Top 10 Giảm 24h
+        // BƯỚC 1: Lọc ra Top 10 Tăng 24h và Top 10 Giảm 24h từ Ticker để làm pool kiểm tra ban đầu
         let top10Gainers24h = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
         let top10Losers24h = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 10);
 
-        // BƯỚC 2: Tính toán % thay đổi giá 6h cho danh sách Top 10 Tăng 24h để lọc lấy Top 5 Tăng 6h
-        console.log('Đang tính toán dữ liệu 6h cho Top 10 Tăng 24h...');
-        let poolGainers6h = [];
-        for (const coin of top10Gainers24h) {
-            const change6h = await getChange6h(coin.instId, coin.lastPrice);
-            poolGainers6h.push({ ...coin, change6h });
-        }
-        // Sắp xếp giảm dần theo tăng trưởng 6h và cắt lấy Top 5
-        let top5Gainers6h = poolGainers6h.sort((a, b) => b.change6h - a.change6h).slice(0, 5);
-
-        // BƯỚC 3: Tính toán % thay đổi giá 6h cho danh sách Top 10 Giảm 24h để lọc lấy Top 5 Giảm 6h
-        console.log('Đang tính toán dữ liệu 6h cho Top 10 Giảm 24h...');
-        let poolLosers6h = [];
-        for (const coin of top10Losers24h) {
-            const change6h = await getChange6h(coin.instId, coin.lastPrice);
-            poolLosers6h.push({ ...coin, change6h });
-        }
-        // Sắp xếp tăng dần theo tăng trưởng 6h (giảm mạnh nhất lên đầu) và cắt lấy Top 5
-        let top5Losers6h = poolLosers6h.sort((a, b) => a.change6h - b.change6h).slice(0, 5);
-
-        // Gom 2 nhóm Top 5 lại để tiến hành check chỉ báo EMA20 15m
+        // Gom nhóm các coin cần check điều kiện vào một Map chung
         let finalPool = new Map();
-        top5Gainers6h.forEach((coin, idx) => finalPool.set(coin.instId, { ...coin, type: 'gainer', rank6h: idx + 1 }));
-        top5Losers6h.forEach((coin, idx) => {
+        top10Gainers24h.forEach(coin => finalPool.set(coin.instId, { ...coin, type: 'gainer' }));
+        top10Losers24h.forEach(coin => {
             if (!finalPool.has(coin.instId)) {
-                finalPool.set(coin.instId, { ...coin, type: 'loser', rank6h: idx + 1 });
+                finalPool.set(coin.instId, { ...coin, type: 'loser' });
             }
         });
 
         let hasNewAlert = false;
 
-        // BƯỚC 4: Quét kiểm tra điều kiện dung sai EMA20
+        // BƯỚC 2: Quét kiểm tra điều kiện khoảng % 6h và dung sai EMA20 15m
         for (const [symbol, coin] of finalPool) {
 
             if (sentLog[symbol]) {
                 if (currentTime - sentLog[symbol] < 30 * 60 * 1000) continue;
             }
 
+            // Lấy % thay đổi giá trong 6h qua
+            const change6h = await getChange6h(symbol, coin.lastPrice);
+
+            // Kiểm tra xem % 6h có nằm trong vùng biên độ yêu cầu không để tối ưu hóa việc gọi API tiếp theo
+            const isLongGainerZone = coin.type === 'gainer' && change6h > 5 && change6h < 15;
+            const isShortLoserZone = coin.type === 'loser' && change6h > -15 && change6h < -5;
+
+            // Nếu không nằm trong dải % 6h của cả hai chiều thì bỏ qua luôn để tiết kiệm request
+            if (!isLongGainerZone && !isShortLoserZone) continue;
+
+            // Lấy chỉ báo EMA20 khung 15m
             const ema20 = await getEMA20_15m(symbol);
             if (!ema20) continue;
 
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN DUNG SAI CHO KHUNG 6H ---
-            if (coin.type === 'gainer') {
-                // LONG: Dung sai (EMA20 - Giá) nằm trong khoảng [-0.1%, +1%] -> [-0.001, 0.01]
+            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN KHOẢNG % VÀ DUNG SAI THEO YÊU CẦU MỚI ---
+            if (isLongGainerZone) {
+                // LONG: thỏa mãn 5% < change6h < 15% VÀ Dung sai (EMA20 - Giá) nằm trong khoảng [-0.1%, +1%] -> [-0.001, 0.01]
                 if (checkTolerance(ema20, coin.lastPrice, -0.001, 0.01)) {
                     signal = "Long";
-                    reason = `Top ${coin.rank6h} Tăng 6H + Sát EMA20`;
+                    reason = `6h Tăng (${change6h.toFixed(1)}%) + Sát EMA20`;
                 }
-            } else if (coin.type === 'loser') {
-                // SHORT: Dung sai (EMA20 - Giá) nằm trong khoảng [-1%, +0.1%] -> [-0.01, 0.001]
-                if (checkTolerance(ema20, coin.lastPrice, -0.01, 0.001)) {
-                    signal = "Short";
-                    reason = `Top ${coin.rank6h} Giảm 6H + Sát EMA20`;
-                }
-            }
-
-            // Gửi tin nhắn rút gọn siêu tốc nếu thỏa mãn
-            if (signal) {
-                const coinName = symbol.replace('-USDT-SWAP', '');
-                const lowerSymbol = symbol.toLowerCase();
-                const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
-                const icon = signal === "Long" ? "🟢" : "🔴";
-
-                const message = `${icon} <b>${signal.toUpperCase()} #${coinName}</b>\n` +
-                                `• Giá: ${coin.lastPrice} (6h: ${coin.change6h >= 0 ? '+' : ''}${coin.change6h.toFixed(2)}% | 24h: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)\n` +
-                                `• Cản: ${reason}\n` +
-                                `👉 <a href="${link}">Giao dịch ngay</a>`;
-
-                await sendTelegramMessage(message);
-                
-                sentLog[symbol] = currentTime;
-                hasNewAlert = true;
-            }
-        }
-
-        if (hasNewAlert) {
-            saveSentLog(sentLog);
-        }
-        console.log('Hoàn thành chu kỳ quét.');
-
-    } catch (error) {
-        console.error('Lỗi hệ thống hàm main:', error.message);
-    }
-}
-
-// Thực thi chạy chương trình chính
-main();
+            } else if (isShortLoserZone) {
+                // SHORT: thỏa mãn -15% < change6h < -5% VÀ Dung sai (EMA20 - Giá) nằm
