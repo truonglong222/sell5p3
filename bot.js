@@ -108,4 +108,134 @@ async function sendTelegramMessage(message) {
         });
         console.log('Đã gửi thông báo Telegram.');
     } catch (error) {
-        console.error('Lỗi khi gửi Telegram:', error.
+        console.error('Lỗi khi gửi Telegram:', error.message);
+    }
+}
+
+// Luồng xử lý dữ liệu chính
+async function main() {
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+        console.error('Thiếu cấu hình BOT_TOKEN hoặc CHAT_ID!');
+        return;
+    }
+
+    try {
+        console.log('Đang quét dữ liệu thị trường OKX...');
+        const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
+        const response = await axios.get(tickersUrl);
+
+        if (!response.data || response.data.code !== '0') {
+            console.error('Không thể lấy dữ liệu từ OKX');
+            return;
+        }
+
+        const sentLog = loadSentLog();
+        const currentTime = Date.now();
+
+        let tickers = response.data.data
+            .filter(t => t.instId.endsWith('-USDT-SWAP'))
+            .map(t => {
+                const open24h = parseFloat(t.open24h);
+                const lastPrice = parseFloat(t.last);
+                const change24h = open24h ? ((lastPrice - open24h) / open24h) * 100 : 0;
+                return { instId: t.instId, change24h, lastPrice };
+            });
+
+        // BƯỚC 1: Lấy chuẩn danh sách Top 10 tăng giá và Top 10 giảm giá 24h
+        let top10Gainers24h = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
+        let top10Losers24h = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 10);
+
+        let poolGainers = [];
+        let poolLosers = [];
+
+        // BƯỚC 2: Tính biến động 8h dựa trên 32 nến 15m cho TOÀN BỘ 20 COIN
+        console.log('Đang tính toán dữ liệu 8h cho 10 coin tăng...');
+        for (const coin of top10Gainers24h) {
+            const metrics = await getMarketMetrics15m(coin.instId, coin.lastPrice);
+            if (metrics) {
+                poolGainers.push({ ...coin, change8h: metrics.change8h, ema20: metrics.ema20 });
+            }
+        }
+
+        console.log('Đang tính toán dữ liệu 8h cho 10 coin giảm...');
+        for (const coin of top10Losers24h) {
+            const metrics = await getMarketMetrics15m(coin.instId, coin.lastPrice);
+            if (metrics) {
+                poolLosers.push({ ...coin, change8h: metrics.change8h, ema20: metrics.ema20 });
+            }
+        }
+
+        // BƯỚC 3: Xếp hạng lấy chuẩn Top 5 tăng và Top 5 giảm trong 8h từ pool 20 coin trên
+        poolGainers.sort((a, b) => b.change8h - a.change8h);
+        let top5Gainers8h = poolGainers.slice(0, 5);
+
+        poolLosers.sort((a, b) => a.change8h - b.change8h);
+        let top5Losers8h = poolLosers.slice(0, 5);
+
+        let hasNewAlert = false;
+
+        // BƯỚC 4: Kiểm tra dung sai EMA20 riêng cho những coin đã lọt được vào danh sách Top 5 chuẩn
+        // Kiểm tra dải Long cho Top 5 tăng 8h
+        for (let i = 0; i < top5Gainers8h.length; i++) {
+            const coin = top5Gainers8h[i];
+            const symbol = coin.instId;
+            const rank8h = i + 1;
+
+            // --- SỬA ĐỔI: Chặn gửi trùng lặp nếu khoảng cách thời gian nhỏ hơn 2 giờ ---
+            if (sentLog[symbol] && (currentTime - sentLog[symbol] < 2 * 60 * 60 * 1000)) continue;
+
+            // Kiểm tra dung sai Long: +1%, -0.1% -> [-0.001, 0.01]
+            if (checkTolerance(coin.ema20, coin.lastPrice, -0.001, 0.01)) {
+                const coinName = symbol.replace('-USDT-SWAP', '');
+                const lowerSymbol = symbol.toLowerCase();
+                const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
+
+                const message = `🟢 <b>LONG #${coinName}</b>\n` +
+                                `• Giá: ${coin.lastPrice} (8h_32n: +${coin.change8h.toFixed(2)}%)\n` +
+                                `• Cản: Top ${rank8h} Tăng 8h + Sát EMA20 (+1%/-0.1%)\n` +
+                                `👉 <a href="${link}">Giao dịch ngay</a>`;
+
+                await sendTelegramMessage(message);
+                sentLog[symbol] = currentTime;
+                hasNewAlert = true;
+            }
+        }
+
+        // Kiểm tra dải Short cho Top 5 giảm 8h
+        for (let i = 0; i < top5Losers8h.length; i++) {
+            const coin = top5Losers8h[i];
+            const symbol = coin.instId;
+            const rank8h = i + 1;
+
+            // --- SỬA ĐỔI: Chặn gửi trùng lặp nếu khoảng cách thời gian nhỏ hơn 2 giờ ---
+            if (sentLog[symbol] && (currentTime - sentLog[symbol] < 2 * 60 * 60 * 1000)) continue;
+
+            // Kiểm tra dung sai Short: -1%, +0.3% -> [-0.01, 0.003]
+            if (checkTolerance(coin.ema20, coin.lastPrice, -0.01, 0.003)) {
+                const coinName = symbol.replace('-USDT-SWAP', '');
+                const lowerSymbol = symbol.toLowerCase();
+                const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
+
+                const message = `🔴 <b>SHORT #${coinName}</b>\n` +
+                                `• Giá: ${coin.lastPrice} (8h_32n: ${coin.change8h.toFixed(2)}%)\n` +
+                                `• Cản: Top ${rank8h} Giảm 8h + Sát EMA20 (-1%/+0.3%)\n` +
+                                `👉 <a href="${link}">Giao dịch ngay</a>`;
+
+                await sendTelegramMessage(message);
+                sentLog[symbol] = currentTime;
+                hasNewAlert = true;
+            }
+        }
+
+        if (hasNewAlert) {
+            saveSentLog(sentLog);
+        }
+        console.log('Hoàn thành chu kỳ quét chuẩn.');
+
+    } catch (error) {
+        console.error('Lỗi hệ thống hàm main:', error.message);
+    }
+}
+
+// Thực thi chạy chương trình chính
+main();
