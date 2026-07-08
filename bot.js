@@ -28,13 +28,12 @@ function loadSentLog() {
     return {};
 }
 
-// --- HÀM SỬA ĐỔI: Dọn dẹp log cũ sau 2 giờ để nhẹ file ---
+// Dọn dẹp log cũ sau 2 giờ để nhẹ file
 function saveSentLog(logData) {
     try {
         const now = Date.now();
         const cleanedLog = {};
         for (const [coin, timestamp] of Object.entries(logData)) {
-            // Thay đổi mốc dọn dẹp từ 30 phút thành 2 giờ (2 * 60 * 60 * 1000 ms)
             if (now - timestamp < 2 * 60 * 60 * 1000) {
                 cleanedLog[coin] = timestamp;
             }
@@ -60,7 +59,7 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Lấy dữ liệu nến 15m để tính EMA20 và % thay đổi giá trong 8h qua (lùi 32 nến)
+// Lấy dữ liệu nến 15m để tính EMA20, % thay đổi giá trong 8h qua và dữ liệu giá Cao/Thấp
 async function getMarketMetrics15m(symbol, lastPrice) {
     try {
         await sleep(250); // Nghỉ 250ms tối ưu Rate Limit
@@ -70,18 +69,31 @@ async function getMarketMetrics15m(symbol, lastPrice) {
         if (response.data && response.data.code === '0' && response.data.data.length > 40) {
             const candles = response.data.data.reverse();
             
-            // 1. Tính EMA20 của nến vừa đóng cửa (candles.length - 2)
+            // 1. Tính EMA20 dựa trên các nến từ quá khứ đến nến VỪA ĐÓNG CỬA (candles.length - 2)
             const closedIndex = candles.length - 2; 
             const historyPrices = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
             const ema20 = calculateEMA(historyPrices, 20);
 
             // 2. Tính % biến động 8h bằng 32 nến 15m trước đó so với giá hiện tại
             const targetIndex = candles.length - 33;
-            const open8hAgo = parseFloat(candles[targetIndex][1]); // Giá mở cửa 32 nến trước
-            
+            const open8hAgo = parseFloat(candles[targetIndex][1]); 
             const change8h = open8hAgo ? ((lastPrice - open8hAgo) / open8hAgo) * 100 : 0;
 
-            return { ema20, change8h };
+            // 3. Lấy giá Thấp nhất và Cao nhất của nến VỪA ĐÓNG và nến ĐANG CHẠY để quét râu nến
+            const closedCandle = candles[candles.length - 2];
+            const currentCandle = candles[candles.length - 1];
+
+            const closedLow = parseFloat(closedCandle[3]);
+            const closedHigh = parseFloat(closedCandle[2]);
+            
+            const currentLow = parseFloat(currentCandle[3]);
+            const currentHigh = parseFloat(currentCandle[2]);
+
+            // Lấy mức Thấp nhất tối tuyệt đối và Cao nhất tuyệt đối của cả 2 cây nến gần đây
+            const absoluteLow = Math.min(closedLow, currentLow);
+            const absoluteHigh = Math.max(closedHigh, currentHigh);
+
+            return { ema20, change8h, absoluteLow, absoluteHigh };
         }
         return null;
     } catch (error) {
@@ -90,10 +102,10 @@ async function getMarketMetrics15m(symbol, lastPrice) {
     }
 }
 
-// Hàm kiểm tra dải dung sai bất đối xứng theo công thức chuẩn: (EMA20 - Giá coin) / EMA20
-function checkTolerance(indicatorVal, price, pctMin, pctMax) {
-    if (!indicatorVal || !price) return false;
-    const diffPct = (indicatorVal - price) / indicatorVal;
+// Hàm kiểm tra dải dung sai bất đối xứng theo công thức chuẩn: (EMA20 - Mốc giá) / EMA20
+function checkTolerance(indicatorVal, testPrice, pctMin, pctMax) {
+    if (!indicatorVal || !testPrice) return false;
+    const diffPct = (indicatorVal - testPrice) / indicatorVal;
     return diffPct >= pctMin && diffPct <= pctMax;
 }
 
@@ -153,7 +165,13 @@ async function main() {
         for (const coin of top10Gainers24h) {
             const metrics = await getMarketMetrics15m(coin.instId, coin.lastPrice);
             if (metrics) {
-                poolGainers.push({ ...coin, change8h: metrics.change8h, ema20: metrics.ema20 });
+                poolGainers.push({ 
+                    ...coin, 
+                    change8h: metrics.change8h, 
+                    ema20: metrics.ema20,
+                    absoluteLow: metrics.absoluteLow,
+                    absoluteHigh: metrics.absoluteHigh
+                });
             }
         }
 
@@ -161,11 +179,17 @@ async function main() {
         for (const coin of top10Losers24h) {
             const metrics = await getMarketMetrics15m(coin.instId, coin.lastPrice);
             if (metrics) {
-                poolLosers.push({ ...coin, change8h: metrics.change8h, ema20: metrics.ema20 });
+                poolLosers.push({ 
+                    ...coin, 
+                    change8h: metrics.change8h, 
+                    ema20: metrics.ema20,
+                    absoluteLow: metrics.absoluteLow,
+                    absoluteHigh: metrics.absoluteHigh
+                });
             }
         }
 
-        // BƯỚC 3: Xếp hạng lấy chuẩn Top 5 tăng và Top 5 giảm trong 8h từ pool 20 coin trên
+        // BƯỚC 3: Xếp hạng lấy chuẩn Top 5 tăng và Top 5 giảm trong 8h
         poolGainers.sort((a, b) => b.change8h - a.change8h);
         let top5Gainers8h = poolGainers.slice(0, 5);
 
@@ -174,25 +198,24 @@ async function main() {
 
         let hasNewAlert = false;
 
-        // BƯỚC 4: Kiểm tra dung sai EMA20 riêng cho những coin đã lọt được vào danh sách Top 5 chuẩn
-        // Kiểm tra dải Long cho Top 5 tăng 8h
+        // BƯỚC 4: Kiểm tra dung sai dựa trên GIÁ THẤP NHẤT (Long) và GIÁ CAO NHẤT (Short)
+        // Kiểm tra dải LONG cho Top 5 tăng 8h
         for (let i = 0; i < top5Gainers8h.length; i++) {
             const coin = top5Gainers8h[i];
             const symbol = coin.instId;
             const rank8h = i + 1;
 
-            // --- SỬA ĐỔI: Chặn gửi trùng lặp nếu khoảng cách thời gian nhỏ hơn 2 giờ ---
             if (sentLog[symbol] && (currentTime - sentLog[symbol] < 2 * 60 * 60 * 1000)) continue;
 
-            // Kiểm tra dung sai Long: +1%, -0.1% -> [-0.001, 0.01]
-            if (checkTolerance(coin.ema20, coin.lastPrice, -0.001, 0.01)) {
+            // SỬA ĐỔI: Sử dụng coin.absoluteLow (Giá thấp nhất của nến) để check điều kiện Long
+            if (checkTolerance(coin.ema20, coin.absoluteLow, -0.001, 0.01)) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const lowerSymbol = symbol.toLowerCase();
                 const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
 
                 const message = `🟢 <b>LONG #${coinName}</b>\n` +
-                                `• Giá: ${coin.lastPrice} (8h_32n: +${coin.change8h.toFixed(2)}%)\n` +
-                                `• Cản: Top ${rank8h} Tăng 8h + Sát EMA20 (+1%/-0.1%)\n` +
+                                `• Giá hiện tại: ${coin.lastPrice} (8h_32n: +${coin.change8h.toFixed(2)}%)\n` +
+                                `• Cản: Top ${rank8h} Tăng 8h + Râu nến chạm EMA20\n` +
                                 `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                 await sendTelegramMessage(message);
@@ -201,24 +224,23 @@ async function main() {
             }
         }
 
-        // Kiểm tra dải Short cho Top 5 giảm 8h
+        // Kiểm tra dải SHORT cho Top 5 giảm 8h
         for (let i = 0; i < top5Losers8h.length; i++) {
             const coin = top5Losers8h[i];
             const symbol = coin.instId;
             const rank8h = i + 1;
 
-            // --- SỬA ĐỔI: Chặn gửi trùng lặp nếu khoảng cách thời gian nhỏ hơn 2 giờ ---
             if (sentLog[symbol] && (currentTime - sentLog[symbol] < 2 * 60 * 60 * 1000)) continue;
 
-            // Kiểm tra dung sai Short: -1%, +0.3% -> [-0.01, 0.003]
-            if (checkTolerance(coin.ema20, coin.lastPrice, -0.01, 0.003)) {
+            // SỬA ĐỔI: Sử dụng coin.absoluteHigh (Giá cao nhất của nến) để check điều kiện Short
+            if (checkTolerance(coin.ema20, coin.absoluteHigh, -0.01, 0.003)) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const lowerSymbol = symbol.toLowerCase();
                 const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
 
                 const message = `🔴 <b>SHORT #${coinName}</b>\n` +
-                                `• Giá: ${coin.lastPrice} (8h_32n: ${coin.change8h.toFixed(2)}%)\n` +
-                                `• Cản: Top ${rank8h} Giảm 8h + Sát EMA20 (-1%/+0.3%)\n` +
+                                `• Giá hiện tại: ${coin.lastPrice} (8h_32n: ${coin.change8h.toFixed(2)}%)\n` +
+                                `• Cản: Top ${rank8h} Giảm 8h + Râu nến chạm EMA20\n` +
                                 `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                 await sendTelegramMessage(message);
