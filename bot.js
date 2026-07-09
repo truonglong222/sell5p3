@@ -56,28 +56,30 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Khung 1H: Trả về dữ liệu kỹ thuật
+// Khung 1H: Trả về dữ liệu kỹ thuật (EMA20 1H, % tăng 40h, % giảm 8h)
 async function getMetrics1H(symbol, lastPrice) {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=100`;
         const response = await axios.get(url, { timeout: 8000 }); // Thêm timeout tránh treo request
         
-        if (response.data && response.data.code === '0' && response.data.data.length > 55) {
+        if (response.data && response.data.code === '0' && response.data.data.length > 45) {
             const candles = response.data.data.reverse();
             
             const closedIndex = candles.length - 2;
             const historyPrices = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
             const ema20_1h = calculateEMA(historyPrices, 20);
 
-            const index50h = candles.length - 51;
-            const open50hAgo = parseFloat(candles[index50h][1]);
-            const change50h = open50hAgo ? ((lastPrice - open50hAgo) / open50hAgo) * 100 : 0;
+            // --- SỬA ĐỔI: Tính tăng trưởng dựa trên mốc 40 cây nến 1H trước đó ---
+            const index40h = candles.length - 41;
+            const open40hAgo = parseFloat(candles[index40h][1]);
+            const change40h = open40hAgo ? ((lastPrice - open40hAgo) / open40hAgo) * 100 : 0;
 
+            // Tính giảm giá 8h bằng cách lùi ngược 8 nến 1H trước đó
             const index8h = candles.length - 9;
             const open8hAgo = parseFloat(candles[index8h][1]);
             const change8h = open8hAgo ? ((lastPrice - open8hAgo) / open8hAgo) * 100 : 0;
 
-            return { symbol, ema20_1h, change50h, change8h };
+            return { symbol, ema20_1h, change40h, change8h };
         }
         return null;
     } catch (error) {
@@ -86,7 +88,7 @@ async function getMetrics1H(symbol, lastPrice) {
     }
 }
 
-// Khung 15m: Trả về dữ liệu kỹ thuật
+// Chỉ gọi khi thỏa điều kiện 1H: Lấy EMA20 nến 15m và High/Low hiện tại
 async function getMetrics15m(symbol) {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
@@ -190,14 +192,15 @@ async function main() {
             const coinTicker = eligibleCoins.find(c => c.instId === data.symbol);
             if (!coinTicker) continue;
 
-            const isLongCondition = data.change50h > 20;
-            const isShortCondition = data.change8h < -10;
+            // --- SỬA ĐỔI: Áp dụng điều kiện lọc mới cho khung 1H ---
+            const isLongCondition = data.change40h > 15; // Tăng 40h > 15%
+            const isShortCondition = data.change8h < -7;  // Giảm 8h < -7%
 
             if (isLongCondition || isShortCondition) {
                 coinsNeed15m.push({
                     ...coinTicker,
                     ema20_1h: data.ema20_1h,
-                    change50h: data.change50h,
+                    change40h: data.change40h,
                     change8h: data.change8h,
                     isLongCondition,
                     isShortCondition
@@ -230,10 +233,10 @@ async function main() {
             if (coin.isLongCondition) {
                 if (checkTolerance(data15m.ema20_15m, data15m.currentLow15m, -0.002, 0.01)) {
                     signal = "Long 15p";
-                    reason = `Tăng 50h (${coin.change50h.toFixed(1)}%) + Râu 15m chạm EMA20_15m`;
+                    reason = `Tăng 40h (${coin.change40h.toFixed(1)}%) + Râu 15m chạm EMA20_15m`;
                 } else if (checkTolerance(coin.ema20_1h, data15m.currentLow15m, -0.005, 0.01)) {
                     signal = "Long 1h";
-                    reason = `Tăng 50h (${coin.change50h.toFixed(1)}%) + Râu 15m chạm EMA20_1H`;
+                    reason = `Tăng 40h (${coin.change40h.toFixed(1)}%) + Râu 15m chạm EMA20_1H`;
                 }
             }
 
