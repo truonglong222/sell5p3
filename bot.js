@@ -88,14 +88,15 @@ async function getMetrics15m(symbol) {
     }
 }
 
-// Lấy dữ liệu nến 1H: Trả về EMA20, % tăng trưởng 24h (24 nến) và % giảm giá 8h (8 nến)
+// Lấy dữ liệu nến 1H: Trả về EMA20, % tăng trưởng của 50 nến và % giảm giá 8h (8 nến)
 async function getMetrics1H(symbol, lastPrice) {
     try {
         await sleep(250);
+        // Nâng limit lên 100 để đảm bảo bao quát đủ 50 cây nến 1H trong quá khứ
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=100`;
         const response = await axios.get(url);
         
-        if (response.data && response.data.code === '0' && response.data.data.length > 30) {
+        if (response.data && response.data.code === '0' && response.data.data.length > 55) {
             const candles = response.data.data.reverse();
             
             // Tính EMA20 cho nến 1h vừa đóng cửa (candles.length - 2)
@@ -103,17 +104,17 @@ async function getMetrics1H(symbol, lastPrice) {
             const historyPrices = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
             const ema20 = calculateEMA(historyPrices, 20);
 
-            // Tính tăng giá 24h bằng cách lùi ngược 24 nến 1H trước đó so với hiện tại
-            const index24h = candles.length - 25;
-            const open24hAgo = parseFloat(candles[index24h][1]);
-            const change24h = open24hAgo ? ((lastPrice - open24hAgo) / open24hAgo) * 100 : 0;
+            // --- SỬA ĐỔI: Tính tăng trưởng dựa trên mốc 50 cây nến 1H trước đó ---
+            const index50h = candles.length - 51;
+            const open50hAgo = parseFloat(candles[index50h][1]);
+            const change50h = open50hAgo ? ((lastPrice - open50hAgo) / open50hAgo) * 100 : 0;
 
             // Tính giảm giá 8h bằng cách lùi ngược 8 nến 1H trước đó so với hiện tại
             const index8h = candles.length - 9;
             const open8hAgo = parseFloat(candles[index8h][1]);
             const change8h = open8hAgo ? ((lastPrice - open8hAgo) / open8hAgo) * 100 : 0;
 
-            return { ema20_1h: ema20, change24h, change8h };
+            return { ema20_1h: ema20, change50h, change8h };
         }
         return null;
     } catch (error) {
@@ -174,12 +175,12 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 1: Lấy chính xác Top 20 coin tăng giá mạnh nhất dựa trên dữ liệu Ticker sàn
+        // Lấy chính xác Top 20 coin tăng giá mạnh nhất dựa trên dữ liệu Ticker sàn
         let top20Gainers = tickers.sort((a, b) => b.change24h - a.change24h).slice(0, 20);
 
         let hasNewAlert = false;
 
-        // BƯỚC 2: Duyệt qua danh sách top 20 để bóc tách chỉ báo đa khung giờ
+        // Duyệt qua danh sách top 20 để bóc tách chỉ báo đa khung giờ
         for (const coin of top20Gainers) {
             const symbol = coin.instId;
 
@@ -193,36 +194,36 @@ async function main() {
             const data1h = await getMetrics1H(symbol, coin.lastPrice);
             if (!data1h) continue;
 
-            const change24h_1h = data1h.change24h; // Tăng giá 24h tính bằng nến 1h
+            const change50h_1h = data1h.change50h; // Tăng giá chu kỳ 50 cây nến 1H
             const change8h_1h = data1h.change8h;   // Giảm giá 8h tính bằng nến 1h
 
             let signal = null;
             let reason = "";
 
-            // --- THIẾT LẬP MAIN LOGIC THEO ĐÚNG CÔNG THỨC YÊU CẦU MỚI ---
+            // --- MAIN LOGIC KIỂM TRA ĐIỀU KIỆN THEO CẤU HÌNH MỚI ---
             
-            // Nhánh 1: Tín hiệu LONG (Yêu cầu tăng 24h > 15%)
-            if (change24h_1h > 15) {
+            // Nhánh 1: Tín hiệu LONG (Sửa đổi: Yêu cầu tăng trưởng 50 nến 1H > 20%)
+            if (change50h_1h > 20) {
                 // Check Long 15p: Dung sai dựa trên Giá Thấp Nhất 15m nằm trong khoảng -0.2% < diff < +1%
                 if (checkTolerance(data15m.ema20_15m, data15m.currentLow15m, -0.002, 0.01)) {
                     signal = "Long 15p";
-                    reason = `Tăng 24h (${change24h_1h.toFixed(1)}%) + Râu 15m chạm EMA20_15m`;
+                    reason = `Tăng 50h (${change50h_1h.toFixed(1)}%) + Râu 15m chạm EMA20_15m`;
                 } 
                 // Check Long 1h: Dung sai dựa trên Giá Thấp Nhất 15m nằm trong khoảng -0.5% < diff < +1%
                 else if (checkTolerance(data1h.ema20_1h, data15m.currentLow15m, -0.005, 0.01)) {
                     signal = "Long 1h";
-                    reason = `Tăng 24h (${change24h_1h.toFixed(1)}%) + Râu 15m chạm EMA20_1H`;
+                    reason = `Tăng 50h (${change50h_1h.toFixed(1)}%) + Râu 15m chạm EMA20_1H`;
                 }
             } 
             
-            // Nhánh 2: Tín hiệu SHORT (Yêu cầu giảm giá 8h < -10%)
+            // Nhánh 2: Tín hiệu SHORT (Giữ nguyên: Yêu cầu giảm giá 8h < -10%)
             if (change8h_1h < -10) {
-                // Check Short 15p: Dung sai dựa trên Giá Cao Nhất 15m nằm trong khoảng +0.2% < diff < -1% (Tức là [-1%, 0.2%] trên trục số)
+                // Check Short 15p: Dung sai dựa trên Giá Cao Nhất 15m nằm trong khoảng [-1%, 0.2%]
                 if (checkTolerance(data15m.ema20_15m, data15m.currentHigh15m, -0.01, 0.002)) {
                     signal = "Short 15p";
                     reason = `Giảm 8h (${change8h_1h.toFixed(1)}%) + Râu 15m chạm EMA20_15m`;
                 } 
-                // Check Short 1h: Dung sai dựa trên Giá Cao Nhất 15m nằm trong khoảng +0.5% < diff < -1% (Tức là [-1%, 0.5%] trên trục số)
+                // Check Short 1h: Dung sai dựa trên Giá Cao Nhất 15m nằm trong khoảng [-1%, 0.5%]
                 else if (checkTolerance(data1h.ema20_1h, data15m.currentHigh15m, -0.01, 0.005)) {
                     signal = "Short 1h";
                     reason = `Giảm 8h (${change8h_1h.toFixed(1)}%) + Râu 15m chạm EMA20_1H`;
