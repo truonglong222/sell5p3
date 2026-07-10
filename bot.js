@@ -142,14 +142,14 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 3: Lấy chuẩn danh sách Top 5 tăng mạnh nhất và Top 10 giảm mạnh nhất
-        let top5Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 5);
-        let top10Losers = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 10);
+        // BƯỚC 3: SỬA ĐỔI -> Lấy chuẩn danh sách Top 10 tăng mạnh nhất và Top 20 giảm mạnh nhất
+        let top10Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
+        let top20Losers = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 20);
 
         // Gom nhóm tổng thể để chạy vòng lọc chung
         let mergedPool = new Map();
-        top5Gainers.forEach(coin => mergedPool.set(coin.instId, { ...coin, poolType: 'long' }));
-        top10Losers.forEach(coin => {
+        top10Gainers.forEach(coin => mergedPool.set(coin.instId, { ...coin, poolType: 'long' }));
+        top20Losers.forEach(coin => {
             if (!mergedPool.has(coin.instId)) {
                 mergedPool.set(coin.instId, { ...coin, poolType: 'short' });
             }
@@ -170,7 +170,7 @@ async function main() {
             return;
         }
 
-        // BƯỚC 5: TỐI ƯU SONG SONG KHUNG 15M (Gọi đồng thời tất cả các coin còn lại bằng Promise.all)
+        // BƯỚC 5: TỐI ƯU SONG SONG KHUNG 15M (Gọi đồng thời tất cả các coin bằng Promise.all)
         console.log(`Đang quét song song nến 15m cho ${eligibleCoins.length} coin hợp lệ...`);
         const promises = eligibleCoins.map(coin => getMetrics15m(coin.instId, coin.lastPrice));
         const results = await Promise.all(promises);
@@ -185,9 +185,9 @@ async function main() {
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC THỎA MÃN HỆ THỐNG MỚI ---
+            // --- MAIN LOGIC THỎA MÃN HỆ THỐNG ---
 
-            // Nhánh xử lý Lệnh LONG (Phát triển từ Top 5 Tăng)
+            // Nhánh xử lý Lệnh LONG (Phát triển từ Top 10 Tăng)
             if (coin.poolType === 'long' && metrics.change4h > 5) {
                 // Check dung sai râu nến: -0.2% < (ema20 - low) / ema20 < +1% -> [-0.002, 0.01]
                 if (checkTolerance(metrics.ema20_15m, metrics.currentLow15m, -0.002, 0.01)) {
@@ -196,7 +196,7 @@ async function main() {
                 }
             }
 
-            // Nhánh xử lý Lệnh SHORT (Phát triển từ Top 10 Giảm)
+            // Nhánh xử lý Lệnh SHORT (Phát triển từ Top 20 Giảm)
             if (coin.poolType === 'short' && metrics.change4h < -5) {
                 // Check dung sai râu nến: +0.2% < (ema20 - high) / ema20 < -1% -> [-0.01, 0.002] trên trục số
                 if (checkTolerance(metrics.ema20_15m, metrics.currentHigh15m, -0.01, 0.002)) {
