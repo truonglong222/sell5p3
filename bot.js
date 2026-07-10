@@ -142,7 +142,7 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 3: SỬA ĐỔI -> Lấy chuẩn danh sách Top 10 tăng mạnh nhất và Top 20 giảm mạnh nhất
+        // BƯỚC 3: Lấy chuẩn danh sách Top 10 tăng mạnh nhất và Top 20 giảm mạnh nhất
         let top10Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
         let top20Losers = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 20);
 
@@ -189,16 +189,16 @@ async function main() {
 
             // Nhánh xử lý Lệnh LONG (Phát triển từ Top 10 Tăng)
             if (coin.poolType === 'long' && metrics.change4h > 5) {
-                // Check dung sai râu nến: -0.2% < (ema20 - low) / ema20 < +1% -> [-0.002, 0.01]
-                if (checkTolerance(metrics.ema20_15m, metrics.currentLow15m, -0.002, 0.01)) {
+                // --- THAY ĐỔI: Nới rộng dung sai râu nến từ -0.2% thành -0.6% -> [-0.006, 0.01] ---
+                if (checkTolerance(metrics.ema20_15m, metrics.currentLow15m, -0.006, 0.01)) {
                     signal = "Long 15p";
-                    reason = `4h Tăng (${metrics.change4h.toFixed(1)}%) + Râu 15m chạm EMA20`;
+                    reason = `4h Tăng (${metrics.change4h.toFixed(1)}%) + Râu 15m chạm EMA20 (-0.6%/+1%)`;
                 }
             }
 
             // Nhánh xử lý Lệnh SHORT (Phát triển từ Top 20 Giảm)
             if (coin.poolType === 'short' && metrics.change4h < -5) {
-                // Check dung sai râu nến: +0.2% < (ema20 - high) / ema20 < -1% -> [-0.01, 0.002] trên trục số
+                // Check dung sai râu nến: +0.2% < (ema20 - high) / ema20 < -1% -> [-0.01, 0.002] trên trục số (Giữ nguyên)
                 if (checkTolerance(metrics.ema20_15m, metrics.currentHigh15m, -0.01, 0.002)) {
                     signal = "Short 15p";
                     reason = `4h Giảm (${metrics.change4h.toFixed(1)}%) + Râu 15m chạm EMA20`;
