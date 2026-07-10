@@ -114,7 +114,7 @@ async function main() {
         const sentLog = loadSentLog();
         const currentTime = Date.now();
 
-        // BƯỚC 2: Tính % thay đổi 24h từ ticker (Xử lý mảng nội bộ)
+        // BƯỚC 2: Tính % thay đổi 24h từ ticker
         let tickers = response.data.data
             .filter(t => t.instId.endsWith('-USDT-SWAP'))
             .map(t => {
@@ -124,10 +124,10 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 3: Lấy Top 20 tăng mạnh nhất
+        // BƯỚC 3: Lấy Top 20 tăng mạnh nhất 24h làm Pool quét
         let top20Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 20);
 
-        // BƯỚC 4: Loại coin đang cooldown 30 phút (Xử lý nhanh không tốn request)
+        // BƯỚC 4: Loại coin đang cooldown 30 phút
         let eligibleCoins = top20Gainers.filter(coin => {
             return !(sentLog[coin.instId] && (currentTime - sentLog[coin.instId] < 30 * 60 * 1000));
         });
@@ -137,26 +137,34 @@ async function main() {
             return;
         }
 
-        // BƯỚC 5: TỐI ƯU SONG SONG KHUNG 5M - Gọi đồng thời toàn bộ danh sách coin còn lại
+        // BƯỚC 5: TỐI ƯU SONG SONG KHUNG 5M
         console.log(`Đang quét song song nến 5m cho ${eligibleCoins.length} coin hợp lệ...`);
         const promises = eligibleCoins.map(coin => getMarketMetrics5m(coin.instId, coin.lastPrice));
         const results = await Promise.all(promises);
 
-        // Lọc bỏ các kết quả rỗng
         let validMetrics = results.filter(r => r !== null);
 
-        // BƯỚC 6: Xếp hạng tìm ra Top 1, Top 2 tăng/giảm dựa trên biến động 4h (48 nến 5m)
-        // Sắp xếp giảm dần để lấy Top 1 và Top 2 Tăng giá 4h
-        let top2Gainers4h = [...validMetrics].sort((a, b) => b.change4h - a.change4h).slice(0, 2);
-        // Sắp xếp tăng dần để lấy Top 1 và Top 2 Giảm giá 4h
-        let top2Losers4h = [...validMetrics].sort((a, b) => a.change4h - b.change4h).slice(0, 2);
+        // BƯỚC 6: --- THAY ĐỔI LOGIC LỌC THEO TIÊU CHÍ MỚI ---
+        // 6.1. Lấy ra chuẩn Top 5 tăng giá mạnh nhất trong 4h
+        let top5Gainers4h = [...validMetrics].sort((a, b) => b.change4h - a.change4h).slice(0, 5);
+        
+        // 6.2. Lấy toàn bộ những coin có mức giảm nhiều hơn 4% (change4h < -4)
+        let losersMoreThan4Pct = validMetrics.filter(coin => coin.change4h < -4);
 
-        // Gom nhóm 4 coin chiến lược này vào danh sách cuối cùng để đối chiếu bộ dung sai
+        // Gom nhóm các coin thỏa mãn điều kiện lọc để đối chiếu bộ dung sai
         let finalSelection = new Map();
-        top2Gainers4h.forEach((coin, idx) => finalSelection.set(coin.symbol, { ...coin, type: 'gainer', rank4h: idx + 1 }));
-        top2Losers4h.forEach((coin, idx) => {
+        
+        top5Gainers4h.forEach((coin, idx) => {
+            finalSelection.set(coin.symbol, { ...coin, allowedSignal: 'long', label: `TOP ${idx + 1}` });
+        });
+        
+        losersMoreThan4Pct.forEach((coin) => {
+            // Nếu coin đã nằm trong top gainer (hy hữu), ưu tiên giữ cấu hình gainer
             if (!finalSelection.has(coin.symbol)) {
-                finalSelection.set(coin.symbol, { ...coin, type: 'loser', rank4h: idx + 1 });
+                finalSelection.set(coin.symbol, { ...coin, allowedSignal: 'short', label: 'GIẢM >4%' });
+            } else {
+                // Nếu vừa thuộc top 5 vừa giảm > 4% (mâu thuẫn thị trường nhưng mở rộng cho code), cho phép check cả 2
+                finalSelection.get(coin.symbol).allowedSignal = 'both';
             }
         });
 
@@ -168,33 +176,33 @@ async function main() {
             if (!coinTicker) continue;
 
             let signal = null;
-
             const a = coinMetrics.a;
             const b = coinMetrics.b;
+            const mode = coinMetrics.allowedSignal;
 
             // --- KIỂM TRA ĐIỀU KIỆN CHỈ BÁO ---
-            // Nhánh xử lý LONG: Thỏa mãn điều kiện -0.5% <= a <= 1%
-            if (a >= -0.5 && a <= 1) {
+            // Nhánh xử lý LONG: Chỉ check cho các coin thuộc nhóm Top 5 Tăng 4h
+            if ((mode === 'long' || mode === 'both') && (a >= -0.5 && a <= 1)) {
                 signal = "Long 5p";
             }
 
-            // Nhánh xử lý SHORT: Thỏa mãn điều kiện -1% <= b <= 0.5%
-            if (b >= -1 && b <= 0.5) {
+            // Nhánh xử lý SHORT: Chỉ check cho các coin thuộc nhóm Giảm nhiều hơn 4%
+            if ((mode === 'short' || mode === 'both') && (b >= -1 && b <= 0.5)) {
                 signal = "Short 5p";
             }
 
-            // --- SỬA ĐỔI: ĐẨY THÔNG BÁO SIÊU RÚT GỌN CHỈ TRÊN 1 DÒNG ---
+            // ĐẨY THÔNG BÁO SIÊU RÚT GỌN CHỈ TRÊN 1 DÒNG
             if (signal) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const lowerSymbol = symbol.toLowerCase();
                 const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
                 const icon = signal.startsWith("Long") ? "🟢" : "🔴";
                 
-                // Chuẩn hóa chuỗi hiển thị dấu tăng (+) hoặc giảm (-) cho phần trăm 4h
                 const formattedChange = coinMetrics.change4h >= 0 ? `+${coinMetrics.change4h.toFixed(2)}%` : `${coinMetrics.change4h.toFixed(2)}%`;
 
-                // Định dạng chuẩn: 🟢 LONG 5P #BTC TOP 1 (+5.34%) 👉 Giao dịch ngay
-                const message = `${icon} <b>${signal.toUpperCase()} #${coinName} TOP ${coinMetrics.rank4h} (${formattedChange})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
+                // Định dạng hiển thị: 🟢 LONG 5P #ETH TOP 3 (+2.45%) 👉 Giao dịch ngay
+                // Hoặc: 🔴 SHORT 5P #CRV GIẢM >4% (-5.12%) 👉 Giao dịch ngay
+                const message = `${icon} <b>${signal.toUpperCase()} #${coinName} ${coinMetrics.label} (${formattedChange})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
 
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                     chat_id: TELEGRAM_CHAT_ID,
@@ -210,7 +218,7 @@ async function main() {
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
-        console.log('Hoàn thành chu kỳ quét siêu tốc khung 5m.');
+        console.log('Hoàn thành chu kỳ quét siêu tốc khung 5m với bộ lọc mới.');
 
     } catch (error) {
         console.error('Lỗi hệ thống hàm main:', error.message);
