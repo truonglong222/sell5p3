@@ -28,13 +28,13 @@ function loadSentLog() {
     return {};
 }
 
-// Điều chỉnh dọn dẹp log cũ sau 30 phút để phù hợp với cooldown
+// --- HÀM SỬA ĐỔI: Dọn dẹp dữ liệu log cũ sau 1 giờ để đồng bộ với Cooldown mới ---
 function saveSentLog(logData) {
     try {
         const now = Date.now();
         const cleanedLog = {};
         for (const [coin, timestamp] of Object.entries(logData)) {
-            if (now - timestamp < 30 * 60 * 1000) {
+            if (now - timestamp < 1 * 60 * 60 * 1000) {
                 cleanedLog[coin] = timestamp;
             }
         }
@@ -124,12 +124,12 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 3: Lấy Top 20 tăng mạnh nhất 24h làm Pool quét
+        // BƯỚC 3: Lấy Top 20 tăng mạnh nhất 24h làm Pool quét cốt lõi
         let top20Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 20);
 
-        // BƯỚC 4: Loại coin đang cooldown 30 phút
+        // BƯỚC 4: --- SỬA ĐỔI: Loại coin đang cooldown nâng từ 30 phút lên 1 giờ ---
         let eligibleCoins = top20Gainers.filter(coin => {
-            return !(sentLog[coin.instId] && (currentTime - sentLog[coin.instId] < 30 * 60 * 1000));
+            return !(sentLog[coin.instId] && (currentTime - sentLog[coin.instId] < 1 * 60 * 60 * 1000));
         });
 
         if (eligibleCoins.length === 0) {
@@ -144,26 +144,24 @@ async function main() {
 
         let validMetrics = results.filter(r => r !== null);
 
-        // BƯỚC 6: --- THAY ĐỔI LOGIC LỌC THEO TIÊU CHÍ MỚI ---
-        // 6.1. Lấy ra chuẩn Top 5 tăng giá mạnh nhất trong 4h
-        let top5Gainers4h = [...validMetrics].sort((a, b) => b.change4h - a.change4h).slice(0, 5);
+        // BƯỚC 6: --- THAY ĐỔI LOGIC LỌC CHỈ TIÊU MỚI ---
+        // 6.1. Chiều LONG: Rút gọn xuống lấy chuẩn Top 3 tăng giá mạnh nhất trong 4h
+        let top3Gainers4h = [...validMetrics].sort((a, b) => b.change4h - a.change4h).slice(0, 3);
         
-        // 6.2. Lấy toàn bộ những coin có mức giảm nhiều hơn 4% (change4h < -4)
-        let losersMoreThan4Pct = validMetrics.filter(coin => coin.change4h < -4);
+        // 6.2. Chiều SHORT: Lấy toàn bộ những coin có mức giảm nhiều hơn 3% (change4h < -3)
+        let losersMoreThan3Pct = validMetrics.filter(coin => coin.change4h < -3);
 
-        // Gom nhóm các coin thỏa mãn điều kiện lọc để đối chiếu bộ dung sai
+        // Gom nhóm các coin thỏa mãn điều kiện lọc vào danh sách cuối cùng
         let finalSelection = new Map();
         
-        top5Gainers4h.forEach((coin, idx) => {
+        top3Gainers4h.forEach((coin, idx) => {
             finalSelection.set(coin.symbol, { ...coin, allowedSignal: 'long', label: `TOP ${idx + 1}` });
         });
         
-        losersMoreThan4Pct.forEach((coin) => {
-            // Nếu coin đã nằm trong top gainer (hy hữu), ưu tiên giữ cấu hình gainer
+        losersMoreThan3Pct.forEach((coin) => {
             if (!finalSelection.has(coin.symbol)) {
-                finalSelection.set(coin.symbol, { ...coin, allowedSignal: 'short', label: 'GIẢM >4%' });
+                finalSelection.set(coin.symbol, { ...coin, allowedSignal: 'short', label: 'GIẢM >3%' });
             } else {
-                // Nếu vừa thuộc top 5 vừa giảm > 4% (mâu thuẫn thị trường nhưng mở rộng cho code), cho phép check cả 2
                 finalSelection.get(coin.symbol).allowedSignal = 'both';
             }
         });
@@ -181,17 +179,17 @@ async function main() {
             const mode = coinMetrics.allowedSignal;
 
             // --- KIỂM TRA ĐIỀU KIỆN CHỈ BÁO ---
-            // Nhánh xử lý LONG: Chỉ check cho các coin thuộc nhóm Top 5 Tăng 4h
+            // Nhánh xử lý LONG: -0.5% <= a <= 1%
             if ((mode === 'long' || mode === 'both') && (a >= -0.5 && a <= 1)) {
                 signal = "Long 5p";
             }
 
-            // Nhánh xử lý SHORT: Chỉ check cho các coin thuộc nhóm Giảm nhiều hơn 4%
+            // Nhánh xử lý SHORT: -1% <= b <= 0.5%
             if ((mode === 'short' || mode === 'both') && (b >= -1 && b <= 0.5)) {
                 signal = "Short 5p";
             }
 
-            // ĐẨY THÔNG BÁO SIÊU RÚT GỌN CHỈ TRÊN 1 DÒNG
+            // ĐẨY THÔNG BÁO SIÊU RÚT GỌN CHỈ TRÊN 1 DÒNG ĐÚNG MẪU YÊU CẦU
             if (signal) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const lowerSymbol = symbol.toLowerCase();
@@ -200,8 +198,8 @@ async function main() {
                 
                 const formattedChange = coinMetrics.change4h >= 0 ? `+${coinMetrics.change4h.toFixed(2)}%` : `${coinMetrics.change4h.toFixed(2)}%`;
 
-                // Định dạng hiển thị: 🟢 LONG 5P #ETH TOP 3 (+2.45%) 👉 Giao dịch ngay
-                // Hoặc: 🔴 SHORT 5P #CRV GIẢM >4% (-5.12%) 👉 Giao dịch ngay
+                // Định dạng hiển thị mẫu: 🟢 LONG 5P #BTC TOP 2 (+3.15%) 👉 Giao dịch ngay
+                // Định dạng hiển thị mẫu: 🔴 SHORT 5P #SOL GIẢM >3% (-4.22%) 👉 Giao dịch ngay
                 const message = `${icon} <b>${signal.toUpperCase()} #${coinName} ${coinMetrics.label} (${formattedChange})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
 
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
