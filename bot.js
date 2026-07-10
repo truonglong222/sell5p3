@@ -75,7 +75,7 @@ async function getMarketMetrics5m(symbol, lastPrice) {
             const open4hAgo = parseFloat(candles[index4h][1]);
             const change4h = open4hAgo ? ((lastPrice - open4hAgo) / open4hAgo) * 100 : 0;
 
-            // 3. --- SỬA ĐỔI: Tính % biến động 30m (lùi ngược 6 cây nến 5m trước đó: 6 * 5m = 30m) ---
+            // 3. Tính % biến động 30m (lùi ngược 6 cây nến 5m trước đó)
             const index30m = candles.length - 7;
             const open30mAgo = parseFloat(candles[index30m][1]);
             const change30m = open30mAgo ? ((lastPrice - open30mAgo) / open30mAgo) * 100 : 0;
@@ -129,30 +129,36 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 3: Lấy Top 20 tăng mạnh nhất 24h từ sàn
-        let top20Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 20);
+        // BƯỚC 3: --- SỬA ĐỔI -> Chỉ lấy đúng Top 10 tăng mạnh nhất 24h từ sàn ---
+        let top10Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
 
-        // --- QUY TRÌNH SỬA ĐỔI: Gọi nến 5m cho TOÀN BỘ Top 20 trước khi lọc cooldown ---
-        console.log(`Đang quét song song nến 5m cho toàn bộ ${top20Gainers.length} coin từ Pool...`);
-        const promises = top20Gainers.map(coin => getMarketMetrics5m(coin.instId, coin.lastPrice));
+        // Gọi dữ liệu nến 5m song song cho toàn bộ Top 10 trước khi lọc cooldown
+        console.log(`Đang quét song song nến 5m cho toàn bộ ${top10Gainers.length} coin từ Pool...`);
+        const promises = top10Gainers.map(coin => getMarketMetrics5m(coin.instId, coin.lastPrice));
         const results = await Promise.all(promises);
 
         let validMetrics = results.filter(r => r !== null);
 
-        // BƯỚC 4: Phân tích kỹ thuật lọc theo điều kiện Tăng 4h và Giảm 30m
-        // 4.1. Lấy chuẩn Top 3 tăng mạnh nhất trong 4h
-        let top3Gainers4h = [...validMetrics].sort((a, b) => b.change4h - a.change4h).slice(0, 3);
+        // BƯỚC 4: Sắp xếp bảng xếp hạng 4h nội bộ để phục vụ lọc chiều Long
+        let sorted4hRank = [...validMetrics].sort((a, b) => b.change4h - a.change4h);
         
-        // 4.2. Lọc toàn bộ coin có mức giảm trong 30 phút nhiều hơn 3% (change30m < -3)
+        // Trích xuất nhóm từ Top 4 đến Top 10 tăng mạnh nhất 4h
+        let top4To10Gainers4h = sorted4hRank.slice(3, 10);
+        
+        // Chiều SHORT: Lọc toàn bộ coin có mức giảm trong 30 phút nhiều hơn 3% (change30m < -3)
         let losersMoreThan3Pct30m = validMetrics.filter(coin => coin.change30m < -3);
 
         // Gom nhóm tạm thời các cặp coin thỏa mãn tín hiệu thị trường
         let targetPool = new Map();
         
-        top3Gainers4h.forEach((coin, idx) => {
-            targetPool.set(coin.symbol, { ...coin, allowedSignal: 'long', label: `TOP ${idx + 1}`, displayPct: coin.change4h });
+        // Nạp nhóm Long (Chỉ gồm top 4 đến top 10)
+        top4To10Gainers4h.forEach((coin) => {
+            // Tìm kiếm lại rank thực tế trong chuỗi sorted4hRank để gắn nhãn tin nhắn chính xác
+            const actualRank = sorted4hRank.findIndex(r => r.symbol === coin.symbol) + 1;
+            targetPool.set(coin.symbol, { ...coin, allowedSignal: 'long', label: `TOP ${actualRank}`, displayPct: coin.change4h });
         });
         
+        // Nạp nhóm Short
         losersMoreThan3Pct30m.forEach((coin) => {
             if (!targetPool.has(coin.symbol)) {
                 targetPool.set(coin.symbol, { ...coin, allowedSignal: 'short', label: 'GIẢM 30m >3%', displayPct: coin.change30m });
@@ -163,16 +169,16 @@ async function main() {
 
         let hasNewAlert = false;
 
-        // BƯỚC 5 & 6: KIỂM TRA COOLDOWN VÀ ĐỐI CHIẾU DUNG SAI KỸ THUẬT
+        // BƯỚC 5 & 6: CHỌN ĐƯỢC COIN THỎA MÃN MỚI TIẾN HÀNH LOẠI BỎ COOLDOWN VÀ CHECK DUNG SAI
         for (const [symbol, coinMetrics] of targetPool) {
             
-            // --- THAY ĐỔI VỊ TRÍ: Sau khi chọn được coin thỏa mãn mới loại bỏ coin dính countdown 1h ---
+            // Loại bỏ các coin dính Cooldown 1 giờ tại bước cuối cùng
             if (sentLog[symbol] && (currentTime - sentLog[symbol] < 1 * 60 * 60 * 1000)) {
-                console.log(`-> Loại bỏ ${symbol} ở bước cuối cùng vì đang dính Cooldown 1 giờ.`);
+                console.log(`-> Bỏ qua ${symbol} vì đang dính Cooldown.`);
                 continue;
             }
 
-            const coinTicker = top20Gainers.find(c => c.instId === symbol);
+            const coinTicker = top10Gainers.find(c => c.instId === symbol);
             if (!coinTicker) continue;
 
             let signal = null;
@@ -191,7 +197,7 @@ async function main() {
                 signal = "Short 5p";
             }
 
-            // Gửi tin nhắn Telegram rút gọn 1 dòng duy nhất
+            // Gửi tin nhắn về Telegram rút gọn đúng 1 dòng
             if (signal) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const lowerSymbol = symbol.toLowerCase();
@@ -200,8 +206,8 @@ async function main() {
                 
                 const formattedPct = coinMetrics.displayPct >= 0 ? `+${coinMetrics.displayPct.toFixed(2)}%` : `${coinMetrics.displayPct.toFixed(2)}%`;
 
-                // Bản tin chuẩn dòng: 🟢 LONG 5P #BTC TOP 1 (+4.12%) 👉 Giao dịch ngay
-                // Bản tin chuẩn dòng: 🔴 SHORT 5P #AVAX GIẢM 30m >3% (-3.54%) 👉 Giao dịch ngay
+                // Định dạng hiển thị mẫu: 🟢 LONG 5P #TON TOP 5 (+1.45%) 👉 Giao dịch ngay
+                // Định dạng hiển thị mẫu: 🔴 SHORT 5P #LINK GIẢM 30m >3% (-3.12%) 👉 Giao dịch ngay
                 const message = `${icon} <b>${signal.toUpperCase()} #${coinName} ${coinMetrics.label} (${formattedPct})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
 
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -218,7 +224,7 @@ async function main() {
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
-        console.log('Hoàn thành chu kỳ quét tối ưu quy trình.');
+        console.log('Hoàn thành chu kỳ quét tối ưu.');
 
     } catch (error) {
         console.error('Lỗi hệ thống hàm main:', error.message);
