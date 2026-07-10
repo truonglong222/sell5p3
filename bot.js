@@ -56,58 +56,52 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Khung 15m (gộp limit 50): Tính toán EMA20, High/Low hiện tại và biến động 4h (16 nến)
-async function getMetrics15m(symbol, lastPrice) {
+// Khung 15m (limit 100): Tính toán mảng EMA20 để bóc tách hệ số a, b, c
+async function getMarketMetrics15m(symbol) {
     try {
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=50`;
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
         const response = await axios.get(url, { timeout: 8000 });
         
-        if (response.data && response.data.code === '0' && response.data.data.length > 20) {
+        if (response.data && response.data.code === '0' && response.data.data.length > 40) {
             const candles = response.data.data.reverse();
             
-            // 1. Tính EMA20 cho nến 15m vừa đóng cửa (candles.length - 2)
-            const closedIndex = candles.length - 2;
-            const historyPrices = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
-            const ema20_15m = calculateEMA(historyPrices, 20);
+            // Xây dựng mảng lịch sử EMA20 chạy dọc theo chuỗi nến
+            let emaHistory = [];
+            let pricesForEma = [];
+            
+            for (let i = 0; i < candles.length; i++) {
+                pricesForEma.push(parseFloat(candles[i][4])); // Giá đóng cửa
+                if (pricesForEma.length >= 20) {
+                    emaHistory.push(calculateEMA(pricesForEma, 20));
+                } else {
+                    emaHistory.push(0);
+                }
+            }
 
-            // 2. Lấy High/Low của nến hiện tại đang chạy (candles.length - 1)
+            // 1. Lấy EMA20 của nến hiện tại đang chạy (cuối mảng)
+            const currentEma20 = emaHistory[emaHistory.length - 1];
+            
+            // 2. Lấy EMA20 của nến cách nến hiện tại 16 nến (lùi lại 16 vị trí)
+            const pastEma20 = emaHistory[emaHistory.length - 17];
+
+            // 3. Tính toán hệ số a (Biến động xu hướng % của EMA20)
+            const a = pastEma20 ? ((currentEma20 - pastEma20) / pastEma20) * 100 : 0;
+
+            // 4. Lấy thông số giá High/Low của nến hiện tại đang chạy
             const currentCandle = candles[candles.length - 1];
             const currentHigh = parseFloat(currentCandle[2]);
             const currentLow = parseFloat(currentCandle[3]);
 
-            // 3. Tính % biến động 4h bằng cách lùi ngược lại đúng 16 cây nến 15m trước đó
-            const index4h = candles.length - 17;
-            const open4hAgo = parseFloat(candles[index4h][1]);
-            const change4h = open4hAgo ? ((lastPrice - open4hAgo) / open4hAgo) * 100 : 0;
+            // 5. BỔ SUNG TOÁN THỨC: Tính b theo giá thấp nhất và c theo giá cao nhất
+            const b = currentEma20 ? ((currentEma20 - currentLow) / currentEma20) * 100 : 0;
+            const c = currentEma20 ? ((currentEma20 - currentHigh) / currentEma20) * 100 : 0;
 
-            return { symbol, ema20_15m, currentHigh15m: currentHigh, currentLow15m: currentLow, change4h };
+            return { symbol, a, b, c };
         }
         return null;
     } catch (error) {
-        console.error(`Lỗi request 15m cho ${symbol}:`, error.message);
+        console.error(`Lỗi request dữ liệu 15m cho ${symbol}:`, error.message);
         return null;
-    }
-}
-
-// Hàm kiểm tra dải dung sai bất đối xứng theo cấu trúc: (EMA20 - Giá Mục Tiêu) / EMA20
-function checkTolerance(indicatorVal, testPrice, pctMin, pctMax) {
-    if (!indicatorVal || !testPrice) return false;
-    const diffPct = (indicatorVal - testPrice) / indicatorVal;
-    return diffPct >= pctMin && diffPct <= pctMax;
-}
-
-// Hàm gửi nội dung tin nhắn về Telegram Chat dạng rút gọn tối giản
-async function sendTelegramMessage(message) {
-    try {
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        await axios.post(url, {
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: 'HTML'
-        });
-        console.log('Đã gửi thông báo Telegram.');
-    } catch (error) {
-        console.error('Lỗi khi gửi Telegram:', error.message);
     }
 }
 
@@ -119,7 +113,7 @@ async function main() {
     }
 
     try {
-        // BƯỚC 1: Lấy toàn bộ Futures USDT (1 request duy nhất)
+        // BƯỚC 1: Lấy toàn bộ Futures USDT
         console.log('Đang quét dữ liệu tổng từ ticker OKX...');
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
@@ -142,24 +136,23 @@ async function main() {
                 return { instId: t.instId, change24h, lastPrice };
             });
 
-        // BƯỚC 3: Lấy chuẩn danh sách Top 10 tăng mạnh nhất và Top 20 giảm mạnh nhất
+        // BƯỚC 3: Lấy Top 10 tăng mạnh nhất và Top 20 giảm mạnh nhất
         let top10Gainers = [...tickers].sort((a, b) => b.change24h - a.change24h).slice(0, 10);
         let top20Losers = [...tickers].sort((a, b) => a.change24h - b.change24h).slice(0, 20);
 
-        // Gom nhóm tổng thể để chạy vòng lọc chung
+        // Gom nhóm tổng thể
         let mergedPool = new Map();
-        top10Gainers.forEach(coin => mergedPool.set(coin.instId, { ...coin, poolType: 'long' }));
+        top10Gainers.forEach(coin => mergedPool.set(coin.instId, coin));
         top20Losers.forEach(coin => {
             if (!mergedPool.has(coin.instId)) {
-                mergedPool.set(coin.instId, { ...coin, poolType: 'short' });
+                mergedPool.set(coin.instId, coin);
             }
         });
 
-        // BƯỚC 4: Loại coin đang trong danh sách Cooldown 2 giờ (Xử lý nhanh nội bộ)
+        // BƯỚC 4: Loại coin đang trong danh sách Cooldown 2 giờ
         let eligibleCoins = [];
         for (const [symbol, coin] of mergedPool) {
             if (sentLog[symbol] && (currentTime - sentLog[symbol] < 2 * 60 * 60 * 1000)) {
-                console.log(`-> Bỏ qua ${symbol} vì đang trong thời gian cooldown 2 giờ.`);
                 continue;
             }
             eligibleCoins.push(coin);
@@ -170,14 +163,14 @@ async function main() {
             return;
         }
 
-        // BƯỚC 5: TỐI ƯU SONG SONG KHUNG 15M (Gọi đồng thời tất cả các coin bằng Promise.all)
+        // BƯỚC 5: TỐI ƯU SONG SONG KHUNG 15M (Limit 100)
         console.log(`Đang quét song song nến 15m cho ${eligibleCoins.length} coin hợp lệ...`);
-        const promises = eligibleCoins.map(coin => getMetrics15m(coin.instId, coin.lastPrice));
+        const promises = eligibleCoins.map(coin => getMarketMetrics15m(coin.instId));
         const results = await Promise.all(promises);
 
         let hasNewAlert = false;
 
-        // BƯỚC 6 & 7: TÍNH TOÁN CHỈ BÁO VÀ KIỂM TRA ĐIỀU KIỆN MIX
+        // BƯỚC 6 & 7: KIỂM TRA ĐIỀU KIỆN TOÁN HỌC MỚI VÀ BẮN TELEGRAM
         for (const coin of eligibleCoins) {
             const metrics = results.find(r => r && r.symbol === coin.instId);
             if (!metrics) continue;
@@ -185,27 +178,26 @@ async function main() {
             let signal = null;
             let reason = "";
 
-            // --- MAIN LOGIC THỎA MÃN HỆ THỐNG ---
+            const a = metrics.a;
+            const b = metrics.b;
+            const c = metrics.c;
 
-            // Nhánh xử lý Lệnh LONG (Phát triển từ Top 10 Tăng)
-            if (coin.poolType === 'long' && metrics.change4h > 5) {
-                // --- THAY ĐỔI: Nới rộng dung sai râu nến từ -0.2% thành -0.6% -> [-0.006, 0.01] ---
-                if (checkTolerance(metrics.ema20_15m, metrics.currentLow15m, -0.006, 0.01)) {
-                    signal = "Long 15p";
-                    reason = `4h Tăng (${metrics.change4h.toFixed(1)}%) + Râu 15m chạm EMA20 (-0.6%/+1%)`;
-                }
+            // --- MAIN LOGIC CHỈ BÁO CẬP NHẬT BIẾN C ---
+
+            // Điều kiện SHORT: a < -5% VÀ 0.5% < c < -1%
+            // Lưu ý logic toán học: Trên trục số thực, mốc này tương đương: -1% <= c <= 0.5%
+            if (a < -5 && c >= -1 && c <= 0.5) {
+                signal = "Short 15p";
+                reason = `EMA xu hướng giảm mạnh (a = ${a.toFixed(1)}%) + Hệ số c đạt chuẩn (${c.toFixed(2)}%)`;
             }
 
-            // Nhánh xử lý Lệnh SHORT (Phát triển từ Top 20 Giảm)
-            if (coin.poolType === 'short' && metrics.change4h < -5) {
-                // Check dung sai râu nến: +0.2% < (ema20 - high) / ema20 < -1% -> [-0.01, 0.002] trên trục số (Giữ nguyên)
-                if (checkTolerance(metrics.ema20_15m, metrics.currentHigh15m, -0.01, 0.002)) {
-                    signal = "Short 15p";
-                    reason = `4h Giảm (${metrics.change4h.toFixed(1)}%) + Râu 15m chạm EMA20`;
-                }
+            // Điều kiện LONG: a > 3% VÀ -0.5% < b < 1%
+            if (a > 3 && b >= -0.5 && b <= 1) {
+                signal = "Long 15p";
+                reason = `EMA xu hướng tăng mạnh (a = +${a.toFixed(1)}%) + Hệ số b đạt chuẩn (${b.toFixed(2)}%)`;
             }
 
-            // Bắn tín hiệu về máy nếu đầy đủ các điều kiện
+            // Tiến hành đẩy thông báo về Telegram nếu thỏa mãn điều kiện
             if (signal) {
                 const coinName = coin.instId.replace('-USDT-SWAP', '');
                 const lowerSymbol = coin.instId.toLowerCase();
@@ -214,10 +206,18 @@ async function main() {
 
                 const message = `${icon} <b>${signal.toUpperCase()} #${coinName}</b>\n` +
                                 `• Giá hiện tại: ${coin.lastPrice}\n` +
+                                `• Hệ số xu hướng a: ${a.toFixed(2)}%\n` +
+                                `• Hệ số b (Long Low): ${b.toFixed(2)}%\n` +
+                                `• Hệ số c (Short High): ${c.toFixed(2)}%\n` +
                                 `• Chỉ báo: ${reason}\n` +
                                 `👉 <a href="${link}">Giao dịch ngay</a>`;
 
-                await sendTelegramMessage(message);
+                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'HTML'
+                }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
+
                 sentLog[coin.instId] = currentTime;
                 hasNewAlert = true;
             }
