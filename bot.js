@@ -92,7 +92,7 @@ async function getMarketMetrics15m(symbol) {
             const currentHigh = parseFloat(currentCandle[2]);
             const currentLow = parseFloat(currentCandle[3]);
 
-            // 5. BỔ SUNG TOÁN THỨC: Tính b theo giá thấp nhất và c theo giá cao nhất
+            // 5. Tính b theo giá thấp nhất và c theo giá cao nhất
             const b = currentEma20 ? ((currentEma20 - currentLow) / currentEma20) * 100 : 0;
             const c = currentEma20 ? ((currentEma20 - currentHigh) / currentEma20) * 100 : 0;
 
@@ -182,19 +182,18 @@ async function main() {
             const b = metrics.b;
             const c = metrics.c;
 
-            // --- MAIN LOGIC CHỈ BÁO CẬP NHẬT BIẾN C ---
+            // --- MAIN LOGIC CHỈ BÁO THEO MỐC PHẦN TRĂM MỚI ---
 
-            // Điều kiện SHORT: a < -5% VÀ 0.5% < c < -1%
-            // Lưu ý logic toán học: Trên trục số thực, mốc này tương đương: -1% <= c <= 0.5%
-            if (a < -5 && c >= -1 && c <= 0.5) {
+            // Điều kiện SHORT sửa đổi: a < -3% VÀ 0.5% < c < -1% (Toán học: -1% <= c <= 0.5%)
+            if (a < -3 && c >= -1 && c <= 0.5) {
                 signal = "Short 15p";
-                reason = `EMA xu hướng giảm mạnh (a = ${a.toFixed(1)}%) + Hệ số c đạt chuẩn (${c.toFixed(2)}%)`;
+                reason = `EMA xu hướng giảm (a = ${a.toFixed(1)}%) + Râu nến High quét qua EMA20`;
             }
 
-            // Điều kiện LONG: a > 3% VÀ -0.5% < b < 1%
-            if (a > 3 && b >= -0.5 && b <= 1) {
+            // Điều kiện LONG sửa đổi: a > 2% VÀ -0.5% < b < 1% (Toán học: -0.5% <= b <= 1%)
+            if (a > 2 && b >= -0.5 && b <= 1) {
                 signal = "Long 15p";
-                reason = `EMA xu hướng tăng mạnh (a = +${a.toFixed(1)}%) + Hệ số b đạt chuẩn (${b.toFixed(2)}%)`;
+                reason = `EMA xu hướng tăng (a = +${a.toFixed(1)}%) + Râu nến Low quét qua EMA20`;
             }
 
             // Tiến hành đẩy thông báo về Telegram nếu thỏa mãn điều kiện
