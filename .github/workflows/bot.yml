@@ -1,32 +1,52 @@
-name: OKX Coin Alert
+name: Crypto Bot Schedule
 
 on:
-  repository_dispatch:
-    types: [run-bot]
-  workflow_dispatch:
+  schedule:
+    # 1. Chạy cập nhật giá mở cửa lúc 00:02 UTC (tức 7:02 sáng Việt Nam) mỗi ngày
+    - cron: '2 0 * * *'
+    
+    # 2. Chạy bot kiểm tra tín hiệu kỹ thuật liên tục mỗi 5 phút
+    - cron: '*/5 * * * *'
+
+  workflow_dispatch: # Cho phép bạn bấm nút chạy thủ công trên giao diện nếu cần
 
 jobs:
-  run:
+  run-bot:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Checkout mã nguồn repo
+        uses: actions/checkout@v4
         with:
-          node-version: 24
+          persist-credentials: true # Cần thiết để lưu và đẩy file state.json lên lại Github
 
-      - run: npm install axios
+      - name: Setup môi trường Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-node-version: 20
 
-      - run: node bot.js
+      - name: Cài đặt Dependencies
+        run: npm install axios
+
+      # Nhánh 1: Nếu rơi vào khung giờ 7:02 sáng (00:02 UTC), chạy file chốt giá 7h trước
+      - name: Chốt giá 7h sáng (Chỉ chạy lúc 7:02 AM VN)
+        if: github.event.schedule == '2 0 * * *' || github.event_name == 'workflow_dispatch'
+        run: node 7h.js
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
 
-      - name: Save state
+      # Nhánh 2: Luôn luôn chạy file kiểm tra tín hiệu từ giá 7h có sẵn
+      - name: Chạy Bot quét tín hiệu kĩ thuật
+        run: node bot.js
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+
+      # Bước quan trọng nhất: Đẩy file state.json hoặc sentCoins.json vừa cập nhật lên ngược lại GitHub để lưu giữ dữ liệu cho lần chạy sau
+      - name: Commit và Push cập nhật file trạng thái
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add sentCoins.json
-          git commit -m "update state" || exit 0
-          git push
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json sentCoins.json || true
+          git commit -m "🤖 [Bot] Cập nhật file trạng thái tự động" || true
+          git push origin main || true
