@@ -65,12 +65,14 @@ async function getMarketMetrics5m(symbol) {
 
 async function main() {
     try {
-        // 1. Đọc giá mở cửa 7h từ file state.json
+        // 1. Đọc dữ liệu từ file state.json theo cấu trúc mới
         if (!fs.existsSync(STATE_FILE)) {
-            console.error('Không tìm thấy dữ liệu giá 7h sáng. Hãy chạy file 7h.js trước!');
+            console.error('Không tìm thấy dữ liệu state.json. Hãy chạy file 7h.js trước!');
             return;
         }
-        const openPrices7AM = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+        const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+        const openPrices7AM = stateData.openPrices || {};
+        const excludedTop10 = stateData.top10Gainers24h || []; // Danh sách cần loại trừ
 
         // 2. Lấy Ticker tổng hiện tại
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -80,7 +82,7 @@ async function main() {
         const sentLog = loadSentLog();
         const currentTime = Date.now();
 
-        // 3. Tính toán nhanh % biến động dựa trên dữ liệu lưu sẵn trong máy
+        // 3. Tính toán nhanh % biến động dựa trên dữ liệu lưu sẵn
         let pool = response.data.data
             .filter(t => t.instId.endsWith('-USDT-SWAP') && openPrices7AM[t.instId])
             .map(t => {
@@ -90,7 +92,7 @@ async function main() {
                 return { instId: t.instId, changeSince7AM, lastPrice };
             });
 
-        // 4. Phân chia chuẩn xác Top 5 Tăng và Top 5 Giảm từ 7h sáng
+        // 4. Phân chia tạm thời Top 5 Tăng và Top 5 Giảm từ 7h sáng
         let top5Gainers = [...pool].sort((a, b) => b.changeSince7AM - a.changeSince7AM).slice(0, 5);
         let top5Losers = [...pool].sort((a, b) => a.changeSince7AM - b.changeSince7AM).slice(0, 5);
 
@@ -101,13 +103,26 @@ async function main() {
             else finalPool.get(c.instId).mode = 'both';
         });
 
-        // 5. Quét song song nến 5m cho các coin đạt tiêu chuẩn xếp hạng
+        // 5. BỔ SUNG: Tiến hành kiểm tra và loại trừ những coin nằm trong danh sách Top 10 Tăng 24h đã lưu lúc 7h sáng
+        for (const symbol of finalPool.keys()) {
+            if (excludedTop10.includes(symbol)) {
+                console.log(`[Loại trừ] Bỏ qua ${symbol} vì nằm trong danh sách Top 10 tăng mạnh nhất 24h chốt từ 7h sáng.`);
+                finalPool.delete(symbol);
+            }
+        }
+
+        if (finalPool.size === 0) {
+            console.log('Không còn coin nào sau khi loại bỏ danh sách Top 10.');
+            return;
+        }
+
+        // 6. Quét song song nến 5m cho các coin còn lại hợp lệ
         const promises = Array.from(finalPool.keys()).map(symbol => getMarketMetrics5m(symbol));
         const techResults = await Promise.all(promises);
 
         let hasNewAlert = false;
 
-        // 6. Kiểm tra dải dung sai và áp dụng bộ lọc Cooldown ở bước cuối cùng
+        // 7. Kiểm tra dải dung sai và áp dụng bộ lọc Cooldown ở bước cuối cùng
         for (const [symbol, coinData] of finalPool) {
             if (sentLog[symbol] && (currentTime - sentLog[symbol] < 1 * 60 * 60 * 1000)) continue; // Cooldown 1h
 
