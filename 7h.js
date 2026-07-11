@@ -11,7 +11,7 @@ const STATE_FILE = path.join(__dirname, 'state.json');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
-    console.log('--- BẮT ĐẦU CHỐT GIÁ MỚI VÀ LỌC TOP 10 24H LÚC 7H SÁNG ---');
+    console.log('--- BẮT ĐẦU CHỐT GIÁ MỚI VÀ LỌC TOP 5 24H LÚC 7H SÁNG ---');
     try {
         // 1. Lấy danh sách tất cả coin Futures USDT kèm thông tin 24h
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -23,7 +23,7 @@ async function main() {
 
         const rawFutures = response.data.data.filter(t => t.instId.endsWith('-USDT-SWAP'));
         
-        // 2. Lọc nhanh Top 10 coin tăng mạnh nhất 24h tại thời điểm 7h sáng
+        // 2. Lọc nhanh đúng TOP 5 coin tăng mạnh nhất 24h tại thời điểm 7h sáng
         const sortedBy24h = [...rawFutures]
             .map(t => {
                 const open24h = parseFloat(t.open24h);
@@ -32,10 +32,10 @@ async function main() {
                 return { instId: t.instId, change24h };
             })
             .sort((a, b) => b.change24h - a.change24h)
-            .slice(0, 10);
+            .slice(0, 5); // Đổi từ 10 xuống 5
             
-        const top10GainersList = sortedBy24h.map(c => c.instId);
-        console.log('Danh sách Top 10 tăng mạnh nhất 24h chốt lúc 7h:', top10GainersList);
+        const top5GainersList = sortedBy24h.map(c => c.instId);
+        console.log('Danh sách Top 5 tăng mạnh nhất 24h chốt lúc 7h:', top5GainersList);
 
         const openPricesData = {};
 
@@ -68,7 +68,7 @@ async function main() {
 
         // 4. Cấu trúc lại dữ liệu đầu ra và ghi đè hoàn toàn lên state.json cũ
         const finalState = {
-            top10Gainers24h: top10GainersList,
+            top5Gainers24h: top5GainersList, // Lưu key mới top5
             openPrices: openPricesData
         };
 
