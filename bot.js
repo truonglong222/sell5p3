@@ -22,6 +22,7 @@ function loadSentLog() {
     return {};
 }
 
+// Giữ Cooldown 1 giờ
 function saveSentLog(logData) {
     try {
         const now = Date.now();
@@ -65,14 +66,14 @@ async function getMarketMetrics5m(symbol) {
 
 async function main() {
     try {
-        // 1. Đọc dữ liệu từ file state.json theo cấu trúc mới
+        // 1. Đọc dữ liệu từ file state.json
         if (!fs.existsSync(STATE_FILE)) {
             console.error('Không tìm thấy dữ liệu state.json. Hãy chạy file 7h.js trước!');
             return;
         }
         const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
         const openPrices7AM = stateData.openPrices || {};
-        const excludedTop10 = stateData.top10Gainers24h || []; // Danh sách cần loại trừ
+        const excludedTop5 = stateData.top5Gainers24h || []; // Danh sách Top 5 cần loại trừ ở chiều Long
 
         // 2. Lấy Ticker tổng hiện tại
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -82,7 +83,7 @@ async function main() {
         const sentLog = loadSentLog();
         const currentTime = Date.now();
 
-        // 3. Tính toán nhanh % biến động dựa trên dữ liệu lưu sẵn
+        // 3. Tính toán nhanh % biến động từ 7h sáng
         let pool = response.data.data
             .filter(t => t.instId.endsWith('-USDT-SWAP') && openPrices7AM[t.instId])
             .map(t => {
@@ -92,31 +93,41 @@ async function main() {
                 return { instId: t.instId, changeSince7AM, lastPrice };
             });
 
-        // 4. Phân chia tạm thời Top 5 Tăng và Top 5 Giảm từ 7h sáng
+        // 4. Phân chia chuẩn xác Top 5 Tăng và Top 5 Giảm từ 7h sáng
         let top5Gainers = [...pool].sort((a, b) => b.changeSince7AM - a.changeSince7AM).slice(0, 5);
         let top5Losers = [...pool].sort((a, b) => a.changeSince7AM - b.changeSince7AM).slice(0, 5);
 
         let finalPool = new Map();
         top5Gainers.forEach((c, i) => finalPool.set(c.instId, { ...c, mode: 'long', label: `TOP ${i+1} TĂNG` }));
         top5Losers.forEach((c, i) => {
-            if (!finalPool.has(c.instId)) finalPool.set(c.instId, { ...c, mode: 'short', label: `TOP ${i+1} GIẢM` });
-            else finalPool.get(c.instId).mode = 'both';
+            if (!finalPool.has(c.instId)) {
+                finalPool.set(c.instId, { ...c, mode: 'short', label: `TOP ${i+1} GIẢM` });
+            } else {
+                finalPool.get(c.instId).mode = 'both';
+            }
         });
 
-        // 5. BỔ SUNG: Tiến hành kiểm tra và loại trừ những coin nằm trong danh sách Top 10 Tăng 24h đã lưu lúc 7h sáng
-        for (const symbol of finalPool.keys()) {
-            if (excludedTop10.includes(symbol)) {
-                console.log(`[Loại trừ] Bỏ qua ${symbol} vì nằm trong danh sách Top 10 tăng mạnh nhất 24h chốt từ 7h sáng.`);
-                finalPool.delete(symbol);
+        // 5. --- THAY ĐỔI LOGIC LOẠI TRỪ: Chỉ loại bỏ quyền LONG đối với coin thuộc Top 5 Tăng 24h ---
+        for (const [symbol, coinData] of finalPool.entries()) {
+            if (excludedTop5.includes(symbol)) {
+                if (coinData.mode === 'long') {
+                    // Nếu coin chỉ có tín hiệu LONG -> Xóa hẳn khỏi danh sách quét
+                    console.log(`[Loại trừ LONG] Bỏ qua tín hiệu LONG của ${symbol} vì thuộc Top 5 Tăng 24h.`);
+                    finalPool.delete(symbol);
+                } else if (coinData.mode === 'both') {
+                    // Nếu coin vừa thuộc nhóm Tăng vừa thuộc nhóm Giảm (hy hữu), hạ cấp chỉ cho phép SHORT
+                    coinData.mode = 'short';
+                    console.log(`[Hạ cấp xuống SHORT] Chặn chiều LONG của ${symbol}, giữ lại chiều SHORT.`);
+                }
             }
         }
 
         if (finalPool.size === 0) {
-            console.log('Không còn coin nào sau khi loại bỏ danh sách Top 10.');
+            console.log('Không còn coin nào hợp lệ sau khi lọc.');
             return;
         }
 
-        // 6. Quét song song nến 5m cho các coin còn lại hợp lệ
+        // 6. Quét song song nến 5m cho các coin còn lại
         const promises = Array.from(finalPool.keys()).map(symbol => getMarketMetrics5m(symbol));
         const techResults = await Promise.all(promises);
 
@@ -124,13 +135,15 @@ async function main() {
 
         // 7. Kiểm tra dải dung sai và áp dụng bộ lọc Cooldown ở bước cuối cùng
         for (const [symbol, coinData] of finalPool) {
-            if (sentLog[symbol] && (currentTime - sentLog[symbol] < 1 * 60 * 60 * 1000)) continue; // Cooldown 1h
+            if (sentLog[symbol] && (currentTime - sentLog[symbol] < 1 * 60 * 60 * 1000)) continue; 
 
             const metrics = techResults.find(r => r && r.symbol === symbol);
             if (!metrics) continue;
 
             let signal = null;
+            // Chỉ check lệnh Long nếu mode là 'long' hoặc 'both'
             if ((coinData.mode === 'long' || coinData.mode === 'both') && (metrics.a >= -0.5 && metrics.a <= 1)) signal = "Long 5p";
+            // Chỉ check lệnh Short nếu mode là 'short' || 'both' (Chiều Short không bao giờ bị loại trừ bởi excludedTop5)
             if ((coinData.mode === 'short' || coinData.mode === 'both') && (metrics.b >= -1 && metrics.b <= 0.5)) signal = "Short 5p";
 
             if (signal) {
