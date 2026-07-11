@@ -56,8 +56,22 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Khung 5m (limit 100): Tính EMA20, % giảm 30m (6 nến), hệ số a và b
-async function getMarketMetrics5m(symbol, lastPrice) {
+// Lấy giá mở cửa lúc 7h sáng (00:00 UTC) từ nến ngày 1D
+async function getOpenPriceSince7AM(symbol) {
+    try {
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=2`;
+        const response = await axios.get(url, { timeout: 5000 });
+        if (response.data && response.data.code === '0' && response.data.data.length > 0) {
+            return parseFloat(response.data.data[0][1]); // Giá mở cửa nến 1D
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
+}
+
+// Khung 5m (limit 100): Tính EMA20, hệ số a và b phục vụ dải dung sai
+async function getMarketMetrics5m(symbol) {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=100`;
         const response = await axios.get(url, { timeout: 8000 });
@@ -70,21 +84,16 @@ async function getMarketMetrics5m(symbol, lastPrice) {
             const historyPrices = candles.slice(0, closedIndex + 1).map(c => parseFloat(c[4]));
             const ema20_5m = calculateEMA(historyPrices, 20);
 
-            // 2. Tính % biến động 30m (lùi ngược 6 cây nến 5m trước đó: 6 * 5m = 30m)
-            const index30m = candles.length - 7;
-            const open30mAgo = parseFloat(candles[index30m][1]);
-            const change30m = open30mAgo ? ((lastPrice - open30mAgo) / open30mAgo) * 100 : 0;
-
-            // 3. Lấy thông số giá High/Low của nến hiện tại đang chạy (candles.length - 1)
+            // 2. Lấy thông số giá High/Low của nến hiện tại đang chạy (candles.length - 1)
             const currentCandle = candles[candles.length - 1];
             const currentHigh = parseFloat(currentCandle[2]);
             const currentLow = parseFloat(currentCandle[3]);
 
-            // 4. Tính toán hệ số a (Long Low) và hệ số b (Short High)
+            // 3. Tính toán hệ số a (Long Low) và hệ số b (Short High)
             const a = ema20_5m ? ((ema20_5m - currentLow) / ema20_5m) * 100 : 0;
             const b = ema20_5m ? ((ema20_5m - currentHigh) / ema20_5m) * 100 : 0;
 
-            return { symbol, ema20_5m, change30m, a, b };
+            return { symbol, ema20_5m, a, b };
         }
         return null;
     } catch (error) {
@@ -114,81 +123,68 @@ async function main() {
         const sentLog = loadSentLog();
         const currentTime = Date.now();
 
-        // BƯỚC 2: Tính % thay đổi 24h từ ticker
-        let tickers = response.data.data
-            .filter(t => t.instId.endsWith('-USDT-SWAP'))
-            .map(t => {
-                const open24h = parseFloat(t.open24h);
-                const lastPrice = parseFloat(t.last);
-                const change24h = open24h ? ((lastPrice - open24h) / open24h) * 100 : 0;
-                return { instId: t.instId, change24h, lastPrice };
-            });
+        // Lọc danh sách USDT-SWAP ban đầu
+        let rawFutures = response.data.data.filter(t => t.instId.endsWith('-USDT-SWAP'));
 
-        // Sắp xếp danh sách 24h từ cao xuống thấp
-        let sorted24hRank = [...tickers].sort((a, b) => b.change24h - a.change24h);
+        // BƯỚC 2: Tính toán song song % tăng trưởng kể từ 7H SÁNG của TOÀN BỘ coin
+        console.log(`Đang quét giá mở cửa 7h sáng cho ${rawFutures.length} cặp coin...`);
+        const openPricePromises = rawFutures.map(async (t) => {
+            const open7AM = await getOpenPriceSince7AM(t.instId);
+            const lastPrice = parseFloat(t.last);
+            const changeSince7AM = open7AM ? ((lastPrice - open7AM) / open7AM) * 100 : -999;
+            return { instId: t.instId, changeSince7AM, lastPrice };
+        });
 
-        // BƯỚC 3: --- THAY ĐỔI THEO YÊU CẦU MỚI: BÓC TÁCH TRỰC TIẾP TỪ THỨ HẠNG TIKER 24H ---
-        // Lấy Top 10 tổng thể phục vụ đầu vào quét dữ liệu nến
-        let top10Gainers24h = sorted24hRank.slice(0, 10);
+        const tickersWith7AM = (await Promise.all(openPricePromises)).filter(c => c.changeSince7AM !== -999);
 
-        console.log(`Đang quét song song nến 5m cho toàn bộ ${top10Gainers24h.length} coin...`);
-        const promises = top10Gainers24h.map(coin => getMarketMetrics5m(coin.instId, coin.lastPrice));
-        const results = await Promise.all(promises);
+        // BƯỚC 3: SẮP XẾP BÓC TÁCH TOP TĂNG VÀ TOP GIẢM TỪ 7H SÁNG
+        // 3.1 Lọc Top 5 TĂNG mạnh nhất kể từ 7h sáng (Chiều LONG)
+        let top5Gainers = [...tickersWith7AM].sort((a, b) => b.changeSince7AM - a.changeSince7AM).slice(0, 5);
+        
+        // 3.2 Lọc Top 5 GIẢM mạnh nhất kể từ 7h sáng (Chiều SHORT)
+        let top5Losers = [...tickersWith7AM].sort((a, b) => a.changeSince7AM - b.changeSince7AM).slice(0, 5);
 
-        let validMetrics = results.filter(r => r !== null);
-
-        // Gom nhóm tạm thời để phân phối tín hiệu
-        let targetPool = new Map();
-
-        // Duyệt toàn bộ Top 10 để phân loại nhóm theo đúng quy định mới
-        top10Gainers24h.forEach((coin, index) => {
-            const rank24h = index + 1; // Vị trí xếp hạng thực tế từ 1 đến 10
-            const metrics = validMetrics.find(m => m.symbol === coin.instId);
-            if (!metrics) return;
-
-            let allowedSignal = 'none';
-
-            // Chiều SHORT: Áp dụng cho TOÀN BỘ TOP 10 (từ rank 1 đến 10)
-            if (metrics.change30m < -3) {
-                allowedSignal = 'short';
-            }
-
-            // Chiều LONG: Chỉ áp dụng TRỰC TIẾP cho coin nằm trong khoảng từ Top 4 đến Top 10
-            if (rank24h >= 4 && rank24h <= 10) {
-                if (allowedSignal === 'short') {
-                    allowedSignal = 'both'; // Nếu vừa giảm 30m > 3% vừa thuộc top 4-10
-                } else {
-                    allowedSignal = 'long';
-                }
-            }
-
-            if (allowedSignal !== 'none') {
-                targetPool.set(coin.instId, { 
-                    ...metrics, 
-                    allowedSignal, 
-                    label: `TOP ${rank24h} 24h`, 
-                    change24h: coin.change24h 
-                });
+        // Gom nhóm tổng Pool cần check kỹ thuật (Dùng Map chặn trùng lặp coin nếu có biến động bất thường)
+        let mergedPool = new Map();
+        
+        top5Gainers.forEach((coin, index) => {
+            mergedPool.set(coin.instId, { ...coin, allowedSignal: 'long', rankLabel: `TOP ${index + 1} TĂNG` });
+        });
+        
+        top5Losers.forEach((coin, index) => {
+            if (!mergedPool.has(coin.instId)) {
+                mergedPool.set(coin.instId, { ...coin, allowedSignal: 'short', rankLabel: `TOP ${index + 1} GIẢM` });
+            } else {
+                mergedPool.get(coin.instId).allowedSignal = 'both'; // Hy hữu coin vừa thuộc top gainer vừa top loser
             }
         });
 
+        if (mergedPool.size === 0) return;
+
+        // BƯỚC 4: TỐI ƯU SONG SONG KHUNG 5M CHO TẤT CẢ COIN ĐÃ LỌC ĐƯỢC
+        console.log(`Đang quét song song nến 5m cho ${mergedPool.size} coin chiến lược...`);
+        const promises = Array.from(mergedPool.keys()).map(symbol => getMarketMetrics5m(symbol));
+        const results = await Promise.all(promises);
+
         let hasNewAlert = false;
 
-        // BƯỚC 4 & 5: SAU KHI CHỌN ĐƯỢC COIN MỚI LOẠI BỎ COOLDOWN VÀ CHECK DUNG SAI EMA
-        for (const [symbol, coinMetrics] of targetPool) {
+        // BƯỚC 5 & 6: DUYỆT VÒNG LẶP CHECK DUNG SAI KỸ THUẬT VÀ LỌC COOLDOWN SAU CÙNG
+        for (const [symbol, coinData] of mergedPool) {
             
-            // Chặn dính Cooldown 1 giờ ở cổng cuối cùng
+            // THỨ TỰ: Chỉ loại bỏ coin dính Cooldown 1 giờ khi nó đã vượt qua vòng xếp hạng thành công
             if (sentLog[symbol] && (currentTime - sentLog[symbol] < 1 * 60 * 60 * 1000)) {
-                console.log(`-> Bỏ qua ${symbol} vì đang dính Cooldown.`);
                 continue;
             }
 
-            let signal = null;
-            const a = coinMetrics.a;
-            const b = coinMetrics.b;
-            const mode = coinMetrics.allowedSignal;
+            const metrics = results.find(r => r && r.symbol === symbol);
+            if (!metrics) continue;
 
-            // Kiểm tra dải dung sai an toàn EMA20 5m
+            let signal = null;
+            const a = metrics.a;
+            const b = metrics.b;
+            const mode = coinData.allowedSignal;
+
+            // Kiểm tra bộ lọc dung sai EMA20 5m như cũ
             // Nhánh xử lý LONG: -0.5% <= a <= 1%
             if ((mode === 'long' || mode === 'both') && (a >= -0.5 && a <= 1)) {
                 signal = "Long 5p";
@@ -199,19 +195,18 @@ async function main() {
                 signal = "Short 5p";
             }
 
-            // Gửi tin nhắn về Telegram rút gọn chuẩn 1 dòng
+            // GỬI TIN NHẮN TELEGRAM SIÊU RÚT GỌN 1 DÒNG CHUẨN XU HƯỚNG
             if (signal) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const lowerSymbol = symbol.toLowerCase();
                 const link = `https://www.okx.com/trade-swap/${lowerSymbol}`;
                 const icon = signal.startsWith("Long") ? "🟢" : "🔴";
                 
-                // Hiển thị phần trăm 24h cho đúng bản chất lọc trực tiếp từ ticker 24h
-                const formattedPct = coinMetrics.change24h >= 0 ? `+${coinMetrics.change24h.toFixed(2)}%` : `${coinMetrics.change24h.toFixed(2)}%`;
+                const formattedPct = coinData.changeSince7AM >= 0 ? `+${coinData.changeSince7AM.toFixed(2)}%` : `${coinData.changeSince7AM.toFixed(2)}%`;
 
-                // Định dạng hiển thị mẫu: 🟢 LONG 5P #TON TOP 5 24h (+12.45%) 👉 Giao dịch ngay
-                // Định dạng hiển thị mẫu: 🔴 SHORT 5P #LINK TOP 2 24h (+24.12%) 👉 Giao dịch ngay (Lúc này có thêm râu nến giảm 30m > 3%)
-                const message = `${icon} <b>${signal.toUpperCase()} #${coinName} ${coinMetrics.label} (${formattedPct})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
+                // Định dạng hiển thị: 🟢 LONG 5P #BTC TOP 1 TĂNG (+4.12%) 👉 Giao dịch ngay
+                // Định dạng hiển thị: 🔴 SHORT 5P #SOL TOP 3 GIẢM (-3.85%) 👉 Giao dịch ngay
+                const message = `${icon} <b>${signal.toUpperCase()} #${coinName} ${coinData.rankLabel} (${formattedPct})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
 
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                     chat_id: TELEGRAM_CHAT_ID,
@@ -227,7 +222,7 @@ async function main() {
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
-        console.log('Hoàn thành chu kỳ quét siêu tốc cấu hình trực tiếp 24h.');
+        console.log('Hoàn thành chu kỳ quét siêu tốc theo cấu trúc Long/Short mốc 7h sáng.');
 
     } catch (error) {
         console.error('Lỗi hệ thống hàm main:', error.message);
