@@ -1,14 +1,12 @@
 name: Crypto Bot Schedule
 
 on:
-  schedule:
-    # 1. Chạy cập nhật giá mở cửa lúc 00:02 UTC (tức 7:02 sáng Việt Nam) mỗi ngày
-    - cron: '2 0 * * *'
-    
-    # 2. Chạy bot kiểm tra tín hiệu kỹ thuật liên tục mỗi 5 phút
-    - cron: '*/5 * * * *'
-
-  workflow_dispatch: # Cho phép bạn bấm nút chạy thủ công trên giao diện nếu cần
+  workflow_dispatch: # Lắng nghe lệnh gọi từ bên ngoài kích hoạt
+    inputs:
+      action_type: # Nhận diện loại hành động gửi từ web cron-job
+        description: 'Nhập run_7h hoặc run_bot'
+        required: true
+        default: 'run_bot'
 
 jobs:
   run-bot:
@@ -17,32 +15,32 @@ jobs:
       - name: Checkout mã nguồn repo
         uses: actions/checkout@v4
         with:
-          persist-credentials: true # Cần thiết để lưu và đẩy file state.json lên lại Github
+          persist-credentials: true
 
       - name: Setup môi trường Node.js
         uses: actions/setup-node@v4
         with:
-          node-node-version: 20
+          node-version: 20
 
       - name: Cài đặt Dependencies
         run: npm install axios
 
-      # Nhánh 1: Nếu rơi vào khung giờ 7:02 sáng (00:02 UTC), chạy file chốt giá 7h trước
-      - name: Chốt giá 7h sáng (Chỉ chạy lúc 7:02 AM VN)
-        if: github.event.schedule == '2 0 * * *' || github.event_name == 'workflow_dispatch'
+      # CHỈ chạy file 7h.js nếu bên web cron-job truyền tham số "run_7h"
+      - name: Chốt giá 7h sáng
+        if: github.event.inputs.action_type == 'run_7h'
         run: node 7h.js
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
 
-      # Nhánh 2: Luôn luôn chạy file kiểm tra tín hiệu từ giá 7h có sẵn
+      # LUÔN LUÔN chạy file bot.js ở mọi lượt kích hoạt
       - name: Chạy Bot quét tín hiệu kĩ thuật
         run: node bot.js
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
 
-      # Bước quan trọng nhất: Đẩy file state.json hoặc sentCoins.json vừa cập nhật lên ngược lại GitHub để lưu giữ dữ liệu cho lần chạy sau
+      # Đẩy file trạng thái mới lên lại Github
       - name: Commit và Push cập nhật file trạng thái
         run: |
           git config --global user.name "github-actions[bot]"
