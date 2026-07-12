@@ -23,14 +23,18 @@ function loadSentLog() {
     return {};
 }
 
-// Cập nhật dọn dẹp log cũ sau 2 giờ để đồng bộ với Cooldown mới
+// Cấu hình dọn dẹp log sau 2 giờ (chạy riêng cho cấu trúc sub-object)
 function saveSentLog(logData) {
     try {
         const now = Date.now();
         const cleanedLog = {};
-        for (const [coin, timestamp] of Object.entries(logData)) {
-            if (now - timestamp < 2 * 60 * 60 * 1000) { // Cooldown 2h
-                cleanedLog[coin] = timestamp;
+        for (const [coin, timeData] of Object.entries(logData)) {
+            const temp = {};
+            if (timeData._5m && now - timeData._5m < 2 * 60 * 60 * 1000) temp._5m = timeData._5m;
+            if (timeData._15m && now - timeData._15m < 2 * 60 * 60 * 1000) temp._15m = timeData._15m;
+            
+            if (Object.keys(temp).length > 0) {
+                cleanedLog[coin] = temp;
             }
         }
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
@@ -61,25 +65,19 @@ async function getTechnicalMetrics(symbol) {
             const currentHigh = parseFloat(currentCandle[2]);
             const currentLow = parseFloat(currentCandle[3]);
 
-            // ==========================================
             // THÀNH PHẦN 1: TÍNH EMA20 CHO KHUNG 5M
-            // ==========================================
             const closedCandles5m = candles5m.slice(0, candles5m.length - 1);
             const prices5m = closedCandles5m.map(c => parseFloat(c[4]));
             const ema20_5m = calculateEMA(prices5m, 20);
 
-            // ==========================================
             // THÀNH PHẦN 2: TÍNH EMA20 KHUNG 15M TỪ NẾN 5M
-            // ==========================================
             const prices15m = [];
             for (let i = 2; i < closedCandles5m.length; i += 3) {
                 prices15m.push(parseFloat(closedCandles5m[i][4]));
             }
             const ema20_15m = calculateEMA(prices15m, 20);
 
-            // ==========================================
             // THÀNH PHẦN 3: TÍNH TOÁN ĐỘ GẦN (HỆ SỐ KHOẢNG CÁCH)
-            // ==========================================
             const a_5m = ema20_5m ? ((ema20_5m - currentLow) / ema20_5m) * 100 : 999;
             const b_5m = ema20_5m ? ((ema20_5m - currentHigh) / ema20_5m) * 100 : 999;
 
@@ -118,22 +116,18 @@ async function main() {
             .map(t => {
                 const open7AM = openPrices7AM[t.instId];
                 const lastPrice = parseFloat(t.last);
-                
-                // ĐÃ SỬA CỐT LÕI: Lấy vol24h để tính chuẩn Volume bằng USDT thay vì số lượng coin rác
                 const vol24hQuote = parseFloat(t.vol24h); 
-                
                 const changeSince7AM = ((lastPrice - open7AM) / open7AM) * 100;
                 return { instId: t.instId, changeSince7AM, lastPrice, vol24hQuote };
             });
 
-        // BƯỚC 4: Lấy danh sách Top 10 Tăng mạnh nhất + Top 10 Giảm sâu nhất từ 7h
-        let top10Gainers = [...calculatedPool].sort((a, b) => b.changeSince7AM - a.changeSince7AM).slice(0, 10);
-        let top10Losers = [...calculatedPool].sort((a, b) => a.changeSince7AM - b.changeSince7AM).slice(0, 10);
+        // BƯỚC 4: ĐÃ THAY ĐỔI: Chỉ lấy danh sách Top 5 Tăng mạnh nhất + Top 5 Giảm sâu nhất từ 7h
+        let top5Gainers = [...calculatedPool].sort((a, b) => b.changeSince7AM - a.changeSince7AM).slice(0, 5);
+        let top5Losers = [...calculatedPool].sort((a, b) => a.changeSince7AM - b.changeSince7AM).slice(0, 5);
 
-        // Trộn 2 danh sách lại vào một cấu trúc Map chung để phân loại hướng lệnh
         let rankingPool = new Map();
-        top10Gainers.forEach((c, i) => rankingPool.set(c.instId, { ...c, mode: 'long', label: `TOP ${i + 1} TĂNG` }));
-        top10Losers.forEach((c, i) => {
+        top5Gainers.forEach((c, i) => rankingPool.set(c.instId, { ...c, mode: 'long', label: `TOP ${i + 1} TĂNG` }));
+        top5Losers.forEach((c, i) => {
             if (!rankingPool.has(c.instId)) {
                 rankingPool.set(c.instId, { ...c, mode: 'short', label: `TOP ${i + 1} GIẢM` });
             } else {
@@ -150,59 +144,74 @@ async function main() {
         }
 
         if (rankingPool.size === 0) {
-            console.log('Không có coin nào trong Top 10 vượt qua được bộ lọc Volume Khối lượng > 5 Triệu $.');
+            console.log('Không có coin nào trong Top 5 vượt qua được bộ lọc Volume Khối lượng > 5 Triệu $.');
             return;
         }
 
-        // BƯỚC 6: Lấy 150 nến 5m xử lý đa khung thời gian song song (Promise.all)
-        console.log(`Đang chạy tính toán đa khung EMA (5m & 15m) cho ${rankingPool.size} coin đạt chuẩn Vol...`);
+        // BƯỚC 6: Lấy 150 nến 5m xử lý đa khung thời gian song song
+        console.log(`Đang chạy tính toán đa khung EMA cho ${rankingPool.size} coin đạt chuẩn Vol...`);
         const technicalPromises = Array.from(rankingPool.keys()).map(symbol => getTechnicalMetrics(symbol));
         const technicalResults = await Promise.all(technicalPromises);
 
         let hasNewAlert = false;
 
-        // BƯỚC 7 & 8: ĐỐI CHIẾU ĐIỀU KIỆN LONG/SHORT VÀ LOẠI BỎ COOLDOWN 2 GIỜ Ở BƯỚC CUỐI CÙNG
+        // BƯỚC 7 & 8: ĐỐI CHIẾU ĐIỀU KIỆN LONG/SHORT VÀ CHECK COOLDOWN 2 GIỜ RIÊNG BIỆT CHO TỪNG KHUNG
         for (const [symbol, coinData] of rankingPool) {
-            
-            // Bộ lọc kiểm tra Cooldown chặn 2 giờ
-            if (sentLog[symbol] && (currentTime - sentLog[symbol] < 2 * 60 * 60 * 1000)) {
-                continue; 
-            }
-
             const metrics = technicalResults.find(r => r && r.symbol === symbol);
             if (!metrics) continue;
 
-            let signal = null;
+            // Khởi tạo cấu trúc log con cho coin nếu chưa tồn tại
+            if (!sentLog[symbol]) sentLog[symbol] = { _5m: 0, _15m: 0 };
+
+            const coinLog = sentLog[symbol];
             const mode = coinData.mode;
 
-            // --- KIỂM TRA ĐIỀU KIỆN CHIỀU LONG ---
+            let finalSignal = null;
+            let triggeredFrame = null; // Biến đánh dấu khung thời gian được kích hoạt
+
+            // --- KIỂM TRA CHIỀU LONG ---
             if (mode === 'long' || mode === 'both') {
                 const closeToEma5m = (metrics.a_5m >= -0.5 && metrics.a_5m <= 1);
                 const closeToEma15m = (metrics.a_15m >= -0.5 && metrics.a_15m <= 1);
                 
-                if (closeToEma5m || closeToEma15m) {
-                    signal = "Long 5p";
+                // Khung 5m thỏa mãn VÀ hết cooldown 5m
+                if (closeToEma5m && (currentTime - (coinLog._5m || 0) >= 2 * 60 * 60 * 1000)) {
+                    finalSignal = "Long 5p";
+                    triggeredFrame = "5m";
+                } 
+                // Khung 15m thỏa mãn VÀ hết cooldown 15m (Kể cả khi khung 5m đang cooldown)
+                else if (closeToEma15m && (currentTime - (coinLog._15m || 0) >= 2 * 60 * 60 * 1000)) {
+                    finalSignal = "Long 15p";
+                    triggeredFrame = "15m";
                 }
             }
 
-            // --- KIỂM TRA ĐIỀU KIỆN CHIỀU SHORT ---
-            if (mode === 'short' || mode === 'both') {
+            // --- KIỂM TRA CHIỀU SHORT ---
+            if (!finalSignal && (mode === 'short' || mode === 'both')) {
                 const closeToEma5m = (metrics.b_5m >= -1 && metrics.b_5m <= 0.5);
                 const closeToEma15m = (metrics.b_15m >= -1 && metrics.b_15m <= 0.5);
 
-                if (closeToEma5m || closeToEma15m) {
-                    signal = "Short 5p";
+                // Khung 5m thỏa mãn VÀ hết cooldown 5m
+                if (closeToEma5m && (currentTime - (coinLog._5m || 0) >= 2 * 60 * 60 * 1000)) {
+                    finalSignal = "Short 5p";
+                    triggeredFrame = "5m";
+                } 
+                // Khung 15m thỏa mãn VÀ hết cooldown 15m
+                else if (closeToEma15m && (currentTime - (coinLog._15m || 0) >= 2 * 60 * 60 * 1000)) {
+                    finalSignal = "Short 15p";
+                    triggeredFrame = "15m";
                 }
             }
 
-            // BƯỚC 9: BẮN THÔNG BÁO TELEGRAM SIÊU RÚT GỌN 1 DÒNG
-            if (signal) {
+            // BƯỚC 9: BẮN THÔNG BÁO TELEGRAM SIÊU RÚT GỌN 1 DÒNG VÀ CẬP NHẬT COOLDOWN KHUNG RIÊNG
+            if (finalSignal && triggeredFrame) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-                const icon = signal.startsWith("Long") ? "🟢" : "🔴";
+                const icon = finalSignal.includes("Long") ? "🟢" : "🔴";
                 const formattedPct = coinData.changeSince7AM >= 0 ? `+${coinData.changeSince7AM.toFixed(2)}%` : `${coinData.changeSince7AM.toFixed(2)}%`;
 
-                const message = `${icon} <b>${signal.toUpperCase()} #${coinName} ${coinData.label} (${formattedPct})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
+                // Hiển thị rõ khung thời gian kích hoạt tín hiệu trên tin nhắn Telegram (Ví dụ: LONG 5P hoặc SHORT 15P)
+                const message = `${icon} <b>${finalSignal.toUpperCase()} #${coinName} ${coinData.label} (${formattedPct})</b> 👉 <a href="${link}">Giao dịch ngay</a>`;
 
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                     chat_id: TELEGRAM_CHAT_ID,
@@ -210,7 +219,13 @@ async function main() {
                     parse_mode: 'HTML'
                 }).catch(() => {});
 
-                sentLog[symbol] = currentTime;
+                // Chỉ khóa cooldown riêng của khung thời gian phát tín hiệu
+                if (triggeredFrame === "5m") {
+                    sentLog[symbol]._5m = currentTime;
+                } else if (triggeredFrame === "15m") {
+                    sentLog[symbol]._15m = currentTime;
+                }
+                
                 hasNewAlert = true;
             }
         }
@@ -218,7 +233,7 @@ async function main() {
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
-        console.log('Hoàn thành chu kỳ quét đa khung thời gian kết hợp lọc Volume chuẩn xác.');
+        console.log('Hoàn thành chu kỳ quét tách biệt Cooldown 5m và 15m.');
 
     } catch (err) {
         console.error('Lỗi trong hàm xử lý chính bot.js:', err.message);
