@@ -11,9 +11,9 @@ const STATE_FILE = path.join(__dirname, 'state.json');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
-    console.log('--- BẮT ĐẦU CHỐT GIÁ MỚI VÀ LỌC TOP 5 24H LÚC 7H SÁNG ---');
+    console.log('--- BẮT ĐẦU CHỐT GIÁ MỞ CỬA LÚC 7H SÁNG ---');
     try {
-        // 1. Lấy danh sách tất cả coin Futures USDT kèm thông tin 24h
+        // 1. Lấy danh sách tất cả coin Futures USDT
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
         if (!response.data || response.data.code !== '0') {
@@ -22,24 +22,9 @@ async function main() {
         }
 
         const rawFutures = response.data.data.filter(t => t.instId.endsWith('-USDT-SWAP'));
-        
-        // 2. Lọc nhanh đúng TOP 5 coin tăng mạnh nhất 24h tại thời điểm 7h sáng
-        const sortedBy24h = [...rawFutures]
-            .map(t => {
-                const open24h = parseFloat(t.open24h);
-                const lastPrice = parseFloat(t.last);
-                const change24h = open24h ? ((lastPrice - open24h) / open24h) * 100 : 0;
-                return { instId: t.instId, change24h };
-            })
-            .sort((a, b) => b.change24h - a.change24h)
-            .slice(0, 5); // Đổi từ 10 xuống 5
-            
-        const top5GainersList = sortedBy24h.map(c => c.instId);
-        console.log('Danh sách Top 5 tăng mạnh nhất 24h chốt lúc 7h:', top5GainersList);
-
         const openPricesData = {};
 
-        // 3. Duyệt từng coin để lấy chính xác giá mở cửa lúc 7h sáng VN
+        // 2. Duyệt từng coin để lấy chính xác giá mở cửa lúc 7h sáng VN (00:00 UTC)
         for (let i = 0; i < rawFutures.length; i++) {
             const symbol = rawFutures[i].instId;
             try {
@@ -53,9 +38,9 @@ async function main() {
                     const targetCandle = candleRes.data.data.find(c => parseInt(c[0]) === today7AM_UTC);
                     
                     if (targetCandle) {
-                        openPricesData[symbol] = parseFloat(targetCandle[1]);
+                        openPricesData[symbol] = parseFloat(targetCandle[1]); // Giá mở nến 7h sáng
                     } else {
-                        openPricesData[symbol] = parseFloat(candleRes.data.data[0][1]);
+                        openPricesData[symbol] = parseFloat(candleRes.data.data[0][1]); // Lấy tạm nến hiện tại nếu có sự cố
                     }
                 }
                 
@@ -66,14 +51,13 @@ async function main() {
             }
         }
 
-        // 4. Cấu trúc lại dữ liệu đầu ra và ghi đè hoàn toàn lên state.json cũ
+        // 3. Định dạng lại cấu trúc phẳng (Chỉ lưu openPrices) và ghi đè hoàn toàn lên state.json
         const finalState = {
-            top5Gainers24h: top5GainersList, // Lưu key mới top5
             openPrices: openPricesData
         };
 
         fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8');
-        console.log('--- ĐÃ GHI ĐÈ DỮ LIỆU MỚI VÀO STATE.JSON THÀNH CÔNG ---');
+        console.log('--- ĐÃ GHI ĐÈ GIÁ 7H VÀO STATE.JSON THÀNH CÔNG ---');
 
     } catch (error) {
         console.error('Lỗi hệ thống file 7h.js:', error.message);
