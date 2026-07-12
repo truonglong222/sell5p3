@@ -51,12 +51,15 @@ function calculateEMA(prices, period = 20) {
 // Thu thập 150 nến 5m và tính toán song song EMA20_5m & EMA20_15m
 async function getTechnicalMetrics(symbol) {
     try {
+        // Lấy hẳn 150 nến để đủ dữ liệu gộp sang khung 15m
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=150`;
         const response = await axios.get(url, { timeout: 8000 });
         
         if (response.data && response.data.code === '0' && response.data.data.length >= 100) {
+            // Thứ tự nến trả về từ OKX là từ Mới đến Cũ -> Đảo ngược lại thành từ Cũ đến Mới
             const candles5m = response.data.data.reverse();
             
+            // --- Cây nến hiện tại đang chạy (Cây cuối cùng trong mảng) ---
             const currentCandle = candles5m[candles5m.length - 1];
             const currentHigh = parseFloat(currentCandle[2]);
             const currentLow = parseFloat(currentCandle[3]);
@@ -64,6 +67,7 @@ async function getTechnicalMetrics(symbol) {
             // ==========================================
             // THÀNH PHẦN 1: TÍNH EMA20 CHO KHUNG 5M
             // ==========================================
+            // Lấy giá đóng cửa của các cây nến 5m đã đóng (loại bỏ cây đang chạy cuối cùng)
             const closedCandles5m = candles5m.slice(0, candles5m.length - 1);
             const prices5m = closedCandles5m.map(c => parseFloat(c[4]));
             const ema20_5m = calculateEMA(prices5m, 20);
@@ -71,6 +75,8 @@ async function getTechnicalMetrics(symbol) {
             // ==========================================
             // THÀNH PHẦN 2: TÍNH EMA20 KHUNG 15M TỪ NẾN 5M
             // ==========================================
+            // Quy tắc gộp: Cứ 3 cây nến 5m liên tiếp tạo thành 1 cây nến 15m. 
+            // Giá đóng cửa của nến 15m chính là giá đóng cửa của cây nến 5m thứ 3 trong cụm.
             const prices15m = [];
             for (let i = 2; i < closedCandles5m.length; i += 3) {
                 prices15m.push(parseFloat(closedCandles5m[i][4]));
@@ -80,9 +86,11 @@ async function getTechnicalMetrics(symbol) {
             // ==========================================
             // THÀNH PHẦN 3: TÍNH TOÁN ĐỘ GẦN (HỆ SỐ KHOẢNG CÁCH)
             // ==========================================
+            // Hệ số đối với EMA 5m
             const a_5m = ema20_5m ? ((ema20_5m - currentLow) / ema20_5m) * 100 : 999;
             const b_5m = ema20_5m ? ((ema20_5m - currentHigh) / ema20_5m) * 100 : 999;
 
+            // Hệ số đối với EMA 15m
             const a_15m = ema20_15m ? ((ema20_15m - currentLow) / ema20_15m) * 100 : 999;
             const b_15m = ema20_15m ? ((ema20_15m - currentHigh) / ema20_15m) * 100 : 999;
 
@@ -112,13 +120,13 @@ async function main() {
         const sentLog = loadSentLog();
         const currentTime = Date.now();
 
-        // BƯỚC 3: Tính % tăng/giảm kể từ mốc 7h sáng
+        // BƯỚC 3: Tính % tăng/giảm kể từ mốc 7h sáng trong bộ nhớ
         let calculatedPool = response.data.data
             .filter(t => t.instId.endsWith('-USDT-SWAP') && openPrices7AM[t.instId])
             .map(t => {
                 const open7AM = openPrices7AM[t.instId];
                 const lastPrice = parseFloat(t.last);
-                const vol24hQuote = parseFloat(t.volCcy24h); 
+                const vol24hQuote = parseFloat(t.volCcy24h); // Khối lượng giao dịch tính bằng USDT trong 24h qua
                 const changeSince7AM = ((lastPrice - open7AM) / open7AM) * 100;
                 return { instId: t.instId, changeSince7AM, lastPrice, vol24hQuote };
             });
@@ -127,6 +135,7 @@ async function main() {
         let top10Gainers = [...calculatedPool].sort((a, b) => b.changeSince7AM - a.changeSince7AM).slice(0, 10);
         let top10Losers = [...calculatedPool].sort((a, b) => a.changeSince7AM - b.changeSince7AM).slice(0, 10);
 
+        // Trộn 2 danh sách lại vào một cấu trúc Map chung để phân loại hướng lệnh
         let rankingPool = new Map();
         top10Gainers.forEach((c, i) => rankingPool.set(c.instId, { ...c, mode: 'long', label: `TOP ${i + 1} TĂNG` }));
         top10Losers.forEach((c, i) => {
@@ -137,20 +146,20 @@ async function main() {
             }
         });
 
-        // BƯỚC 5: --- ĐÃ CẬP NHẬT: Loại bỏ toàn bộ coin có Volume 24h dưới 2 triệu đô ($2.000.000) ---
+        // BƯỚC 5: Bộ lọc Volume -> Loại bỏ toàn bộ các coin có Volume 24h dưới 5 triệu đô ($5.000.000)
         for (const [symbol, coinData] of rankingPool.entries()) {
-            if (coinData.vol24hQuote < 2000000) {
-                console.log(`[Bỏ qua Volume Thấp] ${symbol} bị loại vì Vol 24h chỉ đạt $${(coinData.vol24hQuote / 1000000).toFixed(2)}M (< $2M)`);
+            if (coinData.vol24hQuote < 5000000) {
+                console.log(`[Bỏ qua Volume Thấp] ${symbol} bị loại vì Vol 24h chỉ đạt $${(coinData.vol24hQuote / 1000000).toFixed(2)}M (< $5M)`);
                 rankingPool.delete(symbol);
             }
         }
 
         if (rankingPool.size === 0) {
-            console.log('Không có coin nào trong Top 10 vượt qua được bộ lọc Volume Khối lượng > 2 Triệu $.');
+            console.log('Không có coin nào trong Top 10 vượt qua được bộ lọc Volume Khối lượng > 5 Triệu $.');
             return;
         }
 
-        // BƯỚC 6: Lấy 150 nến 5m xử lý đa khung thời gian song song
+        // BƯỚC 6: Lấy 150 nến 5m xử lý đa khung thời gian song song (Promise.all)
         console.log(`Đang chạy tính toán đa khung EMA (5m & 15m) cho ${rankingPool.size} coin đạt chuẩn Vol...`);
         const technicalPromises = Array.from(rankingPool.keys()).map(symbol => getTechnicalMetrics(symbol));
         const technicalResults = await Promise.all(technicalPromises);
@@ -160,6 +169,7 @@ async function main() {
         // BƯỚC 7 & 8: ĐỐI CHIẾU ĐIỀU KIỆN LONG/SHORT VÀ LOẠI BỎ COOLDOWN 2 GIỜ Ở BƯỚC CUỐI CÙNG
         for (const [symbol, coinData] of rankingPool) {
             
+            // Bộ lọc kiểm tra Cooldown chặn 2 giờ
             if (sentLog[symbol] && (currentTime - sentLog[symbol] < 2 * 60 * 60 * 1000)) {
                 continue; 
             }
@@ -170,7 +180,8 @@ async function main() {
             let signal = null;
             const mode = coinData.mode;
 
-            // Kiểm tra điều kiện Long
+            // --- KIỂM TRA ĐIỀU KIỆN CHIỀU LONG ---
+            // Thỏa mãn nếu giá chạm gần đường EMA20 của nến 5m HOẶC đường EMA20 của nến 15m
             if (mode === 'long' || mode === 'both') {
                 const closeToEma5m = (metrics.a_5m >= -0.5 && metrics.a_5m <= 1);
                 const closeToEma15m = (metrics.a_15m >= -0.5 && metrics.a_15m <= 1);
@@ -180,7 +191,8 @@ async function main() {
                 }
             }
 
-            // Kiểm tra điều kiện Short
+            // --- KIỂM TRA ĐIỀU KIỆN CHIỀU SHORT ---
+            // Thỏa mãn nếu giá chạm gần đường EMA20 của nến 5m HOẶC đường EMA20 của nến 15m
             if (mode === 'short' || mode === 'both') {
                 const closeToEma5m = (metrics.b_5m >= -1 && metrics.b_5m <= 0.5);
                 const closeToEma15m = (metrics.b_15m >= -1 && metrics.b_15m <= 0.5);
@@ -213,7 +225,7 @@ async function main() {
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
-        console.log('Hoàn thành chu kỳ quét đa khung thời gian kết hợp lọc Volume mới.');
+        console.log('Hoàn thành chu kỳ quét đa khung thời gian kết hợp lọc Volume.');
 
     } catch (err) {
         console.error('Lỗi trong hàm xử lý chính bot.js:', err.message);
