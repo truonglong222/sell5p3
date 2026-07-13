@@ -10,11 +10,10 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sentCoins.json');
+const STATE_FILE = path.join(__dirname, 'state.json');
 
-// Cấu hình thời gian chặn gửi lại (Countdown 15m) là 6 giờ
+// Giữ nguyên cơ chế chặn spam tín hiệu (Countdown 6 tiếng cho khung 15m)
 const COUNTDOWN_15M = 6 * 60 * 60 * 1000; 
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadSentLog() {
     try {
@@ -39,52 +38,54 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-function calculateEMA(prices, period = 20) {
-    if (prices.length < period) return 0;
-    const k = 2 / (period + 1);
-    let ema = prices.slice(0, period).reduce((sum, p) => sum + p, 0) / period;
-    for (let i = period; i < prices.length; i++) {
-        ema = prices[i] * k + ema * (1 - k);
+// Hàm tính chỉ số kĩ thuật RSI-14 tiêu chuẩn
+function calculateRSI(prices, period = 14) {
+    if (prices.length <= period) return 50; // Không đủ dữ liệu nến
+
+    let gains = 0;
+    let losses = 0;
+
+    // Tính bước thay đổi ban đầu cho cây đầu tiên
+    for (let i = 1; i <= period; i++) {
+        const diff = prices[i] - prices[i - 1];
+        if (diff > 0) gains += diff;
+        else losses -= diff;
     }
-    return ema;
-}
 
-// Hàm quét dữ liệu nến 15m để tính biến động 6h qua (24 nến)
-async function get6HoursChange(symbol) {
-    try {
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=24`;
-        const response = await axios.get(url, { timeout: 5000 });
-        if (response.data && response.data.code === '0' && response.data.data.length > 0) {
-            const candles = response.data.data; // index 0 là nến hiện tại
-            
-            const currentPrice = parseFloat(candles[0][4]); 
-            const oldestCandle = candles[candles.length - 1];
-            const price6HoursAgo = parseFloat(oldestCandle[1]); // Giá open của 6 tiếng trước
-            
-            const change6h = price6HoursAgo ? ((currentPrice - price6HoursAgo) / price6HoursAgo) * 100 : 0;
-            return { symbol, change6h };
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+
+    // Sử dụng công thức mượt rải đều Wilder's Smoothing cho các nến tiếp theo
+    for (let i = period + 1; i < prices.length; i++) {
+        const diff = prices[i] - prices[i - 1];
+        if (diff > 0) {
+            avgGain = (avgGain * (period - 1) + diff) / period;
+            avgLoss = (avgLoss * (period - 1)) / period;
+        } else {
+            avgGain = (avgGain * (period - 1)) / period;
+            avgLoss = (avgLoss * (period - 1) - diff) / period;
         }
-    } catch (error) {}
-    return { symbol, change6h: 999 };
+    }
+
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - 100 / (1 + rs);
 }
 
-// Hàm lấy 100 nến 15m tính EMA20 cho Top 5 sau cùng
-async function getTechnicalMetrics15m(symbol) {
+// Hàm lấy nến và tính RSI khung 15m
+async function getRSI15m(symbol) {
     try {
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
+        // Lấy khoảng 50 nến là dư sức để tính mượt RSI-14 chính xác
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=50`;
         const response = await axios.get(url, { timeout: 6000 });
-        if (response.data && response.data.code === '0' && response.data.data.length >= 40) {
-            const candles15m = response.data.data.reverse(); 
-            const currentCandle = candles15m[candles15m.length - 1];
-            const currentHigh = parseFloat(currentCandle[2]); 
+        if (response.data && response.data.code === '0' && response.data.data.length >= 20) {
+            const candles15m = response.data.data.reverse(); // Chuyển từ cũ đến mới
 
-            const closedCandles15m = candles15m.slice(0, candles15m.length - 1);
-            const prices15m = closedCandles15m.map(c => parseFloat(c[4]));
-            const ema20_15m = calculateEMA(prices15m, 20);
+            // Lấy chuỗi giá đóng cửa (Close Price) để tính toán
+            const prices15m = candles15m.map(c => parseFloat(c[4]));
+            const rsi = calculateRSI(prices15m, 14);
 
-            const b_15m = ema20_15m ? ((ema20_15m - currentHigh) / ema20_15m) * 100 : 999;
-
-            return { symbol, b_15m };
+            return { symbol, rsi, currentPrice: prices15m[prices15m.length - 1] };
         }
     } catch (error) {}
     return null;
@@ -92,84 +93,46 @@ async function getTechnicalMetrics15m(symbol) {
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU BOT LỌC 2 BƯỚC: TOP 20 (24H) -> TOP 5 (6H) ---');
+        console.log('--- BẤT ĐẦU BOT KHUNG 15M THEO DÕI RSI TOP 20 COIN GIẢM 4D ---');
         
-        // 1. Tải Ticker tổng & Lọc Volume > 5,000,000 USD trước
-        const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
-        const response = await axios.get(tickersUrl);
-        if (!response.data || response.data.code !== '0') return;
+        // 1. Đọc danh sách 20 coin giảm mạnh từ file state.json
+        if (!fs.existsSync(STATE_FILE)) {
+            console.log('Không tìm thấy file trạng thái state.json!');
+            return;
+        }
+        const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+        const top20Losers = stateData.top20Losers || [];
 
-        const rawFutures = response.data.data.filter(t => 
-            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.vol24h) >= 5000000
-        );
-
-        // 2. Tính % 24h từ dữ liệu có sẵn trong Ticker
-        const poolWith24hChange = rawFutures.map(t => {
-            const open24h = parseFloat(t.sod24h);
-            const lastPrice = parseFloat(t.last);
-            const change24h = open24h ? ((lastPrice - open24h) / open24h) * 100 : 0;
-            return { instId: t.instId, change24h, lastPrice };
-        });
-
-        // 3. CHẶN BƯỚC 1: Chỉ lấy Top 20 coin giảm mạnh nhất 24h qua để xét tiếp
-        const top20Losers24h = poolWith24hChange
-            .sort((a, b) => a.change24h - b.change24h) // Giảm nhiều nhất xếp lên đầu
-            .slice(0, 20);
-
-        if (top20Losers24h.length === 0) return;
+        if (top20Losers.length === 0) return;
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
-        const poolWith6hChange = [];
 
-        // 4. CHẶN BƯỚC 2: Chỉ quét nến 6h đối với 20 coin đầu bảng này
-        for (let i = 0; i < top20Losers24h.length; i++) {
-            const symbol = top20Losers24h[i].instId;
-            const data6h = await get6HoursChange(symbol);
-            if (data6h.change6h !== 999) {
-                poolWith6hChange.push({
-                    instId: symbol,
-                    change6h: data6h.change6h,
-                    lastPrice: top20Losers24h[i].lastPrice
-                });
-            }
-            await sleep(40);
-        }
-
-        // 5. ĐÃ THÀNH TOP 5: Sắp xếp và lấy chính xác Top 5 giảm mạnh nhất trong 6 giờ vừa qua
-        const top5Losers6h = poolWith6hChange
-            .sort((a, b) => a.change6h - b.change6h)
-            .slice(0, 5);
-
-        if (top5Losers6h.length === 0) return;
-
-        // 6. Lấy dữ liệu 100 nến tính EMA20 song song cho Top 5 cuối cùng (Tiết kiệm thêm request)
-        const technicalPromises = top5Losers6h.map(coin => getTechnicalMetrics15m(coin.instId));
-        const technicalResults = await Promise.all(technicalPromises);
+        // 2. Lấy dữ liệu RSI song song của đúng 20 coin này (Cực kì tiết kiệm request)
+        const rsiPromises = top20Losers.map(symbol => getRSI15m(symbol));
+        const rsiResults = await Promise.all(rsiPromises);
 
         let hasNewAlert = false;
 
-        for (let i = 0; i < top5Losers6h.length; i++) {
-            const coinData = top5Losers6h[i];
-            const symbol = coinData.instId;
-            const metrics = technicalResults.find(r => r && r.symbol === symbol);
+        for (let i = 0; i < top20Losers.length; i++) {
+            const symbol = top20Losers[i];
+            const metrics = rsiResults.find(r => r && r.symbol === symbol);
             if (!metrics) continue;
 
             if (!sentLog[symbol]) sentLog[symbol] = { _15m: 0 };
             const coinLog = sentLog[symbol];
 
-            // 7. Kiểm tra điều kiện Short khung 15m (b_15m thuộc khoảng [-1%; 0.5%])
-            if (metrics.b_15m >= -1 && metrics.b_15m <= 0.5) {
-                // Kiểm tra Countdown 6 giờ độc lập
+            // 3. KIỂM TRA ĐIỀU KIỆN SHORT: RSI Khung 15m > 70
+            if (metrics.rsi > 70) {
+                // Kiểm tra Countdown chặn spam tin nhắn (6 giờ)
                 if (currentTime - (coinLog._15m || 0) >= COUNTDOWN_15M) {
                     
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-                    const formattedPct = coinData.change6h >= 0 ? `+${coinData.change6h.toFixed(2)}%` : `${coinData.change6h.toFixed(2)}%`;
-                    const labelRanking = `TOP ${i + 1} GIẢM 6H`;
+                    const labelRanking = `TOP GIẢM 4 NGÀY`;
 
-                    // Gửi tin nhắn Telegram
-                    const message = `🔴 <b>SHORT 15M #${coinName} ${labelRanking} (${formattedPct})</b>\n👉 <a href="${link}">Giao dịch ngay</a>`;
+                    // 4. Bắn tín hiệu sang Telegram
+                    const message = `🔴 <b>SHORT TÍN HIỆU RSI 15M</b>\n🔥 Coin: <b>#${coinName}</b> (${labelRanking})\n📊 Chỉ số RSI: <code>${metrics.rsi.toFixed(2)}</code> (>70 Quá mua)\n👉 <a href="${link}">Giao dịch ngay</a>`;
 
                     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         chat_id: TELEGRAM_CHAT_ID,
@@ -177,6 +140,7 @@ async function main() {
                         parse_mode: 'HTML'
                     }).catch(() => {});
 
+                    // 5. Cập nhật trạng thái thời gian gửi tin
                     sentLog[symbol]._15m = currentTime;
                     hasNewAlert = true;
                 }
@@ -184,9 +148,9 @@ async function main() {
         }
 
         if (hasNewAlert) saveSentLog(sentLog);
-        console.log('--- KẾT THÚC TIẾN TRÌNH QUÉT KHUNG 15M ---');
+        console.log('--- KẾT THÚC TIẾN TRÌNH QUÉT RSI KHUNG 15M ---');
     } catch (err) {
-        console.error('Lỗi chạy chính:', err.message);
+        console.error('Lỗi chạy chính bot.js:', err.message);
     }
 }
 
