@@ -82,7 +82,8 @@ async function main() {
         if (!fs.existsSync(STATE_FILE)) return;
         const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
         const openPrices7AM = stateData.openPrices || {};
-        const qualified2DaysGainers = stateData.qualified2DaysGainers || []; // Danh sách 2 ngày tăng (2%-10%)
+        const qualified7DaysGainers = stateData.qualified7DaysGainers || [];
+        const heavy7DaysLosers = stateData.heavy7DaysLosers || [];
 
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
@@ -126,31 +127,30 @@ async function main() {
             }
         }
 
-        // --- ĐÃ ĐIỀU CHỈNH: ĐỐI CHIẾU ĐIỀU KIỆN DANH SÁCH 2 NGÀY ---
+        // --- ĐÃ THAY ĐỔI: ĐỐI CHIẾU TIÊU CHUẨN BỘ LỌC CHIỀU LONG / SHORT ---
         for (const [symbol, coinData] of rankingPool.entries()) {
-            const hasInList = qualified2DaysGainers.includes(symbol);
+            const isGainer7D = qualified7DaysGainers.includes(symbol);
+            const isHeavyLoser7D = heavy7DaysLosers.includes(symbol);
 
             if (coinData.mode === 'long') {
-                // Với lệnh Long: Nếu KHÔNG CÓ trong list -> Hủy không xét EMA
-                if (!hasInList) {
-                    console.log(`[Loại bỏ LONG] ${symbol} bị loại vì không nằm trong danh sách tăng 2 ngày.`);
+                // Lệnh Long: Bắt buộc phải nằm trong list tăng 7 ngày
+                if (!isGainer7D) {
                     rankingPool.delete(symbol);
                 }
             } else if (coinData.mode === 'short') {
-                // Với lệnh Short: Nếu CÓ trong list -> Hủy không xét EMA
-                if (hasInList) {
-                    console.log(`[Loại bỏ SHORT] ${symbol} bị loại vì nằm trong danh sách tăng 2 ngày.`);
+                // Lệnh Short: Không được nằm trong list tăng VÀ không được nằm trong list giảm sâu 7 ngày
+                if (isGainer7D || isHeavyLoser7D) {
                     rankingPool.delete(symbol);
                 }
             } else if (coinData.mode === 'both') {
-                // Trường hợp coin lưỡng tính (vừa thuộc top tăng vừa thuộc top giảm mốc biên giới)
-                if (!hasInList) {
-                    // Không có trong list -> Chặn chiều Long, chỉ giữ lại xét chiều Short
-                    coinData.mode = 'short';
-                } else {
-                    // Có trong list -> Chặn chiều Short, chỉ giữ lại xét chiều Long
-                    coinData.mode = 'long';
-                }
+                // Xử lý coin lưỡng tính
+                const allowLong = isGainer7D;
+                const allowShort = !isGainer7D && !isHeavyLoser7D;
+
+                if (allowLong && !allowShort) coinData.mode = 'long';
+                else if (!allowLong && allowShort) coinData.mode = 'short';
+                else if (allowLong && allowShort) coinData.mode = 'both';
+                else rankingPool.delete(symbol); // Không thỏa mãn cả 2 hướng -> Hủy hẳn
             }
         }
 
@@ -172,7 +172,6 @@ async function main() {
             let finalSignal = null;
             let triggeredFrame = null;
 
-            // Kiểm tra cấu trúc lệnh Long
             if (mode === 'long' || mode === 'both') {
                 const closeToEma5m = (metrics.a_5m >= -0.5 && metrics.a_5m <= 1);
                 const closeToEma15m = (metrics.a_15m >= -0.5 && metrics.a_15m <= 1);
@@ -186,7 +185,6 @@ async function main() {
                 }
             }
 
-            // Kiểm tra cấu trúc lệnh Short
             if (!finalSignal && (mode === 'short' || mode === 'both')) {
                 const closeToEma5m = (metrics.b_5m >= -1 && metrics.b_5m <= 0.5);
                 const closeToEma15m = (metrics.b_15m >= -1 && metrics.b_15m <= 0.5);
