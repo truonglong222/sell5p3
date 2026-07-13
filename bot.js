@@ -10,11 +10,11 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sentCoins.json');
-const STATE_FILE = path.join(__dirname, 'state.json');
 
-// Cấu hình thời gian chặn gửi lại (Countdown) theo quy trình mới
-const COUNTDOWN_5M = 4 * 60 * 60 * 1000;  // 4 giờ
-const COUNTDOWN_15M = 6 * 60 * 60 * 1000; // 6 giờ
+// Cấu hình thời gian chặn gửi lại (Countdown 15m) là 6 giờ
+const COUNTDOWN_15M = 6 * 60 * 60 * 1000; 
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadSentLog() {
     try {
@@ -30,10 +30,8 @@ function saveSentLog(logData) {
     try {
         const now = Date.now();
         const cleanedLog = {};
-        // Dọn dẹp log dựa trên thời gian hết hạn tối đa của quy trình mới (6 giờ)
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
-            if (timeData._5m && now - timeData._5m < COUNTDOWN_5M) temp._5m = timeData._5m;
             if (timeData._15m && now - timeData._15m < COUNTDOWN_15M) temp._15m = timeData._15m;
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
         }
@@ -51,139 +49,145 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-async function getTechnicalMetrics(symbol) {
+// Hàm quét dữ liệu nến 15m để tính biến động 6h qua (24 nến)
+async function get6HoursChange(symbol) {
     try {
-        // Lấy 150 nến 5 phút theo quy trình mới
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=150`;
-        const response = await axios.get(url, { timeout: 8000 });
-        if (response.data && response.data.code === '0' && response.data.data.length >= 100) {
-            const candles5m = response.data.data.reverse();
-            const currentCandle = candles5m[candles5m.length - 1];
-            const currentHigh = parseFloat(currentCandle[2]); // Đỉnh (High) của nến hiện tại
-
-            // Lấy danh sách các nến đã đóng cửa để tính toán kỹ thuật
-            const closedCandles5m = candles5m.slice(0, candles5m.length - 1);
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=24`;
+        const response = await axios.get(url, { timeout: 5000 });
+        if (response.data && response.data.code === '0' && response.data.data.length > 0) {
+            const candles = response.data.data; // index 0 là nến hiện tại
             
-            // 1. Tính EMA20 khung 5 phút
-            const prices5m = closedCandles5m.map(c => parseFloat(c[4]));
-            const ema20_5m = calculateEMA(prices5m, 20);
+            const currentPrice = parseFloat(candles[0][4]); 
+            const oldestCandle = candles[candles.length - 1];
+            const price6HoursAgo = parseFloat(oldestCandle[1]); // Giá open của 6 tiếng trước
+            
+            const change6h = price6HoursAgo ? ((currentPrice - price6HoursAgo) / price6HoursAgo) * 100 : 0;
+            return { symbol, change6h };
+        }
+    } catch (error) {}
+    return { symbol, change6h: 999 };
+}
 
-            // 2. Ghép nến 5m thành nến 15m (3 nến 5m tạo thành 1 nến 15m, lấy giá đóng cửa tại nến cuối mỗi cụm)
-            const prices15m = [];
-            for (let i = 2; i < closedCandles5m.length; i += 3) {
-                prices15m.push(parseFloat(closedCandles5m[i][4]));
-            }
-            // 3. Tính EMA20 khung 15 phút
+// Hàm lấy 100 nến 15m tính EMA20 cho Top 5 sau cùng
+async function getTechnicalMetrics15m(symbol) {
+    try {
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
+        const response = await axios.get(url, { timeout: 6000 });
+        if (response.data && response.data.code === '0' && response.data.data.length >= 40) {
+            const candles15m = response.data.data.reverse(); 
+            const currentCandle = candles15m[candles15m.length - 1];
+            const currentHigh = parseFloat(currentCandle[2]); 
+
+            const closedCandles15m = candles15m.slice(0, candles15m.length - 1);
+            const prices15m = closedCandles15m.map(c => parseFloat(c[4]));
             const ema20_15m = calculateEMA(prices15m, 20);
 
-            // 4. Tính khoảng cách từ EMA đến đỉnh (High) theo công thức tỷ lệ %
-            const b_5m = ema20_5m ? ((ema20_5m - currentHigh) / ema20_5m) * 100 : 999;
             const b_15m = ema20_15m ? ((ema20_15m - currentHigh) / ema20_15m) * 100 : 999;
 
-            return { symbol, b_5m, b_15m };
+            return { symbol, b_15m };
         }
-        return null;
-    } catch (error) { return null; }
+    } catch (error) {}
+    return null;
 }
 
 async function main() {
     try {
-        // 1. Đọc file state.json và chỉ lấy trường openPrices
-        if (!fs.existsSync(STATE_FILE)) return;
-        const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-        const openPrices7AM = stateData.openPrices || {};
-
-        // 2. Lấy toàn bộ Futures OKX
+        console.log('--- BẤT ĐẦU BOT LỌC 2 BƯỚC: TOP 20 (24H) -> TOP 5 (6H) ---');
+        
+        // 1. Tải Ticker tổng & Lọc Volume > 5,000,000 USD trước
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
         if (!response.data || response.data.code !== '0') return;
 
+        const rawFutures = response.data.data.filter(t => 
+            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.vol24h) >= 5000000
+        );
+
+        // 2. Tính % 24h từ dữ liệu có sẵn trong Ticker
+        const poolWith24hChange = rawFutures.map(t => {
+            const open24h = parseFloat(t.sod24h);
+            const lastPrice = parseFloat(t.last);
+            const change24h = open24h ? ((lastPrice - open24h) / open24h) * 100 : 0;
+            return { instId: t.instId, change24h, lastPrice };
+        });
+
+        // 3. CHẶN BƯỚC 1: Chỉ lấy Top 20 coin giảm mạnh nhất 24h qua để xét tiếp
+        const top20Losers24h = poolWith24hChange
+            .sort((a, b) => a.change24h - b.change24h) // Giảm nhiều nhất xếp lên đầu
+            .slice(0, 20);
+
+        if (top20Losers24h.length === 0) return;
+
         const sentLog = loadSentLog();
         const currentTime = Date.now();
+        const poolWith6hChange = [];
 
-        // 3. Tính % thay đổi kể từ giá mở cửa 7h sáng
-        let calculatedPool = response.data.data
-            .filter(t => t.instId.endsWith('-USDT-SWAP') && openPrices7AM[t.instId])
-            .map(t => {
-                const open7AM = parseFloat(openPrices7AM[t.instId]);
-                const lastPrice = parseFloat(t.last);
-                const vol24hQuote = parseFloat(t.vol24h); // Volume 24h quy đổi ra USD/USDT
-                const changeSince7AM = open7AM ? ((lastPrice - open7AM) / open7AM) * 100 : 0;
-                return { instId: t.instId, changeSince7AM, lastPrice, vol24hQuote };
-            });
+        // 4. CHẶN BƯỚC 2: Chỉ quét nến 6h đối với 20 coin đầu bảng này
+        for (let i = 0; i < top20Losers24h.length; i++) {
+            const symbol = top20Losers24h[i].instId;
+            const data6h = await get6HoursChange(symbol);
+            if (data6h.change6h !== 999) {
+                poolWith6hChange.push({
+                    instId: symbol,
+                    change6h: data6h.change6h,
+                    lastPrice: top20Losers24h[i].lastPrice
+                });
+            }
+            await sleep(40);
+        }
 
-        // 4. Sắp xếp từ giảm mạnh nhất đến tăng (tăng dần theo %) và Lọc Volume > 5.000.000 USD
-        let filteredPool = calculatedPool
-            .sort((a, b) => a.changeSince7AM - b.changeSince7AM) // Giảm nhiều nhất xếp lên đầu
-            .filter(c => c.vol24hQuote >= 5000000); // Lọc Volume
+        // 5. ĐÃ THÀNH TOP 5: Sắp xếp và lấy chính xác Top 5 giảm mạnh nhất trong 6 giờ vừa qua
+        const top5Losers6h = poolWith6hChange
+            .sort((a, b) => a.change6h - b.change6h)
+            .slice(0, 5);
 
-        // 5. Lấy Top 10 giảm mạnh nhất
-        let top10Losers = filteredPool.slice(0, 10);
+        if (top5Losers6h.length === 0) return;
 
-        // Nếu không còn coin nào thỏa mãn -> Kết thúc
-        if (top10Losers.length === 0) return;
-
-        // Lấy dữ liệu kỹ thuật song song cho các coin trong Top 10
-        const technicalPromises = top10Losers.map(coin => getTechnicalMetrics(coin.instId));
+        // 6. Lấy dữ liệu 100 nến tính EMA20 song song cho Top 5 cuối cùng (Tiết kiệm thêm request)
+        const technicalPromises = top5Losers6h.map(coin => getTechnicalMetrics15m(coin.instId));
         const technicalResults = await Promise.all(technicalPromises);
 
         let hasNewAlert = false;
 
-        for (let i = 0; i < top10Losers.length; i++) {
-            const coinData = top10Losers[i];
+        for (let i = 0; i < top5Losers6h.length; i++) {
+            const coinData = top5Losers6h[i];
             const symbol = coinData.instId;
             const metrics = technicalResults.find(r => r && r.symbol === symbol);
             if (!metrics) continue;
 
-            if (!sentLog[symbol]) sentLog[symbol] = { _5m: 0, _15m: 0 };
+            if (!sentLog[symbol]) sentLog[symbol] = { _15m: 0 };
             const coinLog = sentLog[symbol];
 
-            let triggeredFrame = null;
-
-            // 6. Kiểm tra điều kiện Short & Countdown độc lập cho từng khung thời gian
-            // Điều kiện: b_5m hoặc b_15m nằm trong khoảng [-1%; 0.5%]
-            
-            // Thử kiểm tra khung 5m trước
-            if (metrics.b_5m >= -1 && metrics.b_5m <= 0.5) {
-                // Kiểm tra xem đã hết thời gian countdown 4 giờ chưa
-                if (currentTime - (coinLog._5m || 0) >= COUNTDOWN_5M) {
-                    triggeredFrame = "5m";
-                }
-            } 
-            
-            // Nếu khung 5m chưa/không kích hoạt, thử kiểm tra tiếp khung 15m
-            if (!triggeredFrame && (metrics.b_15m >= -1 && metrics.b_15m <= 0.5)) {
-                // Kiểm tra xem đã hết thời gian countdown 6 giờ chưa
+            // 7. Kiểm tra điều kiện Short khung 15m (b_15m thuộc khoảng [-1%; 0.5%])
+            if (metrics.b_15m >= -1 && metrics.b_15m <= 0.5) {
+                // Kiểm tra Countdown 6 giờ độc lập
                 if (currentTime - (coinLog._15m || 0) >= COUNTDOWN_15M) {
-                    triggeredFrame = "15m";
+                    
+                    const coinName = symbol.replace('-USDT-SWAP', '');
+                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+                    const formattedPct = coinData.change6h >= 0 ? `+${coinData.change6h.toFixed(2)}%` : `${coinData.change6h.toFixed(2)}%`;
+                    const labelRanking = `TOP ${i + 1} GIẢM 6H`;
+
+                    // Gửi tin nhắn Telegram
+                    const message = `🔴 <b>SHORT 15M #${coinName} ${labelRanking} (${formattedPct})</b>\n👉 <a href="${link}">Giao dịch ngay</a>`;
+
+                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML'
+                    }).catch(() => {});
+
+                    sentLog[symbol]._15m = currentTime;
+                    hasNewAlert = true;
                 }
-            }
-
-            // 7. Nếu đủ điều kiện, tiến hành gửi thông báo Telegram
-            if (triggeredFrame) {
-                const coinName = symbol.replace('-USDT-SWAP', '');
-                const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-                const formattedPct = coinData.changeSince7AM >= 0 ? `+${coinData.changeSince7AM.toFixed(2)}%` : `${coinData.changeSince7AM.toFixed(2)}%`;
-                const labelRanking = `TOP ${i + 1} GIẢM`;
-
-                const message = `🔴 <b>SHORT ${triggeredFrame.toUpperCase()} #${coinName} ${labelRanking} (${formattedPct})</b>\n👉 <a href="${link}">Giao dịch ngay</a>`;
-
-                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: message,
-                    parse_mode: 'HTML'
-                }).catch(() => {});
-
-                // 8. Cập nhật thời gian gửi vào hệ thống quản lý Countdown
-                if (triggeredFrame === "5m") sentLog[symbol]._5m = currentTime;
-                if (triggeredFrame === "15m") sentLog[symbol]._15m = currentTime;
-                hasNewAlert = true;
             }
         }
 
-        // 9. Lưu trạng thái countdown mới vào file sentCoins.json nếu có cập nhật mới
         if (hasNewAlert) saveSentLog(sentLog);
-    } catch (err) {}
+        console.log('--- KẾT THÚC TIẾN TRÌNH QUÉT KHUNG 15M ---');
+    } catch (err) {
+        console.error('Lỗi chạy chính:', err.message);
+    }
 }
 
 main();
