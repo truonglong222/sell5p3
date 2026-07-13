@@ -11,9 +11,9 @@ const STATE_FILE = path.join(__dirname, 'state.json');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
-    console.log('--- BẮT ĐẦU LẤY GIÁ MỞ CỬA 7H SÁNG ---');
+    console.log('--- BẤT ĐẦU LỌC TOP 20 COIN GIẢM MẠNH NHẤT 4 NGÀY QUA LÚC 7H SÁNG ---');
     try {
-        // 1. Lấy danh sách tất cả coin Futures USDT
+        // 1. Lấy tất cả coin Futures USDT có volume > 5,000,000 USD
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
         if (!response.data || response.data.code !== '0') {
@@ -21,46 +21,55 @@ async function main() {
             return;
         }
 
-        const rawFutures = response.data.data.filter(t => t.instId.endsWith('-USDT-SWAP'));
-        const openPricesData = {};
+        const rawFutures = response.data.data.filter(t => 
+            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.vol24h) >= 5000000
+        );
+        const poolWith4DaysChange = [];
 
-        // 2. Duyệt từng coin - Chỉ lấy 1 cây nến 1D gần nhất để lấy giá mở cửa lúc 7h sáng
+        // 2. Quét nến 1D để tính biến động 4 ngày qua
         for (let i = 0; i < rawFutures.length; i++) {
             const symbol = rawFutures[i].instId;
             try {
-                // Chỉ cần limit=1 để lấy nến ngày hôm nay
-                const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=1`;
+                // Lấy 5 nến để có nến index 4 (giá đóng cửa của 4 ngày trước)
+                const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=5`;
                 const candleRes = await axios.get(candle1DUrl);
 
-                if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length > 0) {
-                    const currentCandle = candleRes.data.data[0];
-                    // Theo API OKX: Index 1 là giá mở cửa (open) của cây nến
-                    const exact7AMPrice = parseFloat(currentCandle[1]); 
-                    openPricesData[symbol] = exact7AMPrice;
-                } else {
-                    // Fallback nếu API nến lỗi thì dùng giá gần nhất (last)
-                    openPricesData[symbol] = parseFloat(rawFutures[i].last);
+                if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 5) {
+                    const candles1D = candleRes.data.data;
+                    const lastPrice = parseFloat(rawFutures[i].last);
+                    const closePrice4DaysAgo = parseFloat(candles1D[4][4]); // Giá close của 4 ngày trước
+                    
+                    const change4Days = closePrice4DaysAgo ? ((lastPrice - closePrice4DaysAgo) / closePrice4DaysAgo) * 100 : 0;
+                    
+                    poolWith4DaysChange.push({ symbol, change4Days });
                 }
-
-                // Giảm bớt sleep vì gọi API nhẹ hơn, tránh bị rate limit của OKX
-                if (i % 5 === 0) await sleep(50); 
-
+                if (i % 5 === 0) await sleep(50); // Tránh bị rate limit khi quét diện rộng
             } catch (err) {
-                console.warn(`Lỗi khi lấy nến cho ${symbol}, dùng giá last thay thế.`);
-                openPricesData[symbol] = parseFloat(rawFutures[i].last);
+                console.warn(`Lỗi lấy dữ liệu nến 1D cho ${symbol}`);
             }
         }
 
-        // 3. Ghi đè vào file state.json (chỉ lưu duy nhất openPrices)
+        // 3. Sắp xếp tìm Top 20 giảm mạnh nhất
+        const top20Losers4Days = poolWith4DaysChange
+            .sort((a, b) => a.change4Days - b.change4Days) // Thấp nhất (giảm nhiều nhất) lên đầu
+            .slice(0, 20)
+            .map(item => item.symbol);
+
+        if (top20Losers4Days.length === 0) {
+            console.log('Không tìm thấy dữ liệu hợp lệ.');
+            return;
+        }
+
+        // 4. Ghi mảng 20 coin này vào file state.json
         const finalState = {
-            openPrices: openPricesData
+            top20Losers: top20Losers4Days
         };
 
         fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8');
-        console.log(`--- ĐÃ ĐỒNG BỘ: Lưu thành công giá mở cửa của ${Object.keys(openPricesData).length} coin ---`);
+        console.log(`--- ĐÃ ĐỒNG BỘ THÀNH CÔNG TOP 20 COIN VÀO STATE.JSON ---`, top20Losers4Days);
 
     } catch (error) {
-        console.error('Lỗi hệ thống:', error.message);
+        console.error('Lỗi hệ thống file 7h.js:', error.message);
     }
 }
 
