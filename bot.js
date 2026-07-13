@@ -82,7 +82,7 @@ async function main() {
         if (!fs.existsSync(STATE_FILE)) return;
         const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
         const openPrices7AM = stateData.openPrices || {};
-        const qualifiedLongCoins = stateData.qualifiedLongCoins || []; // Đọc danh sách đạt chuẩn tăng 3 ngày > 5% từ file lưu trữ
+        const qualified2DaysGainers = stateData.qualified2DaysGainers || []; // Danh sách 2 ngày tăng (2%-10%)
 
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
@@ -126,15 +126,31 @@ async function main() {
             }
         }
 
-        // --- ĐÃ BỔ SUNG: KIỂM TRA ĐIỀU KIỆN 3 NGÀY TĂNG > 5% ĐỐI VỚI CHIỀU LONG ---
+        // --- ĐÃ ĐIỀU CHỈNH: ĐỐI CHIẾU ĐIỀU KIỆN DANH SÁCH 2 NGÀY ---
         for (const [symbol, coinData] of rankingPool.entries()) {
-            // Nếu coin có xu hướng LONG (hoặc cả hai) mà KHÔNG nằm trong danh sách đạt chuẩn 3 ngày tăng > 5%
-            if (coinData.mode === 'long' && !qualifiedLongCoins.includes(symbol)) {
-                console.log(`[Bỏ qua LONG] ${symbol} thuộc Top Tăng mốc 7h nhưng 3 ngày qua không tăng đủ 5% -> Hủy.`);
-                rankingPool.delete(symbol);
-            } else if (coinData.mode === 'both' && !qualifiedLongCoins.includes(symbol)) {
-                // Nếu dính lưỡng tính, hạ cấp chặn chiều LONG, giữ nguyên chiều SHORT (Short không cần lọc 3 ngày tăng)
-                coinData.mode = 'short';
+            const hasInList = qualified2DaysGainers.includes(symbol);
+
+            if (coinData.mode === 'long') {
+                // Với lệnh Long: Nếu KHÔNG CÓ trong list -> Hủy không xét EMA
+                if (!hasInList) {
+                    console.log(`[Loại bỏ LONG] ${symbol} bị loại vì không nằm trong danh sách tăng 2 ngày.`);
+                    rankingPool.delete(symbol);
+                }
+            } else if (coinData.mode === 'short') {
+                // Với lệnh Short: Nếu CÓ trong list -> Hủy không xét EMA
+                if (hasInList) {
+                    console.log(`[Loại bỏ SHORT] ${symbol} bị loại vì nằm trong danh sách tăng 2 ngày.`);
+                    rankingPool.delete(symbol);
+                }
+            } else if (coinData.mode === 'both') {
+                // Trường hợp coin lưỡng tính (vừa thuộc top tăng vừa thuộc top giảm mốc biên giới)
+                if (!hasInList) {
+                    // Không có trong list -> Chặn chiều Long, chỉ giữ lại xét chiều Short
+                    coinData.mode = 'short';
+                } else {
+                    // Có trong list -> Chặn chiều Short, chỉ giữ lại xét chiều Long
+                    coinData.mode = 'long';
+                }
             }
         }
 
@@ -156,7 +172,7 @@ async function main() {
             let finalSignal = null;
             let triggeredFrame = null;
 
-            // Kiểm tra cấu trúc lệnh Long (đã qua bộ lọc 3 ngày ở trên)
+            // Kiểm tra cấu trúc lệnh Long
             if (mode === 'long' || mode === 'both') {
                 const closeToEma5m = (metrics.a_5m >= -0.5 && metrics.a_5m <= 1);
                 const closeToEma15m = (metrics.a_15m >= -0.5 && metrics.a_15m <= 1);
