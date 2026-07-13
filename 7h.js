@@ -13,7 +13,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function main() {
     console.log('--- BẤT ĐẦU LỌC TOP 20 COIN GIẢM MẠNH NHẤT 4 NGÀY QUA LÚC 7H SÁNG ---');
     try {
-        // 1. Lấy tất cả coin Futures USDT có volume > 5,000,000 USD
+        // 1. Tải Ticker tổng & LỌC NGAY Volume 24h > 2,000,000 USD trước khi lấy nến ngày
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
         if (!response.data || response.data.code !== '0') {
@@ -21,12 +21,15 @@ async function main() {
             return;
         }
 
+        // Lọc điều kiện: Đuôi USDT-SWAP VÀ Volume 24h > 2,000,000 USD
         const rawFutures = response.data.data.filter(t => 
-            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.vol24h) >= 5000000
+            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.vol24h) >= 2000000
         );
+        
+        console.log(`Đã lọc ra ${rawFutures.length} coin có Volume > 2M USD để tiến hành quét nến...`);
         const poolWith4DaysChange = [];
 
-        // 2. Quét nến 1D để tính biến động 4 ngày qua
+        // 2. Chỉ quét nến 1D cho các coin đã thỏa mãn điều kiện Volume ở trên
         for (let i = 0; i < rawFutures.length; i++) {
             const symbol = rawFutures[i].instId;
             try {
@@ -43,24 +46,25 @@ async function main() {
                     
                     poolWith4DaysChange.push({ symbol, change4Days });
                 }
-                if (i % 5 === 0) await sleep(50); // Tránh bị rate limit khi quét diện rộng
+                // Nghỉ ngắn để bảo vệ IP khỏi bị rate limit
+                if (i % 5 === 0) await sleep(50); 
             } catch (err) {
                 console.warn(`Lỗi lấy dữ liệu nến 1D cho ${symbol}`);
             }
         }
 
-        // 3. Sắp xếp tìm Top 20 giảm mạnh nhất
+        // 3. Sắp xếp tìm Top 20 giảm mạnh nhất trong 4 ngày qua
         const top20Losers4Days = poolWith4DaysChange
             .sort((a, b) => a.change4Days - b.change4Days) // Thấp nhất (giảm nhiều nhất) lên đầu
             .slice(0, 20)
             .map(item => item.symbol);
 
         if (top20Losers4Days.length === 0) {
-            console.log('Không tìm thấy dữ liệu hợp lệ.');
+            console.log('Không tìm thấy dữ liệu hợp lệ sau khi lọc.');
             return;
         }
 
-        // 4. Ghi mảng 20 coin này vào file state.json
+        // 4. Ghi mảng 20 coin này vào file state.json để file bot.js sử dụng
         const finalState = {
             top20Losers: top20Losers4Days
         };
