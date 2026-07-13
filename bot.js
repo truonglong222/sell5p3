@@ -82,6 +82,7 @@ async function main() {
         if (!fs.existsSync(STATE_FILE)) return;
         const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
         const openPrices7AM = stateData.openPrices || {};
+        const qualifiedLongCoins = stateData.qualifiedLongCoins || []; // Đọc danh sách đạt chuẩn tăng 3 ngày > 5% từ file lưu trữ
 
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
@@ -90,22 +91,19 @@ async function main() {
         const sentLog = loadSentLog();
         const currentTime = Date.now();
 
-        // 1. Tính toán phần trăm biến động thực tế từ 7h sáng
         let calculatedPool = response.data.data
             .filter(t => t.instId.endsWith('-USDT-SWAP') && openPrices7AM[t.instId])
             .map(t => {
                 const open7AM = parseFloat(openPrices7AM[t.instId]);
                 const lastPrice = parseFloat(t.last);
-                const vol24hQuote = parseFloat(t.vol24h); // Đo chuẩn Volume bằng định dạng USD
+                const vol24hQuote = parseFloat(t.vol24h); 
                 const changeSince7AM = open7AM ? ((lastPrice - open7AM) / open7AM) * 100 : 0;
                 return { instId: t.instId, changeSince7AM, lastPrice, vol24hQuote };
             });
 
-        // 2. Tách biệt bộ lọc Top 5 Tăng và Top 5 Giảm rõ ràng
         let top5Gainers = [...calculatedPool].sort((a, b) => b.changeSince7AM - a.changeSince7AM).slice(0, 5);
         let top5Losers = [...calculatedPool].sort((a, b) => a.changeSince7AM - b.changeSince7AM).slice(0, 5);
 
-        // 3. Đưa vào Map xử lý nhãn để không bao giờ bị nhảy vọt thành TOP 6
         let rankingPool = new Map();
         
         top5Gainers.forEach((c, i) => {
@@ -116,22 +114,32 @@ async function main() {
             if (!rankingPool.has(c.instId)) {
                 rankingPool.set(c.instId, { ...c, mode: 'short', label: `TOP ${i + 1} GIẢM` });
             } else {
-                // Trường hợp đặc biệt hy hữu nằm ở ranh giới
                 rankingPool.get(c.instId).mode = 'both';
                 rankingPool.get(c.instId).label = `TOP ${i + 1} GIẢM`; 
             }
         });
 
-        // 4. Lọc Volume > 5.000.000 USD
+        // Lọc Volume > 5.000.000 USD
         for (const [symbol, coinData] of rankingPool.entries()) {
             if (coinData.vol24hQuote < 5000000) {
                 rankingPool.delete(symbol);
             }
         }
 
+        // --- ĐÃ BỔ SUNG: KIỂM TRA ĐIỀU KIỆN 3 NGÀY TĂNG > 5% ĐỐI VỚI CHIỀU LONG ---
+        for (const [symbol, coinData] of rankingPool.entries()) {
+            // Nếu coin có xu hướng LONG (hoặc cả hai) mà KHÔNG nằm trong danh sách đạt chuẩn 3 ngày tăng > 5%
+            if (coinData.mode === 'long' && !qualifiedLongCoins.includes(symbol)) {
+                console.log(`[Bỏ qua LONG] ${symbol} thuộc Top Tăng mốc 7h nhưng 3 ngày qua không tăng đủ 5% -> Hủy.`);
+                rankingPool.delete(symbol);
+            } else if (coinData.mode === 'both' && !qualifiedLongCoins.includes(symbol)) {
+                // Nếu dính lưỡng tính, hạ cấp chặn chiều LONG, giữ nguyên chiều SHORT (Short không cần lọc 3 ngày tăng)
+                coinData.mode = 'short';
+            }
+        }
+
         if (rankingPool.size === 0) return;
 
-        // 5. Quét kỹ thuật đa khung song song
         const technicalPromises = Array.from(rankingPool.keys()).map(symbol => getTechnicalMetrics(symbol));
         const technicalResults = await Promise.all(technicalPromises);
 
@@ -148,7 +156,7 @@ async function main() {
             let finalSignal = null;
             let triggeredFrame = null;
 
-            // Kiểm tra cấu trúc lệnh Long
+            // Kiểm tra cấu trúc lệnh Long (đã qua bộ lọc 3 ngày ở trên)
             if (mode === 'long' || mode === 'both') {
                 const closeToEma5m = (metrics.a_5m >= -0.5 && metrics.a_5m <= 1);
                 const closeToEma15m = (metrics.a_15m >= -0.5 && metrics.a_15m <= 1);
