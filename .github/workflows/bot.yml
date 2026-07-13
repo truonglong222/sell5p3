@@ -1,50 +1,60 @@
-name: Crypto Bot Schedule
+name: Run Trading Bots Daily
 
 on:
-  workflow_dispatch: # Lắng nghe lệnh gọi từ bên ngoài kích hoạt
+  workflow_dispatch:
     inputs:
-      action_type: # Nhận diện loại hành động gửi từ web cron-job
-        description: 'Nhập run_7h hoặc run_bot'
+      action_type:
+        description: 'Loại action cần chạy (run_7h hoặc run_bot)'
         required: true
         default: 'run_bot'
 
 jobs:
-  run-bot:
+  run-bots:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout mã nguồn repo
+      - name: Checkout mã nguồn
         uses: actions/checkout@v4
-        with:
-          persist-credentials: true
 
-      - name: Setup môi trường Node.js
+      - name: Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Cài đặt Dependencies
-        run: npm install axios
+      - name: Cài đặt thư viện dependencies
+        run: npm install
 
-      # CHỈ chạy file 7h.js nếu bên web cron-job truyền tham số "run_7h"
-      - name: Chốt giá 7h sáng
-        if: github.event.inputs.action_type == 'run_7h'
-        run: node 7h.js
+      # ========================================================
+      # KỊCH BẢN 1: CHẠY FILE CHỐT GIÁ 7H SÁNG (Cho cả 2 sàn)
+      # ========================================================
+      - name: Chạy chốt giá 7h OKX & Binance
+        if: "${{ github.event.inputs.action_type == 'run_7h' }}"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          node 7h.js
+          node 7h_binance.js
 
-      # LUÔN LUÔN chạy file bot.js ở mọi lượt kích hoạt
-      - name: Chạy Bot quét tín hiệu kĩ thuật
-        run: node bot.js
+      # ========================================================
+      # KỊCH BẢN 2: CHẠY QUÉT SIGNAL MỖI 5 PHÚT (Cho cả 2 sàn)
+      # ========================================================
+      - name: Chạy Bot Quét Tín Hiệu OKX & Binance
+        if: "${{ github.event.inputs.action_type == 'run_bot' }}"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          node bot.js
+          node bot_binance.js
 
-      # Đẩy file trạng thái mới lên lại Github
-      - name: Commit và Push cập nhật file trạng thái
+      # ========================================================
+      # TỰ ĐỘNG ĐẨY LỊCH SỬ COOLDOWN VÀ STATE LÊN GITHUB
+      # ========================================================
+      - name: Lưu trữ trạng thái State và Cooldown mới
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add state.json sentCoins.json || true
-          git commit -m "🤖 [Bot] Cập nhật file trạng thái tự động" || true
-          git push origin main || true
+          git add state.json state_binance.json sentCoins.json sentCoins_binance.json || true
+          git commit -m "🤖 [Bot Auto] Cập nhật State & Cooldown" || true
+          git push || true
