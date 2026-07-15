@@ -13,7 +13,7 @@ const DB_FILE = path.join(__dirname, 'sentCoins.json');
 const STATE_FILE = path.join(__dirname, 'state.json');
 
 // Cấu hình chặn spam tín hiệu (Countdown 6 giờ)
-const COUNTDOWN_TIME = 48 * 60 * 60 * 1000; 
+const COUNTDOWN_TIME = 10 * 60 * 60 * 1000; 
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
