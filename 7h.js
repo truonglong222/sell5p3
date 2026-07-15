@@ -103,7 +103,7 @@ async function main() {
         // B. Trích xuất Top 10 tăng mạnh nhất trong 2 ngày qua
         const top10Gainers2Days = [...poolWithChanges]
             .sort((a, b) => b.change2Days - a.change2Days) // Tăng nhiều nhất (số dương lớn nhất) xếp lên đầu
-            .slice(0, 10)
+            .slice(0, 20)
             .map(item => item.symbol);
 
         if (top20Losers5Days.length === 0 && top10Gainers2Days.length === 0) {
