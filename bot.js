@@ -148,7 +148,7 @@ async function main() {
             const symbol = top10Gainers[i];
             const rsi = await getRSIForCoin(symbol, '1H');
 
-            if (rsi !== null && rsi < 48) {
+            if (rsi !== null && rsi < 49) {
                 if (!sentLog[symbol]) sentLog[symbol] = {};
                 const coinLog = sentLog[symbol];
 
@@ -160,7 +160,7 @@ async function main() {
 
                     const message = `🔴 <b>TÍN HIỆU SHORT (1H)</b>\n` +
                                     `🔥 Coin: <b>#${coinName}</b> (${rankingLabel})\n` +
-                                    `📊 Chỉ số RSI-20 (1h): <code>${rsi.toFixed(2)}</code> (&lt; 48)\n` +
+                                    `📊 Chỉ số RSI-20 (1h): <code>${rsi.toFixed(2)}</code> (&lt; 49)\n` +
                                     `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
