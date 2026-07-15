@@ -48,7 +48,7 @@ async function fetchMultiDayChanges(coin, rawFuturesMap) {
 
             // 2. Tính biến động 2 ngày qua
             const index2d = Math.min(2, candles1D.length - 1);
-            const close2DaysAgo = parseFloat(candles1D[index2d][1]);
+            const open2DaysAgo = parseFloat(candles1D[index2d][1]);
             const change2Days = open2DaysAgo ? ((lastPrice - open2DaysAgo) / open2DaysAgo) * 100 : 0;
 
             return { symbol, change5Days, change2Days };
