@@ -12,8 +12,9 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sentCoins.json');
 const STATE_FILE = path.join(__dirname, 'state.json');
 
-// Cấu hình chặn spam tín hiệu (Countdown 6 giờ)
-const COUNTDOWN_TIME = 10 * 60 * 60 * 1000; 
+// Cấu hình Cooldown độc lập theo yêu cầu mới
+const COOLDOWN_LONG = 48 * 60 * 60 * 1000; // 48 giờ cho tín hiệu Long (15m)
+const COOLDOWN_SHORT = 4 * 60 * 60 * 1000;  // 4 giờ cho tín hiệu Short (1h)
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -33,22 +34,23 @@ function saveSentLog(logData) {
         const cleanedLog = {};
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
-            if (timeData._15m && now - timeData._15m < COUNTDOWN_TIME) temp._15m = timeData._15m;
-            if (timeData._1h && now - timeData._1h < COUNTDOWN_TIME) temp._1h = timeData._1h;
+            if (timeData._15m && now - timeData._15m < COOLDOWN_LONG) temp._15m = timeData._15m;
+            if (timeData._1h && now - timeData._1h < COOLDOWN_SHORT) temp._1h = timeData._1h;
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
         }
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
     } catch (e) {}
 }
 
-// Hàm tính RSI-20 chuẩn mượt Wilder
-function calculateRSI(prices, period = 20) {
-    if (prices.length <= period) return 50; 
+// Hàm tính mảng RSI-20 chuẩn mượt Wilder cho toàn bộ chuỗi giá
+function calculateRSIHistory(prices, period = 20) {
+    const rsiHistory = new Array(prices.length).fill(null);
+    if (prices.length <= period) return rsiHistory;
 
     let gains = 0;
     let losses = 0;
 
-    // Tính bước thay đổi ban đầu
+    // Bước khởi tạo đầu tiên
     for (let i = 1; i <= period; i++) {
         const diff = prices[i] - prices[i - 1];
         if (diff > 0) gains += diff;
@@ -58,7 +60,9 @@ function calculateRSI(prices, period = 20) {
     let avgGain = gains / period;
     let avgLoss = losses / period;
 
-    // Làm mượt Wilder's Smoothing
+    rsiHistory[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + (avgGain / avgLoss));
+
+    // Làm mượt Wilder's Smoothing cho toàn bộ chuỗi còn lại
     for (let i = period + 1; i < prices.length; i++) {
         const diff = prices[i] - prices[i - 1];
         if (diff > 0) {
@@ -68,24 +72,45 @@ function calculateRSI(prices, period = 20) {
             avgGain = (avgGain * (period - 1)) / period;
             avgLoss = (avgLoss * (period - 1) - diff) / period;
         }
+        rsiHistory[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + (avgGain / avgLoss));
     }
 
-    if (avgLoss === 0) return 100;
-    const rs = avgGain / avgLoss;
-    return 100 - 100 / (1 + rs);
+    return rsiHistory;
 }
 
-// Hàm lấy nến và tính RSI-20 theo khung thời gian yêu cầu
-async function getRSIForCoin(symbol, barFrame) {
+// Hàm tính ATR% tức thời (20 nến gần nhất)
+async function getATRPercent(symbol) {
     try {
-        // Lấy 60 nến để đảm bảo dữ liệu tính RSI-20 đủ mượt và chính xác
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${barFrame}&limit=60`;
-        const response = await axios.get(url, { timeout: 6000 });
-        if (response.data && response.data.code === '0' && response.data.data.length >= 30) {
-            const candles = response.data.data.reverse(); // Chuyển từ cũ đến mới
-            const prices = candles.map(c => parseFloat(c[4])); // Lấy giá đóng cửa (Close)
-            const rsi = calculateRSI(prices, 20); // Tính RSI-20
-            return rsi;
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=21`;
+        const response = await axios.get(url, { timeout: 5000 });
+        if (response.data && response.data.code === '0' && response.data.data.length >= 21) {
+            const candles = response.data.data.reverse();
+            const trValues = [];
+            for (let i = 1; i < candles.length; i++) {
+                const high = parseFloat(candles[i][2]);
+                const low = parseFloat(candles[i][3]);
+                const prevClose = parseFloat(candles[i - 1][4]);
+                const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+                trValues.push(tr);
+            }
+            const atr20 = trValues.reduce((sum, val) => sum + val, 0) / trValues.length;
+            const currentPrice = parseFloat(candles[candles.length - 1][4]);
+            return currentPrice > 0 ? (atr20 / currentPrice) * 100 : 0;
+        }
+    } catch (e) {}
+    return 0;
+}
+
+// Hàm lấy dữ liệu nến và tính RSI-20 cho coin
+async function getRSIHistoryForCoin(symbol, barFrame) {
+    try {
+        // Lấy 65 nến để lịch sử tính RSI-20 đạt độ chính xác tối ưu nhất
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${barFrame}&limit=65`;
+        const response = await axios.get(url, { timeout: 5000 });
+        if (response.data && response.data.code === '0' && response.data.data.length >= 35) {
+            const candles = response.data.data.reverse(); // Đảo từ cũ đến mới
+            const prices = candles.map(c => parseFloat(c[4])); // Lấy chuỗi giá Close
+            return calculateRSIHistory(prices, 20);
         }
     } catch (error) {}
     return null;
@@ -93,91 +118,108 @@ async function getRSIForCoin(symbol, barFrame) {
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU RSI-20 ĐA KHUNG ---');
+        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU THEO ATR % ---');
 
-        // 1. Đọc dữ liệu từ state.json
+        // 1. Đọc danh sách coin đủ điều kiện ATR% từ file state.json
         if (!fs.existsSync(STATE_FILE)) {
             console.log('Không tìm thấy file state.json!');
             return;
         }
         const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-        const top20Losers = stateData.top20Losers5Days || [];
-        const top10Gainers = stateData.top10Gainers2Days || [];
+        const qualifiedCoins = stateData.qualifiedCoins || [];
+
+        if (qualifiedCoins.length === 0) {
+            console.log('Danh sách lọc qualifiedCoins trống.');
+            return;
+        }
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
         let hasNewAlert = false;
 
-        // 2. XỬ LÝ NHÓM 1: Top 20 Giảm 5 ngày -> Quét RSI-20 khung 15m (Tìm điểm LONG)
-        console.log(`Đang quét ${top20Losers.length} coin thuộc nhóm Top Giảm 5 Ngày (Khung 15m)...`);
-        for (let i = 0; i < top20Losers.length; i++) {
-            const symbol = top20Losers[i];
-            const rsi = await getRSIForCoin(symbol, '15m');
-            
-            if (rsi !== null && rsi > 70) {
-                if (!sentLog[symbol]) sentLog[symbol] = {};
-                const coinLog = sentLog[symbol];
+        // 2. XỬ LÝ LỆNH LONG: Khung 15m (RSI20 > 70) | Cooldown 48h
+        console.log(`Đang quét tín hiệu LONG cho ${qualifiedCoins.length} coin (Khung 15m)...`);
+        for (const symbol of qualifiedCoins) {
+            if (!sentLog[symbol]) sentLog[symbol] = { _15m: 0, _1h: 0 };
+            const coinLog = sentLog[symbol];
 
-                // Kiểm tra countdown chặn lặp tín hiệu (6h) cho khung 15m
-                if (currentTime - (coinLog._15m || 0) >= COUNTDOWN_TIME) {
-                    const coinName = symbol.replace('-USDT-SWAP', '');
-                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-                    const rankingLabel = `TOP ${i + 1} GIẢM 5 NGÀY`;
+            // Chỉ gọi API tính RSI nếu đã hết thời gian chặn Cooldown 48h
+            if (currentTime - (coinLog._15m || 0) >= COOLDOWN_LONG) {
+                const rsiHistory = await getRSIHistoryForCoin(symbol, '15m');
+                if (rsiHistory && rsiHistory[rsiHistory.length - 1] !== null) {
+                    const rsiCurrent = rsiHistory[rsiHistory.length - 1]; // RSI của cây nến hiện tại [1]
 
-                    const message = `🟢 <b>TÍN HIỆU LONG (15M)</b>\n` +
-                                    `🔥 Coin: <b>#${coinName}</b> (${rankingLabel})\n` +
-                                    `📊 Chỉ số RSI-20 (15m): <code>${rsi.toFixed(2)}</code> (&gt; 70)\n` +
-                                    `👉 <a href="${link}">Giao dịch ngay</a>`;
+                    if (rsiCurrent > 70) {
+                        const atrPercent = await getATRPercent(symbol);
+                        const coinName = symbol.replace('-USDT-SWAP', '');
+                        const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: message,
-                        parse_mode: 'HTML'
-                    }).catch(() => {});
+                        const message = `🟢 <b>TÍN HIỆU LONG (15M)</b>\n` +
+                                        `🔥 Coin: <b>#${coinName}</b>\n` +
+                                        `📊 Chỉ số RSI-20 (15m): <code>${rsiCurrent.toFixed(2)}</code> (&gt; 70)\n` +
+                                        `⚡ ATR% hiện tại: <code>${atrPercent.toFixed(3)}%</code>\n` +
+                                        `👉 <a href="${link}">Giao dịch ngay</a>`;
 
-                    sentLog[symbol]._15m = currentTime;
-                    hasNewAlert = true;
+                        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: message,
+                            parse_mode: 'HTML'
+                        }).catch(() => {});
+
+                        sentLog[symbol]._15m = currentTime;
+                        hasNewAlert = true;
+                    }
                 }
+                await sleep(50); // Tránh bị quá tải request đột ngột
             }
-            await sleep(50); // Khoảng nghỉ nhỏ tránh nghẽn
         }
 
-        // 3. XỬ LÝ NHÓM 2: Top 10 Tăng 2 ngày -> Quét RSI-20 khung 1h (Tìm điểm SHORT)
-        console.log(`Đang quét ${top10Gainers.length} coin thuộc nhóm Top Tăng 2 Ngày (Khung 1h)...`);
-        for (let i = 0; i < top10Gainers.length; i++) {
-            const symbol = top10Gainers[i];
-            const rsi = await getRSIForCoin(symbol, '1H');
+        // 3. XỬ LÝ LỆNH SHORT: Khung 1h (RSI_nay - RSI_truoc < -8) | Cooldown 4h
+        console.log(`Đang quét tín hiệu SHORT cho ${qualifiedCoins.length} coin (Khung 1h)...`);
+        for (const symbol of qualifiedCoins) {
+            if (!sentLog[symbol]) sentLog[symbol] = { _15m: 0, _1h: 0 };
+            const coinLog = sentLog[symbol];
 
-            if (rsi !== null && rsi < 49) {
-                if (!sentLog[symbol]) sentLog[symbol] = {};
-                const coinLog = sentLog[symbol];
+            // Chỉ gọi API tính RSI nếu đã hết thời gian chặn Cooldown 4h
+            if (currentTime - (coinLog._1h || 0) >= COOLDOWN_SHORT) {
+                const rsiHistory = await getRSIHistoryForCoin(symbol, '1h');
+                if (rsiHistory && rsiHistory.length >= 2) {
+                    const rsiCurrent = rsiHistory[rsiHistory.length - 1];  // RSI nến hiện hành [1]
+                    const rsiPrevious = rsiHistory[rsiHistory.length - 2]; // RSI nến trước đó [2]
 
-                // Kiểm tra countdown chặn lặp tín hiệu (6h) cho khung 1h
-                if (currentTime - (coinLog._1h || 0) >= COUNTDOWN_TIME) {
-                    const coinName = symbol.replace('-USDT-SWAP', '');
-                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-                    const rankingLabel = `TOP ${i + 1} TĂNG 2 NGÀY`;
+                    if (rsiCurrent !== null && rsiPrevious !== null) {
+                        const diffRsi = rsiCurrent - rsiPrevious;
 
-                    const message = `🔴 <b>TÍN HIỆU SHORT (1H)</b>\n` +
-                                    `🔥 Coin: <b>#${coinName}</b> (${rankingLabel})\n` +
-                                    `📊 Chỉ số RSI-20 (1h): <code>${rsi.toFixed(2)}</code> (&lt; 49)\n` +
-                                    `👉 <a href="${link}">Giao dịch ngay</a>`;
+                        if (diffRsi < -8) { // Độ sụt giảm RSI mạnh hơn 8 đơn vị
+                            const atrPercent = await getATRPercent(symbol);
+                            const coinName = symbol.replace('-USDT-SWAP', '');
+                            const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: message,
-                        parse_mode: 'HTML'
-                    }).catch(() => {});
+                            const message = `🔴 <b>TÍN HIỆU SHORT (1H)</b>\n` +
+                                            `🔥 Coin: <b>#${coinName}</b>\n` +
+                                            `📊 RSI-20 hiện tại [1]: <code>${rsiCurrent.toFixed(2)}</code>\n` +
+                                            `📉 RSI-20 trước đó [2]: <code>${rsiPrevious.toFixed(2)}</code>\n` +
+                                            `📐 Chênh lệch (Δ): <code>${diffRsi.toFixed(2)}</code> (&lt; -8)\n` +
+                                            `⚡ ATR% hiện tại: <code>${atrPercent.toFixed(3)}%</code>\n` +
+                                            `👉 <a href="${link}">Giao dịch ngay</a>`;
 
-                    sentLog[symbol]._1h = currentTime;
-                    hasNewAlert = true;
+                            await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                                chat_id: TELEGRAM_CHAT_ID,
+                                text: message,
+                                parse_mode: 'HTML'
+                            }).catch(() => {});
+
+                            sentLog[symbol]._1h = currentTime;
+                            hasNewAlert = true;
+                        }
+                    }
                 }
+                await sleep(50);
             }
-            await sleep(50); // Khoảng nghỉ nhỏ tránh nghẽn
         }
 
         if (hasNewAlert) saveSentLog(sentLog);
-        console.log('--- HOÀN THÀNH TIẾN TRÌNH QUÉT BOT ---');
+        console.log('--- KẾT THÚC TIẾN TRÌNH QUÉT KHUNG 15M / 1H ---');
     } catch (err) {
         console.error('Lỗi chạy chính bot.js:', err.message);
     }
