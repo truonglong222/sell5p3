@@ -101,7 +101,7 @@ async function getCandleDataAndRSI(symbol, barFrame) {
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU THEO YÊU CẦU MỚI (ATR X 2) ---');
+        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU THEO YÊU CẦU MỚI (RSI > 67 & ATR X 3) ---');
 
         // 1. Đọc dữ liệu từ state.json (Dạng Map { symbol: atrPercent })
         if (!fs.existsSync(STATE_FILE)) {
@@ -121,7 +121,7 @@ async function main() {
         const currentTime = Date.now();
         let hasNewAlert = false;
 
-        // 2. XỬ LÝ LỆNH LONG: Khung 15m (RSI20 nến hiện hành [0] > 70) | Cooldown 48h
+        // 2. XỬ LÝ LỆNH LONG: Khung 15m (RSI20 nến hiện hành [0] > 67) | Cooldown 48h
         console.log(`Đang quét tín hiệu LONG cho ${qualifiedCoins.length} coin (Khung 15m)...`);
         for (const symbol of qualifiedCoins) {
             if (!sentLog[symbol]) sentLog[symbol] = { _15m: 0, _1h: 0 };
@@ -134,17 +134,17 @@ async function main() {
                     const rsiHistory = data.rsiHistory;
                     const rsiCurrent = rsiHistory[rsiHistory.length - 1]; // RSI nến hiện tại [0] (cuối mảng)
 
-                    if (rsiCurrent !== null && rsiCurrent > 70) {
+                    if (rsiCurrent !== null && rsiCurrent > 67) { // ĐÃ SỬA: Thay đổi ngưỡng RSI > 67
                         const atrPercent = qualifiedCoinsMap[symbol] || 0;
-                        const atrTimes2 = atrPercent * 2; // ĐÃ SỬA: nhân 2 thay vì nhân 3
+                        const atrTimes3 = atrPercent * 3; // ĐÃ SỬA: Nhân 3 lần giá trị ATR%
                         
                         const coinName = symbol.replace('-USDT-SWAP', '');
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                         const message = `🟢 <b>TÍN HIỆU LONG (15M)</b>\n` +
                                         `🔥 Coin: <b>#${coinName}</b>\n` +
-                                        `📊 Chỉ số RSI-20 (15m) nến [0]: <code>${rsiCurrent.toFixed(2)}</code> (&gt; 70)\n` +
-                                        `⚡ ATR% x 2: <code>${atrTimes2.toFixed(3)}%</code>\n` +
+                                        `📊 Chỉ số RSI-20 (15m) nến [0]: <code>${rsiCurrent.toFixed(2)}</code> (&gt; 67)\n` +
+                                        `⚡ ATR% x 3: <code>${atrTimes3.toFixed(3)}%</code>\n` +
                                         `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
