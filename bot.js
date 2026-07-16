@@ -101,7 +101,7 @@ async function getCandleDataAndRSI(symbol, barFrame) {
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU THEO YÊU CẦU MỚI ---');
+        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU THEO YÊU CẦU MỚI (ATR X 2) ---');
 
         // 1. Đọc dữ liệu từ state.json (Dạng Map { symbol: atrPercent })
         if (!fs.existsSync(STATE_FILE)) {
@@ -136,7 +136,7 @@ async function main() {
 
                     if (rsiCurrent !== null && rsiCurrent > 70) {
                         const atrPercent = qualifiedCoinsMap[symbol] || 0;
-                        const atrTimes3 = atrPercent * 3; // ATR% nhân với 3
+                        const atrTimes2 = atrPercent * 2; // ĐÃ SỬA: nhân 2 thay vì nhân 3
                         
                         const coinName = symbol.replace('-USDT-SWAP', '');
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -144,7 +144,7 @@ async function main() {
                         const message = `🟢 <b>TÍN HIỆU LONG (15M)</b>\n` +
                                         `🔥 Coin: <b>#${coinName}</b>\n` +
                                         `📊 Chỉ số RSI-20 (15m) nến [0]: <code>${rsiCurrent.toFixed(2)}</code> (&gt; 70)\n` +
-                                        `⚡ ATR% x 3: <code>${atrTimes3.toFixed(3)}%</code>\n` +
+                                        `⚡ ATR% x 2: <code>${atrTimes2.toFixed(3)}%</code>\n` +
                                         `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -199,9 +199,9 @@ async function main() {
                                             `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                             await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                                chat_id: TELEGRAM_CHAT_ID,
-                                text: message,
-                                parse_mode: 'HTML'
+                                    chat_id: TELEGRAM_CHAT_ID,
+                                    text: message,
+                                    parse_mode: 'HTML'
                             }).catch(() => {});
 
                             sentLog[symbol]._1h = currentTime;
