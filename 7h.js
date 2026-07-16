@@ -100,25 +100,26 @@ async function main() {
         // Lọc bỏ các kết quả bị lỗi mạng (null)
         const validResults = results.filter(r => r !== null);
 
-        const qualifiedCoins = [];
+        // ĐỔI LOGIC: Lưu dạng Key (Symbol) - Value (ATR%) để dễ truy xuất
+        const qualifiedCoinsMap = {};
 
         // 3. Lọc theo điều kiện: 0.5% < ATR% < 3%
         for (const item of validResults) {
             if (item.atrPercent > 0.5 && item.atrPercent < 3.0) {
-                qualifiedCoins.push(item.symbol);
+                qualifiedCoinsMap[item.symbol] = parseFloat(item.atrPercent.toFixed(3));
                 console.log(`✓ [Thỏa mãn] ${item.symbol} | ATR%: ${item.atrPercent.toFixed(3)}%`);
             }
         }
 
-        // 4. Ghi danh sách sạch này vào file state.json để bot.js sử dụng
+        // 4. Ghi đối tượng map này vào file state.json
         const finalState = {
-            qualifiedCoins: qualifiedCoins
+            qualifiedCoins: qualifiedCoinsMap
         };
 
         fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8');
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        console.log(`--- HOÀN THÀNH: Đã lưu ${qualifiedCoins.length} coin thỏa mãn vào state.json trong ${duration} giây ---`);
+        console.log(`--- HOÀN THÀNH: Đã lưu ${Object.keys(qualifiedCoinsMap).length} coin thỏa mãn kèm ATR% vào state.json trong ${duration} giây ---`);
 
     } catch (error) {
         console.error('Lỗi hệ thống trong file 7h.js:', error.message);
