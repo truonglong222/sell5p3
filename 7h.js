@@ -71,9 +71,9 @@ async function calculateATRPercent(symbol) {
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU QUY TRÌNH LỌC COIN THEO ATR% KHUNG 15M LÚC 7H SÁNG ---');
+    console.log('--- BẤT ĐẦU QUY TRÌNH LỌC COIN THEO ATR% LÚC 7H SÁNG (VOL > 2M USD) ---');
     try {
-        // 1. Tải Ticker tổng từ OKX và lọc lấy Top 100 coin có Volume quy đổi USD lớn nhất
+        // 1. Tải Ticker tổng từ OKX
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
         if (!response.data || response.data.code !== '0') {
@@ -81,26 +81,30 @@ async function main() {
             return;
         }
 
-        const top100OKX = response.data.data
-            .filter(t => t.instId.endsWith('-USDT-SWAP'))
+        // ĐÃ ĐỔI: Thay vì lấy top 100, lọc thẳng toàn bộ coin có Volume 24h quy đổi > 2,000,000 USD
+        const filteredOKX = response.data.data
+            .filter(t => t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 2000000)
             .map(t => ({
                 instId: t.instId,
-                vol24hUsd: parseFloat(t.volCcy24h) // Volume quy đổi chuẩn USD
-            }))
-            .sort((a, b) => b.vol24hUsd - a.vol24hUsd)
-            .slice(0, 100);
+                vol24hUsd: parseFloat(t.volCcy24h)
+            }));
 
-        console.log(`Đã chọn ra Top 100 coin có Volume USD cao nhất. Đang tiến hành quét ATR%...`);
+        console.log(`Đã chọn ra ${filteredOKX.length} coin thỏa mãn Volume USD > 2,000,000. Tiến hành quét ATR%...`);
+
+        if (filteredOKX.length === 0) {
+            console.log('Không có coin nào đạt mốc Volume > 2M USD.');
+            return;
+        }
 
         // 2. Quét ATR% song song cực nhanh bằng Promise Pool
-        const results = await asyncPool(MAX_CONCURRENT_REQUESTS, top100OKX, (coin) => 
+        const results = await asyncPool(MAX_CONCURRENT_REQUESTS, filteredOKX, (coin) => 
             calculateATRPercent(coin.instId)
         );
 
         // Lọc bỏ các kết quả bị lỗi mạng (null)
         const validResults = results.filter(r => r !== null);
 
-        // ĐỔI LOGIC: Lưu dạng Key (Symbol) - Value (ATR%) để dễ truy xuất
+        // Lưu dạng Key (Symbol) - Value (ATR%) để dễ truy xuất
         const qualifiedCoinsMap = {};
 
         // 3. Lọc theo điều kiện: 0.5% < ATR% < 3%
