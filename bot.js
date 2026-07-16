@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sentCoins.json');
 const STATE_FILE = path.join(__dirname, 'state.json');
 
-// Cấu hình Cooldown độc lập theo yêu cầu mới
+// Cấu hình Cooldown độc lập
 const COOLDOWN_LONG = 48 * 60 * 60 * 1000; // 48 giờ cho tín hiệu Long (15m)
 const COOLDOWN_SHORT = 4 * 60 * 60 * 1000;  // 4 giờ cho tín hiệu Short (1h)
 
@@ -78,30 +78,7 @@ function calculateRSIHistory(prices, period = 20) {
     return rsiHistory;
 }
 
-// Hàm tính ATR% tức thời (20 nến gần nhất)
-async function getATRPercent(symbol) {
-    try {
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=21`;
-        const response = await axios.get(url, { timeout: 5000 });
-        if (response.data && response.data.code === '0' && response.data.data.length >= 21) {
-            const candles = response.data.data.reverse();
-            const trValues = [];
-            for (let i = 1; i < candles.length; i++) {
-                const high = parseFloat(candles[i][2]);
-                const low = parseFloat(candles[i][3]);
-                const prevClose = parseFloat(candles[i - 1][4]);
-                const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
-                trValues.push(tr);
-            }
-            const atr20 = trValues.reduce((sum, val) => sum + val, 0) / trValues.length;
-            const currentPrice = parseFloat(candles[candles.length - 1][4]);
-            return currentPrice > 0 ? (atr20 / currentPrice) * 100 : 0;
-        }
-    } catch (e) {}
-    return 0;
-}
-
-// Hàm lấy dữ liệu nến và tính RSI-20 cho coin
+// Hàm lấy dữ liệu nến và tính toán lịch sử RSI-20 cho coin
 async function getRSIHistoryForCoin(symbol, barFrame) {
     try {
         // Lấy 65 nến để lịch sử tính RSI-20 đạt độ chính xác tối ưu nhất
@@ -118,15 +95,16 @@ async function getRSIHistoryForCoin(symbol, barFrame) {
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU THEO ATR % ---');
+        console.log('--- BẤT ĐẦU CHẠY BOT QUÉT TÍN HIỆU THEO ATR % ĐÃ ĐỒNG BỘ ---');
 
-        // 1. Đọc danh sách coin đủ điều kiện ATR% từ file state.json
+        // 1. Đọc dữ liệu từ state.json (Đã tối ưu cấu trúc Map dạng { symbol: atrPercent })
         if (!fs.existsSync(STATE_FILE)) {
             console.log('Không tìm thấy file state.json!');
             return;
         }
         const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-        const qualifiedCoins = stateData.qualifiedCoins || [];
+        const qualifiedCoinsMap = stateData.qualifiedCoins || {};
+        const qualifiedCoins = Object.keys(qualifiedCoinsMap); // Chuyển danh sách Key thành mảng các Symbol
 
         if (qualifiedCoins.length === 0) {
             console.log('Danh sách lọc qualifiedCoins trống.');
@@ -143,21 +121,22 @@ async function main() {
             if (!sentLog[symbol]) sentLog[symbol] = { _15m: 0, _1h: 0 };
             const coinLog = sentLog[symbol];
 
-            // Chỉ gọi API tính RSI nếu đã hết thời gian chặn Cooldown 48h
+            // Chỉ xử lý nếu đã hết thời gian chặn Cooldown 48h
             if (currentTime - (coinLog._15m || 0) >= COOLDOWN_LONG) {
                 const rsiHistory = await getRSIHistoryForCoin(symbol, '15m');
                 if (rsiHistory && rsiHistory[rsiHistory.length - 1] !== null) {
                     const rsiCurrent = rsiHistory[rsiHistory.length - 1]; // RSI của cây nến hiện tại [1]
 
                     if (rsiCurrent > 70) {
-                        const atrPercent = await getATRPercent(symbol);
+                        // TỐI ƯU: Đọc trực tiếp ATR% lưu trong file state.json thay vì gọi API lấy nến
+                        const atrPercent = qualifiedCoinsMap[symbol] || 0;
                         const coinName = symbol.replace('-USDT-SWAP', '');
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                         const message = `🟢 <b>TÍN HIỆU LONG (15M)</b>\n` +
                                         `🔥 Coin: <b>#${coinName}</b>\n` +
                                         `📊 Chỉ số RSI-20 (15m): <code>${rsiCurrent.toFixed(2)}</code> (&gt; 70)\n` +
-                                        `⚡ ATR% hiện tại: <code>${atrPercent.toFixed(3)}%</code>\n` +
+                                        `⚡ ATR% (lưu lúc 7h): <code>${atrPercent.toFixed(3)}%</code>\n` +
                                         `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -170,7 +149,7 @@ async function main() {
                         hasNewAlert = true;
                     }
                 }
-                await sleep(50); // Tránh bị quá tải request đột ngột
+                await sleep(50); // Tránh bị dính Rate Limit của sàn
             }
         }
 
@@ -180,7 +159,7 @@ async function main() {
             if (!sentLog[symbol]) sentLog[symbol] = { _15m: 0, _1h: 0 };
             const coinLog = sentLog[symbol];
 
-            // Chỉ gọi API tính RSI nếu đã hết thời gian chặn Cooldown 4h
+            // Chỉ xử lý nếu đã hết thời gian chặn Cooldown 4h
             if (currentTime - (coinLog._1h || 0) >= COOLDOWN_SHORT) {
                 const rsiHistory = await getRSIHistoryForCoin(symbol, '1h');
                 if (rsiHistory && rsiHistory.length >= 2) {
@@ -190,8 +169,9 @@ async function main() {
                     if (rsiCurrent !== null && rsiPrevious !== null) {
                         const diffRsi = rsiCurrent - rsiPrevious;
 
-                        if (diffRsi < -8) { // Độ sụt giảm RSI mạnh hơn 8 đơn vị
-                            const atrPercent = await getATRPercent(symbol);
+                        if (diffRsi < -8) { // Độ sụt giảm RSI đột ngột mạnh hơn 8 đơn vị
+                            // TỐI ƯU: Đọc trực tiếp ATR% lưu trong file state.json thay vì gọi API lấy nến
+                            const atrPercent = qualifiedCoinsMap[symbol] || 0;
                             const coinName = symbol.replace('-USDT-SWAP', '');
                             const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
@@ -200,7 +180,7 @@ async function main() {
                                             `📊 RSI-20 hiện tại [1]: <code>${rsiCurrent.toFixed(2)}</code>\n` +
                                             `📉 RSI-20 trước đó [2]: <code>${rsiPrevious.toFixed(2)}</code>\n` +
                                             `📐 Chênh lệch (Δ): <code>${diffRsi.toFixed(2)}</code> (&lt; -8)\n` +
-                                            `⚡ ATR% hiện tại: <code>${atrPercent.toFixed(3)}%</code>\n` +
+                                            `⚡ ATR% (lưu lúc 7h): <code>${atrPercent.toFixed(3)}%</code>\n` +
                                             `👉 <a href="${link}">Giao dịch ngay</a>`;
 
                             await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -214,7 +194,7 @@ async function main() {
                         }
                     }
                 }
-                await sleep(50);
+                await sleep(50); // Tránh bị dính Rate Limit của sàn
             }
         }
 
