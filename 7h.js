@@ -61,7 +61,8 @@ async function fetchMultiDayChanges(coin, rawFuturesMap) {
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 GIẢM (5 ngày) & TOP 10 TĂNG (2 ngày) ---');
+    // Đã sửa log hiển thị thông tin lọc
+    console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 GIẢM (5 ngày) & TOP 5 TĂNG (2 ngày) ---');
     try {
         // 1. Tải Ticker tổng & lọc ngay Volume 24h > 2,000,000 USD
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -100,10 +101,10 @@ async function main() {
             .slice(0, 20)
             .map(item => item.symbol);
 
-        // B. Trích xuất Top 10 tăng mạnh nhất trong 2 ngày qua
+        // B. Trích xuất Top 5 tăng mạnh nhất trong 2 ngày qua
         const top10Gainers2Days = [...poolWithChanges]
             .sort((a, b) => b.change2Days - a.change2Days) // Tăng nhiều nhất (số dương lớn nhất) xếp lên đầu
-            .slice(0, 20)
+            .slice(0, 5) // <--- ĐÃ SỬA: lấy 5 coin thay vì 20 coin
             .map(item => item.symbol);
 
         if (top20Losers5Days.length === 0 && top10Gainers2Days.length === 0) {
@@ -122,7 +123,7 @@ async function main() {
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
         console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${duration} GIÂY ---`);
         console.log(`- Đã lưu Top 20 Giảm 5 Ngày:`, top20Losers5Days);
-        console.log(`- Đã lưu Top 10 Tăng 2 Ngày:`, top10Gainers2Days);
+        console.log(`- Đã lưu Top 5 Tăng 2 Ngày:`, top10Gainers2Days); // Đã sửa log hiển thị
 
     } catch (error) {
         console.error('Lỗi hệ thống file 7h.js:', error.message);
@@ -130,4 +131,3 @@ async function main() {
 }
 
 main();
-
