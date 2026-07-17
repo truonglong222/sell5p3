@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const STATE_FILE = path.join(__dirname, 'state.json');
 
-// Giới hạn số lượng request chạy song song cùng lúc để bảo vệ IP
+// Cấu hình giới hạn số lượng request chạy song song cùng lúc (Tránh bị khóa IP)
 const MAX_CONCURRENT_REQUESTS = 8; 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -29,51 +29,41 @@ async function asyncPool(limit, array, iteratorFn) {
     return Promise.all(ret);
 }
 
-// Hàm tính ATR% của 20 nến 15 phút
-async function calculateATRPercent(symbol) {
+// Hàm lấy nến 1D để tính biến động 5 ngày và 2 ngày
+async function fetchMultiDayChanges(coin, rawFuturesMap) {
+    const symbol = coin.instId;
     try {
-        // Lấy 21 nến để tính toán chính xác 20 khoảng True Range (TR)
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=21`;
-        const response = await axios.get(url, { timeout: 5000 });
+        // Lấy 6 nến ngày (limit=6) để có đủ nến index 5 (5 ngày trước) và index 2 (2 ngày trước)
+        const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=6`;
+        const candleRes = await axios.get(candle1DUrl, { timeout: 5000 });
 
-        if (response.data && response.data.code === '0' && response.data.data.length >= 21) {
-            const candles = response.data.data.reverse(); // Đảo từ cũ đến mới để tính toán tuần tự
-            const trValues = [];
+        if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length > 0) {
+            const candles1D = candleRes.data.data; // Mới nhất đến cũ nhất
+            const lastPrice = parseFloat(rawFuturesMap[symbol]);
+            
+            // 1. Tính biến động 5 ngày qua
+            const index5d = Math.min(5, candles1D.length - 1);
+            const close5DaysAgo = parseFloat(candles1D[index5d][4]);
+            const change5Days = close5DaysAgo ? ((lastPrice - close5DaysAgo) / close5DaysAgo) * 100 : 0;
 
-            // Tính True Range cho từng nến từ nến thứ 2 trở đi
-            for (let i = 1; i < candles.length; i++) {
-                const high = parseFloat(candles[i][2]);
-                const low = parseFloat(candles[i][3]);
-                const prevClose = parseFloat(candles[i - 1][4]);
+            // 2. Tính biến động 2 ngày qua
+            const index2d = Math.min(2, candles1D.length - 1);
+            const open2DaysAgo = parseFloat(candles1D[index2d][1]);
+            const change2Days = open2DaysAgo ? ((lastPrice - open2DaysAgo) / open2DaysAgo) * 100 : 0;
 
-                const tr = Math.max(
-                    high - low,
-                    Math.abs(high - prevClose),
-                    Math.abs(low - prevClose)
-                );
-                trValues.push(tr);
-            }
-
-            // Tính trung bình cộng của 20 giá trị TR vừa tìm được (ATR-20)
-            const atr20 = trValues.reduce((sum, val) => sum + val, 0) / trValues.length;
-
-            // Tính tỷ lệ phần trăm ATR% so với giá đóng cửa của nến hiện tại
-            const currentPrice = parseFloat(candles[candles.length - 1][4]);
-            const atrPercent = currentPrice > 0 ? (atr20 / currentPrice) * 100 : 0;
-
-            return { symbol, atrPercent };
+            return { symbol, change5Days, change2Days };
         }
-    } catch (error) {
-        // Bỏ qua lỗi kết nối cục bộ của một vài coin để hệ thống chạy mượt mà
+    } catch (err) {
+        // Bỏ qua lỗi của một vài coin để tiến trình chạy liên tục không bị gián đoạn
     }
     return null;
 }
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU QUY TRÌNH LỌC COIN THEO ATR% LÚC 7H SÁNG (VOL > 2M USD) ---');
+    console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 GIẢM (5 ngày) & TOP 10 TĂNG (2 ngày) ---');
     try {
-        // 1. Tải Ticker tổng từ OKX
+        // 1. Tải Ticker tổng & lọc ngay Volume 24h > 2,000,000 USD
         const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
         const response = await axios.get(tickersUrl);
         if (!response.data || response.data.code !== '0') {
@@ -81,53 +71,63 @@ async function main() {
             return;
         }
 
-        // ĐÃ ĐỔI: Thay vì lấy top 100, lọc thẳng toàn bộ coin có Volume 24h quy đổi > 2,000,000 USD
-        const filteredOKX = response.data.data
-            .filter(t => t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 2000000)
-            .map(t => ({
-                instId: t.instId,
-                vol24hUsd: parseFloat(t.volCcy24h)
-            }));
+        const rawFutures = response.data.data.filter(t => 
+            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.vol24h) >= 2000000
+        );
+        
+        console.log(`Đã lọc ra ${rawFutures.length} coin thỏa mãn Volume > 2M USD.`);
+        
+        // Tạo map lưu giá hiện tại (last) để tra cứu nhanh O(1)
+        const rawFuturesMap = {};
+        rawFutures.forEach(t => {
+            rawFuturesMap[t.instId] = t.last;
+        });
 
-        console.log(`Đã chọn ra ${filteredOKX.length} coin thỏa mãn Volume USD > 2,000,000. Tiến hành quét ATR%...`);
+        // 2. Chạy tải nến song song cực tốc (Tối đa 8 luồng đồng thời)
+        console.log(`Đang quét nến 1D song song với hiệu năng cao...`);
+        const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => 
+            fetchMultiDayChanges(coin, rawFuturesMap)
+        );
 
-        if (filteredOKX.length === 0) {
-            console.log('Không có coin nào đạt mốc Volume > 2M USD.');
+        // Lọc bỏ kết quả null lỗi mạng
+        const poolWithChanges = results.filter(r => r !== null);
+
+        // 3. Xử lý & Sắp xếp danh sách
+
+        // A. Trích xuất Top 20 giảm mạnh nhất trong 5 ngày qua
+        const top20Losers5Days = [...poolWithChanges]
+            .sort((a, b) => a.change5Days - b.change5Days) // Giảm nhiều nhất (số âm lớn nhất) xếp lên đầu
+            .slice(0, 20)
+            .map(item => item.symbol);
+
+        // B. Trích xuất Top 10 tăng mạnh nhất trong 2 ngày qua
+        const top10Gainers2Days = [...poolWithChanges]
+            .sort((a, b) => b.change2Days - a.change2Days) // Tăng nhiều nhất (số dương lớn nhất) xếp lên đầu
+            .slice(0, 20)
+            .map(item => item.symbol);
+
+        if (top20Losers5Days.length === 0 && top10Gainers2Days.length === 0) {
+            console.log('Không tìm thấy dữ liệu hợp lệ sau khi lọc.');
             return;
         }
 
-        // 2. Quét ATR% song song cực nhanh bằng Promise Pool
-        const results = await asyncPool(MAX_CONCURRENT_REQUESTS, filteredOKX, (coin) => 
-            calculateATRPercent(coin.instId)
-        );
-
-        // Lọc bỏ các kết quả bị lỗi mạng (null)
-        const validResults = results.filter(r => r !== null);
-
-        // Lưu dạng Key (Symbol) - Value (ATR%) để dễ truy xuất
-        const qualifiedCoinsMap = {};
-
-        // 3. Lọc theo điều kiện: 0.5% < ATR% < 3%
-        for (const item of validResults) {
-            if (item.atrPercent > 0.5 && item.atrPercent < 3.0) {
-                qualifiedCoinsMap[item.symbol] = parseFloat(item.atrPercent.toFixed(3));
-                console.log(`✓ [Thỏa mãn] ${item.symbol} | ATR%: ${item.atrPercent.toFixed(3)}%`);
-            }
-        }
-
-        // 4. Ghi đối tượng map này vào file state.json
+        // 4. Lưu đồng thời 2 danh sách này vào file state.json
         const finalState = {
-            qualifiedCoins: qualifiedCoinsMap
+            top20Losers5Days: top20Losers5Days,
+            top10Gainers2Days: top10Gainers2Days
         };
 
         fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8');
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        console.log(`--- HOÀN THÀNH: Đã lưu ${Object.keys(qualifiedCoinsMap).length} coin thỏa mãn kèm ATR% vào state.json trong ${duration} giây ---`);
+        console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${duration} GIÂY ---`);
+        console.log(`- Đã lưu Top 20 Giảm 5 Ngày:`, top20Losers5Days);
+        console.log(`- Đã lưu Top 10 Tăng 2 Ngày:`, top10Gainers2Days);
 
     } catch (error) {
-        console.error('Lỗi hệ thống trong file 7h.js:', error.message);
+        console.error('Lỗi hệ thống file 7h.js:', error.message);
     }
 }
 
 main();
+
