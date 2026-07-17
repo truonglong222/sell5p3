@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sentCoins.json');
 const STATE_FILE = path.join(__dirname, 'state.json');
 
-// Cấu hình chặn spam tín hiệu (Countdown 6 giờ)
+// Cấu hình chặn spam tín hiệu (Countdown 10 giờ tương đương 10 * 60 * 60 * 1000)
 const COUNTDOWN_TIME = 10 * 60 * 60 * 1000; 
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -102,7 +102,7 @@ async function main() {
         }
         const stateData = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
         const top20Losers = stateData.top20Losers5Days || [];
-        const top10Gainers = stateData.top10Gainers2Days || [];
+        const top5Gainers = stateData.top10Gainers2Days || []; // Vẫn trỏ đúng key lưu trữ cũ của bạn
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
@@ -118,7 +118,7 @@ async function main() {
                 if (!sentLog[symbol]) sentLog[symbol] = {};
                 const coinLog = sentLog[symbol];
 
-                // Kiểm tra countdown chặn lặp tín hiệu (6h) cho khung 15m
+                // Kiểm tra countdown chặn lặp tín hiệu cho khung 15m
                 if (currentTime - (coinLog._15m || 0) >= COUNTDOWN_TIME) {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -142,20 +142,22 @@ async function main() {
             await sleep(50); // Khoảng nghỉ nhỏ tránh nghẽn
         }
 
-        // 3. XỬ LÝ NHÓM 2: Top 10 Tăng 2 ngày -> Quét RSI-20 khung 1h (Tìm điểm SHORT)
-        console.log(`Đang quét ${top10Gainers.length} coin thuộc nhóm Top Tăng 2 Ngày (Khung 1h)...`);
-        for (let i = 0; i < top10Gainers.length; i++) {
-            const symbol = top10Gainers[i];
+        // 3. XỬ LÝ NHÓM 2: Top 5 Tăng 2 ngày -> Quét RSI-20 khung 1h (Tìm điểm SHORT)
+        // ĐÃ SỬA: Thay đổi nội dung log hiển thị (Top 5 thay vì Top 10)
+        console.log(`Đang quét ${top5Gainers.length} coin thuộc nhóm Top Tăng 2 Ngày (Khung 1h)...`);
+        for (let i = 0; i < top5Gainers.length; i++) {
+            const symbol = top5Gainers[i];
             const rsi = await getRSIForCoin(symbol, '1H');
 
             if (rsi !== null && rsi < 49) {
                 if (!sentLog[symbol]) sentLog[symbol] = {};
                 const coinLog = sentLog[symbol];
 
-                // Kiểm tra countdown chặn lặp tín hiệu (6h) cho khung 1h
+                // Kiểm tra countdown chặn lặp tín hiệu cho khung 1h
                 if (currentTime - (coinLog._1h || 0) >= COUNTDOWN_TIME) {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+                    // ĐÃ SỬA: Tự động hiển thị chính xác từ TOP 1 đến TOP 5 TĂNG 2 NGÀY
                     const rankingLabel = `TOP ${i + 1} TĂNG 2 NGÀY`;
 
                     const message = `🔴 <b>TÍN HIỆU SHORT (1H)</b>\n` +
