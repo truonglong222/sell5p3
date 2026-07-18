@@ -1,0 +1,58 @@
+name: Execute EMA and RSI Bots From External Cron
+
+on:
+  # Mở cổng nhận tín hiệu kích hoạt kèm tham số từ trang web cron-job.org bên ngoài
+  workflow_dispatch:
+    inputs:
+      target_script:
+        description: 'Nhập tên script muốn chạy (rsi hoặc ema)'
+        required: true
+        default: 'rsi'
+
+jobs:
+  run-crypto-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn từ Repository
+        uses: actions/checkout@v4
+
+      - name: Khởi tạo môi trường Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Cài đặt thư viện dependencies
+        run: npm install
+
+      - name: Thực thi Tập lệnh dựa trên tham số truyền vào
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          SCRIPT="${{ github.event.inputs.target_script }}"
+          echo "Kích hoạt từ bên ngoài: Tiến hành chạy file ${SCRIPT}.js"
+          
+          if [ "$SCRIPT" = "rsi" ]; then
+            node rsi.js
+          elif [ "$SCRIPT" = "ema" ]; then
+            node ema.js
+          else
+            echo "Lỗi: Tham số '$SCRIPT' không hợp lệ! Chỉ chấp nhận 'rsi' hoặc 'ema'." && exit 1
+          fi
+
+      - name: Commit & Push file log thay đổi về kho code
+        run: |
+          # Thiết lập cấu hình danh tính Git hệ thống
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Theo dõi cả 2 file log chống trùng tín hiệu
+          git add sent_rsi.json sent_ema.json
+          
+          # Chỉ tiến hành commit và đẩy lên nếu thực sự có log thời gian mới được ghi nhận
+          if git diff --cached --quiet; then
+            echo "Không phát hiện thay đổi trong các file log. Bỏ qua bước đẩy mã nguồn lên."
+          else
+            git commit -m "🤖 [Bot Action] Cập nhật bộ đếm ngược chống trùng lệnh [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+          fi
