@@ -1,0 +1,45 @@
+name: Auto Daily Top 5D Scan
+
+on:
+  # Kích hoạt tự động bằng lịch hẹn giờ nội bộ của GitHub
+  schedule:
+    # Chạy 1 ngày / 1 lần lúc 00:02 UTC (Tương đương đúng 07:02 sáng giờ Việt Nam GMT+7)
+    - cron: '2 0 * * *'
+    
+  # Cho phép bạn bấm nút chạy thử thủ công trực tiếp trên giao diện Web GitHub nếu cần
+  workflow_dispatch:
+
+jobs:
+  run-top5d-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn từ Repository
+        uses: actions/checkout@v4
+
+      - name: Khởi tạo môi trường Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Cài đặt thư viện dependencies
+        run: npm install
+
+      - name: Thực thi Tập lệnh top_5d.js
+        run: node top_5d.js
+
+      - name: Commit & Push dữ liệu statetop_5d.json mới về kho code
+        run: |
+          # Thiết lập cấu hình danh tính Git hệ thống
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Theo dõi tệp kết quả danh sách coin giảm
+          git add statetop_5d.json
+          
+          # Chỉ tiến hành đẩy mã nguồn lên nếu danh sách Top 20 coin giảm có sự thay đổi mới
+          if git diff --cached --quiet; then
+            echo "Không phát hiện thay đổi trong danh sách coin. Bỏ qua bước đẩy mã nguồn lên."
+          else
+            git commit -m "🤖 [Bot Action] Cập nhật danh sách Top 20 coin giảm giá statetop_5d.json [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+          fi
