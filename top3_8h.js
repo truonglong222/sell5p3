@@ -50,6 +50,7 @@ async function fetch8hChange(coin) {
             return { symbol, change8h };
         }
     } catch (err) {
+        console.error(`Lỗi quét coin ${symbol}:`, err.message);
         // Bỏ qua lỗi kết nối cục bộ của một vài coin để tiến trình chính chạy liên tục
     }
     return null;
