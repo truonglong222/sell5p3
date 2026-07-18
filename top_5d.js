@@ -6,7 +6,9 @@ import { fileURLToPath } from 'url';
 const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const STATE_FILE = path.join(__dirname, 'statelong.json');
+
+// ĐÃ ĐỔI: Tên file lưu trữ mới theo yêu cầu của bạn
+const STATE_FILE = path.join(__dirname, 'statetop_5d.json');
 
 // Cấu hình giới hạn số lượng request chạy song song cùng lúc để bảo vệ IP sàn
 const MAX_CONCURRENT_REQUESTS = 8; 
@@ -94,7 +96,7 @@ async function main() {
 
         const top20LosersSymbols = top20Losers.map(item => item.symbol);
 
-        // 4. Lưu danh sách mảng sạch này vào file statelong.json
+        // 4. Lưu danh sách mảng sạch này vào file statetop_5d.json
         const finalState = {
             top20Losers: top20LosersSymbols
         };
@@ -103,7 +105,7 @@ async function main() {
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
         console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`);
-        console.log(`- Đã tìm và lưu Top 20 Giảm 5 Ngày vào statelong.json:`, top20LosersSymbols);
+        console.log(`- Đã tìm và lưu Top 20 Giảm 5 Ngày vào statetop_5d.json:`, top20LosersSymbols);
 
         // In chi tiết % biến động ra terminal để tiện quan sát
         console.log('\nChi tiết biên độ giảm:');
