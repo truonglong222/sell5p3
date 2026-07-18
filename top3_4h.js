@@ -6,10 +6,8 @@ import { fileURLToPath } from 'url';
 const OKX_BASE_URL = 'https://www.okx.com';
 const STATE_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'statetop3_4h.json');
 
-// Hàm tạo khoảng trễ (miliseconds) giúp làm mượt dòng request, tránh bị sàn quét IP
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Hàm kiểm soát số lượng request song song kèm delay nhỏ giữa các đợt
 async function poolRequests(items, maxParallel, fn) {
     const results = [];
     const executing = new Set();
@@ -23,7 +21,7 @@ async function poolRequests(items, maxParallel, fn) {
         
         if (executing.size >= maxParallel) {
             await Promise.race(executing);
-            await sleep(100); // Nghỉ 100ms sau khi đạt giới hạn song song để giãn cách request
+            await sleep(100); 
         }
     }
     await Promise.all(executing);
@@ -32,43 +30,42 @@ async function poolRequests(items, maxParallel, fn) {
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU QUY TRÌNH LỌC TOP 3 TĂNG/GIẢM KHUNG 4H (VOL > 2M) ---');
+    console.log('--- BẤT ĐẦU LỌC TĂNG (4H) / GIẢM (8H) BẰNG 3 NẾN 4H ---');
     
     try {
-        // 1. Lấy Ticker tổng từ OKX để kiểm tra Volume 24h
         const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
         if (!resTickers.data || resTickers.data.code !== '0') {
             return console.error('Lỗi lấy ticker tổng từ OKX');
         }
 
-        // Lọc volCcy24h > 2,000,000 USD
         const validCoins = resTickers.data.data.filter(t => 
             t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 2000000
         );
         console.log(`Tìm thấy ${validCoins.length} coin thỏa mãn Volume > 2M USD.`);
         if (validCoins.length === 0) return;
 
-        // 2. Quét dữ liệu nến 4h để tính biến động
-        // Tối ưu số request song song xuống 8 để an toàn tránh bị block IP khi gọi đồng loạt
+        // Quét dữ liệu nến: Đổi limit thành '3' để lấy đủ 3 nến 4H gần nhất
         const validResults = await poolRequests(validCoins, 8, async (coin) => {
             try {
-                // Lấy limit: '2' để có nến hiện tại (index 0) và nến vừa đóng (index 1)
                 const resCandle = await axios.get(`${OKX_BASE_URL}/api/v5/market/candles`, {
-                    params: { instId: coin.instId, bar: '4H', limit: '2' } 
+                    params: { instId: coin.instId, bar: '4H', limit: '3' } 
                 });
                 const candles = resCandle.data?.data;
-                if (!candles || candles.length < 2) return null;
+                // Cần tối thiểu 3 nến để tính được cả 4H và 8H
+                if (!candles || candles.length < 3) return null;
 
-                const currentPrice = parseFloat(candles[0][4]); // Giá hiện tại (giá đóng của nến đang chạy)
-                const openPrevious4h = parseFloat(candles[1][1]); // Giá mở cửa của nến 4h vừa đóng trước đó
+                const close0 = parseFloat(candles[0][4]); // Giá đóng cửa hiện tại
+                const open1 = parseFloat(candles[1][1]);  // Giá mở cửa nến 4h trước
+                const open2 = parseFloat(candles[2][1]);  // Giá mở cửa nến 8h trước (đầu nến thứ 3)
 
                 return {
                     symbol: coin.instId,
-                    change4h: ((currentPrice - openPrevious4h) / openPrevious4h) * 100
+                    change4h: ((close0 - open1) / open1) * 100,
+                    change8h: ((close0 - open2) / open2) * 100
                 };
             } catch (err) { 
                 if (err.response?.status === 429) {
-                    console.warn(`Sàn phản hồi 429 (Rate Limit) với cặp: ${coin.instId}. Đang tự bỏ qua...`);
+                    console.warn(`Sàn phản hồi 429 với cặp: ${coin.instId}. Đang bỏ qua...`);
                 }
                 return null; 
             }
@@ -76,15 +73,25 @@ async function main() {
 
         if (validResults.length === 0) return console.log('Không có dữ liệu nến hợp lệ.');
 
-        // 3. Sắp xếp danh sách dựa trên phần trăm biến động 4h
-        const sorted = validResults.sort((a, b) => b.change4h - a.change4h);
-        
-        // Trích xuất Top 3 Tăng mạnh nhất & Top 3 Giảm mạnh nhất khung 4H
-        const top3Gainers4h = sorted.slice(0, 3).map(i => ({ symbol: i.symbol, change4h: `${i.change4h.toFixed(2)}%` }));
-        const top3Losers4h = sorted.slice(-3).reverse().map(i => ({ symbol: i.symbol, change4h: `${i.change4h.toFixed(2)}%` }));
+        // 3. Sắp xếp độc lập
+        // Top 3 Tăng (Khung 4H) -> Xếp từ Cao xuống Thấp dựa trên change4h
+        const sortedGainers = [...validResults].sort((a, b) => b.change4h - a.change4h);
 
-        // 4. Đồng bộ kết quả vào file JSON mới (statetop3_4h.json)
-        fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h, top3Losers4h }, null, 2), 'utf8');
+        // Top 3 Giảm (Khung 8H) -> Xếp từ Thấp lên Cao dựa trên change8h (âm nhiều nhất lên đầu)
+        const sortedLosers = [...validResults].sort((a, b) => a.change8h - b.change8h); 
+        
+        const top3Gainers4h = sortedGainers.slice(0, 3).map(i => ({ 
+            symbol: i.symbol, 
+            change: `${i.change4h.toFixed(2)}%` 
+        }));
+        
+        const top3Losers8h = sortedLosers.slice(0, 3).map(i => ({ 
+            symbol: i.symbol, 
+            change: `${i.change8h.toFixed(2)}%` 
+        }));
+
+        // 4. Đồng bộ kết quả vào file JSON gọn gàng
+        fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h, top3Losers8h }, null, 2), 'utf8');
 
         console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`);
         console.log(`- Cập nhật thành công file: ${STATE_FILE}`);
@@ -94,5 +101,4 @@ async function main() {
     }
 }
 
-// Thực thi 1 lần duy nhất và tự thoát
 main();
