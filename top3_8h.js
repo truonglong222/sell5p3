@@ -4,76 +4,72 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const OKX_BASE_URL = 'https://www.okx.com';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const STATE_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'statetop3_8h.json');
 
-// Đã chỉnh sửa: Đồng bộ hóa tên biến định nghĩa đồng nhất là STATE_FILE
-const STATE_FILE = path.join(__dirname, 'statetop3_8h.json');
+// Hàm kiểm soát số lượng request chạy song song (Tối đa 20 dòng để tránh bị OKX chặn IP)
+async function poolRequests(items, maxParallel, fn) {
+    const results = [];
+    const executing = new Set();
+    for (const item of items) {
+        const p = fn(item).then(res => { if (res) results.push(res); executing.delete(p); });
+        executing.add(p);
+        if (executing.size >= maxParallel) await Promise.race(executing);
+    }
+    await Promise.all(executing);
+    return results;
+}
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU QUY TRÌNH LỌC TOP 3 TĂNG/GIẢM KHUNG 8H (TỐI ƯU HÓA 1 REQUEST) ---');
+    console.log('--- BẤT ĐẦU QUY TRÌNH LỌC TOP 3 TĂNG/GIẢM KHUNG 8H (VOL > 4M) ---');
     try {
-        // 1. Tải Ticker tổng từ OKX (Chỉ tốn 1 request duy nhất cho toàn bộ sàn)
-        const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
-        const response = await axios.get(tickersUrl);
-        if (!response.data || response.data.code !== '0') {
-            console.error('Không thể lấy dữ liệu ticker tổng từ OKX.');
-            return;
-        }
+        // 1. Lấy Ticker tổng từ OKX để kiểm tra Volume 24h
+        const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
+        if (!resTickers.data || resTickers.data.code !== '0') return console.error('Lỗi lấy ticker tổng từ OKX');
 
-        // Lọc các cặp SWAP-USDT có Volume 24h quy đổi > 2,000,000 USD
-        const rawFutures = response.data.data.filter(t => 
-            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 2000000
+        // ĐÃ SỬA: Thay đổi điều kiện lọc volCcy24h > 4,000,000 USD
+        const validCoins = resTickers.data.data.filter(t => 
+            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 4000000
         );
+        console.log(`Tìm thấy ${validCoins.length} coin thỏa mãn Volume > 4M USD.`);
+        if (validCoins.length === 0) return;
 
-        console.log(`Tìm thấy ${rawFutures.length} coin thỏa mãn Volume > 2M USD.`);
-        if (rawFutures.length === 0) return;
+        // 2. Quét dữ liệu 2 cây nến 4h gần nhất để tính biến động 8h
+        const validResults = await poolRequests(validCoins, 20, async (coin) => {
+            try {
+                const resCandle = await axios.get(`${OKX_BASE_URL}/api/v5/market/candles`, {
+                    params: { instId: coin.instId, bar: '4H', limit: '3' } // Lấy 3 để có nến hiện tại + 2 nến lịch sử đầy đủ
+                });
+                const candles = resCandle.data?.data;
+                if (!candles || candles.length < 3) return null;
 
-        // 2. Tính toán biên độ biến động trực tiếp từ dữ liệu Ticker tổng (Không gọi thêm API nến)
-        const validResults = rawFutures.map(t => {
-            const lastPrice = parseFloat(t.last);     // Giá hiện tại
-            const openPrice = parseFloat(t.open24h); // Giá mở cửa 24h được sàn cập nhật liên tục
-            
-            // Tính % biến động
-            const change8h = openPrice > 0 ? ((lastPrice - openPrice) / openPrice) * 100 : 0;
-            
-            return {
-                symbol: t.instId,
-                change8h: change8h
-            };
+                const currentPrice = parseFloat(candles[0][4]); // Giá đóng cửa hiện tại
+                const open8hAgo = parseFloat(candles[2][1]);   // Giá mở cửa của 8 tiếng trước
+
+                return {
+                    symbol: coin.instId,
+                    change8h: ((currentPrice - open8hAgo) / open8hAgo) * 100
+                };
+            } catch { return null; } // Bỏ qua coin nếu bị lỗi kết nối cục bộ
         });
 
-        // 3. Phân tách danh sách và trích xuất Top 3 Tăng / Top 3 Giảm
+        if (validResults.length === 0) return console.log('Không có dữ liệu nến hợp lệ.');
+
+        // 3. Sắp xếp danh sách dựa trên phần trăm biến động 8h
+        const sorted = validResults.sort((a, b) => b.change8h - a.change8h);
         
-        // Top 3 Tăng mạnh nhất (change8h từ lớn đến nhỏ)
-        const top3Gainers8h = [...validResults]
-            .sort((a, b) => b.change8h - a.change8h)
-            .slice(0, 3)
-            .map(item => item.symbol);
+        // Trích xuất Top 3 Tăng mạnh nhất & Top 3 Giảm mạnh nhất (Kèm chi tiết % biến động để bạn tiện theo dõi)
+        const top3Gainers8h = sorted.slice(0, 3).map(i => ({ symbol: i.symbol, change8h: `${i.change8h.toFixed(2)}%` }));
+        const top3Losers8h = sorted.slice(-3).reverse().map(i => ({ symbol: i.symbol, change8h: `${i.change8h.toFixed(2)}%` }));
 
-        // Top 3 Giảm mạnh nhất (change8h từ nhỏ đến lớn)
-        const top3Losers8h = [...validResults]
-            .sort((a, b) => a.change8h - b.change8h)
-            .slice(0, 3)
-            .map(item => item.symbol);
+        // 4. Đồng bộ kết quả trực tiếp vào file JSON cấu trúc gọn gàng
+        fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers8h, top3Losers8h }, null, 2), 'utf8');
 
-        // 4. Lưu dữ liệu hoàn chỉnh vào file statetop3_8h.json
-        const finalState = {
-            top3Gainers8h: top3Gainers8h,
-            top3Losers8h: top3Losers8h
-        };
-
-        // Đã sửa: Gọi đúng tên biến STATE_FILE
-        fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8');
-
-        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${duration} GIÂY ---`);
-        console.log(`- Đã lưu Top 3 Tăng 8h vào JSON:`, top3Gainers8h);
-        console.log(`- Đã lưu Top 3 Giảm 8h vào JSON:`, top3Losers8h);
+        console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`);
+        console.log(`- Đã cập nhật file: ${STATE_FILE}`);
 
     } catch (error) {
-        console.error('Lỗi hệ thống file top3_8h.js:', error.message);
+        console.error('Lỗi hệ thống trong quy trình:', error.message);
     }
 }
 
