@@ -1,12 +1,30 @@
 {
   "top3Gainers8h": [
-    "TRIA-USDT-SWAP",
-    "ALLO-USDT-SWAP",
-    "TRUMP-USDT-SWAP"
+    {
+      "symbol": "ALLO-USDT-SWAP",
+      "change8h": "22.85%"
+    },
+    {
+      "symbol": "CHIP-USDT-SWAP",
+      "change8h": "4.90%"
+    },
+    {
+      "symbol": "ZBT-USDT-SWAP",
+      "change8h": "4.53%"
+    }
   ],
   "top3Losers8h": [
-    "HOME-USDT-SWAP",
-    "ARX-USDT-SWAP",
-    "BILL-USDT-SWAP"
+    {
+      "symbol": "LRC-USDT-SWAP",
+      "change8h": "-13.03%"
+    },
+    {
+      "symbol": "RE-USDT-SWAP",
+      "change8h": "-9.18%"
+    },
+    {
+      "symbol": "HUMA-USDT-SWAP",
+      "change8h": "-4.88%"
+    }
   ]
 }
