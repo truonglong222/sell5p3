@@ -1,50 +1,73 @@
-name: Crypto Bot Schedule
+name: Crypto Bot Automation
 
 on:
-  workflow_dispatch: # Lắng nghe lệnh gọi từ bên ngoài kích hoạt
+  # 1. Kích hoạt tự động theo thời gian của GitHub Actions (Cho file top_5d.js)
+  schedule:
+    # Chạy 1 ngày/1 lần lúc 00:00 UTC (Tương đương 07:00 sáng giờ Việt Nam GMT+7)
+    - cron: '0 0 * * *'
+
+  # 2. Mở cổng nhận tín hiệu kích hoạt từ trang web cron-job.org bên ngoài (Cho các file còn lại)
+  workflow_dispatch:
     inputs:
-      action_type: # Nhận diện loại hành động gửi từ web cron-job
-        description: 'Nhập run_7h hoặc run_bot'
+      target_script:
+        description: 'Nhập tên script muốn chạy (rsi, ema, top3_8h)'
         required: true
-        default: 'run_bot'
+        default: 'rsi'
 
 jobs:
-  run-bot:
+  execute-scripts:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout mã nguồn repo
+      - name: Checkout mã nguồn từ Repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: true
 
-      - name: Setup môi trường Node.js
+      - name: Khởi tạo môi trường Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Cài đặt Dependencies
-        run: npm install axios
+      - name: Cài đặt thư viện dependencies
+        run: npm install
 
-      # CHỈ chạy file 7h.js nếu bên web cron-job truyền tham số "run_7h"
-      - name: Chốt giá 7h sáng
-        if: github.event.inputs.action_type == 'run_7h'
-        run: node 7h.js
+      - name: Thực thi Script dựa trên sự kiện kích hoạt
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-
-      # LUÔN LUÔN chạy file bot.js ở mọi lượt kích hoạt
-      - name: Chạy Bot quét tín hiệu kĩ thuật
-        run: node bot.js
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-
-      # Đẩy file trạng thái mới lên lại Github
-      - name: Commit và Push cập nhật file trạng thái
         run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "Kích hoạt lịch chạy tự động hàng ngày: Chạy top_5d.js"
+            node top_5d.js
+
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            SCRIPT="${{ github.event.inputs.target_script }}"
+            echo "Kích hoạt từ Cron-job bên ngoài: Chạy ${SCRIPT}.js"
+            
+            if [ "$SCRIPT" = "rsi" ]; then
+              node rsi.js
+            elif [ "$SCRIPT" = "$SCRIPT" = "ema" ]; then
+              node ema.js
+            elif [ "$SCRIPT" = "top3_8h" ]; then
+              node top3_8h.js
+            else
+              echo "Lỗi: Tên script '$SCRIPT' không hợp lệ!" && exit 1
+            fi
+          fi
+
+      # 3. BƯỚC BỔ SUNG: Tự động cấu hình và Git Push dữ liệu mới về kho code
+      - name: Commit & Push các file JSON thay đổi
+        run: |
+          # Cấu hình danh tính Git ẩn danh của GitHub Actions
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add state.json sentCoins.json || true
-          git commit -m "🤖 [Bot] Cập nhật file trạng thái tự động" || true
-          git push origin main || true
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Kiểm tra xem có file JSON nào có dữ liệu mới không
+          git add *.json
+          
+          # Chỉ tiến hành commit và push nếu thực sự có sự thay đổi dữ liệu
+          if git diff --cached --quiet; then
+            echo "Không có file JSON nào thay đổi. Bỏ qua bước Git Push."
+          else
+            git commit -m "🤖 [Bot Action] Cập nhật dữ liệu trạng thái và log đếm ngược [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+          fi
