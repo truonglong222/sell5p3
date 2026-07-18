@@ -6,7 +6,9 @@ import { fileURLToPath } from 'url';
 const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const STATE_EMA_FILE = path.join(__dirname, 'statetop3_8h.json');
+
+// Đã chỉnh sửa: Đồng bộ hóa tên biến định nghĩa đồng nhất là STATE_FILE
+const STATE_FILE = path.join(__dirname, 'statetop3_8h.json');
 
 async function main() {
     const startTime = Date.now();
@@ -31,7 +33,7 @@ async function main() {
         // 2. Tính toán biên độ biến động trực tiếp từ dữ liệu Ticker tổng (Không gọi thêm API nến)
         const validResults = rawFutures.map(t => {
             const lastPrice = parseFloat(t.last);     // Giá hiện tại
-            const openPrice = parseFloat(t.open24h); // Giá mở cửa 24h/8h được sàn cập nhật liên tục
+            const openPrice = parseFloat(t.open24h); // Giá mở cửa 24h được sàn cập nhật liên tục
             
             // Tính % biến động
             const change8h = openPrice > 0 ? ((lastPrice - openPrice) / openPrice) * 100 : 0;
@@ -62,6 +64,7 @@ async function main() {
             top3Losers8h: top3Losers8h
         };
 
+        // Đã sửa: Gọi đúng tên biến STATE_FILE
         fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8');
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
