@@ -24,8 +24,8 @@ jobs:
       - name: Khởi tạo môi trường Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 24 # 1. ĐÃ ĐỔI: Nâng cấp lên Node 24 để hết bị báo cảnh báo Deprecated
+          # 2. ĐÃ XÓA: Bỏ dòng `cache: 'npm'` để không bị ép buộc phải có file package-lock.json
 
       - name: Cài đặt thư viện dependencies
         run: npm install
@@ -45,7 +45,7 @@ jobs:
             
             if [ "$SCRIPT" = "rsi" ]; then
               node rsi.js
-            elif [ "$SCRIPT" = "$SCRIPT" = "ema" ]; then
+            elif [ "$SCRIPT" = "ema" ]; then
               node ema.js
             elif [ "$SCRIPT" = "top3_8h" ]; then
               node top3_8h.js
@@ -54,17 +54,14 @@ jobs:
             fi
           fi
 
-      # 3. BƯỚC BỔ SUNG: Tự động cấu hình và Git Push dữ liệu mới về kho code
+      # 3. Tự động cấu hình và Git Push dữ liệu mới về kho code
       - name: Commit & Push các file JSON thay đổi
         run: |
-          # Cấu hình danh tính Git ẩn danh của GitHub Actions
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # Kiểm tra xem có file JSON nào có dữ liệu mới không
           git add *.json
           
-          # Chỉ tiến hành commit và push nếu thực sự có sự thay đổi dữ liệu
           if git diff --cached --quiet; then
             echo "Không có file JSON nào thay đổi. Bỏ qua bước Git Push."
           else
