@@ -10,7 +10,7 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
-const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_8h.json');
+const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json'); 
 
 const COOLDOWN_TIME = 2 * 60 * 60 * 1000; // Khóa chống trùng 4 giờ
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,7 +39,7 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Hàm tính mảng giá trị EMA chuẩn kỹ thuật
+// Hàm lấy dữ liệu nến khung 5m và trả về { giá hiện hành, giá ema20 }
 function calculateEMA(prices, period = 20) {
     if (prices.length < period) return null;
     const k = 2 / (period + 1);
@@ -52,10 +52,8 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Hàm lấy dữ liệu nến khung 5m và trả về { giá hiện hành, giá ema20 }
 async function getLivePriceAndEMA20(symbol) {
     try {
-        // Lấy 60 nến khung 5m (ĐÃ ĐỔI TỪ 15m THÀNH 5m)
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=60`;
         const response = await axios.get(url, { timeout: 5000 });
         
@@ -77,20 +75,27 @@ async function main() {
         console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 5M ---');
 
         if (!fs.existsSync(STATE_TOP3_FILE)) {
-            console.log('Không tìm thấy file statetop3_8h.json!');
+            console.log('Không tìm thấy file statetop3_4h.json!');
             return;
         }
         
         const stateData = JSON.parse(fs.readFileSync(STATE_TOP3_FILE, 'utf8'));
-        const top3Gainers = stateData.top3Gainers8h || [];
-        const top3Losers = stateData.top3Losers8h || [];
+        
+        const top3Gainers = stateData.top3Gainers4h || stateData.top3Gainers8h || [];
+        const top3Losers = stateData.top3Losers4h || stateData.top3Losers8h || [];
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
         let hasNewAlert = false;
 
-        // 1. XỬ LÝ NHÓM LONG: Top 3 Tăng giá 8h
-        for (const symbol of top3Gainers) {
+        // 1. XỬ LÝ NHÓM LONG: Top 3 Tăng giá 4h
+        for (let i = 0; i < top3Gainers.length; i++) {
+            const item = top3Gainers[i];
+            // Hỗ trợ cả 2 định dạng: Object {symbol, change} hoặc chuỗi String đơn thuần
+            const symbol = typeof item === 'object' ? item.symbol : item;
+            const changeStr = typeof item === 'object' && item.change ? `${item.change}%` : 'N/A';
+            const rank = i + 1; // Vị trí Top (1, 2, 3)
+
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0, _short: 0 };
             
             if (currentTime - sentLog[symbol]._long >= COOLDOWN_TIME) {
@@ -102,10 +107,10 @@ async function main() {
                         const coinName = symbol.replace('-USDT-SWAP', '');
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
                         
-                        // Tin nhắn ngắn gọn
+                        // THAY ĐỔI: Tin nhắn chỉ gồm Top, % biến động và Link đồ thị
                         const message = `🟢 <b>LONG #${coinName} (5M)</b>\n` +
-                                        `💰 Giá: <code>${data.lastPrice}</code> \vert{} EMA20: <code>${data.ema20.toFixed(3)}</code>\n` +
-                                        `📐 Lệch: <code>${diff.toFixed(3)}</code>\n` +
+                                        `🏆 Vị trí: <b>Top ${rank} Tăng</b>\n` +
+                                        `📊 Biến động 4H: <code>${changeStr}</code>\n` +
                                         `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -122,8 +127,13 @@ async function main() {
             }
         }
 
-        // 2. XỬ LÝ NHÓM SHORT: Top 3 Giảm giá 8h
-        for (const symbol of top3Losers) {
+        // 2. XỬ LÝ NHÓM SHORT: Top 3 Giảm giá 4h
+        for (let i = 0; i < top3Losers.length; i++) {
+            const item = top3Losers[i];
+            const symbol = typeof item === 'object' ? item.symbol : item;
+            const changeStr = typeof item === 'object' && item.change ? `${item.change}%` : 'N/A';
+            const rank = i + 1;
+
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0, _short: 0 };
             
             if (currentTime - sentLog[symbol]._short >= COOLDOWN_TIME) {
@@ -135,10 +145,10 @@ async function main() {
                         const coinName = symbol.replace('-USDT-SWAP', '');
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
                         
-                        // Tin nhắn ngắn gọn
+                        // THAY ĐỔI: Tin nhắn chỉ gồm Top, % biến động và Link đồ thị
                         const message = `🔴 <b>SHORT #${coinName} (5M)</b>\n` +
-                                        `💰 Giá: <code>${data.lastPrice}</code> \vert{} EMA20: <code>${data.ema20.toFixed(3)}</code>\n` +
-                                        `📐 Lệch: <code>${diff.toFixed(3)}</code>\n` +
+                                        `🏆 Vị trí: <b>Top ${rank} Giảm</b>\n` +
+                                        `📊 Biến động 4H: <code>${changeStr}</code>\n` +
                                         `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
