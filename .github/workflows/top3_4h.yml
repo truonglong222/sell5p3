@@ -1,11 +1,11 @@
-name: Execute Top 3 8H Bot From External Cron
+name: Execute Top 3 4H Bot From External Cron
 
 on:
   # Mở cổng nhận tín hiệu trigger kích hoạt từ trang web cron-job.org bên ngoài
   workflow_dispatch:
 
 jobs:
-  run-top3-8h-bot:
+  run-top3-4h-bot:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout mã nguồn từ Repository
@@ -19,22 +19,22 @@ jobs:
       - name: Cài đặt thư viện dependencies
         run: npm install
 
-      - name: Thực thi Tập lệnh top3_8h.js
-        run: node top3_8h.js
+      - name: Thực thi Tập lệnh top3_4h.js
+        run: node top3_4h.js
 
-      - name: Commit & Push dữ liệu statetop3_8h.json mới về kho code
+      - name: Commit & Push dữ liệu statetop3_4h.json mới về kho code
         run: |
           # Thiết lập cấu hình danh tính Git hệ thống
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # Theo dõi tệp kết quả danh sách coin top tăng/giảm 8h
-          git add statetop3_8h.json
+          # ĐÃ SỬA: Theo dõi tệp kết quả danh sách coin top tăng/giảm 4h mới
+          git add statetop3_4h.json
           
           # Chỉ tiến hành đẩy mã nguồn lên nếu danh sách có sự thay đổi mới
           if git diff --cached --quiet; then
             echo "Không phát hiện thay đổi trong danh sách coin. Bỏ qua bước đẩy mã nguồn lên."
           else
-            git commit -m "🤖 [Bot Action] Cập nhật danh sách Top 3 tăng/giảm 8h statetop3_8h.json [skip ci]"
+            git commit -m "🤖 [Bot Action] Cập nhật danh sách Top 3 tăng/giảm 4h statetop3_4h.json [skip ci]"
             git push origin HEAD:${{ github.ref }}
           fi
