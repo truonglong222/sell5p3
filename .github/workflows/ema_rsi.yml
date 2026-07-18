@@ -1,16 +1,11 @@
-name: Execute EMA and RSI Bots From External Cron
+name: Execute EMA and RSI Bots Simultaneously
 
 on:
-  # Mở cổng nhận tín hiệu kích hoạt kèm tham số từ trang web cron-job.org bên ngoài
+  # Kích hoạt đơn giản từ bên ngoài, không cần truyền tham số đầu vào (inputs) nữa
   workflow_dispatch:
-    inputs:
-      target_script:
-        description: 'Nhập tên script muốn chạy (rsi hoặc ema)'
-        required: true
-        default: 'rsi'
 
 jobs:
-  run-crypto-bot:
+  run-crypto-bots:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout mã nguồn từ Repository
@@ -24,35 +19,30 @@ jobs:
       - name: Cài đặt thư viện dependencies
         run: npm install
 
-      - name: Thực thi Tập lệnh dựa trên tham số truyền vào
+      - name: Thực thi đồng thời cả 2 tập lệnh rsi.js và ema.js
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          SCRIPT="${{ github.event.inputs.target_script }}"
-          echo "Kích hoạt từ bên ngoài: Tiến hành chạy file ${SCRIPT}.js"
+          echo "🤖 Bắt đầu chu kỳ quét tổng hợp 5 phút..."
           
-          if [ "$SCRIPT" = "rsi" ]; then
-            node rsi.js
-          elif [ "$SCRIPT" = "ema" ]; then
-            node ema.js
-          else
-            echo "Lỗi: Tham số '$SCRIPT' không hợp lệ! Chỉ chấp nhận 'rsi' hoặc 'ema'." && exit 1
-          fi
+          # Chạy nối tiếp nhau: rsi.js chạy xong rồi đến ema.js chạy ngay sau đó
+          node rsi.js
+          node ema.js
+          
+          echo "✓ Hoàn thành lượt quét của cả 2 chiến lược."
 
-      - name: Commit & Push file log thay đổi về kho code
+      - name: Commit & Push tất cả file log thay đổi về kho code
         run: |
-          # Thiết lập cấu hình danh tính Git hệ thống
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # Theo dõi cả 2 file log chống trùng tín hiệu
+          # Theo dõi sự thay đổi của cả 2 file log chống trùng
           git add sent_rsi.json sent_ema.json
           
-          # Chỉ tiến hành commit và đẩy lên nếu thực sự có log thời gian mới được ghi nhận
           if git diff --cached --quiet; then
             echo "Không phát hiện thay đổi trong các file log. Bỏ qua bước đẩy mã nguồn lên."
           else
-            git commit -m "🤖 [Bot Action] Cập nhật bộ đếm ngược chống trùng lệnh [skip ci]"
+            git commit -m "🤖 [Bot Action] Cập nhật bộ đếm ngược chống trùng lệnh rsi + ema [skip ci]"
             git push origin HEAD:${{ github.ref }}
           fi
