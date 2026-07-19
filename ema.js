@@ -32,7 +32,6 @@ function saveSentLog(logData) {
         const cleanedLog = {};
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
-            // Chỉ giữ và làm sạch log của lệnh Long phục vụ cooldown
             if (timeData._long && now - timeData._long < COOLDOWN_TIME) temp._long = timeData._long;
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
         }
@@ -91,25 +90,6 @@ async function main() {
             } 
         } 
 
-        // 2. Lấy dữ liệu Ticker tổng trực tiếp từ OKX để lọc loại trừ Top 3 Tăng 24h
-        const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`); 
-        if (!resTickers.data || resTickers.data.code !== '0') { 
-            console.log('Không thể lấy dữ liệu ticker tổng để lọc loại bỏ Top 3 24h.'); 
-            return; 
-        } 
-        
-        const tickers24h = resTickers.data.data 
-            .filter(t => t.instId.endsWith('-USDT-SWAP')) 
-            .map(t => ({ 
-                symbol: t.instId, 
-                change24h: parseFloat(t.sodUtc24h || 0) 
-            })); 
-            
-        const top3Gainers24hSymbols = [...tickers24h] 
-            .sort((a, b) => b.change24h - a.change24h) 
-            .slice(0, 3) 
-            .map(t => t.symbol); 
-            
         const sentLog = loadSentLog(); 
         const currentTime = Date.now(); 
         let hasNewAlert = false; 
@@ -121,24 +101,20 @@ async function main() {
             const changeStr = typeof item === 'object' && item.change ? `${item.change}` : 'N/A'; 
             const rank = i + 1; 
 
-            // Điều kiện quan trọng: Phải nằm trong top 20 giảm 5 ngày
+            // Điều kiện 1: Phải nằm trong danh sách top 20 giảm 5 ngày
             if (!top20Losers5dSymbols.includes(symbol)) { 
-                continue; 
-            } 
-
-            // Điều kiện chặn nhiễu fomo: Không thuộc Top 3 tăng mạnh nhất trong ngày (24h)
-            if (top3Gainers24hSymbols.includes(symbol)) { 
-                console.log(`[LONG] Bỏ qua ${symbol} vì thuộc Top 3 Tăng giá 24h`); 
                 continue; 
             } 
 
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0 }; 
             
+            // Kiểm tra cooldown
             if (currentTime - (sentLog[symbol]._long || 0) >= COOLDOWN_TIME) { 
                 const data = await getLivePriceAndEMA20(symbol); 
                 if (data && data.ema20 !== null) { 
                     const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100; 
-                    // Vùng giá kéo ngược tiệm cận đường EMA20 khung 5m
+                    
+                    // Điều kiện 2: Giá đang nằm trong vùng chạm/vừa nhúng qua EMA20 khung 5m
                     if (diffPct > -0.5 && diffPct < 0.2) { 
                         const coinName = symbol.replace('-USDT-SWAP', ''); 
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
