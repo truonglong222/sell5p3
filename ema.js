@@ -11,7 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json'); 
-// Đường dẫn tới file top 20 giảm 5 ngày
 const STATE_5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
 const COOLDOWN_TIME = 2 * 60 * 60 * 1000; // Khóa chống trùng 4 giờ
@@ -84,7 +83,7 @@ async function main() {
         const top3Gainers = stateData.top3Gainers4h || stateData.top3Gainers8h || [];
         const top3Losers = stateData.top3Losers8h || stateData.top3Losers4h || [];
 
-        // Đọc danh sách top 20 giảm 5 ngày để đối chiếu cho cả lệnh LONG và SHORT
+        // 1. Đọc danh sách top 20 giảm 5 ngày từ file JSON
         let top20Losers5d = [];
         if (fs.existsSync(STATE_5D_FILE)) {
             try {
@@ -93,28 +92,56 @@ async function main() {
             } catch (e) {
                 console.log('Lỗi đọc cấu trúc file statetop_5d.json, tạm thời bỏ qua đối chiếu mảng 5d.');
             }
-        } else {
-            console.log('Cảnh báo: Không tìm thấy file statetop_5d.json để kiểm tra điều kiện LONG/SHORT!');
+        }
+        const top20Losers5dSymbols = top20Losers5d.map(item => typeof item === 'object' ? item.symbol : item);
+
+        // 2. BỔ SUNG: Lấy dữ liệu Ticker tổng trực tiếp từ OKX để lọc Top 3 Tăng/Giảm 24h
+        const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
+        if (!resTickers.data || resTickers.data.code !== '0') {
+            console.log('Không thể lấy dữ liệu ticker tổng để lọc loại bỏ Top 3 24h.');
+            return;
         }
 
-        // Chuyển mảng 5 ngày thành danh sách chỉ chứa chuỗi kí tự Symbol để dễ so khớp
-        const top20Losers5dSymbols = top20Losers5d.map(item => typeof item === 'object' ? item.symbol : item);
+        // Lọc các cặp USDT-SWAP và parse giá trị phần trăm biến động 24h (sodUtc24h)
+        const tickers24h = resTickers.data.data
+            .filter(t => t.instId.endsWith('-USDT-SWAP'))
+            .map(t => ({
+                symbol: t.instId,
+                change24h: parseFloat(t.sodUtc24h || 0) // Biên độ biến động so với giá mở cửa UTC lúc 0h
+            }));
+
+        // Tìm Top 3 Tăng giá 24h lớn nhất (Sắp xếp từ Cao xuống Thấp)
+        const top3Gainers24hSymbols = [...tickers24h]
+            .sort((a, b) => b.change24h - a.change24h)
+            .slice(0, 3)
+            .map(t => t.symbol);
+
+        // Tìm Top 3 Giảm giá 24h lớn nhất (Sắp xếp từ Thấp lên Cao - âm nhiều nhất lên đầu)
+        const top3Losers24hSymbols = [...tickers24h]
+            .sort((a, b) => a.change24h - b.change24h)
+            .slice(0, 3)
+            .map(t => t.symbol);
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
         let hasNewAlert = false;
 
-        // 1. XỬ LÝ NHÓM LONG: Bắt buộc PHẢI NẰM TRONG Top 20 Giảm 5 Ngày
+        // 1. XỬ LÝ NHÓM LONG: Thuộc Top 20 Giảm 5D VÀ KHÔNG ĐƯỢC THUỘC Top 3 Tăng 24H
         for (let i = 0; i < top3Gainers.length; i++) {
             const item = top3Gainers[i];
             const symbol = typeof item === 'object' ? item.symbol : item;
             const changeStr = typeof item === 'object' && item.change ? `${item.change}%` : 'N/A';
             const rank = i + 1;
 
-            // Điều kiện LONG: Nếu không nằm trong top 20 giảm 5 ngày -> Bỏ qua
-            const isExistIn5dLosers = top20Losers5dSymbols.includes(symbol);
-            if (!isExistIn5dLosers) {
+            // Điều kiện gốc: Phải nằm trong top 20 giảm 5 ngày
+            if (!top20Losers5dSymbols.includes(symbol)) {
                 continue; 
+            }
+
+            // ĐIỀU KIỆN MỚI: Nếu trùng vào Top 3 Tăng giá 24h -> Loại bỏ ngay
+            if (top3Gainers24hSymbols.includes(symbol)) {
+                console.log(`[LONG] Bỏ qua ${symbol} vì thuộc Top 3 Tăng giá 24h`);
+                continue;
             }
 
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0, _short: 0 };
@@ -147,17 +174,22 @@ async function main() {
             }
         }
 
-        // 2. XỬ LÝ NHÓM SHORT: Bắt buộc KHÔNG ĐƯỢC NẰM TRONG Top 20 Giảm 5 Ngày
+        // 2. XỬ LÝ NHÓM SHORT: KHÔNG THUỘC Top 20 Giảm 5D VÀ KHÔNG ĐƯỢC THUỘC Top 3 Giảm 24H
         for (let i = 0; i < top3Losers.length; i++) {
             const item = top3Losers[i];
             const symbol = typeof item === 'object' ? item.symbol : item;
             const changeStr = typeof item === 'object' && item.change ? `${item.change}%` : 'N/A';
             const rank = i + 1;
 
-            // ĐIỀU KIỆN MỚI CHO SHORT: Check xem coin này có nằm trong danh sách Top 20 giảm 5 ngày không
-            const isExistIn5dLosers = top20Losers5dSymbols.includes(symbol);
-            if (isExistIn5dLosers) {
-                continue; // BỔ SUNG: Nếu nằm trong top 20 giảm 5 ngày -> Bỏ qua không SHORT coin này
+            // Điều kiện gốc: Không được nằm trong top 20 giảm 5 ngày
+            if (top20Losers5dSymbols.includes(symbol)) {
+                continue; 
+            }
+
+            // ĐIỀU KIỆN MỚI: Nếu trùng vào Top 3 Giảm giá 24h -> Loại bỏ ngay
+            if (top3Losers24hSymbols.includes(symbol)) {
+                console.log(`[SHORT] Bỏ qua ${symbol} vì thuộc Top 3 Giảm giá 24h`);
+                continue;
             }
 
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0, _short: 0 };
