@@ -30,7 +30,7 @@ async function poolRequests(items, maxParallel, fn) {
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU LỌC TĂNG (4H) / GIẢM (8H) BẰNG 3 NẾN 4H ---');
+    console.log('--- BẤT ĐẦU LỌC TĂNG (8H) / GIẢM (8H) BẰNG 3 NẾN 4H ---');
     
     try {
         const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
@@ -44,19 +44,18 @@ async function main() {
         console.log(`Tìm thấy ${validCoins.length} coin thỏa mãn Volume > 2M USD.`);
         if (validCoins.length === 0) return;
 
-        // Quét dữ liệu nến: Đổi limit thành '3' để lấy đủ 3 nến 4H gần nhất
+        // Quét dữ liệu nến: Lấy 3 nến 4H gần nhất
         const validResults = await poolRequests(validCoins, 8, async (coin) => {
             try {
                 const resCandle = await axios.get(`${OKX_BASE_URL}/api/v5/market/candles`, {
                     params: { instId: coin.instId, bar: '4H', limit: '3' } 
                 });
                 const candles = resCandle.data?.data;
-                // Cần tối thiểu 3 nến để tính được cả 4H và 8H
                 if (!candles || candles.length < 3) return null;
 
                 const close0 = parseFloat(candles[0][4]); // Giá đóng cửa hiện tại
                 const open1 = parseFloat(candles[1][1]);  // Giá mở cửa nến 4h trước
-                const open2 = parseFloat(candles[2][1]);  // Giá mở cửa nến 8h trước (đầu nến thứ 3)
+                const open2 = parseFloat(candles[2][1]);  // Giá mở cửa nến 8h trước
 
                 return {
                     symbol: coin.instId,
@@ -73,16 +72,17 @@ async function main() {
 
         if (validResults.length === 0) return console.log('Không có dữ liệu nến hợp lệ.');
 
-        // 3. Sắp xếp độc lập
-        // Top 3 Tăng (Khung 4H) -> Xếp từ Cao xuống Thấp dựa trên change4h
-        const sortedGainers = [...validResults].sort((a, b) => b.change4h - a.change4h);
+        // 3. Sắp xếp độc lập theo biến động 8H
+        // Nhóm Tăng: Xếp từ Cao xuống Thấp dựa trên change8h
+        const sortedGainers = [...validResults].sort((a, b) => b.change8h - a.change8h);
 
-        // Top 3 Giảm (Khung 8H) -> Xếp từ Thấp lên Cao dựa trên change8h (âm nhiều nhất lên đầu)
+        // Nhóm Giảm: Xếp từ Thấp lên Cao dựa trên change8h
         const sortedLosers = [...validResults].sort((a, b) => a.change8h - b.change8h); 
         
+        // GIỮ NGUYÊN tên biến và key JSON cũ, chỉ đổi giá trị map từ change8h
         const top3Gainers4h = sortedGainers.slice(0, 3).map(i => ({ 
             symbol: i.symbol, 
-            change: `${i.change4h.toFixed(2)}%` 
+            change: `${i.change8h.toFixed(2)}%` // Đã đổi thành dữ liệu 8H
         }));
         
         const top3Losers8h = sortedLosers.slice(0, 3).map(i => ({ 
@@ -90,7 +90,7 @@ async function main() {
             change: `${i.change8h.toFixed(2)}%` 
         }));
 
-        // 4. Đồng bộ kết quả vào file JSON gọn gàng
+        // 4. Đồng bộ kết quả vào file JSON (Tên key vẫn giữ nguyên top3Gainers4h)
         fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h, top3Losers8h }, null, 2), 'utf8');
 
         console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`);
