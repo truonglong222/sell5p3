@@ -82,35 +82,35 @@ async function main() {
         const stateData = JSON.parse(fs.readFileSync(STATE_TOP3_FILE, 'utf8'));
         
         const top3Gainers = stateData.top3Gainers4h || stateData.top3Gainers8h || [];
-        const top3Losers = stateData.top3Losers4h || stateData.top3Losers8h || [];
+        const top3Losers = stateData.top3Losers8h || stateData.top3Losers4h || []; // Ưu tiên 8h cho nhóm short theo cấu trúc trước đó của bạn
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
         let hasNewAlert = false;
 
-        // 1. XỬ LÝ NHÓM LONG: Top 3 Tăng giá 4h
+        // 1. XỬ LÝ NHÓM LONG: Top 3 Tăng giá
         for (let i = 0; i < top3Gainers.length; i++) {
             const item = top3Gainers[i];
-            // Hỗ trợ cả 2 định dạng: Object {symbol, change} hoặc chuỗi String đơn thuần
             const symbol = typeof item === 'object' ? item.symbol : item;
             const changeStr = typeof item === 'object' && item.change ? `${item.change}%` : 'N/A';
-            const rank = i + 1; // Vị trí Top (1, 2, 3)
+            const rank = i + 1;
 
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0, _short: 0 };
             
             if (currentTime - sentLog[symbol]._long >= COOLDOWN_TIME) {
                 const data = await getLivePriceAndEMA20(symbol);
                 if (data && data.ema20 !== null) {
-                    const diff = data.lastPrice - data.ema20;
+                    // Tính tỷ lệ % lệch: (giá - ema) / ema * 100
+                    const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100;
                     
-                    if (diff > -1 && diff < 0.5) {
+                    // Điều kiện Long mới: -0.5% < Lệch < 0.2%
+                    if (diffPct > -0.5 && diffPct < 0.2) {
                         const coinName = symbol.replace('-USDT-SWAP', '');
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
                         
-                        // THAY ĐỔI: Tin nhắn chỉ gồm Top, % biến động và Link đồ thị
                         const message = `🟢 <b>LONG #${coinName} (5M)</b>\n` +
                                         `🏆 Vị trí: <b>Top ${rank} Tăng</b>\n` +
-                                        `📊 Biến động 4H: <code>${changeStr}</code>\n` +
+                                        `📊 Biến động 8H: <code>${changeStr}</code>\n` +
                                         `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -127,7 +127,7 @@ async function main() {
             }
         }
 
-        // 2. XỬ LÝ NHÓM SHORT: Top 3 Giảm giá 4h
+        // 2. XỬ LÝ NHÓM SHORT: Top 3 Giảm giá
         for (let i = 0; i < top3Losers.length; i++) {
             const item = top3Losers[i];
             const symbol = typeof item === 'object' ? item.symbol : item;
@@ -139,16 +139,17 @@ async function main() {
             if (currentTime - sentLog[symbol]._short >= COOLDOWN_TIME) {
                 const data = await getLivePriceAndEMA20(symbol);
                 if (data && data.ema20 !== null) {
-                    const diff = data.lastPrice - data.ema20;
+                    // Tính tỷ lệ % lệch: (giá - ema) / ema * 100
+                    const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100;
                     
-                    if (diff > -0.5 && diff < 1) {
+                    // Điều kiện Short mới: -0.2% < Lệch < 0.5%
+                    if (diffPct > -0.2 && diffPct < 0.5) {
                         const coinName = symbol.replace('-USDT-SWAP', '');
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
                         
-                        // THAY ĐỔI: Tin nhắn chỉ gồm Top, % biến động và Link đồ thị
                         const message = `🔴 <b>SHORT #${coinName} (5M)</b>\n` +
                                         `🏆 Vị trí: <b>Top ${rank} Giảm</b>\n` +
-                                        `📊 Biến động 4H: <code>${changeStr}</code>\n` +
+                                        `📊 Biến động 8H: <code>${changeStr}</code>\n` +
                                         `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
