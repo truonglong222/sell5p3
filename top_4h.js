@@ -1,89 +1,40 @@
-import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+name: Execute Top 3 4H Bot From External Cron
 
-const OKX_BASE_URL = 'https://www.okx.com';
-const STATE_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'statetop3_4h.json');
+on:
+  # Mở cổng nhận tín hiệu trigger kích hoạt từ trang web cron-job.org bên ngoài
+  workflow_dispatch:
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+jobs:
+  run-top3-4h-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn từ Repository
+        uses: actions/checkout@v4
 
-async function poolRequests(items, maxParallel, fn) {
-    const results = [];
-    const executing = new Set();
+      - name: Khởi tạo môi trường Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
 
-    for (const item of items) {
-        const p = fn(item).then(res => {
-            if (res) results.push(res);
-            executing.delete(p);
-        });
-        executing.add(p);
-        if (executing.size >= maxParallel) {
-            await Promise.race(executing);
-            await sleep(100);
-        }
-    }
-    await Promise.all(executing);
-    return results;
-}
+      - name: Cài đặt thư viện dependencies
+        run: npm install
 
-async function main() {
-    const startTime = Date.now();
-    console.log('--- BẤT ĐẦU LỌC TOP 5 TĂNG (8H) BẰNG 3 NẾN 4H ---');
+      - name: Thực thi Tập lệnh top_4h.js
+        run: node top_4h.js
 
-    try {
-        const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
-        if (!resTickers.data || resTickers.data.code !== '0') {
-            return console.error('Lỗi lấy ticker tổng từ OKX');
-        }
-        const validCoins = resTickers.data.data.filter(t => 
-            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 2000000
-        );
-        console.log(`Tìm thấy ${validCoins.length} coin thỏa mãn Volume > 2M USD.`);
-        if (validCoins.length === 0) return;
-
-        // Quét dữ liệu nến: Lấy 3 nến 4H gần nhất
-        const validResults = await poolRequests(validCoins, 8, async (coin) => {
-            try {
-                const resCandle = await axios.get(`${OKX_BASE_URL}/api/v5/market/candles`, {
-                    params: { instId: coin.instId, bar: '4H', limit: '3' }
-                });
-                const candles = resCandle.data?.data;
-                if (!candles || candles.length < 3) return null;
-
-                const close0 = parseFloat(candles[0][4]); // Giá đóng cửa hiện tại
-                const open1 = parseFloat(candles[1][1]);   // Giá mở cửa nến 4h trước
-                const open2 = parseFloat(candles[2][1]);   // Giá mở cửa nến 8h trước
-
-                return {
-                    symbol: coin.instId,
-                    change4h: ((close0 - open1) / open1) * 100,
-                    change8h: ((close0 - open2) / open2) * 100
-                };
-            } catch (err) {
-                if (err.response?.status === 429) {
-                    console.warn(`Sàn phản hồi 429 với cặp: ${coin.instId}. Đang bỏ qua...`);
-                }
-                return null;
-            }
-        });
-
-        if (validResults.length === 0) return console.log('Không có dữ liệu nến hợp lệ.');
-
-        // Sắp xếp độc lập theo biến động 8H (Nhóm Tăng: Xếp từ Cao xuống Thấp)
-        const sortedGainers = [...validResults].sort((a, b) => b.change8h - a.change8h);
-
-        // Lấy 5 phần tử tăng mạnh nhất
-        const top3Gainers4h = sortedGainers.slice(0, 5).map(i => ({ symbol: i.symbol, change: `${i.change8h.toFixed(2)}%` }));
-
-        // Đồng bộ kết quả vào file JSON (Loại bỏ hoàn toàn mảng losers)
-        fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h }, null, 2), 'utf8');
-        
-        console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`);
-        console.log(`- Cập nhật thành công file: ${STATE_FILE} (Đã chứa top 5 tăng giá)`);
-    } catch (error) {
-        console.error('Lỗi hệ thống trong quy trình:', error.message);
-    }
-}
-
-main();
+      - name: Commit & Push dữ liệu statetop3_4h.json mới về kho code
+        run: |
+          # Thiết lập cấu hình danh tính Git hệ thống
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # ĐÃ SỬA: Theo dõi tệp kết quả danh sách coin top tăng/giảm 4h mới
+          git add statetop3_4h.json
+          
+          # Chỉ tiến hành đẩy mã nguồn lên nếu danh sách có sự thay đổi mới
+          if git diff --cached --quiet; then
+            echo "Không phát hiện thay đổi trong danh sách coin. Bỏ qua bước đẩy mã nguồn lên."
+          else
+            git commit -m "🤖 [Bot Action] Cập nhật danh sách Top 3 tăng/giảm 4h statetop3_4h.json [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+          fi
