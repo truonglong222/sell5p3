@@ -69,7 +69,8 @@ async function getLivePriceAndEMA20(symbol) {
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 5M (CHỈ LỆNH LONG) ---');
+        // ĐÃ ĐỔI: Log thông báo chạy tiến trình nến 2H
+        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 5M (DỰA TRÊN TOP TĂNG 2H) ---');
 
         if (!fs.existsSync(STATE_TOP3_FILE)) { 
             console.log('Không tìm thấy file statetop3_4h.json!'); 
@@ -118,9 +119,11 @@ async function main() {
                     if (diffPct > -0.5 && diffPct < 0.2) { 
                         const coinName = symbol.replace('-USDT-SWAP', ''); 
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
+                        
+                        // ĐÃ ĐỔI: Cập nhật text tiêu đề thông báo hiển thị "Top Tăng (2H)" và "Biến động 3 nến 2H"
                         const message = `🟢 <b>LONG #${coinName} (5M)</b>\n` + 
-                                        `🏆 Vị trí: <b>Top ${rank} Tăng (4H)</b>\n` + 
-                                        `📊 Biến động 8H: <code>${changeStr}</code>\n` + 
+                                        `🏆 Vị trí: <b>Top ${rank} Tăng (2H)</b>\n` + 
+                                        `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
                                         `👉 <a href="${link}">Đồ thị OKX</a>`; 
                         
                         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { 
