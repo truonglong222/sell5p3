@@ -30,7 +30,7 @@ async function poolRequests(items, maxParallel, fn) {
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU LỌC TĂNG (8H) / GIẢM (8H) BẰNG 3 NẾN 4H ---');
+    console.log('--- BẤT ĐẦU LỌC TOP 5 TĂNG (8H) BẰNG 3 NẾN 4H ---');
     
     try {
         const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
@@ -72,29 +72,20 @@ async function main() {
 
         if (validResults.length === 0) return console.log('Không có dữ liệu nến hợp lệ.');
 
-        // 3. Sắp xếp độc lập theo biến động 8H
-        // Nhóm Tăng: Xếp từ Cao xuống Thấp dựa trên change8h
+        // 3. Sắp xếp độc lập theo biến động 8H (Nhóm Tăng: Xếp từ Cao xuống Thấp dựa trên change8h)
         const sortedGainers = [...validResults].sort((a, b) => b.change8h - a.change8h);
-
-        // Nhóm Giảm: Xếp từ Thấp lên Cao dựa trên change8h
-        const sortedLosers = [...validResults].sort((a, b) => a.change8h - b.change8h); 
         
-        // GIỮ NGUYÊN tên biến và key JSON cũ, chỉ đổi giá trị map từ change8h
-        const top3Gainers4h = sortedGainers.slice(0, 3).map(i => ({ 
+        // Lấy hẳn 5 phần tử nhưng vẫn giữ tên biến và key là top3Gainers4h theo yêu cầu của bạn
+        const top3Gainers4h = sortedGainers.slice(0, 5).map(i => ({ 
             symbol: i.symbol, 
-            change: `${i.change8h.toFixed(2)}%` // Đã đổi thành dữ liệu 8H
-        }));
-        
-        const top3Losers8h = sortedLosers.slice(0, 3).map(i => ({ 
-            symbol: i.symbol, 
-            change: `${i.change8h.toFixed(2)}%` 
+            change: `${i.change8h.toFixed(2)}%`
         }));
 
-        // 4. Đồng bộ kết quả vào file JSON (Tên key vẫn giữ nguyên top3Gainers4h)
-        fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h, top3Losers8h }, null, 2), 'utf8');
+        // 4. Đồng bộ kết quả vào file JSON (Giữ nguyên cấu trúc key cũ, loại bỏ hoàn toàn losers)
+        fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h }, null, 2), 'utf8');
 
         console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`);
-        console.log(`- Cập nhật thành công file: ${STATE_FILE}`);
+        console.log(`- Cập nhật thành công file: ${STATE_FILE} (Đã chứa top 5 tăng giá)`);
 
     } catch (error) {
         console.error('Lỗi hệ thống trong quy trình:', error.message);
