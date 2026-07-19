@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const STATE_FILE = path.join(__dirname, 'statetop_5d.json');
-const MAX_CONCURRENT_REQUESTS = 8; 
+const MAX_CONCURRENT_REQUESTS = 8;
 
 async function asyncPool(limit, array, iteratorFn) {
     const ret = [];
@@ -26,30 +26,21 @@ async function asyncPool(limit, array, iteratorFn) {
     return Promise.all(ret);
 }
 
-// SỬA LOGIC: Truyền thêm rawFuturesMap để lấy giá hiện tại chính xác theo giây
 async function fetch5DayChange(coin, rawFuturesMap) {
     const symbol = coin.instId;
     try {
-        // Lấy 6 nến để chắc chắn có phần tử index 5
         const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=6`;
         const candleRes = await axios.get(candle1DUrl, { timeout: 5000 });
 
-        if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 6) {
+        if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 6) { 
             const candles1D = candleRes.data.data; 
-
-            // 1. Lấy giá hiện tại real-time từ ticker tổng (O(1))
-            const currentLivePrice = parseFloat(rawFuturesMap[symbol]);
-            
-            // 2. Lấy giá mở cửa của cây nến cách đây 5 ngày [5][1]
+            const currentLivePrice = parseFloat(rawFuturesMap[symbol]); 
             const open5DaysAgo = parseFloat(candles1D[5][1]); 
-
-            // Cố định công thức tính theo giá Realtime giúp không bao giờ bị nhảy vọt hạng
-            const change5Days = open5DaysAgo ? ((currentLivePrice - open5DaysAgo) / open5DaysAgo) * 100 : 0;
-
-            return { symbol, change5Days };
-        }
-    } catch (err) {}
-    return null;
+            const change5Days = open5DaysAgo ? ((currentLivePrice - open5DaysAgo) / open5DaysAgo) * 100 : 0; 
+            return { symbol, change5Days }; 
+        } 
+    } catch (err) {} 
+    return null; 
 }
 
 async function main() {
@@ -63,53 +54,39 @@ async function main() {
             return;
         }
 
-        // Nới lỏng Volume một chút (ví dụ > 1.9M) để tránh việc coin cận biên bị văng ra khi sụt nhẹ vol
         const rawFutures = response.data.data.filter(t => 
-            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 1900000
-        );
+            t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 1900000 
+        ); 
+        console.log(`Tìm thấy ${rawFutures.length} coin thoả mãn Volume 24h.`); 
+        if (rawFutures.length === 0) return; 
+
+        const rawFuturesMap = {}; 
+        rawFutures.forEach(t => { 
+            rawFuturesMap[t.instId] = t.last; 
+        }); 
         
-        console.log(`Tìm thấy ${rawFutures.length} coin thoả mãn Volume 24h.`);
-        if (rawFutures.length === 0) return;
-
-        // BỔ SUNG LẠI: Tạo bảng map giá trị hiện tại tra cứu nhanh
-        const rawFuturesMap = {};
-        rawFutures.forEach(t => {
-            rawFuturesMap[t.instId] = t.last;
-        });
-
-        console.log('Đang quét lịch sử nến 1D song song...');
-        // Truyền kèm bảng map vào hàm xử lý luồng
-        const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => 
-            fetch5DayChange(coin, rawFuturesMap)
-        );
-
-        const poolWithChanges = results.filter(r => r !== null);
-
-        // Sắp xếp lấy Top 20 giảm mạnh nhất
-        const top20Losers = poolWithChanges
-            .sort((a, b) => a.change5Days - b.change5Days)
+        console.log('Đang quét lịch sử nến 1D song song...'); 
+        const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetch5DayChange(coin, rawFuturesMap) ); 
+        const poolWithChanges = results.filter(r => r !== null); 
+        
+        const top20Losers = poolWithChanges 
+            .sort((a, b) => a.change5Days - b.change5Days) 
             .slice(0, 20); 
-
-        const top20LosersSymbols = top20Losers.map(item => item.symbol);
-
-        const finalState = {
-            top20Losers: top20LosersSymbols
-        };
-
-        fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8');
+            
+        const top20LosersSymbols = top20Losers.map(item => item.symbol); 
+        const finalState = { top20Losers: top20LosersSymbols }; 
         
-        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`);
-        console.log(`- Đã lưu Top 20 Giảm vào statetop_5d.json`);
-
-        console.log('\nChi tiết biên độ giảm thực tế (Real-time vs Open 5D):');
-        top20Losers.forEach((c, idx) => {
-            console.log(`${idx + 1}. ${c.symbol}: ${c.change5Days.toFixed(2)}%`);
-        });
-
-    } catch (error) {
-        console.error('Lỗi hệ thống file top_5d.js:', error.message);
-    }
+        fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8'); 
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
+        console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
+        console.log(`- Đã lưu Top 20 Giảm vào statetop_5d.json`); 
+        console.log('\nChi tiết biên độ giảm thực tế (Real-time vs Open 5D):'); 
+        top20Losers.forEach((c, idx) => { 
+            console.log(`${idx + 1}. ${c.symbol}: ${c.change5Days.toFixed(2)}%`); 
+        }); 
+    } catch (error) { 
+        console.error('Lỗi hệ thống file top_5d.js:', error.message); 
+    } 
 }
 
 main();
