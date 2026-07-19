@@ -29,7 +29,7 @@ async function poolRequests(items, maxParallel, fn) {
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU LỌC TOP 5 TĂNG (8H) BẰNG 3 NẾN 4H ---');
+    console.log('--- BẤT ĐẦU LỌC TOP 5 TĂNG BẰNG 3 NẾN 2H ---');
 
     try {
         const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
@@ -42,23 +42,22 @@ async function main() {
         console.log(`Tìm thấy ${validCoins.length} coin thỏa mãn Volume > 2M USD.`);
         if (validCoins.length === 0) return;
 
-        // Quét dữ liệu nến: Lấy 3 nến 4H gần nhất
+        // Quét dữ liệu nến: Lấy 3 nến 2H gần nhất
         const validResults = await poolRequests(validCoins, 8, async (coin) => {
             try {
                 const resCandle = await axios.get(`${OKX_BASE_URL}/api/v5/market/candles`, {
-                    params: { instId: coin.instId, bar: '4H', limit: '3' }
+                    params: { instId: coin.instId, bar: '2H', limit: '3' }
                 });
                 const candles = resCandle.data?.data;
                 if (!candles || candles.length < 3) return null;
 
-                const close0 = parseFloat(candles[0][4]); // Giá đóng cửa hiện tại
-                const open1 = parseFloat(candles[1][1]);   // Giá mở cửa nến 4h trước
-                const open2 = parseFloat(candles[2][1]);   // Giá mở cửa nến 8h trước
+                const close0 = parseFloat(candles[0][4]); // Giá đóng cửa hiện tại (nến đang chạy)
+                const open2 = parseFloat(candles[2][1]);   // Giá mở cửa nến số 2
 
                 return {
                     symbol: coin.instId,
-                    change4h: ((close0 - open1) / open1) * 100,
-                    change8h: ((close0 - open2) / open2) * 100
+                    // Tính biến động dựa trên giá hiện tại nến đang chạy trừ giá mở cửa nến số 2
+                    changeCalculated: ((close0 - open2) / open2) * 100
                 };
             } catch (err) {
                 if (err.response?.status === 429) {
@@ -70,17 +69,20 @@ async function main() {
 
         if (validResults.length === 0) return console.log('Không có dữ liệu nến hợp lệ.');
 
-        // Sắp xếp độc lập theo biến động 8H (Nhóm Tăng: Xếp từ Cao xuống Thấp)
-        const sortedGainers = [...validResults].sort((a, b) => b.change8h - a.change8h);
+        // Sắp xếp theo biến động vừa tính toán (Nhóm Tăng: Xếp từ Cao xuống Thấp)
+        const sortedGainers = [...validResults].sort((a, b) => b.changeCalculated - a.changeCalculated);
 
         // Lấy 5 phần tử tăng mạnh nhất
-        const top3Gainers4h = sortedGainers.slice(0, 5).map(i => ({ symbol: i.symbol, change: `${i.change8h.toFixed(2)}%` }));
+        const top3Gainers4h = sortedGainers.slice(0, 5).map(i => ({ 
+            symbol: i.symbol, 
+            change: `${i.changeCalculated.toFixed(2)}%` 
+        }));
 
-        // Đồng bộ kết quả vào file JSON (Loại bỏ hoàn toàn mảng losers)
+        // Đồng bộ kết quả vào file JSON (Giữ nguyên tên biến và tên file lưu theo cấu trúc cũ)
         fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h }, null, 2), 'utf8');
         
         console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`);
-        console.log(`- Cập nhật thành công file: ${STATE_FILE} (Đã chứa top 5 tăng giá)`);
+        console.log(`- Cập nhật thành công file: ${STATE_FILE} (Đã chứa top 5 tăng giá bằng nến 2H)`);
     } catch (error) {
         console.error('Lỗi hệ thống trong quy trình:', error.message);
     }
