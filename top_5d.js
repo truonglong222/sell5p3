@@ -92,7 +92,7 @@ async function main() {
         // 3. Sắp xếp lấy Top 20 đồng coin giảm mạnh nhất (số âm lớn nhất xếp lên đầu)
         const top20Losers = poolWithChanges
             .sort((a, b) => a.change5Days - b.change5Days)
-            .slice(0, 20);
+            .slice(0, 40);
 
         const top20LosersSymbols = top20Losers.map(item => item.symbol);
 
