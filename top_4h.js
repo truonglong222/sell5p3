@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const OKX_BASE_URL = 'https://www.okx.com';
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-// Cập nhật tên file lưu thành statetop3_4h.json theo yêu cầu
+// File lưu trữ kết quả chính xác
 const STATE_FILE = path.join(CURRENT_DIR, 'statetop3_4h.json'); 
 const STATETOP_5D_FILE = path.join(CURRENT_DIR, 'statetop_5d.json');
 const COIN_TTL = 24 * 60 * 60 * 1000;
@@ -130,9 +130,9 @@ async function main() {
       } 
     } 
 
-    // RESET SẠCH FILE SAU 18H00 GIỜ VN HẰNG NGÀY
+    // ĐÃ ĐỔI: Đồng bộ thông báo reset chính xác cho file statetop3_4h.json
     if (Date.now() >= existingData.nextResetTime) { 
-      console.log('--- Đã đến 18h00 tối (Giờ VN)! Reset hoàn toàn danh sách cũ ---'); 
+      console.log('--- Đã đến 18h00 tối (Giờ VN)! Tiến hành reset sạch file statetop3_4h.json ---'); 
       existingData.top3Gainers4h = []; 
       existingData.nextResetTime = getTargetResetTime(); 
     } 
