@@ -52,7 +52,8 @@ function calculateEMA(prices, period = 20) {
 
 async function getLivePriceAndEMA20(symbol) {
     try {
-        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=60`;
+        // ĐÃ ĐỔI: bar=5m -> bar=15m để lấy nến 15 phút
+        const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
         const response = await axios.get(url, { timeout: 5000 });
 
         if (response.data && response.data.code === '0' && response.data.data.length >= 25) { 
@@ -68,7 +69,8 @@ async function getLivePriceAndEMA20(symbol) {
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 5M (DỰA TRÊN TOP TĂNG 2H) ---');
+        // ĐÃ ĐỔI: Text log hiển thị cho đúng khung thời gian mới
+        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 15M (DỰA TRÊN TOP TĂNG 2H) ---');
 
         if (!fs.existsSync(STATE_TOP3_FILE)) { 
             console.log('Không tìm thấy file statetop3_4h.json!'); 
@@ -96,12 +98,13 @@ async function main() {
                 if (data && data.ema20 !== null) { 
                     const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100; 
                     
-                    // Điều kiện: Giá đang nằm trong vùng chạm/vừa nhúng qua EMA20 khung 5m
+                    // Điều kiện: Giá đang nằm trong vùng chạm/vừa nhúng qua EMA20 khung 15m
                     if (diffPct > -0.5 && diffPct < 0.2) { 
                         const coinName = symbol.replace('-USDT-SWAP', ''); 
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
                         
-                        const message = `🟢 <b>LONG #${coinName} (5M)</b>\n` + 
+                        // ĐÃ ĐỔI: Chữ hiển thị tin nhắn Telegram từ (5M) thành (15M)
+                        const message = `🟢 <b>LONG #${coinName} (15M)</b>\n` + 
                                         `🏆 Vị trí: <b>Top ${rank} Tăng (2H)</b>\n` + 
                                         `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
                                         `👉 <a href="${link}">Đồ thị OKX</a>`; 
@@ -121,7 +124,7 @@ async function main() {
         } 
 
         if (hasNewAlert) saveSentLog(sentLog); 
-        console.log('--- HOÀN THÀNH TIẾN TRÌNH QUÉT EMA 5M ---'); 
+        console.log('--- HOÀN THÀNH TIẾN TRÌNH QUÉT EMA 15M ---'); 
     } catch (err) { 
         console.error('Lỗi chạy file ema.js:', err.message); 
     } 
