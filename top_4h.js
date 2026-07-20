@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 const OKX_BASE_URL = 'https://www.okx.com';
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const STATE_FILE = path.join(CURRENT_DIR, 'statetop3_4h.json');
-const STATETOP_5D_FILE = path.join(CURRENT_DIR, 'statetop_5d.json'); // File điều kiện đầu vào
 const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 giờ tính bằng mili giây
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -32,7 +31,7 @@ async function poolRequests(items, maxParallel, fn) {
 
 async function main() {
     const startTime = Date.now();
-    console.log('--- BẤT ĐẦU LỌC TOP 5 TĂNG BẰNG 3 NẾN 2H ---');
+    console.log('--- BẤT ĐẦU LỌC TOP TĂNG BẰNG 3 NẾN 2H ---');
 
     try {
         const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`);
@@ -74,37 +73,13 @@ async function main() {
         // Sắp xếp theo biến động vừa tính toán (Nhóm Tăng: Xếp từ Cao xuống Thấp)
         const sortedGainers = [...validResults].sort((a, b) => b.changeCalculated - a.changeCalculated);
 
-        // Lấy 5 phần tử tăng mạnh nhất từ lượt quét hiện tại
+        // Lấy 5 phần tử tăng mạnh nhất từ lượt quét hiện tại để kiểm tra đưa vào danh sách
         let newTop5 = sortedGainers.slice(0, 5).map(i => ({ 
             symbol: i.symbol, 
             change: `${i.changeCalculated.toFixed(2)}%` 
         }));
 
-        // --- ĐOẠN XỬ LÝ LƯU THÊM VÀ TỰ ĐỘNG XÓA SAU 12H (CÓ BỔ SUNG ĐIỀU KIỆN DANH SÁCH 5D) ---
-        
-        // Đọc danh sách coin từ file statetop_5d.json để làm điều kiện lọc
-        let allowedSymbols = new Set();
-        if (fs.existsSync(STATETOP_5D_FILE)) {
-            try {
-                const content5d = fs.readFileSync(STATETOP_5D_FILE, 'utf8');
-                const data5d = JSON.parse(content5d);
-                
-                // Giả định dữ liệu trong statetop_5d.json là 1 mảng các object có chứa thuộc tính 'symbol'
-                // Hoặc nếu file chứa object dạng { top5d: [...] } thì bạn hãy điều chỉnh lại cho đúng cấu trúc file của bạn.
-                const list5d = Array.isArray(data5d) ? data5d : (data5d.top5d || data5d.coins || []);
-                allowedSymbols = new Set(list5d.map(item => item.symbol));
-                console.log(`Đã tải ${allowedSymbols.size} coin từ file điều kiện statetop_5d.json`);
-            } catch (e) {
-                console.warn('Không thể đọc hoặc lỗi định dạng file statetop_5d.json. Sẽ bỏ qua các coin lượt này để đảm bảo an toàn.');
-            }
-        } else {
-            console.warn('Không tìm thấy file statetop_5d.json. Không có coin nào được duyệt vào file 4h.');
-        }
-
-        // Bổ sung: Lọc lại newTop5, chỉ giữ lại những coin nằm trong allowedSymbols (có trong statetop_5d.json)
-        newTop5 = newTop5.filter(coin => allowedSymbols.has(coin.symbol));
-        console.log(`Còn lại ${newTop5.length}/5 coin thỏa mãn điều kiện có trong file statetop_5d.json`);
-
+        // --- ĐOẠN XỬ LÝ LƯU THÊM VÀ TỰ ĐỘNG XÓA SAU 12H ---
         let existingData = { lastReset: Date.now(), top3Gainers4h: [] };
 
         // 1. Đọc dữ liệu cũ nếu file đã tồn tại
@@ -126,7 +101,7 @@ async function main() {
             existingData.lastReset = Date.now();
         }
 
-        // 3. Hợp nhất: Chỉ thêm những coin chưa có trong danh sách cũ (sau khi đã được lọc ở trên)
+        // 3. Hợp nhất: Toàn bộ coin trong lượt quét mới đều được xét để đưa vào file lưu trữ
         const currentSymbols = new Set(existingData.top3Gainers4h.map(item => item.symbol));
         
         for (const coin of newTop5) {
@@ -134,7 +109,7 @@ async function main() {
                 existingData.top3Gainers4h.push(coin);
                 console.log(`+ Thêm mới: ${coin.symbol} (${coin.change})`);
             } else {
-                // Cập nhật lại % tăng mới nhất cho coin đã tồn tại
+                // Cập nhật lại % tăng mới nhất cho coin đã tồn tại trong file
                 const index = existingData.top3Gainers4h.findIndex(item => item.symbol === coin.symbol);
                 existingData.top3Gainers4h[index].change = coin.change;
             }
