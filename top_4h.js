@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 
 const OKX_BASE_URL = 'https://www.okx.com';
 const STATE_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'statetop3_4h.json');
+const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 giờ tính bằng mili giây
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -56,7 +57,6 @@ async function main() {
 
                 return {
                     symbol: coin.instId,
-                    // Tính biến động dựa trên giá hiện tại nến đang chạy trừ giá mở cửa nến số 2
                     changeCalculated: ((close0 - open2) / open2) * 100
                 };
             } catch (err) {
@@ -72,17 +72,56 @@ async function main() {
         // Sắp xếp theo biến động vừa tính toán (Nhóm Tăng: Xếp từ Cao xuống Thấp)
         const sortedGainers = [...validResults].sort((a, b) => b.changeCalculated - a.changeCalculated);
 
-        // Lấy 5 phần tử tăng mạnh nhất
-        const top3Gainers4h = sortedGainers.slice(0, 5).map(i => ({ 
+        // Lấy 5 phần tử tăng mạnh nhất từ lượt quét hiện tại
+        const newTop5 = sortedGainers.slice(0, 5).map(i => ({ 
             symbol: i.symbol, 
             change: `${i.changeCalculated.toFixed(2)}%` 
         }));
 
-        // Đồng bộ kết quả vào file JSON (Giữ nguyên tên biến và tên file lưu theo cấu trúc cũ)
-        fs.writeFileSync(STATE_FILE, JSON.stringify({ top3Gainers4h }, null, 2), 'utf8');
+        // --- ĐOẠN XỬ LÝ LƯU THÊM VÀ TỰ ĐỘNG XÓA SAU 12H ---
+        let existingData = { lastReset: Date.now(), top3Gainers4h: [] };
+
+        // 1. Đọc dữ liệu cũ nếu file đã tồn tại
+        if (fs.existsSync(STATE_FILE)) {
+            try {
+                const fileContent = fs.readFileSync(STATE_FILE, 'utf8');
+                existingData = JSON.parse(fileContent);
+                // Đảm bảo cấu trúc dữ liệu cũ hợp lệ, nếu không có lastReset thì gán mặc định
+                if (!existingData.lastReset) existingData.lastReset = Date.now();
+                if (!Array.isArray(existingData.top3Gainers4h)) existingData.top3Gainers4h = [];
+            } catch (e) {
+                console.warn('File cũ bị lỗi định dạng, sẽ khởi tạo lại.');
+            }
+        }
+
+        // 2. Kiểm tra nếu đã quá 12h thì xóa sạch danh sách cũ
+        if (Date.now() - existingData.lastReset > RESET_INTERVAL) {
+            console.log('--- Đã quá 12 giờ! Tiến hành reset danh sách cũ ---');
+            existingData.top3Gainers4h = [];
+            existingData.lastReset = Date.now(); // Cập nhật lại mốc thời gian 12h tiếp theo
+        }
+
+        // 3. Hợp nhất: Chỉ thêm những coin chưa có trong danh sách cũ
+        const currentSymbols = new Set(existingData.top3Gainers4h.map(item => item.symbol));
+        
+        for (const coin of newTop5) {
+            if (!currentSymbols.has(coin.symbol)) {
+                existingData.top3Gainers4h.push(coin);
+                console.log(`+ Thêm mới: ${coin.symbol} (${coin.change})`);
+            } else {
+                // Tùy chọn: Cập nhật lại % tăng mới nhất cho coin đã tồn tại
+                const index = existingData.top3Gainers4h.findIndex(item => item.symbol === coin.symbol);
+                existingData.top3Gainers4h[index].change = coin.change;
+            }
+        }
+
+        // 4. Lưu lại dữ liệu đã hợp nhất vào file
+        fs.writeFileSync(STATE_FILE, JSON.stringify(existingData, null, 2), 'utf8');
+        // --------------------------------------------------
         
         console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`);
-        console.log(`- Cập nhật thành công file: ${STATE_FILE} (Đã chứa top 5 tăng giá bằng nến 2H)`);
+        console.log(`- Tổng số coin hiện tại trong file: ${existingData.top3Gainers4h.length}`);
+        console.log(`- Cập nhật thành công file: ${STATE_FILE}`);
     } catch (error) {
         console.error('Lỗi hệ thống trong quy trình:', error.message);
     }
