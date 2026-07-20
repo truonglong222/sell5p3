@@ -11,7 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
-const STATE_5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
 const COOLDOWN_TIME = 2 * 60 * 60 * 1000; // Khóa chống trùng gửi tin 2 tiếng
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,7 +68,6 @@ async function getLivePriceAndEMA20(symbol) {
 
 async function main() {
     try {
-        // ĐÃ ĐỔI: Log thông báo chạy tiến trình nến 2H
         console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 5M (DỰA TRÊN TOP TĂNG 2H) ---');
 
         if (!fs.existsSync(STATE_TOP3_FILE)) { 
@@ -78,18 +76,6 @@ async function main() {
         } 
         const stateData = JSON.parse(fs.readFileSync(STATE_TOP3_FILE, 'utf8')); 
         const top3Gainers = stateData.top3Gainers4h || stateData.top3Gainers8h || []; 
-
-        // 1. Đọc danh sách top 20 giảm 5 ngày từ file JSON
-        let top20Losers5dSymbols = []; 
-        if (fs.existsSync(STATE_5D_FILE)) { 
-            try { 
-                const data5d = JSON.parse(fs.readFileSync(STATE_5D_FILE, 'utf8')); 
-                const rawList = data5d.top20Losers || data5d.top20Losers5d || [];
-                top20Losers5dSymbols = rawList.map(item => typeof item === 'object' ? item.symbol : item);
-            } catch (e) { 
-                console.log('Lỗi đọc cấu trúc file statetop_5d.json, tạm thời bỏ qua đối chiếu mảng 5d.'); 
-            } 
-        } 
 
         const sentLog = loadSentLog(); 
         const currentTime = Date.now(); 
@@ -102,11 +88,6 @@ async function main() {
             const changeStr = typeof item === 'object' && item.change ? `${item.change}` : 'N/A'; 
             const rank = i + 1; 
 
-            // Điều kiện 1: Phải nằm trong danh sách top 20 giảm 5 ngày
-            if (!top20Losers5dSymbols.includes(symbol)) { 
-                continue; 
-            } 
-
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0 }; 
             
             // Kiểm tra cooldown
@@ -115,12 +96,11 @@ async function main() {
                 if (data && data.ema20 !== null) { 
                     const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100; 
                     
-                    // Điều kiện 2: Giá đang nằm trong vùng chạm/vừa nhúng qua EMA20 khung 5m
+                    // Điều kiện: Giá đang nằm trong vùng chạm/vừa nhúng qua EMA20 khung 5m
                     if (diffPct > -0.5 && diffPct < 0.2) { 
                         const coinName = symbol.replace('-USDT-SWAP', ''); 
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
                         
-                        // ĐÃ ĐỔI: Cập nhật text tiêu đề thông báo hiển thị "Top Tăng (2H)" và "Biến động 3 nến 2H"
                         const message = `🟢 <b>LONG #${coinName} (5M)</b>\n` + 
                                         `🏆 Vị trí: <b>Top ${rank} Tăng (2H)</b>\n` + 
                                         `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
