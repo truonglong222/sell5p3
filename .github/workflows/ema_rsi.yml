@@ -19,30 +19,29 @@ jobs:
       - name: Cài đặt thư viện dependencies
         run: npm install
 
-      - name: Thực thi đồng thời cả 2 tập lệnh rsi.js và ema.js
+      - name: Thực thi tập lệnh ema.js
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           echo "🤖 Bắt đầu chu kỳ quét tổng hợp 5 phút..."
           
-          # Chạy nối tiếp nhau: rsi.js chạy xong rồi đến ema.js chạy ngay sau đó
-          node rsi.js
+          # Chỉ chạy duy nhất file ema.js
           node ema.js
           
-          echo "✓ Hoàn thành lượt quét của cả 2 chiến lược."
+          echo "✓ Hoàn thành lượt quét của chiến lược EMA."
 
       - name: Commit & Push tất cả file log thay đổi về kho code
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # Theo dõi sự thay đổi của cả 2 file log chống trùng
-          git add sent_rsi.json sent_ema.json
+          # Chỉ theo dõi sự thay đổi của file log chống trùng ema
+          git add sent_ema.json
           
           if git diff --cached --quiet; then
             echo "Không phát hiện thay đổi trong các file log. Bỏ qua bước đẩy mã nguồn lên."
           else
-            git commit -m "🤖 [Bot Action] Cập nhật bộ đếm ngược chống trùng lệnh rsi + ema [skip ci]"
+            git commit -m "🤖 [Bot Action] Cập nhật bộ đếm ngược chống trùng lệnh ema [skip ci]"
             git push origin HEAD:${{ github.ref }}
           fi
