@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url';
 const OKX_BASE_URL = 'https://www.okx.com';
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-// Giữ nguyên file lưu là statetop_4h.json theo yêu cầu của bạn
-const STATE_FILE = path.join(CURRENT_DIR, 'statetop_4h.json'); 
+// Cập nhật tên file lưu thành statetop3_4h.json theo yêu cầu
+const STATE_FILE = path.join(CURRENT_DIR, 'statetop3_4h.json'); 
 const STATETOP_5D_FILE = path.join(CURRENT_DIR, 'statetop_5d.json');
 const COIN_TTL = 24 * 60 * 60 * 1000;
 // Điều kiện biến động cứng (4%)
@@ -116,7 +116,7 @@ async function main() {
       } 
     }); 
 
-    // Đọc hoặc khởi tạo cấu trúc dữ liệu cho file statetop_4h.json
+    // Đọc hoặc khởi tạo cấu trúc dữ liệu cho file statetop3_4h.json
     let existingData = { nextResetTime: getTargetResetTime(), top3Gainers4h: [] }; 
 
     if (fs.existsSync(STATE_FILE)) { 
@@ -162,7 +162,7 @@ async function main() {
       } 
     } 
 
-    // Ghi đè cập nhật vào file statetop_4h.json
+    // Ghi đè cập nhật vào file statetop3_4h.json
     fs.writeFileSync(STATE_FILE, JSON.stringify(existingData, null, 2), 'utf8'); 
     console.log(`--- HOÀN THÀNH ĐỒNG BỘ TRONG ${((Date.now() - startTime) / 1000).toFixed(2)} GIÂY ---`); 
     console.log(`- Tổng số coin lưu giữ hiện tại trong file: ${existingData.top3Gainers4h.length}`); 
