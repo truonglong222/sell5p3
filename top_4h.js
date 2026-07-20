@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 
 const OKX_BASE_URL = 'https://www.okx.com';
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const STATE_FILE = path.join(CURRENT_DIR, 'statetop_4h.json'); // Thống nhất tên file JSON
+// Đã thay đổi tên file lưu kết quả thành statetop3_4h.json
+const STATE_FILE = path.join(CURRENT_DIR, 'statetop3_4h.json'); 
 const STATETOP_5D_FILE = path.join(CURRENT_DIR, 'statetop_5d.json');
 const COIN_TTL = 24 * 60 * 60 * 1000;
 
@@ -80,13 +81,11 @@ async function main() {
       timestamp: Date.now() 
     })); 
 
-    // ĐỌC VÀ LỌC THEO FILE 5 NGÀY (Đã sửa để đọc đúng key top30Losers)
     let allowedSymbols = new Set(); 
     if (fs.existsSync(STATETOP_5D_FILE)) { 
       try { 
         const content5d = fs.readFileSync(STATETOP_5D_FILE, 'utf8'); 
         const data5d = JSON.parse(content5d); 
-        // Bổ sung thêm data5d.top30Losers vào danh sách ưu tiên kiểm tra
         const list5d = Array.isArray(data5d) ? data5d : (data5d.top30Losers || data5d.top20Losers || data5d.top5d || []); 
         allowedSymbols = new Set(list5d.map(item => typeof item === 'object' ? item.symbol : item)); 
         console.log(`Đã tải ${allowedSymbols.size} coin từ file điều kiện statetop_5d.json`); 
