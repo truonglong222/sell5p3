@@ -4,7 +4,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const OKX_BASE_URL = 'https://www.okx.com';
-const STATE_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'statetop3_4h.json');
+const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const STATE_FILE = path.join(CURRENT_DIR, 'statetop3_4h.json');
+const STATETOP_5D_FILE = path.join(CURRENT_DIR, 'statetop_5d.json'); // File điều kiện đầu vào
 const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 giờ tính bằng mili giây
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -73,12 +75,36 @@ async function main() {
         const sortedGainers = [...validResults].sort((a, b) => b.changeCalculated - a.changeCalculated);
 
         // Lấy 5 phần tử tăng mạnh nhất từ lượt quét hiện tại
-        const newTop5 = sortedGainers.slice(0, 5).map(i => ({ 
+        let newTop5 = sortedGainers.slice(0, 5).map(i => ({ 
             symbol: i.symbol, 
             change: `${i.changeCalculated.toFixed(2)}%` 
         }));
 
-        // --- ĐOẠN XỬ LÝ LƯU THÊM VÀ TỰ ĐỘNG XÓA SAU 12H ---
+        // --- ĐOẠN XỬ LÝ LƯU THÊM VÀ TỰ ĐỘNG XÓA SAU 12H (CÓ BỔ SUNG ĐIỀU KIỆN DANH SÁCH 5D) ---
+        
+        // Đọc danh sách coin từ file statetop_5d.json để làm điều kiện lọc
+        let allowedSymbols = new Set();
+        if (fs.existsSync(STATETOP_5D_FILE)) {
+            try {
+                const content5d = fs.readFileSync(STATETOP_5D_FILE, 'utf8');
+                const data5d = JSON.parse(content5d);
+                
+                // Giả định dữ liệu trong statetop_5d.json là 1 mảng các object có chứa thuộc tính 'symbol'
+                // Hoặc nếu file chứa object dạng { top5d: [...] } thì bạn hãy điều chỉnh lại cho đúng cấu trúc file của bạn.
+                const list5d = Array.isArray(data5d) ? data5d : (data5d.top5d || data5d.coins || []);
+                allowedSymbols = new Set(list5d.map(item => item.symbol));
+                console.log(`Đã tải ${allowedSymbols.size} coin từ file điều kiện statetop_5d.json`);
+            } catch (e) {
+                console.warn('Không thể đọc hoặc lỗi định dạng file statetop_5d.json. Sẽ bỏ qua các coin lượt này để đảm bảo an toàn.');
+            }
+        } else {
+            console.warn('Không tìm thấy file statetop_5d.json. Không có coin nào được duyệt vào file 4h.');
+        }
+
+        // Bổ sung: Lọc lại newTop5, chỉ giữ lại những coin nằm trong allowedSymbols (có trong statetop_5d.json)
+        newTop5 = newTop5.filter(coin => allowedSymbols.has(coin.symbol));
+        console.log(`Còn lại ${newTop5.length}/5 coin thỏa mãn điều kiện có trong file statetop_5d.json`);
+
         let existingData = { lastReset: Date.now(), top3Gainers4h: [] };
 
         // 1. Đọc dữ liệu cũ nếu file đã tồn tại
@@ -86,7 +112,6 @@ async function main() {
             try {
                 const fileContent = fs.readFileSync(STATE_FILE, 'utf8');
                 existingData = JSON.parse(fileContent);
-                // Đảm bảo cấu trúc dữ liệu cũ hợp lệ, nếu không có lastReset thì gán mặc định
                 if (!existingData.lastReset) existingData.lastReset = Date.now();
                 if (!Array.isArray(existingData.top3Gainers4h)) existingData.top3Gainers4h = [];
             } catch (e) {
@@ -98,10 +123,10 @@ async function main() {
         if (Date.now() - existingData.lastReset > RESET_INTERVAL) {
             console.log('--- Đã quá 12 giờ! Tiến hành reset danh sách cũ ---');
             existingData.top3Gainers4h = [];
-            existingData.lastReset = Date.now(); // Cập nhật lại mốc thời gian 12h tiếp theo
+            existingData.lastReset = Date.now();
         }
 
-        // 3. Hợp nhất: Chỉ thêm những coin chưa có trong danh sách cũ
+        // 3. Hợp nhất: Chỉ thêm những coin chưa có trong danh sách cũ (sau khi đã được lọc ở trên)
         const currentSymbols = new Set(existingData.top3Gainers4h.map(item => item.symbol));
         
         for (const coin of newTop5) {
@@ -109,7 +134,7 @@ async function main() {
                 existingData.top3Gainers4h.push(coin);
                 console.log(`+ Thêm mới: ${coin.symbol} (${coin.change})`);
             } else {
-                // Tùy chọn: Cập nhật lại % tăng mới nhất cho coin đã tồn tại
+                // Cập nhật lại % tăng mới nhất cho coin đã tồn tại
                 const index = existingData.top3Gainers4h.findIndex(item => item.symbol === coin.symbol);
                 existingData.top3Gainers4h[index].change = coin.change;
             }
