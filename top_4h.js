@@ -49,15 +49,23 @@ async function main() {
   console.log(`--- BẤT ĐẦU LỌC COIN BIẾN ĐỘNG > ${GROWTH_THRESHOLD}% TỪ FILE STATETOP_5D ---`);
 
   try { 
-    // Tải danh sách coin bắt buộc từ file statetop_5d.json
-    let allowedSymbols = new Set(); 
+    // Map lưu trữ thông tin thứ hạng: key = symbol (ví dụ "BTC-USDT-SWAP"), value = rank (thứ hạng 1-based)
+    const allowedSymbolsMap = new Map(); 
     if (fs.existsSync(STATETOP_5D_FILE)) { 
       try { 
         const content5d = fs.readFileSync(STATETOP_5D_FILE, 'utf8'); 
         const data5d = JSON.parse(content5d); 
         const list5d = Array.isArray(data5d) ? data5d : (data5d.top30Losers || data5d.top20Losers || data5d.top5d || []); 
-        allowedSymbols = new Set(list5d.map(item => typeof item === 'object' ? item.symbol : item)); 
-        console.log(`Đã tải ${allowedSymbols.size} coin mục tiêu từ file statetop_5d.json`); 
+        
+        list5d.forEach((item, index) => {
+          const symbol = typeof item === 'object' ? item.symbol : item;
+          if (symbol) {
+            // Lưu thứ hạng xuất hiện trong file (1 là top 1, 2 là top 2,...)
+            allowedSymbolsMap.set(symbol, index + 1);
+          }
+        });
+
+        console.log(`Đã tải ${allowedSymbolsMap.size} coin mục tiêu từ file statetop_5d.json`); 
       } catch (e) { 
         console.warn('Không thể đọc hoặc lỗi định dạng file statetop_5d.json. Quy trình dừng vì không có danh sách gốc.');
         return;
@@ -66,7 +74,7 @@ async function main() {
       return console.error(`Không tìm thấy file điều kiện gốc: ${STATETOP_5D_FILE}`);
     }
 
-    if (allowedSymbols.size === 0) return console.log('Danh sách coin cho phép trống.');
+    if (allowedSymbolsMap.size === 0) return console.log('Danh sách coin cho phép trống.');
 
     const resTickers = await axios.get(`${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`); 
     if (!resTickers.data || resTickers.data.code !== '0') { 
@@ -77,7 +85,7 @@ async function main() {
     const validCoins = resTickers.data.data.filter(t => 
       t.instId.endsWith('-USDT-SWAP') && 
       parseFloat(t.volCcy24h) > 2000000 && 
-      allowedSymbols.has(t.instId)
+      allowedSymbolsMap.has(t.instId)
     ); 
     
     console.log(`Số lượng coin cần quét nến thực tế (đã khớp 2 file): ${validCoins.length} coin.`); 
@@ -102,6 +110,7 @@ async function main() {
         if (changeCalculated >= GROWTH_THRESHOLD) {
           return { 
             symbol: coin.instId, 
+            rank5d: allowedSymbolsMap.get(coin.instId), // Thêm thứ hạng top trong file 5d
             change: `${changeCalculated.toFixed(2)}%`, 
             timestamp: Date.now() 
           }; 
@@ -130,7 +139,7 @@ async function main() {
       } 
     } 
 
-    // ĐÃ ĐỔI: Đồng bộ thông báo reset chính xác cho file statetop3_4h.json
+    // Đồng bộ thông báo reset chính xác cho file statetop3_4h.json
     if (Date.now() >= existingData.nextResetTime) { 
       console.log('--- Đã đến 18h00 tối (Giờ VN)! Tiến hành reset sạch file statetop3_4h.json ---'); 
       existingData.top3Gainers4h = []; 
@@ -153,12 +162,13 @@ async function main() {
     for (const coin of matchedCoins) { 
       if (!currentSymbols.has(coin.symbol)) { 
         existingData.top3Gainers4h.push(coin); 
-        console.log(`+ Thêm mới thỏa mãn (>4%): ${coin.symbol} (${coin.change})`); 
+        console.log(`+ Thêm mới thỏa mãn (>4%): ${coin.symbol} (Top 5D: #${coin.rank5d}, Biến động: ${coin.change})`); 
       } else { 
         const index = existingData.top3Gainers4h.findIndex(item => item.symbol === coin.symbol); 
+        existingData.top3Gainers4h[index].rank5d = coin.rank5d; // Cập nhật thứ hạng nếu có
         existingData.top3Gainers4h[index].change = coin.change; 
         existingData.top3Gainers4h[index].timestamp = Date.now(); 
-        console.log(`~ Cập nhật chỉ số: ${coin.symbol} (${coin.change})`);
+        console.log(`~ Cập nhật chỉ số: ${coin.symbol} (Top 5D: #${coin.rank5d}, Biến động: ${coin.change})`);
       } 
     } 
 
