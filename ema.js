@@ -52,7 +52,6 @@ function calculateEMA(prices, period = 20) {
 
 async function getLivePriceAndEMA20(symbol) {
     try {
-        // ĐÃ ĐỔI: bar=5m -> bar=15m để lấy nến 15 phút
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
         const response = await axios.get(url, { timeout: 5000 });
 
@@ -69,8 +68,7 @@ async function getLivePriceAndEMA20(symbol) {
 
 async function main() {
     try {
-        // ĐÃ ĐỔI: Text log hiển thị cho đúng khung thời gian mới
-        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 15M (DỰA TRÊN TOP TĂNG 2H) ---');
+        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 15M (DỰA TRÊN TÍNH TOÁN DỮ LIỆU TOP 5D) ---');
 
         if (!fs.existsSync(STATE_TOP3_FILE)) { 
             console.log('Không tìm thấy file statetop3_4h.json!'); 
@@ -88,7 +86,9 @@ async function main() {
             const item = top3Gainers[i]; 
             const symbol = typeof item === 'object' ? item.symbol : item; 
             const changeStr = typeof item === 'object' && item.change ? `${item.change}` : 'N/A'; 
-            const rank = i + 1; 
+            
+            // ĐÃ ĐỔI: Lấy thứ hạng 5 ngày từ thuộc tính rank5d trong file statetop3_4h.json
+            const rank5d = typeof item === 'object' && item.rank5d ? item.rank5d : 'N/A'; 
 
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0 }; 
             
@@ -103,9 +103,9 @@ async function main() {
                         const coinName = symbol.replace('-USDT-SWAP', ''); 
                         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
                         
-                        // ĐÃ ĐỔI: Chữ hiển thị tin nhắn Telegram từ (5M) thành (15M)
+                        // ĐÃ ĐỔI: Đổi nội dung hiển thị sang Top Giảm / Biến động 5D
                         const message = `🟢 <b>LONG #${coinName} (15M)</b>\n` + 
-                                        `🏆 Vị trí: <b>Top ${rank} Tăng (2H)</b>\n` + 
+                                        `🏆 Vị trí: <b>Top ${rank5d} Biến động 5D</b>\n` + 
                                         `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
                                         `👉 <a href="${link}">Đồ thị OKX</a>`; 
                         
