@@ -4,7 +4,7 @@ on:
   # Kích hoạt tự động bằng lịch hẹn giờ nội bộ của GitHub
   schedule:
     # Chạy 1 ngày / 1 lần lúc 00:02 UTC (Tương đương đúng 07:02 sáng giờ Việt Nam GMT+7)
-    - cron: '2 0 * * *'
+    - cron: '30 21 * * *'
     
   # Cho phép bạn bấm nút chạy thử thủ công trực tiếp trên giao diện Web GitHub nếu cần
   workflow_dispatch:
