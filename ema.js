@@ -50,17 +50,44 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-async function getLivePriceAndEMA20(symbol) {
+async function checkCandleConditions(symbol) {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
         const response = await axios.get(url, { timeout: 5000 });
 
         if (response.data && response.data.code === '0' && response.data.data.length >= 25) { 
+            // OKX trả về danh sách từ MỚI NHẤT -> CŨ NHẤT. 
+            // .reverse() lại thành CŨ NHẤT -> MỚI NHẤT để tính EMA đúng chuẩn.
             const candles = response.data.data.reverse(); 
-            const prices = candles.map(c => parseFloat(c[4])); 
-            const lastPrice = prices[prices.length - 1]; 
-            const ema20 = calculateEMA(prices, 20); 
-            return { lastPrice, ema20 }; 
+
+            // Mảng giá close dùng để tính EMA20
+            const closePrices = candles.map(c => parseFloat(c[4])); 
+            const ema20 = calculateEMA(closePrices, 20); 
+            if (ema20 === null) return null;
+
+            // Nến vừa mới đóng cửa chính là nến kế cuối (Index: length - 2)
+            // Cấu trúc OKX Candle: [ts, open, high, low, close, ...]
+            const lastClosedCandle = candles[candles.length - 2];
+            const openPrice = parseFloat(lastClosedCandle[1]);
+            const lowPrice = parseFloat(lastClosedCandle[3]);
+            const closePrice = parseFloat(lastClosedCandle[4]);
+
+            // 1. % Độ lệch giữa râu nến dưới (Low) và đường EMA20
+            const lowDiffPct = ((lowPrice - ema20) / ema20) * 100;
+
+            // 2. % Tăng giá của nến vừa đóng (Close so với Open)
+            const candleBodyPct = ((closePrice - openPrice) / openPrice) * 100;
+
+            return {
+                closePrice,
+                ema20,
+                lowDiffPct,
+                candleBodyPct,
+                // Điều kiện 1: -0.5% < (Low - EMA20) / EMA20 < 1%
+                isLowNearEMA: lowDiffPct > -0.5 && lowDiffPct < 1.0,
+                // Điều kiện 2: Nến 15m vừa đóng tăng > 0.5%
+                isBullishCandle: candleBodyPct > 0.5
+            };
         } 
     } catch (error) {
         console.error(`Lỗi lấy nến OKX (${symbol}):`, error.message);
@@ -107,20 +134,20 @@ async function main() {
                 continue;
             }
 
-            const data = await getLivePriceAndEMA20(symbol); 
-            if (data && data.ema20 !== null) { 
-                const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100; 
-                console.log(`🔍 [${symbol}] Giá: ${data.lastPrice} | EMA20: ${data.ema20.toFixed(4)} | Đội lệch: ${diffPct.toFixed(2)}%`);
+            const signal = await checkCandleConditions(symbol); 
+            if (signal) { 
+                console.log(`🔍 [${symbol}] Râu dưới lệch EMA20: ${signal.lowDiffPct.toFixed(2)}% | % Tăng nến 15M: ${signal.candleBodyPct.toFixed(2)}%`);
                 
-                // NỚI RỘNG ĐIỀU KIỆN: Chạm/nhúng quanh EMA20 từ -0.8% đến +0.5%
-                if (diffPct > -0.8 && diffPct < 0.5) { 
+                // KIỂM TRA ĐỦ CẢ 2 ĐIỀU KIỆN
+                if (signal.isLowNearEMA && signal.isBullishCandle) { 
                     const coinName = symbol.replace('-USDT-SWAP', ''); 
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
                     
                     const message = `🟢 <b>LONG #${coinName} (15M)</b>\n` + 
                                     `🏆 Vị trí: <b>Top ${rank5d} Biến động 5D</b>\n` + 
                                     `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
-                                    `📉 Độ lệch EMA20: <code>${diffPct.toFixed(2)}%</code>\n` + 
+                                    `📉 Đáy râu nến lệch EMA20: <code>${signal.lowDiffPct.toFixed(2)}%</code>\n` + 
+                                    `🔥 Nến 15M vừa đóng tăng: <code>+${signal.candleBodyPct.toFixed(2)}%</code>\n` + 
                                     `👉 <a href="${link}">Đồ thị OKX</a>`; 
                     
                     console.log(`🚀 BÁO ĐỘNG MATCH: Gửi tin nhắn Telegram cho ${symbol}...`);
