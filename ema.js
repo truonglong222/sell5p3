@@ -62,20 +62,29 @@ async function getLivePriceAndEMA20(symbol) {
             const ema20 = calculateEMA(prices, 20); 
             return { lastPrice, ema20 }; 
         } 
-    } catch (error) {} 
+    } catch (error) {
+        console.error(`Lỗi lấy nến OKX (${symbol}):`, error.message);
+    } 
     return null; 
 }
 
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 15M (DỰA TRÊN TÍNH TOÁN DỮ LIỆU TOP 5D) ---');
+        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU EMA CHÂN SÓNG 15M ---');
 
         if (!fs.existsSync(STATE_TOP3_FILE)) { 
-            console.log('Không tìm thấy file statetop3_4h.json!'); 
+            console.log('❌ Không tìm thấy file statetop3_4h.json!'); 
             return; 
         } 
+
         const stateData = JSON.parse(fs.readFileSync(STATE_TOP3_FILE, 'utf8')); 
         const top3Gainers = stateData.top3Gainers4h || stateData.top3Gainers8h || []; 
+
+        console.log(`📋 Số lượng coin khả dụng trong file statetop3_4h.json: ${top3Gainers.length}`);
+        if (top3Gainers.length === 0) {
+            console.log('⚠️ Không có coin nào trong danh sách cần quét.');
+            return;
+        }
 
         const sentLog = loadSentLog(); 
         const currentTime = Date.now(); 
@@ -86,47 +95,55 @@ async function main() {
             const item = top3Gainers[i]; 
             const symbol = typeof item === 'object' ? item.symbol : item; 
             const changeStr = typeof item === 'object' && item.change ? `${item.change}` : 'N/A'; 
-            
-            // ĐÃ ĐỔI: Lấy thứ hạng 5 ngày từ thuộc tính rank5d trong file statetop3_4h.json
             const rank5d = typeof item === 'object' && item.rank5d ? item.rank5d : 'N/A'; 
 
             if (!sentLog[symbol]) sentLog[symbol] = { _long: 0 }; 
             
             // Kiểm tra cooldown
-            if (currentTime - (sentLog[symbol]._long || 0) >= COOLDOWN_TIME) { 
-                const data = await getLivePriceAndEMA20(symbol); 
-                if (data && data.ema20 !== null) { 
-                    const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100; 
+            const lastSent = sentLog[symbol]._long || 0;
+            if (currentTime - lastSent < COOLDOWN_TIME) {
+                const remainingMin = Math.round((COOLDOWN_TIME - (currentTime - lastSent)) / 60000);
+                console.log(`⏳ ${symbol} đang trong cooldown (còn ${remainingMin} phút). Bỏ qua.`);
+                continue;
+            }
+
+            const data = await getLivePriceAndEMA20(symbol); 
+            if (data && data.ema20 !== null) { 
+                const diffPct = ((data.lastPrice - data.ema20) / data.ema20) * 100; 
+                console.log(`🔍 [${symbol}] Giá: ${data.lastPrice} | EMA20: ${data.ema20.toFixed(4)} | Đội lệch: ${diffPct.toFixed(2)}%`);
+                
+                // NỚI RỘNG ĐIỀU KIỆN: Chạm/nhúng quanh EMA20 từ -0.8% đến +0.5%
+                if (diffPct > -0.8 && diffPct < 0.5) { 
+                    const coinName = symbol.replace('-USDT-SWAP', ''); 
+                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
                     
-                    // Điều kiện: Giá đang nằm trong vùng chạm/vừa nhúng qua EMA20 khung 15m
-                    if (diffPct > -0.5 && diffPct < 0.2) { 
-                        const coinName = symbol.replace('-USDT-SWAP', ''); 
-                        const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
-                        
-                        // ĐÃ ĐỔI: Đổi nội dung hiển thị sang Top Giảm / Biến động 5D
-                        const message = `🟢 <b>LONG #${coinName} (15M)</b>\n` + 
-                                        `🏆 Vị trí: <b>Top ${rank5d} Biến động 5D</b>\n` + 
-                                        `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
-                                        `👉 <a href="${link}">Đồ thị OKX</a>`; 
-                        
-                        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { 
-                            chat_id: TELEGRAM_CHAT_ID, 
-                            text: message, 
-                            parse_mode: 'HTML' 
-                        }).catch(() => {}); 
-                        
-                        sentLog[symbol]._long = currentTime; 
-                        hasNewAlert = true; 
-                    } 
+                    const message = `🟢 <b>LONG #${coinName} (15M)</b>\n` + 
+                                    `🏆 Vị trí: <b>Top ${rank5d} Biến động 5D</b>\n` + 
+                                    `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
+                                    `📉 Độ lệch EMA20: <code>${diffPct.toFixed(2)}%</code>\n` + 
+                                    `👉 <a href="${link}">Đồ thị OKX</a>`; 
+                    
+                    console.log(`🚀 BÁO ĐỘNG MATCH: Gửi tin nhắn Telegram cho ${symbol}...`);
+
+                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { 
+                        chat_id: TELEGRAM_CHAT_ID, 
+                        text: message, 
+                        parse_mode: 'HTML' 
+                    }).catch((err) => {
+                        console.error(`❌ Lỗi gửi Telegram (${symbol}):`, err.message);
+                    }); 
+                    
+                    sentLog[symbol]._long = currentTime; 
+                    hasNewAlert = true; 
                 } 
-                await sleep(50); 
             } 
+            await sleep(100); 
         } 
 
         if (hasNewAlert) saveSentLog(sentLog); 
         console.log('--- HOÀN THÀNH TIẾN TRÌNH QUÉT EMA 15M ---'); 
     } catch (err) { 
-        console.error('Lỗi chạy file ema.js:', err.message); 
+        console.error('Lỗi hệ thống trong ema.js:', err.message); 
     } 
 }
 
