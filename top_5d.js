@@ -69,7 +69,7 @@ async function main() {
     
     const top30Losers = poolWithChanges 
       .sort((a, b) => a.change5Days - b.change5Days) 
-      .slice(0, 30); 
+      .slice(0, 10); 
       
     const top30LosersSymbols = top30Losers.map(item => item.symbol); 
     const finalState = { top30Losers: top30LosersSymbols }; 
