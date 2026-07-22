@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
 
-const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Khóa chống trùng gửi tin 2 tiếng
+const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Khóa chống trùng gửi tin 1 tiếng
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadSentLog() {
@@ -56,21 +56,24 @@ async function checkCandleConditions(symbol) {
         const response = await axios.get(url, { timeout: 5000 });
 
         if (response.data && response.data.code === '0' && response.data.data.length >= 25) { 
-            // OKX trả về danh sách từ MỚI NHẤT -> CŨ NHẤT. 
-            // .reverse() lại thành CŨ NHẤT -> MỚI NHẤT để tính EMA đúng chuẩn.
-            const candles = response.data.data.reverse(); 
+            const rawCandles = response.data.data; // OKX trả về từ MỚI NHẤT -> CŨ NHẤT
 
-            // Mảng giá close dùng để tính EMA20
-            const closePrices = candles.map(c => parseFloat(c[4])); 
-            const ema20 = calculateEMA(closePrices, 20); 
-            if (ema20 === null) return null;
-
-            // Nến vừa mới đóng cửa chính là nến kế cuối (Index: length - 2)
+            // Nến vừa mới đóng cửa chính là phần tử index [1] (index [0] là nến đang chạy)
             // Cấu trúc OKX Candle: [ts, open, high, low, close, ...]
-            const lastClosedCandle = candles[candles.length - 2];
+            const lastClosedCandle = rawCandles[1];
             const openPrice = parseFloat(lastClosedCandle[1]);
             const lowPrice = parseFloat(lastClosedCandle[3]);
             const closePrice = parseFloat(lastClosedCandle[4]);
+
+            // Chuẩn bị mảng giá đóng cửa từ CŨ -> MỚI để tính EMA20 chính xác
+            const candles = rawCandles.slice().reverse(); 
+            const closePrices = candles.map(c => parseFloat(c[4])); 
+            
+            // Tính EMA20 tính đến điểm nến vừa đóng (bỏ nến đang chạy ra)
+            const closePricesUntilLastClosed = closePrices.slice(0, closePrices.length - 1);
+            const ema20 = calculateEMA(closePricesUntilLastClosed, 20); 
+
+            if (ema20 === null) return null;
 
             // 1. % Độ lệch giữa râu nến dưới (Low) và đường EMA20
             const lowDiffPct = ((lowPrice - ema20) / ema20) * 100;
@@ -83,8 +86,8 @@ async function checkCandleConditions(symbol) {
                 ema20,
                 lowDiffPct,
                 candleBodyPct,
-                // Điều kiện 1: -0.5% < (Low - EMA20) / EMA20 < 1%
-                isLowNearEMA: lowDiffPct > -0.5 && lowDiffPct < 1.0,
+                // CẬP NHẬT: Điều kiện 1: -0.5% < (Low - EMA20) / EMA20 < 0.5%
+                isLowNearEMA: lowDiffPct > -0.5 && lowDiffPct < 0.5,
                 // Điều kiện 2: Nến 15m vừa đóng tăng > 0.5%
                 isBullishCandle: candleBodyPct > 0.5
             };
