@@ -15,11 +15,16 @@ const GROWTH_THRESHOLD = 4.0;
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Cập nhật mốc reset thành 12:40 (Giờ VN)
 function getTargetResetTime() {
   const now = new Date();
   const vnTimeStr = now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
   const vnDate = new Date(vnTimeStr);
-  vnDate.setHours(18, 0, 0, 0); 
+  
+  // Đặt mốc thời gian thành 12:40:00.000
+  vnDate.setHours(12, 40, 0, 0); 
+
+  // Nếu thời điểm hiện tại đã qua 12:40 hôm nay, hẹn mốc reset sang 12:40 ngày mai
   if (new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })).getTime() >= vnDate.getTime()) { 
     vnDate.setDate(vnDate.getDate() + 1); 
   } 
@@ -139,9 +144,9 @@ async function main() {
       } 
     } 
 
-    // Đồng bộ thông báo reset chính xác cho file statetop3_4h.json
+    // Đồng bộ thông báo reset chính xác cho file statetop3_4h.json (Lúc 12h40)
     if (Date.now() >= existingData.nextResetTime) { 
-      console.log('--- Đã đến 18h00 tối (Giờ VN)! Tiến hành reset sạch file statetop3_4h.json ---'); 
+      console.log('--- Đã đến 12h40 (Giờ VN)! Tiến hành reset sạch file statetop3_4h.json ---'); 
       existingData.top3Gainers4h = []; 
       existingData.nextResetTime = getTargetResetTime(); 
     } 
