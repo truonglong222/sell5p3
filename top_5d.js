@@ -45,7 +45,7 @@ async function fetch5DayChange(coin, rawFuturesMap) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 30 COIN GIẢM GIÁ 5 NGÀY (VOL > 2M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 COIN GIẢM GIÁ 5 NGÀY (VOL > 2M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -67,20 +67,28 @@ async function main() {
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetch5DayChange(coin, rawFuturesMap) ); 
     const poolWithChanges = results.filter(r => r !== null); 
     
-    const top30Losers = poolWithChanges 
+    // Đã sửa: Sắp xếp tăng dần và cắt đúng Top 20 (slice(0, 20))
+    const top20Losers = poolWithChanges 
       .sort((a, b) => a.change5Days - b.change5Days) 
       .slice(0, 20); 
       
-    const top30LosersSymbols = top30Losers.map(item => item.symbol); 
-    const finalState = { top30Losers: top30LosersSymbols }; 
+    // Lưu định dạng đối tượng chứa rank5d để code đọc Short lấy đúng thứ hạng
+    const top20LosersData = top20Losers.map((item, index) => ({
+      symbol: item.symbol,
+      rank5d: index + 1,
+      change5Days: parseFloat(item.change5Days.toFixed(2))
+    }));
+
+    // Đã sửa: Đặt key lưu trong file thành top20Losers
+    const finalState = { top20Losers: top20LosersData }; 
     
     fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8'); 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
-    console.log(`- Đã lưu Top 30 Giảm vào statetop_5d.json`); 
+    console.log(`- Đã lưu Top 20 Giảm vào statetop_5d.json`); 
     console.log('\nChi tiết biên độ giảm thực tế (Real-time vs Open 5D):'); 
-    top30Losers.forEach((c, idx) => { 
+    top20Losers.forEach((c, idx) => { 
       console.log(`${idx + 1}. ${c.symbol}: ${c.change5Days.toFixed(2)}%`); 
     }); 
   } catch (error) { 
