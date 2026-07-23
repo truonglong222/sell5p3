@@ -11,9 +11,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
-const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json'); // File top giảm 5D
+const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
-const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Khóa chống trùng gửi tin 1 tiếng
+const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Cooldown 1 tiếng
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadSentLog() {
@@ -40,7 +40,6 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Hàm tính EMA
 function calculateEMA(prices, period = 20) {
     if (prices.length < period) return null;
     const k = 2 / (period + 1);
@@ -53,7 +52,6 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Hàm tính RSI
 function calculateRSI(prices, period = 20) {
     if (prices.length <= period) return null;
 
@@ -93,16 +91,20 @@ async function checkCandleConditions(symbol) {
 
         if (response.data && response.data.code === '0' && response.data.data.length >= 25) { 
             const rawCandles = response.data.data;
+            
+            // rawCandles[0]: Nến đang chạy
+            // rawCandles[1]: Nến 15M vừa đóng gần nhất
             const lastClosedCandle = rawCandles[1];
             const openPrice = parseFloat(lastClosedCandle[1]);
             const lowPrice = parseFloat(lastClosedCandle[3]);
             const closePrice = parseFloat(lastClosedCandle[4]);
 
-            const candles = rawCandles.slice().reverse(); 
-            const closePrices = candles.map(c => parseFloat(c[4])); 
+            // Lấy toàn bộ các nến ĐÃ ĐÓNG CỬA (từ rawCandles[1] trở đi về quá khứ)
+            const closedCandles = rawCandles.slice(1).reverse(); // Đảo lại thành: Cũ -> Mới (mới nhất là rawCandles[1])
+            const closePrices = closedCandles.map(c => parseFloat(c[4])); 
             
-            const closePricesUntilLastClosed = closePrices.slice(0, closePrices.length - 1);
-            const ema20 = calculateEMA(closePricesUntilLastClosed, 20); 
+            // Tính EMA20 dựa trên chuỗi nến đã đóng
+            const ema20 = calculateEMA(closePrices, 20); 
 
             if (ema20 === null) return null;
 
@@ -133,13 +135,16 @@ async function checkShortConditions(symbol) {
 
         if (!res15m.data || res15m.data.code !== '0' || res15m.data.data.length < 30) return null;
 
-        const raw15m = res15m.data.data.slice().reverse(); // Từ CŨ -> MỚI
-        const closePrices15m = raw15m.map(c => parseFloat(c[4]));
-        const currentPrice = closePrices15m[closePrices15m.length - 1]; // Giá hiện tại
+        const raw15m = res15m.data.data;
+        const currentPrice = parseFloat(raw15m[0][4]); // Giá nến đang chạy (Real-time)
+
+        // Chỉ lấy các nến 15M đã đóng để tính RSI
+        const closed15m = raw15m.slice(1).reverse(); // Từ CŨ -> MỚI (mới nhất là nến vừa đóng)
+        const closePrices15m = closed15m.map(c => parseFloat(c[4]));
 
         const rsi20_15m = calculateRSI(closePrices15m, 20);
         if (rsi20_15m === null || rsi20_15m <= 70) {
-            return null; // Bỏ qua ngay nếu RSI20 khung 15m <= 70
+            return null; // Bỏ qua nếu RSI20 khung 15m <= 70
         }
 
         // 2. Tải nến ngày (1D) để tính EMA20 Nến Ngày
@@ -148,8 +153,9 @@ async function checkShortConditions(symbol) {
 
         if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 25) return null;
 
-        const raw1D = res1D.data.data.slice().reverse();
-        const closePrices1D = raw1D.map(c => parseFloat(c[4]));
+        // Chỉ lấy các nến D1 đã đóng cửa
+        const closed1D = res1D.data.data.slice(1).reverse();
+        const closePrices1D = closed1D.map(c => parseFloat(c[4]));
         const ema20_1D = calculateEMA(closePrices1D, 20);
 
         if (ema20_1D === null) return null;
@@ -235,9 +241,8 @@ async function main() {
         // ==================== 2. QUÉT TÍN HIỆU SHORT ====================
         if (fs.existsSync(STATE_TOP5D_FILE)) {
             const stateTop5dData = JSON.parse(fs.readFileSync(STATE_TOP5D_FILE, 'utf8'));
-            // Lấy danh sách Top 20 giảm giá 5D (xử lý linh hoạt format mảng hoặc object chứa mảng)
-            let top20Losers = Array.isArray(stateTop5dData) ? stateTop5dData : (stateTop5dData.topLosers5d || stateTop5dData.top20Losers || []);
-            top20Losers = top20Losers.slice(0, 20); // Lấy chuẩn Top 20
+            let top20Losers = Array.isArray(stateTop5dData) ? stateTop5dData : (stateTop5dData.top20Losers || stateTop5dData.topLosers5d || []);
+            top20Losers = top20Losers.slice(0, 20);
 
             console.log(`📋 Số lượng coin SHORT khả dụng (Top 20 Giảm 5D): ${top20Losers.length}`);
 
