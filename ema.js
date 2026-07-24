@@ -13,7 +13,10 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
 const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
-const COOLDOWN_TIME = 12 * 60 * 60 * 1000; // Cooldown 1 tiếng
+// Cấu hình Cooldown
+const LONG_COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Cooldown 1 tiếng cho Long
+const SHORT_COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 tiếng cho Short
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadSentLog() {
@@ -32,8 +35,8 @@ function saveSentLog(logData) {
         const cleanedLog = {};
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
-            if (timeData._long && now - timeData._long < COOLDOWN_TIME) temp._long = timeData._long;
-            if (timeData._short && now - timeData._short < COOLDOWN_TIME) temp._short = timeData._short;
+            if (timeData._long && now - timeData._long < LONG_COOLDOWN_TIME) temp._long = timeData._long;
+            if (timeData._short && now - timeData._short < SHORT_COOLDOWN_TIME) temp._short = timeData._short;
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
         }
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
@@ -90,7 +93,7 @@ async function checkCandleConditions(symbol) {
     return null; 
 }
 
-// ------------------- LOGIC KIỂM TRA SHORT (ĐÃ BỎ RSI) -------------------
+// ------------------- LOGIC KIỂM TRA SHORT -------------------
 async function checkShortConditions(symbol) {
     try {
         // 1. Lấy ticker giá hiện tại
@@ -100,7 +103,7 @@ async function checkShortConditions(symbol) {
         
         const currentPrice = parseFloat(tickerRes.data.data[0].last);
 
-        // 2. Tải nến ngày (1D) để tính EMA20 Nến Ngày
+        // 2. Kiểm tra EMA20 khung Ngày (1D)
         const url1D = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=60`;
         const res1D = await axios.get(url1D, { timeout: 5000 });
 
@@ -112,14 +115,33 @@ async function checkShortConditions(symbol) {
 
         if (ema20_1D === null) return null;
 
-        const diffPct = ((currentPrice - ema20_1D) / ema20_1D) * 100;
+        const diffPct1D = ((currentPrice - ema20_1D) / ema20_1D) * 100;
 
-        // ĐIỀU KIỆN SHORT: -1% < diffPct < 5%
-        if (diffPct > -1 && diffPct < 5) {
+        // Điều kiện EMA1D: -1% < diffPct1D < 5%
+        if (diffPct1D <= -1 || diffPct1D >= 5) return null;
+
+        // 3. Kiểm tra EMA20 khung 15 Phút (15M)
+        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
+        const res15M = await axios.get(url15M, { timeout: 5000 });
+
+        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 25) return null;
+
+        const closed15M = res15M.data.data.slice(1).reverse();
+        const closePrices15M = closed15M.map(c => parseFloat(c[4]));
+        const ema20_15M = calculateEMA(closePrices15M, 20);
+
+        if (ema20_15M === null) return null;
+
+        const diffPct15M = ((currentPrice - ema20_15M) / ema20_15M) * 100;
+
+        // Điều kiện EMA15M: -0.5% < diffPct15M < 1%
+        if (diffPct15M > -0.5 && diffPct15M < 1) {
             return {
-                diffPct: diffPct,
+                diffPct1D,
+                diffPct15M,
                 currentPrice,
-                ema20_1D
+                ema20_1D,
+                ema20_15M
             };
         }
     } catch (error) {
@@ -153,8 +175,8 @@ async function main() {
                 if (!sentLog[symbol]) sentLog[symbol] = {}; 
                 
                 const lastSentLong = sentLog[symbol]._long || 0;
-                if (currentTime - lastSentLong < COOLDOWN_TIME) {
-                    const remainingMin = Math.round((COOLDOWN_TIME - (currentTime - lastSentLong)) / 60000);
+                if (currentTime - lastSentLong < LONG_COOLDOWN_TIME) {
+                    const remainingMin = Math.round((LONG_COOLDOWN_TIME - (currentTime - lastSentLong)) / 60000);
                     console.log(`⏳ [LONG] ${symbol} đang trong cooldown (còn ${remainingMin} phút).`);
                     continue;
                 }
@@ -204,31 +226,33 @@ async function main() {
                 // Lấy biên độ nến 1D vừa đóng
                 const change1Day = (typeof item === 'object' && item.change1Day !== undefined) ? item.change1Day : 0;
 
-                // 1. ĐIỀU KIỆN TIỀN ĐỀ: Nến 1D vừa đóng hôm qua phải giảm > 1% (change1Day < -1)
-                if (change1Day >= -1) {
-                    console.log(`⏩ [SHORT] ${symbol} bị bỏ qua (Nến 1D vừa đóng: ${change1Day}% không đạt điều kiện < -1%).`);
+                // 1. ĐIỀU KIỆN TIỀN ĐỀ MỚI: Nến 1D vừa đóng hôm qua phải giảm < -5%
+                if (change1Day >= -5) {
+                    console.log(`⏩ [SHORT] ${symbol} bị bỏ qua (Nến 1D vừa đóng: ${change1Day}% không đạt điều kiện < -5%).`);
                     continue;
                 }
 
                 if (!sentLog[symbol]) sentLog[symbol] = {};
 
+                // 2. KIỂM TRA COOLDOWN 8 TIẾNG CHO SHORT
                 const lastSentShort = sentLog[symbol]._short || 0;
-                if (currentTime - lastSentShort < COOLDOWN_TIME) {
-                    const remainingMin = Math.round((COOLDOWN_TIME - (currentTime - lastSentShort)) / 60000);
-                    console.log(`⏳ [SHORT] ${symbol} đang trong cooldown (còn ${remainingMin} phút).`);
+                if (currentTime - lastSentShort < SHORT_COOLDOWN_TIME) {
+                    const remainingHours = ((SHORT_COOLDOWN_TIME - (currentTime - lastSentShort)) / 3600000).toFixed(1);
+                    console.log(`⏳ [SHORT] ${symbol} đang trong cooldown 8H (còn ${remainingHours} giờ).`);
                     continue;
                 }
 
-                // 2. ĐIỀU KIỆN EMA: Kiểm tra độ lệch EMA20 (1D)
+                // 3. ĐIỀU KIỆN EMA: Kiểm tra EMA20 1D và EMA20 15M
                 const shortSignal = await checkShortConditions(symbol);
                 if (shortSignal) {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    const message = `🔴 <b>SHORT #${coinName} (1D)</b>\n` +
+                    const message = `🔴 <b>SHORT #${coinName}</b>\n` +
                                     `🏆 Vị trí: <b>Top ${rank5d} Giảm Giá 5D</b>\n` +
                                     `📉 Nến 1D vừa đóng: <code>${change1Day.toFixed(2)}%</code>\n` +
-                                    `📉 Độ lệch so với EMA20 (1D): <code>${shortSignal.diffPct.toFixed(2)}%</code>\n` +
+                                    `📊 Lệch EMA20 (1D): <code>${shortSignal.diffPct1D.toFixed(2)}%</code>\n` +
+                                    `⚡ Lệch EMA20 (15M): <code>${shortSignal.diffPct15M.toFixed(2)}%</code>\n` +
                                     `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                     console.log(`🚀 [SHORT MATCH] Gửi Telegram cho ${symbol}...`);
