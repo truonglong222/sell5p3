@@ -13,7 +13,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
 const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
-const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Cooldown 1 tiếng
+const COOLDOWN_TIME = 12 * 60 * 60 * 1000; // Cooldown 1 tiếng
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadSentLog() {
