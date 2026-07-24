@@ -41,10 +41,20 @@ async function fetch5DayChange(coin) {
       // 2. Tìm giá thấp nhất (Low - index [3]) trong chuỗi 6 nến gần nhất (từ nến 0 đến nến 5)
       const lowestPrice = Math.min(...candles1D.map(c => parseFloat(c[3])));
 
-      // 3. Tính % giảm theo công thức: (Open5D - MinLow) / MinLow * 100
+      // 3. Tính % biến động của NẾN VỪA ĐÓNG HÔM QUA (nến index [1])
+      // Structure nến OKX: [ts, open, high, low, close, ...]
+      const open1D = parseFloat(candles1D[1][1]);
+      const close1D = parseFloat(candles1D[1][4]);
+      const change1DPercentage = open1D > 0 ? ((close1D - open1D) / open1D) * 100 : 0;
+
+      // 4. Tính % giảm 5 ngày theo công thức cũ
       if (open5DaysAgo && lowestPrice > 0) {
         const dropPercentage = ((open5DaysAgo - lowestPrice) / lowestPrice) * 100;
-        return { symbol, change5Days: dropPercentage }; 
+        return { 
+          symbol, 
+          change5Days: dropPercentage,
+          change1Day: change1DPercentage // Thêm thông tin nến 1 ngày vừa đóng
+        }; 
       }
     } 
   } catch (err) {} 
@@ -68,11 +78,10 @@ async function main() {
     
     console.log('Đang quét lịch sử nến 1D song song...'); 
     
-    // Đã bỏ truyền rawFuturesMap không cần thiết
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetch5DayChange(coin)); 
     const poolWithChanges = results.filter(r => r !== null); 
     
-    // Sắp xếp giảm dần theo mức độ giảm giá (coin giảm mạnh nhất xếp lên đầu)
+    // Sắp xếp giảm dần theo mức độ giảm giá 5 ngày
     const top20Losers = poolWithChanges 
       .sort((a, b) => b.change5Days - a.change5Days) 
       .slice(0, 20); 
@@ -80,7 +89,8 @@ async function main() {
     const top20LosersData = top20Losers.map((item, index) => ({
       symbol: item.symbol,
       rank5d: index + 1,
-      change5Days: parseFloat(item.change5Days.toFixed(2))
+      change5Days: parseFloat(item.change5Days.toFixed(2)),
+      change1Day: parseFloat(item.change1Day.toFixed(2)) // Thêm dữ liệu nến [1] vào JSON
     }));
 
     const finalState = { top20Losers: top20LosersData }; 
@@ -90,9 +100,9 @@ async function main() {
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
     console.log(`- Đã lưu Top 20 Giảm vào statetop_5d.json`); 
-    console.log('\nChi tiết biên độ giảm tối đa trong 5 ngày (Open 5D vs Min Low):'); 
+    console.log('\nChi tiết biên độ giảm tối đa 5 ngày & Biến động nến 1D vừa đóng:'); 
     top20Losers.forEach((c, idx) => { 
-      console.log(`${idx + 1}. ${c.symbol}: Max Drop ${c.change5Days.toFixed(2)}%`); 
+      console.log(`${idx + 1}. ${c.symbol}: Max Drop 5D ${c.change5Days.toFixed(2)}% | Nến 1D Vừa Đóng: ${c.change1Day.toFixed(2)}%`); 
     }); 
   } catch (error) { 
     console.error('Lỗi hệ thống file top_5d.js:', error.message); 
