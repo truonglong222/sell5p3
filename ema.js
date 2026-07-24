@@ -14,7 +14,7 @@ const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
 const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
 // Cấu hình Cooldown
-const LONG_COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Cooldown 1 tiếng cho Long
+const LONG_COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 1 tiếng cho Long
 const SHORT_COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 tiếng cho Short
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
