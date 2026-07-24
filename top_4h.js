@@ -10,8 +10,9 @@ const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const STATE_FILE = path.join(CURRENT_DIR, 'statetop3_4h.json'); 
 const STATETOP_5D_FILE = path.join(CURRENT_DIR, 'statetop_5d.json');
 const COIN_TTL = 24 * 60 * 60 * 1000;
-// Điều kiện biến động cứng (4%)
-const GROWTH_THRESHOLD = 4.0; 
+
+// CẬP NHẬT: Điều kiện biến động cứng đổi thành 5%
+const GROWTH_THRESHOLD = 5.0; 
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -117,7 +118,7 @@ async function main() {
         const open2 = parseFloat(candles[2][1]); 
         const changeCalculated = ((close0 - open2) / open2) * 100;
 
-        // KIỂM TRA ĐIỀU KIỆN CỨNG: Biến động 4h phải >= 4%
+        // KIỂM TRA ĐIỀU KIỆN CỨNG: Biến động 4h phải >= 5%
         if (changeCalculated >= GROWTH_THRESHOLD) {
           return { 
             symbol: coin.instId, 
@@ -173,7 +174,7 @@ async function main() {
     for (const coin of matchedCoins) { 
       if (!currentSymbols.has(coin.symbol)) { 
         existingData.top3Gainers4h.push(coin); 
-        console.log(`+ Thêm mới thỏa mãn (>4%): ${coin.symbol} (Top 5D: #${coin.rank5d}, Biến động: ${coin.change})`); 
+        console.log(`+ Thêm mới thỏa mãn (>5%): ${coin.symbol} (Top 5D: #${coin.rank5d}, Biến động: ${coin.change})`); 
       } else { 
         const index = existingData.top3Gainers4h.findIndex(item => item.symbol === coin.symbol); 
         existingData.top3Gainers4h[index].rank5d = coin.rank5d; // Cập nhật thứ hạng nếu có
