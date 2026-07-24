@@ -1,28 +1,28 @@
 {
   "top20Losers": [
     {
-      "symbol": "CORE-USDT-SWAP",
+      "symbol": "NIGHT-USDT-SWAP",
       "rank5d": 1,
-      "change5Days": 63.85,
-      "change1Day": -1.71
+      "change5Days": 81.26,
+      "change1Day": 1.22
+    },
+    {
+      "symbol": "LAB-USDT-SWAP",
+      "rank5d": 2,
+      "change5Days": 66.84,
+      "change1Day": -5.05
     },
     {
       "symbol": "APR-USDT-SWAP",
-      "rank5d": 2,
+      "rank5d": 3,
       "change5Days": 47.04,
       "change1Day": -26.47
     },
     {
-      "symbol": "HOME-USDT-SWAP",
-      "rank5d": 3,
-      "change5Days": 28.3,
-      "change1Day": -5.46
-    },
-    {
-      "symbol": "ZIL-USDT-SWAP",
+      "symbol": "BASED-USDT-SWAP",
       "rank5d": 4,
-      "change5Days": 23.64,
-      "change1Day": 2.46
+      "change5Days": 20.61,
+      "change1Day": -7.22
     },
     {
       "symbol": "TRIA-USDT-SWAP",
@@ -43,34 +43,34 @@
       "change1Day": -0.59
     },
     {
-      "symbol": "RAVE-USDT-SWAP",
+      "symbol": "SPCX-USDT-SWAP",
       "rank5d": 8,
-      "change5Days": 11.69,
-      "change1Day": 0.89
+      "change5Days": 13.76,
+      "change1Day": -7.86
+    },
+    {
+      "symbol": "WLFI-USDT-SWAP",
+      "rank5d": 9,
+      "change5Days": 11.9,
+      "change1Day": 6.52
     },
     {
       "symbol": "ZBT-USDT-SWAP",
-      "rank5d": 9,
+      "rank5d": 10,
       "change5Days": 10.96,
       "change1Day": 9.83
     },
     {
       "symbol": "RE-USDT-SWAP",
-      "rank5d": 10,
+      "rank5d": 11,
       "change5Days": 10.18,
       "change1Day": 11.01
     },
     {
       "symbol": "H-USDT-SWAP",
-      "rank5d": 11,
+      "rank5d": 12,
       "change5Days": 10.05,
       "change1Day": 3.9
-    },
-    {
-      "symbol": "AERO-USDT-SWAP",
-      "rank5d": 12,
-      "change5Days": 9.87,
-      "change1Day": -0.28
     },
     {
       "symbol": "SLX-USDT-SWAP",
@@ -79,46 +79,168 @@
       "change1Day": -7.6
     },
     {
-      "symbol": "CHIP-USDT-SWAP",
+      "symbol": "BEAT-USDT-SWAP",
       "rank5d": 14,
+      "change5Days": 9.47,
+      "change1Day": 15.04
+    },
+    {
+      "symbol": "CHZ-USDT-SWAP",
+      "rank5d": 15,
+      "change5Days": 9.24,
+      "change1Day": -2.95
+    },
+    {
+      "symbol": "CHIP-USDT-SWAP",
+      "rank5d": 16,
       "change5Days": 9.16,
       "change1Day": -3.36
     },
     {
+      "symbol": "MEGA-USDT-SWAP",
+      "rank5d": 17,
+      "change5Days": 8.77,
+      "change1Day": 2.02
+    },
+    {
       "symbol": "EIGEN-USDT-SWAP",
-      "rank5d": 15,
+      "rank5d": 18,
       "change5Days": 8.69,
       "change1Day": -4.3
     },
     {
-      "symbol": "WIF-USDT-SWAP",
-      "rank5d": 16,
-      "change5Days": 8.48,
-      "change1Day": -3.64
-    },
-    {
-      "symbol": "HMSTR-USDT-SWAP",
-      "rank5d": 17,
-      "change5Days": 7.48,
-      "change1Day": -2.33
-    },
-    {
-      "symbol": "POL-USDT-SWAP",
-      "rank5d": 18,
-      "change5Days": 7.35,
-      "change1Day": -2.45
-    },
-    {
-      "symbol": "MMT-USDT-SWAP",
+      "symbol": "KMNO-USDT-SWAP",
       "rank5d": 19,
-      "change5Days": 7.29,
-      "change1Day": 2.72
+      "change5Days": 8.1,
+      "change1Day": -0.88
     },
     {
-      "symbol": "ARX-USDT-SWAP",
+      "symbol": "GRT-USDT-SWAP",
       "rank5d": 20,
-      "change5Days": 6.84,
-      "change1Day": -1.84
+      "change5Days": 7.72,
+      "change1Day": -2.6
+    }
+  ],
+  "top20Gainers3D": [
+    {
+      "symbol": "RE-USDT-SWAP",
+      "rank3dGain": 1,
+      "change3DaysGain": 85.24,
+      "change1Day": 11.01
+    },
+    {
+      "symbol": "BEAT-USDT-SWAP",
+      "rank3dGain": 2,
+      "change3DaysGain": 50.01,
+      "change1Day": 15.04
+    },
+    {
+      "symbol": "ONE-USDT-SWAP",
+      "rank3dGain": 3,
+      "change3DaysGain": 48.67,
+      "change1Day": -2.15
+    },
+    {
+      "symbol": "ZAMA-USDT-SWAP",
+      "rank3dGain": 4,
+      "change3DaysGain": 47.27,
+      "change1Day": 28.34
+    },
+    {
+      "symbol": "LA-USDT-SWAP",
+      "rank3dGain": 5,
+      "change3DaysGain": 45.48,
+      "change1Day": 11.38
+    },
+    {
+      "symbol": "LAB-USDT-SWAP",
+      "rank3dGain": 6,
+      "change3DaysGain": 34.96,
+      "change1Day": -5.05
+    },
+    {
+      "symbol": "ZBT-USDT-SWAP",
+      "rank3dGain": 7,
+      "change3DaysGain": 29.1,
+      "change1Day": 9.83
+    },
+    {
+      "symbol": "OPN-USDT-SWAP",
+      "rank3dGain": 8,
+      "change3DaysGain": 21.07,
+      "change1Day": -0.58
+    },
+    {
+      "symbol": "KORU-USDT-SWAP",
+      "rank3dGain": 9,
+      "change3DaysGain": 20.99,
+      "change1Day": 0.33
+    },
+    {
+      "symbol": "BARD-USDT-SWAP",
+      "rank3dGain": 10,
+      "change3DaysGain": 20.68,
+      "change1Day": 0.88
+    },
+    {
+      "symbol": "WLFI-USDT-SWAP",
+      "rank3dGain": 11,
+      "change3DaysGain": 18.67,
+      "change1Day": 6.52
+    },
+    {
+      "symbol": "1INCH-USDT-SWAP",
+      "rank3dGain": 12,
+      "change3DaysGain": 17.37,
+      "change1Day": 3.52
+    },
+    {
+      "symbol": "ALLO-USDT-SWAP",
+      "rank3dGain": 13,
+      "change3DaysGain": 17.33,
+      "change1Day": 2.02
+    },
+    {
+      "symbol": "YGG-USDT-SWAP",
+      "rank3dGain": 14,
+      "change3DaysGain": 17.29,
+      "change1Day": -1.88
+    },
+    {
+      "symbol": "INIT-USDT-SWAP",
+      "rank3dGain": 15,
+      "change3DaysGain": 16.27,
+      "change1Day": 1.6
+    },
+    {
+      "symbol": "LIGHT-USDT-SWAP",
+      "rank3dGain": 16,
+      "change3DaysGain": 15.73,
+      "change1Day": -1.41
+    },
+    {
+      "symbol": "TRIA-USDT-SWAP",
+      "rank3dGain": 17,
+      "change3DaysGain": 14.98,
+      "change1Day": 1.73
+    },
+    {
+      "symbol": "SLX-USDT-SWAP",
+      "rank3dGain": 18,
+      "change3DaysGain": 14.96,
+      "change1Day": -7.6
+    },
+    {
+      "symbol": "KAITO-USDT-SWAP",
+      "rank3dGain": 19,
+      "change3DaysGain": 14.62,
+      "change1Day": 5.04
+    },
+    {
+      "symbol": "CL-USDT-SWAP",
+      "rank3dGain": 20,
+      "change3DaysGain": 14.6,
+      "change1Day": 6.73
     }
   ]
 }
