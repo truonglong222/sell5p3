@@ -14,7 +14,7 @@ const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
 const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
 // Cấu hình Cooldown
-const LONG_COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 1 tiếng cho Long
+const LONG_COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 tiếng cho Long
 const SHORT_COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 tiếng cho Short
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -84,7 +84,8 @@ async function checkCandleConditions(symbol) {
                 lowDiffPct,
                 candleBodyPct,
                 isLowNearEMA: lowDiffPct > -0.5 && lowDiffPct < 0.5,
-                isBullishCandle: candleBodyPct > 0.5
+                // CẬP NHẬT: Chỉ cần nến 15M vừa đóng là nến tăng giá (> 0%)
+                isBullishCandle: candleBodyPct > 0
             };
         } 
     } catch (error) {
@@ -117,16 +118,24 @@ async function checkShortConditions(symbol) {
 
         const diffPct1D = ((currentPrice - ema20_1D) / ema20_1D) * 100;
 
-        // Điều kiện EMA1D: -1% < diffPct1D < 5%
-        if (diffPct1D <= -1 || diffPct1D >= 5) return null;
+        // Điều kiện EMA 1D: -5% < diffPct1D < 5%
+        if (diffPct1D <= -5 || diffPct1D >= 5) return null;
 
-        // 3. Kiểm tra EMA20 khung 15 Phút (15M)
+        // 3. Kiểm tra EMA20 & Nến 15M vừa đóng khung 15 Phút (15M)
         const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
         const res15M = await axios.get(url15M, { timeout: 5000 });
 
         if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 25) return null;
 
-        const closed15M = res15M.data.data.slice(1).reverse();
+        const raw15MCandles = res15M.data.data;
+        const lastClosedCandle15M = raw15MCandles[1]; // Nến 15M vừa đóng
+        const open15M = parseFloat(lastClosedCandle15M[1]);
+        const close15M = parseFloat(lastClosedCandle15M[4]);
+
+        // Tính phần trăm thân nến 15M (< 0% tức là nến giảm giá)
+        const candle15MBodyPct = ((close15M - open15M) / open15M) * 100;
+
+        const closed15M = raw15MCandles.slice(1).reverse();
         const closePrices15M = closed15M.map(c => parseFloat(c[4]));
         const ema20_15M = calculateEMA(closePrices15M, 20);
 
@@ -134,11 +143,12 @@ async function checkShortConditions(symbol) {
 
         const diffPct15M = ((currentPrice - ema20_15M) / ema20_15M) * 100;
 
-        // Điều kiện EMA15M: -0.5% < diffPct15M < 1%
-        if (diffPct15M > -0.5 && diffPct15M < 1) {
+        // Điều kiện: -1% < diffPct15M < 1% VÀ Nến 15M vừa đóng là nến giảm (candle15MBodyPct < 0)
+        if (diffPct15M > -1 && diffPct15M < 1 && candle15MBodyPct < 0) {
             return {
                 diffPct1D,
                 diffPct15M,
+                candle15MBodyPct,
                 currentPrice,
                 ema20_1D,
                 ema20_15M
@@ -226,7 +236,7 @@ async function main() {
                 // Lấy biên độ nến 1D vừa đóng
                 const change1Day = (typeof item === 'object' && item.change1Day !== undefined) ? item.change1Day : 0;
 
-                // 1. ĐIỀU KIỆN TIỀN ĐỀ MỚI: Nến 1D vừa đóng hôm qua phải giảm < -5%
+                // 1. ĐIỀU KIỆN TIỀN ĐỀ: Nến 1D vừa đóng hôm qua phải giảm < -5%
                 if (change1Day >= -5) {
                     console.log(`⏩ [SHORT] ${symbol} bị bỏ qua (Nến 1D vừa đóng: ${change1Day}% không đạt điều kiện < -5%).`);
                     continue;
@@ -242,7 +252,7 @@ async function main() {
                     continue;
                 }
 
-                // 3. ĐIỀU KIỆN EMA: Kiểm tra EMA20 1D và EMA20 15M
+                // 3. ĐIỀU KIỆN EMA & NẾN 15M GIẢM
                 const shortSignal = await checkShortConditions(symbol);
                 if (shortSignal) {
                     const coinName = symbol.replace('-USDT-SWAP', '');
@@ -253,6 +263,7 @@ async function main() {
                                     `📉 Nến 1D vừa đóng: <code>${change1Day.toFixed(2)}%</code>\n` +
                                     `📊 Lệch EMA20 (1D): <code>${shortSignal.diffPct1D.toFixed(2)}%</code>\n` +
                                     `⚡ Lệch EMA20 (15M): <code>${shortSignal.diffPct15M.toFixed(2)}%</code>\n` +
+                                    `🔻 Nến 15M vừa đóng giảm: <code>${shortSignal.candle15MBodyPct.toFixed(2)}%</code>\n` +
                                     `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                     console.log(`🚀 [SHORT MATCH] Gửi Telegram cho ${symbol}...`);
