@@ -52,37 +52,6 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-function calculateRSI(prices, period = 20) {
-    if (prices.length <= period) return null;
-
-    let gains = 0;
-    let losses = 0;
-
-    for (let i = 1; i <= period; i++) {
-        const change = prices[i] - prices[i - 1];
-        if (change >= 0) gains += change;
-        else losses -= change;
-    }
-
-    let avgGain = gains / period;
-    let avgLoss = losses / period;
-
-    for (let i = period + 1; i < prices.length; i++) {
-        const change = prices[i] - prices[i - 1];
-        if (change >= 0) {
-            avgGain = (avgGain * (period - 1) + change) / period;
-            avgLoss = (avgLoss * (period - 1)) / period;
-        } else {
-            avgGain = (avgGain * (period - 1)) / period;
-            avgLoss = (avgLoss * (period - 1) - change) / period;
-        }
-    }
-
-    if (avgLoss === 0) return 100;
-    const rs = avgGain / avgLoss;
-    return 100 - (100 / (1 + rs));
-}
-
 // ------------------- LOGIC KIỂM TRA LONG -------------------
 async function checkCandleConditions(symbol) {
     try {
@@ -91,19 +60,14 @@ async function checkCandleConditions(symbol) {
 
         if (response.data && response.data.code === '0' && response.data.data.length >= 25) { 
             const rawCandles = response.data.data;
-            
-            // rawCandles[0]: Nến đang chạy
-            // rawCandles[1]: Nến 15M vừa đóng gần nhất
             const lastClosedCandle = rawCandles[1];
             const openPrice = parseFloat(lastClosedCandle[1]);
             const lowPrice = parseFloat(lastClosedCandle[3]);
             const closePrice = parseFloat(lastClosedCandle[4]);
 
-            // Lấy toàn bộ các nến ĐÃ ĐÓNG CỬA (từ rawCandles[1] trở đi về quá khứ)
-            const closedCandles = rawCandles.slice(1).reverse(); // Đảo lại thành: Cũ -> Mới (mới nhất là rawCandles[1])
+            const closedCandles = rawCandles.slice(1).reverse();
             const closePrices = closedCandles.map(c => parseFloat(c[4])); 
             
-            // Tính EMA20 dựa trên chuỗi nến đã đóng
             const ema20 = calculateEMA(closePrices, 20); 
 
             if (ema20 === null) return null;
@@ -126,26 +90,15 @@ async function checkCandleConditions(symbol) {
     return null; 
 }
 
-// ------------------- LOGIC KIỂM TRA SHORT -------------------
+// ------------------- LOGIC KIỂM TRA SHORT (ĐÃ BỎ RSI) -------------------
 async function checkShortConditions(symbol) {
     try {
-        // 1. Lấy nến 15m tính RSI20
-        const url15m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
-        const res15m = await axios.get(url15m, { timeout: 5000 });
-
-        if (!res15m.data || res15m.data.code !== '0' || res15m.data.data.length < 30) return null;
-
-        const raw15m = res15m.data.data;
-        const currentPrice = parseFloat(raw15m[0][4]); // Giá nến đang chạy (Real-time)
-
-        // Chỉ lấy các nến 15M đã đóng để tính RSI
-        const closed15m = raw15m.slice(1).reverse(); // Từ CŨ -> MỚI (mới nhất là nến vừa đóng)
-        const closePrices15m = closed15m.map(c => parseFloat(c[4]));
-
-        const rsi20_15m = calculateRSI(closePrices15m, 20);
-        if (rsi20_15m === null || rsi20_15m <= 70) {
-            return null; // Bỏ qua nếu RSI20 khung 15m <= 70
-        }
+        // 1. Lấy ticker giá hiện tại
+        const tickerUrl = `${OKX_BASE_URL}/api/v5/market/ticker?instId=${symbol}`;
+        const tickerRes = await axios.get(tickerUrl, { timeout: 5000 });
+        if (!tickerRes.data || tickerRes.data.code !== '0' || !tickerRes.data.data.length) return null;
+        
+        const currentPrice = parseFloat(tickerRes.data.data[0].last);
 
         // 2. Tải nến ngày (1D) để tính EMA20 Nến Ngày
         const url1D = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=60`;
@@ -153,20 +106,17 @@ async function checkShortConditions(symbol) {
 
         if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 25) return null;
 
-        // Chỉ lấy các nến D1 đã đóng cửa
         const closed1D = res1D.data.data.slice(1).reverse();
         const closePrices1D = closed1D.map(c => parseFloat(c[4]));
         const ema20_1D = calculateEMA(closePrices1D, 20);
 
         if (ema20_1D === null) return null;
 
-        // Tính % độ lệch: (Giá hiện tại - EMA20 Ngày) / EMA20 Ngày * 100
         const diffPct = ((currentPrice - ema20_1D) / ema20_1D) * 100;
 
         // ĐIỀU KIỆN SHORT: -1% < diffPct < 5%
         if (diffPct > -1 && diffPct < 5) {
             return {
-                rsi20: rsi20_15m,
                 diffPct: diffPct,
                 currentPrice,
                 ema20_1D
@@ -250,6 +200,15 @@ async function main() {
                 const item = top20Losers[i];
                 const symbol = typeof item === 'object' ? item.symbol : item;
                 const rank5d = (typeof item === 'object' && item.rank5d) ? item.rank5d : (i + 1);
+                
+                // Lấy biên độ nến 1D vừa đóng
+                const change1Day = (typeof item === 'object' && item.change1Day !== undefined) ? item.change1Day : 0;
+
+                // 1. ĐIỀU KIỆN TIỀN ĐỀ: Nến 1D vừa đóng hôm qua phải giảm > 1% (change1Day < -1)
+                if (change1Day >= -1) {
+                    console.log(`⏩ [SHORT] ${symbol} bị bỏ qua (Nến 1D vừa đóng: ${change1Day}% không đạt điều kiện < -1%).`);
+                    continue;
+                }
 
                 if (!sentLog[symbol]) sentLog[symbol] = {};
 
@@ -260,14 +219,15 @@ async function main() {
                     continue;
                 }
 
+                // 2. ĐIỀU KIỆN EMA: Kiểm tra độ lệch EMA20 (1D)
                 const shortSignal = await checkShortConditions(symbol);
                 if (shortSignal) {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    const message = `🔴 <b>SHORT #${coinName} (15M / 1D)</b>\n` +
+                    const message = `🔴 <b>SHORT #${coinName} (1D)</b>\n` +
                                     `🏆 Vị trí: <b>Top ${rank5d} Giảm Giá 5D</b>\n` +
-                                    `⚡ RSI20 (15M): <code>${shortSignal.rsi20.toFixed(2)}</code>\n` +
+                                    `📉 Nến 1D vừa đóng: <code>${change1Day.toFixed(2)}%</code>\n` +
                                     `📉 Độ lệch so với EMA20 (1D): <code>${shortSignal.diffPct.toFixed(2)}%</code>\n` +
                                     `👉 <a href="${link}">Đồ thị OKX</a>`;
 
