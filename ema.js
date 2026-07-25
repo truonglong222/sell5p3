@@ -103,8 +103,6 @@ async function checkLong15MConditions(symbol) {
 
             const isLowNearEMA = lowDiffPct > -0.5 && lowDiffPct < 0.5;
             const isBullishCandle = candleBodyPct > 0;
-            
-            // ĐÃ ĐỔI: Chênh lệch EMA20 của nến [1] và nến [20] > 3.0%
             const isDiffEMAValid = diffEMA > 3.0;
 
             if (isLowNearEMA && isBullishCandle && isDiffEMAValid) {
@@ -123,54 +121,24 @@ async function checkLong15MConditions(symbol) {
     return null;
 }
 
-// ------------------- 2. LOGIC KIỂM TRA LONG 5M -------------------
+// ------------------- 2. LOGIC KIỂM TRA LONG 5M (QUY TRÌNH MỚI) -------------------
 async function checkLong5MConditions(symbol) {
     try {
-        // A. Kiểm tra tăng giá 2H > 2.5%
-        const url2H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=2H&limit=5`;
-        const res2H = await axios.get(url2H, { timeout: 5000 });
-        if (!res2H.data || res2H.data.code !== '0' || res2H.data.data.length < 2) return null;
-
-        const candle2H = res2H.data.data[1]; // Nến 2H vừa đóng
-        const open2H = parseFloat(candle2H[1]);
-        const close2H = parseFloat(candle2H[4]);
-        const change2H = ((close2H - open2H) / open2H) * 100;
-
-        if (change2H <= 2.5) return null; // Điều kiện: Biến động 2H > 2.5%
-
-        // B. Kiểm tra Nến 5M
-        const url5M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=60`;
-        const res5M = await axios.get(url5M, { timeout: 5000 });
-        if (!res5M.data || res5M.data.code !== '0' || res5M.data.data.length < 30) return null;
-
-        const raw5M = res5M.data.data;
-        const candle1_5M = raw5M[1]; // Nến [1] vừa đóng
-        const candle2_5M = raw5M[2]; // Nến [2]
-
-        const open1_5M = parseFloat(candle1_5M[1]);
-        const close1_5M = parseFloat(candle1_5M[4]);
-        const low2_5M = parseFloat(candle2_5M[3]);
-
-        // Điều kiện 1: Nến 1 là nến tăng
-        const isCandle1Bullish = close1_5M > open1_5M;
-        if (!isCandle1Bullish) return null;
-
-        // Tính EMA20 khung 5M tại thời điểm nến 2
-        const closed5M = raw5M.slice(2).reverse();
-        const closePrices5M = closed5M.map(c => parseFloat(c[4]));
-        const ema20_5M = calculateEMA(closePrices5M, 20);
-        if (!ema20_5M) return null;
-
-        // Điều kiện 2: Râu nến 5m[2] sát EMA20 khung 5M (-0.5 < diff < 0.3)
-        const diffPrice5M = ((low2_5M - ema20_5M) / ema20_5M) * 100;
-        if (diffPrice5M <= -0.5 || diffPrice5M >= 0.3) return null;
-
-        // C. Kiểm tra diff EMA 15M (> -0.5%)
+        // STEP 1: LẤY DỮ LIỆU 15M (1 LẦN GỌI API)
         const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
         const res15M = await axios.get(url15M, { timeout: 5000 });
         if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 45) return null;
 
         const raw15M = res15M.data.data;
+
+        // A. Kiểm tra 8 nến 15M vừa qua tăng > 2.5% (từ open nến thứ 8 [8] đến close nến thứ 1 [1])
+        const open8_15M = parseFloat(raw15M[8][1]);
+        const close1_15M = parseFloat(raw15M[1][4]);
+        const change8Candles15M = ((close1_15M - open8_15M) / open8_15M) * 100;
+
+        if (change8Candles15M <= 2.5) return null; // Không đạt → bỏ ngay
+
+        // B. Tính Diff EMA20 15M > -0.5%
         const closed15M = raw15M.slice(1).reverse();
         const closePrices15M = closed15M.map(c => parseFloat(c[4]));
 
@@ -182,14 +150,40 @@ async function checkLong5MConditions(symbol) {
 
         const diffEMA15M = ((ema20_15M_1 - ema20_15M_20) / ema20_15M_20) * 100;
 
-        if (diffEMA15M > -0.5) {
-            return {
-                change2H,
-                diffPrice5M,
-                diffEMA15M,
-                candle1BodyPct: ((close1_5M - open1_5M) / open1_5M) * 100
-            };
-        }
+        if (diffEMA15M <= -0.5) return null; // Không đạt → bỏ ngay
+
+        // STEP 2: LẤY DỮ LIỆU 5M (1 LẦN GỌI API)
+        const url5M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=60`;
+        const res5M = await axios.get(url5M, { timeout: 5000 });
+        if (!res5M.data || res5M.data.code !== '0' || res5M.data.data.length < 30) return null;
+
+        const raw5M = res5M.data.data;
+        const candle1_5M = raw5M[1]; // Nến 5M[1]
+        const candle2_5M = raw5M[2]; // Nến 5M[2]
+
+        const open1_5M = parseFloat(candle1_5M[1]);
+        const close1_5M = parseFloat(candle1_5M[4]);
+        const low2_5M = parseFloat(candle2_5M[3]);
+
+        // A. Nến 5M[1] là nến tăng
+        if (close1_5M <= open1_5M) return null;
+
+        // B. Đáy nến 5M[2] sát EMA20 (-0.5% đến 0.3%)
+        const closed5M = raw5M.slice(2).reverse();
+        const closePrices5M = closed5M.map(c => parseFloat(c[4]));
+        const ema20_5M = calculateEMA(closePrices5M, 20);
+        if (!ema20_5M) return null;
+
+        const diffPrice5M = ((low2_5M - ema20_5M) / ema20_5M) * 100;
+        if (diffPrice5M <= -0.5 || diffPrice5M >= 0.3) return null;
+
+        // Thoả tất cả điều kiện
+        return {
+            change8Candles15M,
+            diffEMA15M,
+            diffPrice5M,
+            candle1BodyPct: ((close1_5M - open1_5M) / open1_5M) * 100
+        };
     } catch (error) {
         console.error(`Lỗi LONG 5M (${symbol}):`, error.message);
     }
@@ -384,7 +378,7 @@ async function main() {
 
                     const message = `🟢 <b>LONG #${coinName} (5M)</b>\n` +
                                     `🏆 Xếp hạng: Top ${i + 1} Giảm 3D\n` +
-                                    `🚀 Tăng giá 2H: <code>+${long5mSignal.change2H.toFixed(2)}%</code> (> 2.5%)\n` +
+                                    `🚀 Tăng giá 8 nến 15M: <code>+${long5mSignal.change8Candles15M.toFixed(2)}%</code> (> 2.5%)\n` +
                                     `📉 Đáy râu 5M[2] lệch EMA20: <code>${long5mSignal.diffPrice5M.toFixed(2)}%</code>\n` +
                                     `📈 Nến 5M[1] vừa đóng: <code>+${long5mSignal.candle1BodyPct.toFixed(2)}%</code>\n` +
                                     `⚡ Diff EMA20 (15M): <code>${long5mSignal.diffEMA15M.toFixed(2)}%</code> (> -0.5%)\n` +
