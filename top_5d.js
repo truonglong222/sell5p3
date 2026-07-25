@@ -37,15 +37,16 @@ async function fetchCandleData(coin) {
 
       // Structure nến OKX: [ts, open, high, low, close, ...]
       
-      // --- 1. LOGIC 3 NGÀY GIẢM GIÁ ---
-      // Lấy giá mở cửa nến 3 ngày trước (index [3])
+      // Giá mở cửa nến 3 ngày trước (index [3])
       const open3DaysAgo = parseFloat(candles1D[3][1]); 
+
+      // --- 1. LOGIC 3 NGÀY GIẢM GIÁ (dùng công thức (open - low) / open) ---
       // Giá thấp nhất trong 3 ngày (từ nến [0] đến [3])
       const lowestPrice3D = Math.min(...candles1D.slice(0, 4).map(c => parseFloat(c[3])));
       
       let dropPercentage3D = null;
-      if (open3DaysAgo && lowestPrice3D > 0) {
-        dropPercentage3D = ((open3DaysAgo - lowestPrice3D) / lowestPrice3D) * 100;
+      if (open3DaysAgo > 0 && lowestPrice3D > 0) {
+        dropPercentage3D = ((open3DaysAgo - lowestPrice3D) / open3DaysAgo) * 100;
       }
 
       // --- 2. LOGIC 3 NGÀY TĂNG GIÁ ---
