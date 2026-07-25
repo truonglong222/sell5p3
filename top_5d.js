@@ -37,18 +37,18 @@ async function fetchCandleData(coin) {
 
       // Structure nến OKX: [ts, open, high, low, close, ...]
       
-      // --- 1. LOGIC 5 NGÀY GIẢM GIÁ ---
-      const open5DaysAgo = parseFloat(candles1D[5][1]); 
-      const lowestPrice5D = Math.min(...candles1D.slice(0, 6).map(c => parseFloat(c[3])));
+      // --- 1. LOGIC 3 NGÀY GIẢM GIÁ ---
+      // Lấy giá mở cửa nến 3 ngày trước (index [3])
+      const open3DaysAgo = parseFloat(candles1D[3][1]); 
+      // Giá thấp nhất trong 3 ngày (từ nến [0] đến [3])
+      const lowestPrice3D = Math.min(...candles1D.slice(0, 4).map(c => parseFloat(c[3])));
       
-      let dropPercentage5D = null;
-      if (open5DaysAgo && lowestPrice5D > 0) {
-        dropPercentage5D = ((open5DaysAgo - lowestPrice5D) / lowestPrice5D) * 100;
+      let dropPercentage3D = null;
+      if (open3DaysAgo && lowestPrice3D > 0) {
+        dropPercentage3D = ((open3DaysAgo - lowestPrice3D) / lowestPrice3D) * 100;
       }
 
       // --- 2. LOGIC 3 NGÀY TĂNG GIÁ ---
-      // Giá mở cửa nến [3] (nến 3 ngày trước)
-      const open3DaysAgo = parseFloat(candles1D[3][1]); 
       // Giá cao nhất trong 3 ngày (từ nến [0] hiện tại đến nến [3])
       const highestPrice3D = Math.max(...candles1D.slice(0, 4).map(c => parseFloat(c[2])));
       
@@ -64,7 +64,7 @@ async function fetchCandleData(coin) {
 
       return { 
         symbol, 
-        change5Days: dropPercentage5D,
+        change3DaysDrop: dropPercentage3D,
         change3DaysGain: gainPercentage3D,
         change1Day: change1DPercentage
       }; 
@@ -75,7 +75,7 @@ async function fetchCandleData(coin) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 GIẢM 5D & TOP 20 TĂNG 3D (VOL > 2M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 GIẢM 3D & TOP 20 TĂNG 3D (VOL > 2M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -93,15 +93,15 @@ async function main() {
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetchCandleData(coin)); 
     const poolData = results.filter(r => r !== null); 
     
-    // 1. Sắp xếp & Lấy Top 20 Giảm 5 ngày
+    // 1. Sắp xếp & Lấy Top 20 Giảm 3 ngày
     const top20Losers = poolData
-      .filter(r => r.change5Days !== null)
-      .sort((a, b) => b.change5Days - a.change5Days) 
+      .filter(r => r.change3DaysDrop !== null)
+      .sort((a, b) => b.change3DaysDrop - a.change3DaysDrop) 
       .slice(0, 20)
       .map((item, index) => ({
         symbol: item.symbol,
-        rank5d: index + 1,
-        change5Days: parseFloat(item.change5Days.toFixed(2)),
+        rank3dDrop: index + 1,
+        change3DaysDrop: parseFloat(item.change3DaysDrop.toFixed(2)),
         change1Day: parseFloat(item.change1Day.toFixed(2))
       }));
 
@@ -128,9 +128,9 @@ async function main() {
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
     console.log(`- Đã lưu kết quả vào statetop_5d.json`); 
 
-    console.log('\n--- TOP 20 COIN GIẢM GIÁ 5 NGÀY ---'); 
+    console.log('\n--- TOP 20 COIN GIẢM GIÁ 3 NGÀY ---'); 
     top20Losers.forEach((c) => { 
-      console.log(`${c.rank5d}. ${c.symbol}: Max Drop 5D ${c.change5Days}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
+      console.log(`${c.rank3dDrop}. ${c.symbol}: Max Drop 3D ${c.change3DaysDrop}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
 
     console.log('\n--- TOP 20 COIN TĂNG GIÁ 3 NGÀY ---'); 
