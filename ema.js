@@ -192,7 +192,6 @@ async function checkLong5MConditions(symbol) {
 // ------------------- 3. LOGIC KIỂM TRA SHORT 15M (BOLLINGER BAND) -------------------
 async function checkShort15MConditions(symbol) {
     try {
-        // Tăng limit lên 100 để đảm bảo có đủ 60 nến đóng cửa + buffer tính EMA
         const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
         const res15M = await axios.get(url15M, { timeout: 5000 });
 
@@ -220,7 +219,7 @@ async function checkShort15MConditions(symbol) {
         const diffBB = ((high3 - bb.upper) / bb.upper) * 100;
         if (diffBB <= -0.5 || diffBB >= 1.0) return null;
 
-        // ---------------- CẬP NHẬT: ĐIỀU KIỆN XÉT 60 NẾN 15M ----------------
+        // ---------------- ĐIỀU KIỆN XÉT 60 NẾN 15M ----------------
         // A. Tìm nến giảm giá lớn nhất trong 60 nến gần nhất (Index 1 đến 60)
         const last60Candles = raw15M.slice(1, 61);
         let maxDropPct = 0; // Trị tuyệt đối mức giảm giá lớn nhất (%)
@@ -336,8 +335,8 @@ async function main() {
         if (fs.existsSync(STATE_TOP5D_FILE)) {
             const stateTop5dData = JSON.parse(fs.readFileSync(STATE_TOP5D_FILE, 'utf8'));
             
-            // A. TOP 20 COIN TĂNG GIÁ 3D (CHO SHORT 15M)
-            const topGainers3D = (stateTop5dData.top20Gainers3d || stateTop5dData.topGainers3d || []).slice(0, 20);
+            // A. TOP 20 COIN TĂNG GIÁ 3D (CHO SHORT 15M) - ĐÃ ĐỔI THÀNH top20Gainers3D
+            const topGainers3D = (stateTop5dData.top20Gainers3D || stateTop5dData.topGainers3d || []).slice(0, 20);
             console.log(`📋 Quét SHORT 15M (Top 20 Tăng 3D: ${topGainers3D.length} coins)...`);
 
             for (let i = 0; i < topGainers3D.length; i++) {
