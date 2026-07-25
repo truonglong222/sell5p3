@@ -13,9 +13,8 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const STATE_TOP3_FILE = path.join(__dirname, 'statetop3_4h.json');
 const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json');
 
-// Cấu hình Cooldown
-const LONG_COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 tiếng cho Long
-const SHORT_COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 tiếng cho Short
+// Cấu hình Cooldown: TẤT CẢ LỆNH ĐỀU LÀ 4 TIẾNG
+const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -35,14 +34,16 @@ function saveSentLog(logData) {
         const cleanedLog = {};
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
-            if (timeData._long && now - timeData._long < LONG_COOLDOWN_TIME) temp._long = timeData._long;
-            if (timeData._short && now - timeData._short < SHORT_COOLDOWN_TIME) temp._short = timeData._short;
+            if (timeData._long15m && now - timeData._long15m < COOLDOWN_TIME) temp._long15m = timeData._long15m;
+            if (timeData._long5m && now - timeData._long5m < COOLDOWN_TIME) temp._long5m = timeData._long5m;
+            if (timeData._short15m && now - timeData._short15m < COOLDOWN_TIME) temp._short15m = timeData._short15m;
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
         }
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
     } catch (e) {}
 }
 
+// ------------------- HÀM TÍNH EMA & BOLLINGER BANDS -------------------
 function calculateEMA(prices, period = 20) {
     if (prices.length < period) return null;
     const k = 2 / (period + 1);
@@ -55,107 +56,213 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// ------------------- LOGIC KIỂM TRA LONG -------------------
-async function checkCandleConditions(symbol) {
+function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
+    if (prices.length < period) return null;
+    const slice = prices.slice(-period);
+    const mean = slice.reduce((a, b) => a + b, 0) / period;
+    const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
+    const stdDev = Math.sqrt(variance);
+    return {
+        middle: mean,
+        upper: mean + stdDevMultiplier * stdDev,
+        lower: mean - stdDevMultiplier * stdDev
+    };
+}
+
+// ------------------- 1. LOGIC KIỂM TRA LONG 15M -------------------
+async function checkLong15MConditions(symbol) {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
         const response = await axios.get(url, { timeout: 5000 });
 
-        if (response.data && response.data.code === '0' && response.data.data.length >= 25) { 
-            const rawCandles = response.data.data;
+        if (response.data && response.data.code === '0' && response.data.data.length >= 45) {
+            const rawCandles = response.data.data; // Index 0: Nến đang chạy, Index 1: Nến [1] vừa đóng
             const lastClosedCandle = rawCandles[1];
             const openPrice = parseFloat(lastClosedCandle[1]);
             const lowPrice = parseFloat(lastClosedCandle[3]);
             const closePrice = parseFloat(lastClosedCandle[4]);
 
+            // Mảng đóng nến lịch sử (đảo ngược để nến cũ đứng trước)
             const closedCandles = rawCandles.slice(1).reverse();
-            const closePrices = closedCandles.map(c => parseFloat(c[4])); 
-            
-            const ema20 = calculateEMA(closePrices, 20); 
+            const closePrices = closedCandles.map(c => parseFloat(c[4]));
 
-            if (ema20 === null) return null;
+            // EMA20 của nến vừa đóng [1]
+            const ema20_1 = calculateEMA(closePrices, 20);
+            if (ema20_1 === null) return null;
 
-            const lowDiffPct = ((lowPrice - ema20) / ema20) * 100;
+            // EMA20 của nến cách đó 20 nến [20]
+            const closePrices20 = closePrices.slice(0, closePrices.length - 20);
+            const ema20_20 = calculateEMA(closePrices20, 20);
+            if (ema20_20 === null) return null;
+
+            // Tính Diff EMA20 (%)
+            const diffEMA = ((ema20_1 - ema20_20) / ema20_20) * 100;
+
+            const lowDiffPct = ((lowPrice - ema20_1) / ema20_1) * 100;
             const candleBodyPct = ((closePrice - openPrice) / openPrice) * 100;
 
-            return {
-                closePrice,
-                ema20,
-                lowDiffPct,
-                candleBodyPct,
-                isLowNearEMA: lowDiffPct > -0.5 && lowDiffPct < 0.5,
-                // CẬP NHẬT: Chỉ cần nến 15M vừa đóng là nến tăng giá (> 0%)
-                isBullishCandle: candleBodyPct > 0
-            };
-        } 
+            const isLowNearEMA = lowDiffPct > -0.5 && lowDiffPct < 0.5;
+            const isBullishCandle = candleBodyPct > 0;
+            const isDiffEMAValid = diffEMA > 1.0; // Bổ sung điều kiện > 1%
+
+            if (isLowNearEMA && isBullishCandle && isDiffEMAValid) {
+                return {
+                    closePrice,
+                    ema20: ema20_1,
+                    lowDiffPct,
+                    candleBodyPct,
+                    diffEMA
+                };
+            }
+        }
     } catch (error) {
-        console.error(`Lỗi lấy nến 15M LONG OKX (${symbol}):`, error.message);
-    } 
-    return null; 
+        console.error(`Lỗi LONG 15M (${symbol}):`, error.message);
+    }
+    return null;
 }
 
-// ------------------- LOGIC KIỂM TRA SHORT -------------------
-async function checkShortConditions(symbol) {
+// ------------------- 2. LOGIC KIỂM TRA LONG 5M -------------------
+async function checkLong5MConditions(symbol) {
     try {
-        // 1. Lấy ticker giá hiện tại
-        const tickerUrl = `${OKX_BASE_URL}/api/v5/market/ticker?instId=${symbol}`;
-        const tickerRes = await axios.get(tickerUrl, { timeout: 5000 });
-        if (!tickerRes.data || tickerRes.data.code !== '0' || !tickerRes.data.data.length) return null;
-        
-        const currentPrice = parseFloat(tickerRes.data.data[0].last);
+        // A. Kiểm tra tăng giá 2H > 2.5%
+        const url2H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=2H&limit=5`;
+        const res2H = await axios.get(url2H, { timeout: 5000 });
+        if (!res2H.data || res2H.data.code !== '0' || res2H.data.data.length < 2) return null;
 
-        // 2. Kiểm tra EMA20 khung Ngày (1D)
-        const url1D = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=60`;
-        const res1D = await axios.get(url1D, { timeout: 5000 });
+        const candle2H = res2H.data.data[1]; // Nến 2H vừa đóng
+        const open2H = parseFloat(candle2H[1]);
+        const close2H = parseFloat(candle2H[4]);
+        const change2H = ((close2H - open2H) / open2H) * 100;
 
-        if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 25) return null;
+        if (change2H <= 2.5) return null; // Điều kiện: Biến động 2H > 2.5%
 
-        const closed1D = res1D.data.data.slice(1).reverse();
-        const closePrices1D = closed1D.map(c => parseFloat(c[4]));
-        const ema20_1D = calculateEMA(closePrices1D, 20);
+        // B. Kiểm tra Nến 5M
+        const url5M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=60`;
+        const res5M = await axios.get(url5M, { timeout: 5000 });
+        if (!res5M.data || res5M.data.code !== '0' || res5M.data.data.length < 30) return null;
 
-        if (ema20_1D === null) return null;
+        const raw5M = res5M.data.data;
+        const candle1_5M = raw5M[1]; // Nến [1] vừa đóng
+        const candle2_5M = raw5M[2]; // Nến [2]
 
-        const diffPct1D = ((currentPrice - ema20_1D) / ema20_1D) * 100;
+        const open1_5M = parseFloat(candle1_5M[1]);
+        const close1_5M = parseFloat(candle1_5M[4]);
+        const low2_5M = parseFloat(candle2_5M[3]);
 
-        // Điều kiện EMA 1D: -5% < diffPct1D < 5%
-        if (diffPct1D <= -5 || diffPct1D >= 5) return null;
+        // Điều kiện 1: Nến 1 là nến tăng
+        const isCandle1Bullish = close1_5M > open1_5M;
+        if (!isCandle1Bullish) return null;
 
-        // 3. Kiểm tra EMA20 & Nến 15M vừa đóng khung 15 Phút (15M)
+        // Tính EMA20 khung 5M tại thời điểm nến 2
+        const closed5M = raw5M.slice(2).reverse();
+        const closePrices5M = closed5M.map(c => parseFloat(c[4]));
+        const ema20_5M = calculateEMA(closePrices5M, 20);
+        if (!ema20_5M) return null;
+
+        // Điều kiện 2: Râu nến 5m[2] sát EMA20 khung 5M (-0.5 < diff < 0.3)
+        const diffPrice5M = ((low2_5M - ema20_5M) / ema20_5M) * 100;
+        if (diffPrice5M <= -0.5 || diffPrice5M >= 0.3) return null;
+
+        // C. Kiểm tra diff EMA 15M (> -0.5%)
         const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
         const res15M = await axios.get(url15M, { timeout: 5000 });
+        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 45) return null;
 
-        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 25) return null;
-
-        const raw15MCandles = res15M.data.data;
-        const lastClosedCandle15M = raw15MCandles[1]; // Nến 15M vừa đóng
-        const open15M = parseFloat(lastClosedCandle15M[1]);
-        const close15M = parseFloat(lastClosedCandle15M[4]);
-
-        // Tính phần trăm thân nến 15M (< 0% tức là nến giảm giá)
-        const candle15MBodyPct = ((close15M - open15M) / open15M) * 100;
-
-        const closed15M = raw15MCandles.slice(1).reverse();
+        const raw15M = res15M.data.data;
+        const closed15M = raw15M.slice(1).reverse();
         const closePrices15M = closed15M.map(c => parseFloat(c[4]));
-        const ema20_15M = calculateEMA(closePrices15M, 20);
 
-        if (ema20_15M === null) return null;
+        const ema20_15M_1 = calculateEMA(closePrices15M, 20);
+        const closePrices15M_20 = closePrices15M.slice(0, closePrices15M.length - 20);
+        const ema20_15M_20 = calculateEMA(closePrices15M_20, 20);
 
-        const diffPct15M = ((currentPrice - ema20_15M) / ema20_15M) * 100;
+        if (!ema20_15M_1 || !ema20_15M_20) return null;
 
-        // Điều kiện: -1% < diffPct15M < 1% VÀ Nến 15M vừa đóng là nến giảm (candle15MBodyPct < 0)
-        if (diffPct15M > -1 && diffPct15M < 1 && candle15MBodyPct < 0) {
+        const diffEMA15M = ((ema20_15M_1 - ema20_15M_20) / ema20_15M_20) * 100;
+
+        if (diffEMA15M > -0.5) {
             return {
-                diffPct1D,
-                diffPct15M,
-                candle15MBodyPct,
-                currentPrice,
-                ema20_1D,
-                ema20_15M
+                change2H,
+                diffPrice5M,
+                diffEMA15M,
+                candle1BodyPct: ((close1_5M - open1_5M) / open1_5M) * 100
             };
         }
     } catch (error) {
-        console.error(`Lỗi lấy dữ liệu SHORT OKX (${symbol}):`, error.message);
+        console.error(`Lỗi LONG 5M (${symbol}):`, error.message);
+    }
+    return null;
+}
+
+// ------------------- 3. LOGIC KIỂM TRA SHORT 15M (BOLLINGER BAND) -------------------
+async function checkShort15MConditions(symbol) {
+    try {
+        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=70`;
+        const res15M = await axios.get(url15M, { timeout: 5000 });
+
+        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 55) return null;
+
+        const raw15M = res15M.data.data; // Index 0: nến đang chạy, 1: nến [1], 2: nến [2], 3: nến [3]
+        const candle1 = raw15M[1];
+        const candle3 = raw15M[3];
+
+        const open1 = parseFloat(candle1[1]);
+        const close1 = parseFloat(candle1[4]);
+        const high3 = parseFloat(candle3[3]);
+
+        // Điều kiện 1: Nến 15m vừa đóng [1] là nến giảm
+        if (close1 >= open1) return null;
+
+        // Tính Bollinger Band cho nến [3]
+        // Lấy 20 nến trước nến 3
+        const closedForBB = raw15M.slice(3, 23).reverse().map(c => parseFloat(c[4]));
+        const bb = calculateBollingerBands(closedForBB, 20);
+        if (!bb) return null;
+
+        // Điều kiện 2: Râu nến [3] (high) chạm BB trên (-0.5% < diffBB < 1%)
+        const diffBB = ((high3 - bb.upper) / bb.upper) * 100;
+        if (diffBB <= -0.5 || diffBB >= 1.0) return null;
+
+        // Điều kiện 3: Xét 30 nến 15m gần nhất
+        const last30Candles = raw15M.slice(1, 31);
+        let minChange = 0; // Thay đổi âm lớn nhất
+        let totalAbsChange = 0;
+
+        for (const c of last30Candles) {
+            const o = parseFloat(c[1]);
+            const cl = parseFloat(c[4]);
+            const changePct = ((cl - o) / o) * 100;
+
+            if (changePct < minChange) minChange = changePct;
+            totalAbsChange += Math.abs(changePct);
+        }
+
+        const avgChange = totalAbsChange / 30;
+        if (avgChange === 0) return null;
+
+        const x = minChange / avgChange; // x = Tỉ số nến giảm mạnh nhất / TB biến động
+        if (x >= -5) return null; // Điều kiện: x < -5
+
+        // Điều kiện 4: Diff EMA 15M (< 3%)
+        const closedAll15M = raw15M.slice(1).reverse().map(c => parseFloat(c[4]));
+        const ema20_1 = calculateEMA(closedAll15M, 20);
+
+        const closed15M_20 = closedAll15M.slice(0, closedAll15M.length - 20);
+        const ema20_20 = calculateEMA(closed15M_20, 20);
+
+        if (!ema20_1 || !ema20_20) return null;
+
+        const diffEMA = ((ema20_1 - ema20_20) / ema20_20) * 100;
+        if (diffEMA >= 3.0) return null; // Điều kiện: diffEMA < 3%
+
+        return {
+            diffBB,
+            xRatio: x,
+            diffEMA,
+            candle1BodyPct: ((close1 - open1) / open1) * 100
+        };
+    } catch (error) {
+        console.error(`Lỗi SHORT 15M (${symbol}):`, error.message);
     }
     return null;
 }
@@ -163,131 +270,141 @@ async function checkShortConditions(symbol) {
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU LONG & SHORT ---');
+        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU BOLLINGER BAND & EMA ---');
 
-        const sentLog = loadSentLog(); 
-        const currentTime = Date.now(); 
-        let hasNewAlert = false; 
+        const sentLog = loadSentLog();
+        const currentTime = Date.now();
+        let hasNewAlert = false;
 
-        // ==================== 1. QUÉT TÍN HIỆU LONG ====================
+        // ==================== 1. QUÉT LONG 15M ====================
         if (fs.existsSync(STATE_TOP3_FILE)) {
-            const stateData = JSON.parse(fs.readFileSync(STATE_TOP3_FILE, 'utf8')); 
-            const top3Gainers = stateData.top3Gainers4h || stateData.top3Gainers8h || []; 
+            const stateData = JSON.parse(fs.readFileSync(STATE_TOP3_FILE, 'utf8'));
+            const top3Gainers = stateData.top3Gainers4h || stateData.top3Gainers8h || [];
 
-            console.log(`📋 Số lượng coin LONG khả dụng: ${top3Gainers.length}`);
+            console.log(`📋 Quét LONG 15M (${top3Gainers.length} coins)...`);
 
-            for (let i = 0; i < top3Gainers.length; i++) { 
-                const item = top3Gainers[i]; 
-                const symbol = typeof item === 'object' ? item.symbol : item; 
-                const changeStr = typeof item === 'object' && item.change ? `${item.change}` : 'N/A'; 
-                const rank5d = typeof item === 'object' && item.rank5d ? item.rank5d : 'N/A'; 
-
-                if (!sentLog[symbol]) sentLog[symbol] = {}; 
-                
-                const lastSentLong = sentLog[symbol]._long || 0;
-                if (currentTime - lastSentLong < LONG_COOLDOWN_TIME) {
-                    const remainingMin = Math.round((LONG_COOLDOWN_TIME - (currentTime - lastSentLong)) / 60000);
-                    console.log(`⏳ [LONG] ${symbol} đang trong cooldown (còn ${remainingMin} phút).`);
-                    continue;
-                }
-
-                const signal = await checkCandleConditions(symbol); 
-                if (signal && signal.isLowNearEMA && signal.isBullishCandle) { 
-                    const coinName = symbol.replace('-USDT-SWAP', ''); 
-                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`; 
-                    
-                    const message = `🟢 <b>LONG #${coinName} (15M)</b>\n` + 
-                                    `🏆 Vị trí: <b>Top ${rank5d} Biến động 5D</b>\n` + 
-                                    `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` + 
-                                    `📉 Đáy râu nến lệch EMA20: <code>${signal.lowDiffPct.toFixed(2)}%</code>\n` + 
-                                    `🔥 Nến 15M vừa đóng tăng: <code>+${signal.candleBodyPct.toFixed(2)}%</code>\n` + 
-                                    `👉 <a href="${link}">Đồ thị OKX</a>`; 
-                    
-                    console.log(`🚀 [LONG MATCH] Gửi Telegram cho ${symbol}...`);
-
-                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { 
-                        chat_id: TELEGRAM_CHAT_ID, 
-                        text: message, 
-                        parse_mode: 'HTML' 
-                    }).catch((err) => console.error(`❌ Lỗi gửi Telegram (${symbol}):`, err.message)); 
-                    
-                    sentLog[symbol]._long = currentTime; 
-                    hasNewAlert = true; 
-                } 
-                await sleep(100); 
-            }
-        } else {
-            console.log('❌ Không tìm thấy file statetop3_4h.json (Bỏ qua quét LONG)');
-        }
-
-        // ==================== 2. QUÉT TÍN HIỆU SHORT ====================
-        if (fs.existsSync(STATE_TOP5D_FILE)) {
-            const stateTop5dData = JSON.parse(fs.readFileSync(STATE_TOP5D_FILE, 'utf8'));
-            let top20Losers = Array.isArray(stateTop5dData) ? stateTop5dData : (stateTop5dData.top20Losers || stateTop5dData.topLosers5d || []);
-            top20Losers = top20Losers.slice(0, 20);
-
-            console.log(`📋 Số lượng coin SHORT khả dụng (Top 20 Giảm 5D): ${top20Losers.length}`);
-
-            for (let i = 0; i < top20Losers.length; i++) {
-                const item = top20Losers[i];
+            for (const item of top3Gainers) {
                 const symbol = typeof item === 'object' ? item.symbol : item;
-                const rank5d = (typeof item === 'object' && item.rank5d) ? item.rank5d : (i + 1);
-                
-                // Lấy biên độ nến 1D vừa đóng
-                const change1Day = (typeof item === 'object' && item.change1Day !== undefined) ? item.change1Day : 0;
-
-                // 1. ĐIỀU KIỆN TIỀN ĐỀ: Nến 1D vừa đóng hôm qua phải giảm < -5%
-                if (change1Day >= -5) {
-                    console.log(`⏩ [SHORT] ${symbol} bị bỏ qua (Nến 1D vừa đóng: ${change1Day}% không đạt điều kiện < -5%).`);
-                    continue;
-                }
+                const changeStr = typeof item === 'object' && item.change ? `${item.change}` : 'N/A';
+                const rank5d = typeof item === 'object' && item.rank5d ? item.rank5d : 'N/A';
 
                 if (!sentLog[symbol]) sentLog[symbol] = {};
+                const lastSent = sentLog[symbol]._long15m || 0;
+                if (currentTime - lastSent < COOLDOWN_TIME) continue;
 
-                // 2. KIỂM TRA COOLDOWN 8 TIẾNG CHO SHORT
-                const lastSentShort = sentLog[symbol]._short || 0;
-                if (currentTime - lastSentShort < SHORT_COOLDOWN_TIME) {
-                    const remainingHours = ((SHORT_COOLDOWN_TIME - (currentTime - lastSentShort)) / 3600000).toFixed(1);
-                    console.log(`⏳ [SHORT] ${symbol} đang trong cooldown 8H (còn ${remainingHours} giờ).`);
-                    continue;
-                }
-
-                // 3. ĐIỀU KIỆN EMA & NẾN 15M GIẢM
-                const shortSignal = await checkShortConditions(symbol);
-                if (shortSignal) {
+                const signal = await checkLong15MConditions(symbol);
+                if (signal) {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    const message = `🔴 <b>SHORT #${coinName}</b>\n` +
-                                    `🏆 Vị trí: <b>Top ${rank5d} Giảm Giá 5D</b>\n` +
-                                    `📉 Nến 1D vừa đóng: <code>${change1Day.toFixed(2)}%</code>\n` +
-                                    `📊 Lệch EMA20 (1D): <code>${shortSignal.diffPct1D.toFixed(2)}%</code>\n` +
-                                    `⚡ Lệch EMA20 (15M): <code>${shortSignal.diffPct15M.toFixed(2)}%</code>\n` +
-                                    `🔻 Nến 15M vừa đóng giảm: <code>${shortSignal.candle15MBodyPct.toFixed(2)}%</code>\n` +
+                    const message = `🟢 <b>LONG #${coinName} (15M)</b>\n` +
+                                    `🏆 Vị trí: <b>Top ${rank5d} Biến động 5D</b>\n` +
+                                    `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` +
+                                    `📉 Đáy râu lệch EMA20: <code>${signal.lowDiffPct.toFixed(2)}%</code>\n` +
+                                    `📈 Nến 15M đóng tăng: <code>+${signal.candleBodyPct.toFixed(2)}%</code>\n` +
+                                    `⚡ Diff EMA20 (15M vs [20]): <code>+${signal.diffEMA.toFixed(2)}%</code>\n` +
                                     `👉 <a href="${link}">Đồ thị OKX</a>`;
 
-                    console.log(`🚀 [SHORT MATCH] Gửi Telegram cho ${symbol}...`);
-
+                    console.log(`🚀 [LONG 15M] Gửi Telegram ${symbol}...`);
                     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         chat_id: TELEGRAM_CHAT_ID,
                         text: message,
                         parse_mode: 'HTML'
-                    }).catch((err) => console.error(`❌ Lỗi gửi Telegram Short (${symbol}):`, err.message));
+                    }).catch(err => console.error(err.message));
 
-                    sentLog[symbol]._short = currentTime;
+                    sentLog[symbol]._long15m = currentTime;
                     hasNewAlert = true;
                 }
                 await sleep(100);
             }
-        } else {
-            console.log('⚠️ Không tìm thấy file statetop_5d.json (Bỏ qua quét SHORT)');
         }
 
-        if (hasNewAlert) saveSentLog(sentLog); 
-        console.log('--- HOÀN THÀNH TIẾN TRÌNH QUÉT EMA LONG & SHORT ---'); 
-    } catch (err) { 
-        console.error('Lỗi hệ thống trong ema.js:', err.message); 
-    } 
+        // ==================== 2. QUÉT LONG 5M & SHORT 15M (TỪ FILE statetop_5d.json) ====================
+        if (fs.existsSync(STATE_TOP5D_FILE)) {
+            const stateTop5dData = JSON.parse(fs.readFileSync(STATE_TOP5D_FILE, 'utf8'));
+            
+            // A. TOP 20 COIN TĂNG GIÁ 3D (CHO SHORT 15M)
+            const topGainers3D = (stateTop5dData.top20Gainers3d || stateTop5dData.topGainers3d || []).slice(0, 20);
+            console.log(`📋 Quét SHORT 15M (Top 20 Tăng 3D: ${topGainers3D.length} coins)...`);
+
+            for (let i = 0; i < topGainers3D.length; i++) {
+                const item = topGainers3D[i];
+                const symbol = typeof item === 'object' ? item.symbol : item;
+
+                if (!sentLog[symbol]) sentLog[symbol] = {};
+                const lastSent = sentLog[symbol]._short15m || 0;
+                if (currentTime - lastSent < COOLDOWN_TIME) continue;
+
+                const shortSignal = await checkShort15MConditions(symbol);
+                if (shortSignal) {
+                    const coinName = symbol.replace('-USDT-SWAP', '');
+                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
+                    const message = `🔴 <b>SHORT #${coinName} (BB + EMA 15M)</b>\n` +
+                                    `🏆 Xếp hạng: Top ${i + 1} Tăng 3D\n` +
+                                    `🎯 Râu High[3] lệch BB Upper: <code>${shortSignal.diffBB.toFixed(2)}%</code>\n` +
+                                    `🔻 Nến 15M vừa đóng: <code>${shortSignal.candle1BodyPct.toFixed(2)}%</code>\n` +
+                                    `📉 Tỉ số Xả/TB (x): <code>${shortSignal.xRatio.toFixed(2)}</code> (< -5)\n` +
+                                    `⚡ Diff EMA20 (15M): <code>${shortSignal.diffEMA.toFixed(2)}%</code> (< 3%)\n` +
+                                    `👉 <a href="${link}">Đồ thị OKX</a>`;
+
+                    console.log(`🚀 [SHORT 15M] Gửi Telegram ${symbol}...`);
+                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML'
+                    }).catch(err => console.error(err.message));
+
+                    sentLog[symbol]._short15m = currentTime;
+                    hasNewAlert = true;
+                }
+                await sleep(100);
+            }
+
+            // B. TOP 20 COIN GIẢM GIÁ 3D (CHO LONG 5M)
+            const topLosers3D = (stateTop5dData.top20Losers3d || stateTop5dData.topLosers3d || stateTop5dData.top20Losers || []).slice(0, 20);
+            console.log(`📋 Quét LONG 5M (Top 20 Giảm 3D: ${topLosers3D.length} coins)...`);
+
+            for (let i = 0; i < topLosers3D.length; i++) {
+                const item = topLosers3D[i];
+                const symbol = typeof item === 'object' ? item.symbol : item;
+
+                if (!sentLog[symbol]) sentLog[symbol] = {};
+                const lastSent = sentLog[symbol]._long5m || 0;
+                if (currentTime - lastSent < COOLDOWN_TIME) continue;
+
+                const long5mSignal = await checkLong5MConditions(symbol);
+                if (long5mSignal) {
+                    const coinName = symbol.replace('-USDT-SWAP', '');
+                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
+                    const message = `🟢 <b>LONG #${coinName} (5M)</b>\n` +
+                                    `🏆 Xếp hạng: Top ${i + 1} Giảm 3D\n` +
+                                    `🚀 Tăng giá 2H: <code>+${long5mSignal.change2H.toFixed(2)}%</code> (> 2.5%)\n` +
+                                    `📉 Đáy râu 5M[2] lệch EMA20: <code>${long5mSignal.diffPrice5M.toFixed(2)}%</code>\n` +
+                                    `📈 Nến 5M[1] vừa đóng: <code>+${long5mSignal.candle1BodyPct.toFixed(2)}%</code>\n` +
+                                    `⚡ Diff EMA20 (15M): <code>${long5mSignal.diffEMA15M.toFixed(2)}%</code> (> -0.5%)\n` +
+                                    `👉 <a href="${link}">Đồ thị OKX</a>`;
+
+                    console.log(`🚀 [LONG 5M] Gửi Telegram ${symbol}...`);
+                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML'
+                    }).catch(err => console.error(err.message));
+
+                    sentLog[symbol]._long5m = currentTime;
+                    hasNewAlert = true;
+                }
+                await sleep(100);
+            }
+        }
+
+        if (hasNewAlert) saveSentLog(sentLog);
+        console.log('--- HOÀN THÀNH BÁO CÁO SCANNER ---');
+    } catch (err) {
+        console.error('Lỗi hệ thống trong main():', err.message);
+    }
 }
 
 main();
