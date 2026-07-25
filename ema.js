@@ -208,7 +208,9 @@ async function checkShort15MConditions(symbol) {
 
         const open1 = parseFloat(candle1[1]);
         const close1 = parseFloat(candle1[4]);
-        const high3 = parseFloat(candle3[3]);
+        
+        // ĐÃ SỬA: candle3[2] là giá HIGH (giá cao nhất)
+        const high3 = parseFloat(candle3[2]);
 
         // Điều kiện 1: Nến 15m vừa đóng [1] là nến giảm
         if (close1 >= open1) return null;
