@@ -121,7 +121,7 @@ async function checkLong15MConditions(symbol) {
     return null;
 }
 
-// ------------------- 2. LOGIC KIỂM TRA LONG 5M (QUY TRÌNH MỚI) -------------------
+// ------------------- 2. LOGIC KIỂM TRA LONG 5M -------------------
 async function checkLong5MConditions(symbol) {
     try {
         // STEP 1: LẤY DỮ LIỆU 15M (1 LẦN GỌI API)
@@ -177,7 +177,6 @@ async function checkLong5MConditions(symbol) {
         const diffPrice5M = ((low2_5M - ema20_5M) / ema20_5M) * 100;
         if (diffPrice5M <= -0.5 || diffPrice5M >= 0.3) return null;
 
-        // Thoả tất cả điều kiện
         return {
             change8Candles15M,
             diffEMA15M,
@@ -193,10 +192,11 @@ async function checkLong5MConditions(symbol) {
 // ------------------- 3. LOGIC KIỂM TRA SHORT 15M (BOLLINGER BAND) -------------------
 async function checkShort15MConditions(symbol) {
     try {
-        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=70`;
+        // Tăng limit lên 100 để đảm bảo có đủ 60 nến đóng cửa + buffer tính EMA
+        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
         const res15M = await axios.get(url15M, { timeout: 5000 });
 
-        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 55) return null;
+        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 85) return null;
 
         const raw15M = res15M.data.data; // Index 0: nến đang chạy, 1: nến [1], 2: nến [2], 3: nến [3]
         const candle1 = raw15M[1];
@@ -211,8 +211,7 @@ async function checkShort15MConditions(symbol) {
         // Điều kiện 1: Nến 15m vừa đóng [1] là nến giảm
         if (close1 >= open1) return null;
 
-        // Tính Bollinger Band cho nến [3]
-        // Lấy 20 nến trước nến 3
+        // Tính Bollinger Band cho nến [3] (Lấy 20 nến trước nến 3)
         const closedForBB = raw15M.slice(3, 23).reverse().map(c => parseFloat(c[4]));
         const bb = calculateBollingerBands(closedForBB, 20);
         if (!bb) return null;
@@ -221,25 +220,41 @@ async function checkShort15MConditions(symbol) {
         const diffBB = ((high3 - bb.upper) / bb.upper) * 100;
         if (diffBB <= -0.5 || diffBB >= 1.0) return null;
 
-        // Điều kiện 3: Xét 30 nến 15m gần nhất
-        const last30Candles = raw15M.slice(1, 31);
-        let minChange = 0; // Thay đổi âm lớn nhất
-        let totalAbsChange = 0;
+        // ---------------- CẬP NHẬT: ĐIỀU KIỆN XÉT 60 NẾN 15M ----------------
+        // A. Tìm nến giảm giá lớn nhất trong 60 nến gần nhất (Index 1 đến 60)
+        const last60Candles = raw15M.slice(1, 61);
+        let maxDropPct = 0; // Trị tuyệt đối mức giảm giá lớn nhất (%)
 
-        for (const c of last30Candles) {
+        for (const c of last60Candles) {
             const o = parseFloat(c[1]);
             const cl = parseFloat(c[4]);
-            const changePct = ((cl - o) / o) * 100;
-
-            if (changePct < minChange) minChange = changePct;
-            totalAbsChange += Math.abs(changePct);
+            if (cl < o) { // Chỉ xét nến giảm
+                const dropPct = ((o - cl) / o) * 100; // Trị tuyệt đối của % giảm
+                if (dropPct > maxDropPct) {
+                    maxDropPct = dropPct;
+                }
+            }
         }
 
-        const avgChange = totalAbsChange / 30;
-        if (avgChange === 0) return null;
+        // B. Tính biến động trung bình của 20 nến gần nhất (Index 1 đến 20)
+        const last20Candles = raw15M.slice(1, 21);
+        let totalAbsChange20 = 0;
 
-        const x = minChange / avgChange; // x = Tỉ số nến giảm mạnh nhất / TB biến động
-        if (x >= -5) return null; // Điều kiện: x < -5
+        for (const c of last20Candles) {
+            const o = parseFloat(c[1]);
+            const cl = parseFloat(c[4]);
+            const absChange = (Math.abs(cl - o) / o) * 100; // Trị tuyệt đối biến động
+            totalAbsChange20 += absChange;
+        }
+
+        const avgChange20 = totalAbsChange20 / 20;
+        if (avgChange20 === 0) return null;
+
+        // C. Tính x = Trị tuyệt đối nến giảm max 60 nến / TB biến động 20 nến
+        const x = maxDropPct / avgChange20;
+        
+        // Điều kiện: x > 4
+        if (x <= 4) return null;
 
         // Điều kiện 4: Diff EMA 15M (< 3%)
         const closedAll15M = raw15M.slice(1).reverse().map(c => parseFloat(c[4]));
@@ -342,7 +357,7 @@ async function main() {
                                     `🏆 Xếp hạng: Top ${i + 1} Tăng 3D\n` +
                                     `🎯 Râu High[3] lệch BB Upper: <code>${shortSignal.diffBB.toFixed(2)}%</code>\n` +
                                     `🔻 Nến 15M vừa đóng: <code>${shortSignal.candle1BodyPct.toFixed(2)}%</code>\n` +
-                                    `📉 Tỉ số Xả/TB (x): <code>${shortSignal.xRatio.toFixed(2)}</code> (< -5)\n` +
+                                    `📉 Tỉ số Xả/TB20 (x): <code>${shortSignal.xRatio.toFixed(2)}</code> (> 4)\n` +
                                     `⚡ Diff EMA20 (15M): <code>${shortSignal.diffEMA.toFixed(2)}%</code> (< 3%)\n` +
                                     `👉 <a href="${link}">Đồ thị OKX</a>`;
 
