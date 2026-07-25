@@ -103,7 +103,9 @@ async function checkLong15MConditions(symbol) {
 
             const isLowNearEMA = lowDiffPct > -0.5 && lowDiffPct < 0.5;
             const isBullishCandle = candleBodyPct > 0;
-            const isDiffEMAValid = diffEMA > 1.0; // Bổ sung điều kiện > 1%
+            
+            // ĐÃ ĐỔI: Chênh lệch EMA20 của nến [1] và nến [20] > 3.0%
+            const isDiffEMAValid = diffEMA > 3.0;
 
             if (isLowNearEMA && isBullishCandle && isDiffEMAValid) {
                 return {
@@ -209,7 +211,7 @@ async function checkShort15MConditions(symbol) {
         const open1 = parseFloat(candle1[1]);
         const close1 = parseFloat(candle1[4]);
         
-        // ĐÃ SỬA: candle3[2] là giá HIGH (giá cao nhất)
+        // Index [2] là giá HIGH (giá cao nhất)
         const high3 = parseFloat(candle3[2]);
 
         // Điều kiện 1: Nến 15m vừa đóng [1] là nến giảm
@@ -304,7 +306,7 @@ async function main() {
                                     `📊 Biến động 3 nến 2H: <code>${changeStr}</code>\n` +
                                     `📉 Đáy râu lệch EMA20: <code>${signal.lowDiffPct.toFixed(2)}%</code>\n` +
                                     `📈 Nến 15M đóng tăng: <code>+${signal.candleBodyPct.toFixed(2)}%</code>\n` +
-                                    `⚡ Diff EMA20 (15M vs [20]): <code>+${signal.diffEMA.toFixed(2)}%</code>\n` +
+                                    `⚡ Diff EMA20 (15M vs [20]): <code>+${signal.diffEMA.toFixed(2)}%</code> (> 3%)\n` +
                                     `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                     console.log(`🚀 [LONG 15M] Gửi Telegram ${symbol}...`);
