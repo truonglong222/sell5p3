@@ -10,7 +10,9 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
-const STATE_TOP5D_FILE = path.join(__dirname, 'statetop_5d.json');
+
+// Đổi đường dẫn trỏ tới đúng file statetop_15d.json
+const STATE_TOP15D_FILE = path.join(__dirname, 'statetop_15d.json');
 
 // Cấu hình Cooldown: 4 tiếng
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
@@ -167,17 +169,19 @@ async function main() {
         const currentTime = Date.now();
         let hasNewAlert = false;
 
-        if (fs.existsSync(STATE_TOP5D_FILE)) {
-            const stateTop5dData = JSON.parse(fs.readFileSync(STATE_TOP5D_FILE, 'utf8'));
+        if (fs.existsSync(STATE_TOP15D_FILE)) {
+            const stateTop15dData = JSON.parse(fs.readFileSync(STATE_TOP15D_FILE, 'utf8'));
             
-            // Đọc danh sách Top 30 Coin Tăng Giá 5D từ file statetop_5d.json
-            const topGainers5D = stateTop5dData.top30Gainers5D || [];
-            console.log(`📋 Quét SHORT 15M (${topGainers5D.length} coins từ Top Tăng 5D)...`);
+            // Đọc danh sách Top 30 Coin Tăng Giá 15D từ file statetop_15d.json
+            const topGainers15D = stateTop15dData.top30Gainers15D || stateTop15dData.top20Gainers15D || [];
+            console.log(`📋 Quét SHORT 15M (${topGainers15D.length} coins từ Top Tăng 15D)...`);
 
-            for (let i = 0; i < topGainers5D.length; i++) {
-                const item = topGainers5D[i];
+            for (let i = 0; i < topGainers15D.length; i++) {
+                const item = topGainers15D[i];
                 const symbol = typeof item === 'object' ? item.symbol : item;
-                const gain5dStr = typeof item === 'object' && item.change5DaysGain ? `${item.change5DaysGain}%` : 'N/A';
+                
+                // Lấy phần trăm tăng trưởng 15D chuẩn từ dữ liệu file
+                const gain15dVal = typeof item === 'object' ? (item.change15DaysGain ?? 'N/A') : 'N/A';
 
                 if (!sentLog[symbol]) sentLog[symbol] = {};
                 const lastSent = sentLog[symbol]._short15m || 0;
@@ -189,7 +193,7 @@ async function main() {
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                     const message = `🔴 <b>SHORT #${coinName} (BB + EMA 15M)</b>\n` +
-                                    `🏆 Xếp hạng: <b>Top ${i + 1} Tăng 5D (+${gain5dStr})</b>\n` +
+                                    `🏆 Xếp hạng: <b>Top ${i + 1} Tăng 15D (+${gain15dVal}%)</b>\n` +
                                     `🎯 Râu High[3] lệch BB Upper: <code>${shortSignal.diffBB.toFixed(2)}%</code>\n` +
                                     `🔻 Nến 15M vừa đóng: <code>${shortSignal.candle1BodyPct.toFixed(2)}%</code>\n` +
                                     `📉 Tỉ số Xả/TB20 (x): <code>${shortSignal.xRatio.toFixed(2)}</code> (> 4)\n` +
@@ -209,7 +213,7 @@ async function main() {
                 await sleep(100);
             }
         } else {
-            console.error(`Không tìm thấy file trạng thái: ${STATE_TOP5D_FILE}`);
+            console.error(`Không tìm thấy file trạng thái: ${STATE_TOP15D_FILE}`);
         }
 
         if (hasNewAlert) saveSentLog(sentLog);
