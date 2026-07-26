@@ -73,10 +73,11 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
 // ------------------- LOGIC KIỂM TRA SHORT 15M (BOLLINGER BAND) -------------------
 async function checkShort15MConditions(symbol) {
     try {
-        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=100`;
+        // Tăng limit lấy API lên 120 nến để đủ dữ liệu kiểm tra 100 nến
+        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=120`;
         const res15M = await axios.get(url15M, { timeout: 5000 });
 
-        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 85) return null;
+        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 100) return null;
 
         const raw15M = res15M.data.data; // Index 0: nến đang chạy, 1: nến [1], 2: nến [2], 3: nến [3]
         const candle1 = raw15M[1];
@@ -96,16 +97,16 @@ async function checkShort15MConditions(symbol) {
         const bb = calculateBollingerBands(closedForBB, 20);
         if (!bb) return null;
 
-        // Điều kiện 2: Râu nến [3] (high) chạm BB trên (-0.5% < diffBB < 1%)
+        // Điều kiện 2: Râu nến [3] (high) chạm BB trên (-1.0% < diffBB < 2.0%)
         const diffBB = ((high3 - bb.upper) / bb.upper) * 100;
-        if (diffBB <= -0.5 || diffBB >= 1.0) return null;
+        if (diffBB <= -1.0 || diffBB >= 2.0) return null;
 
-        // ---------------- ĐIỀU KIỆN XÉT 60 NẾN 15M ----------------
-        // A. Tìm nến giảm giá lớn nhất trong 60 nến gần nhất (Index 1 đến 60)
-        const last60Candles = raw15M.slice(1, 61);
+        // ---------------- ĐIỀU KIỆN XÉT 100 NẾN 15M ----------------
+        // A. Tìm nến giảm giá lớn nhất trong 100 nến gần nhất (Index 1 đến 100)
+        const last100Candles = raw15M.slice(1, 101);
         let maxDropPct = 0; // Trị tuyệt đối mức giảm giá lớn nhất (%)
 
-        for (const c of last60Candles) {
+        for (const c of last100Candles) {
             const o = parseFloat(c[1]);
             const cl = parseFloat(c[4]);
             if (cl < o) { // Chỉ xét nến giảm
@@ -130,13 +131,13 @@ async function checkShort15MConditions(symbol) {
         const avgChange20 = totalAbsChange20 / 20;
         if (avgChange20 === 0) return null;
 
-        // C. Tính x = Trị tuyệt đối nến giảm max 60 nến / TB biến động 20 nến
+        // C. Tính x = Trị tuyệt đối nến giảm max 100 nến / TB biến động 20 nến
         const x = maxDropPct / avgChange20;
         
-        // Điều kiện: x > 4
-        if (x <= 4) return null;
+        // Điều kiện: x > 3
+        if (x <= 3) return null;
 
-        // Điều kiện 4: Diff EMA 15M (< 3%)
+        // Điều kiện 4: Diff EMA 15M (< 4%)
         const closedAll15M = raw15M.slice(1).reverse().map(c => parseFloat(c[4]));
         const ema20_1 = calculateEMA(closedAll15M, 20);
 
@@ -146,7 +147,7 @@ async function checkShort15MConditions(symbol) {
         if (!ema20_1 || !ema20_20) return null;
 
         const diffEMA = ((ema20_1 - ema20_20) / ema20_20) * 100;
-        if (diffEMA >= 3.0) return null; // Điều kiện: diffEMA < 3%
+        if (diffEMA >= 4.0) return null; // Điều kiện: diffEMA < 4%
 
         return {
             diffBB,
@@ -180,7 +181,7 @@ async function main() {
                 const item = topGainers15D[i];
                 const symbol = typeof item === 'object' ? item.symbol : item;
                 
-                // Lấy phần trăm tăng trưởng 15D chuẩn từ dữ liệu file
+                // Lấy phần phần trăm tăng trưởng 15D chuẩn từ dữ liệu file
                 const gain15dVal = typeof item === 'object' ? (item.change15DaysGain ?? 'N/A') : 'N/A';
 
                 if (!sentLog[symbol]) sentLog[symbol] = {};
@@ -196,8 +197,8 @@ async function main() {
                                     `🏆 Xếp hạng: <b>Top ${i + 1} Tăng 15D (+${gain15dVal}%)</b>\n` +
                                     `🎯 Râu High[3] lệch BB Upper: <code>${shortSignal.diffBB.toFixed(2)}%</code>\n` +
                                     `🔻 Nến 15M vừa đóng: <code>${shortSignal.candle1BodyPct.toFixed(2)}%</code>\n` +
-                                    `📉 Tỉ số Xả/TB20 (x): <code>${shortSignal.xRatio.toFixed(2)}</code> (> 4)\n` +
-                                    `⚡ Diff EMA20 (15M): <code>${shortSignal.diffEMA.toFixed(2)}%</code> (< 3%)\n` +
+                                    `📉 Tỉ số Xả/TB20 (x): <code>${shortSignal.xRatio.toFixed(2)}</code> (> 3)\n` +
+                                    `⚡ Diff EMA20 (15M): <code>${shortSignal.diffEMA.toFixed(2)}%</code> (< 4%)\n` +
                                     `👉 <a href="${link}">Đồ thị OKX</a>`;
 
                     console.log(`🚀 [SHORT 15M] Gửi Telegram ${symbol}...`);
