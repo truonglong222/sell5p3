@@ -67,7 +67,7 @@ async function fetchCandleData(coin) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 COIN TĂNG MẠNH NHẤT 15 NGÀY (VOL > 3M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 30 COIN TĂNG MẠNH NHẤT 15 NGÀY (VOL > 3M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -86,11 +86,11 @@ async function main() {
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetchCandleData(coin)); 
     const poolData = results.filter(r => r !== null); 
     
-    // Sắp xếp & Lấy đúng CHUẨN TOP 20
-    const top20Gainers15D = poolData
+    // Sắp xếp & Lấy đúng TOP 30
+    const top30Gainers15D = poolData
       .filter(r => r.change15DaysGain !== null)
       .sort((a, b) => b.change15DaysGain - a.change15DaysGain)
-      .slice(0, 20)
+      .slice(0, 30)
       .map((item, index) => ({
         symbol: item.symbol,
         rank15dGain: index + 1,
@@ -98,20 +98,20 @@ async function main() {
         change1Day: parseFloat(item.change1Day.toFixed(2))
       }));
 
-    // Chỉ lưu duy nhất danh sách 20 coin và thời gian cập nhật
+    // Chỉ lưu duy nhất danh sách 30 coin và thời gian cập nhật
     const finalState = { 
       updatedAt: new Date().toISOString(),
-      top20Gainers15D
+      top30Gainers15D
     }; 
     
     fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8'); 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
-    console.log(`- Đã lưu đúng ${top20Gainers15D.length} coin vào ${STATE_FILE}`); 
+    console.log(`- Đã lưu đúng ${top30Gainers15D.length} coin vào ${STATE_FILE}`); 
 
-    console.log('\n--- TOP 20 COIN TĂNG GIÁ MẠNH NHẤT 15 NGÀY ---'); 
-    top20Gainers15D.forEach((c) => { 
+    console.log('\n--- TOP 30 COIN TĂNG GIÁ MẠNH NHẤT 15 NGÀY ---'); 
+    top30Gainers15D.forEach((c) => { 
       console.log(`${c.rank15dGain}. ${c.symbol}: Gain 15D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
 
