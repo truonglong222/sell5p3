@@ -29,44 +29,35 @@ async function asyncPool(limit, array, iteratorFn) {
 async function fetchCandleData(coin) {
   const symbol = coin.instId;
   try {
+    // Lấy 6 nến 1D để truy cập đến nến index [5] (5 ngày trước)
     const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=6`;
     const candleRes = await axios.get(candle1DUrl, { timeout: 5000 });
 
     if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 6) { 
       const candles1D = candleRes.data.data; 
 
-      // Structure nến OKX: [ts, open, high, low, close, ...]
+      // Cấu trúc nến OKX: [ts, open, high, low, close, ...]
       
-      // Giá mở cửa nến 3 ngày trước (index [3])
-      const open3DaysAgo = parseFloat(candles1D[3][1]); 
+      // Giá mở cửa 5 ngày trước (index [5])
+      const open5DaysAgo = parseFloat(candles1D[5][1]); 
 
-      // --- 1. LOGIC 3 NGÀY GIẢM GIÁ (dùng công thức (open - low) / open) ---
-      // Giá thấp nhất trong 3 ngày (từ nến [0] đến [3])
-      const lowestPrice3D = Math.min(...candles1D.slice(0, 4).map(c => parseFloat(c[3])));
-      
-      let dropPercentage3D = null;
-      if (open3DaysAgo > 0 && lowestPrice3D > 0) {
-        dropPercentage3D = ((open3DaysAgo - lowestPrice3D) / open3DaysAgo) * 100;
+      // Giá đóng cửa nến ngày hôm qua vừa đóng (index [1])
+      const closeYesterday = parseFloat(candles1D[1][4]);
+
+      // --- CÁCH TÍNH MỚI ---
+      // % Tăng/Giảm = ((Giá đóng cửa hôm qua - Giá mở cửa 5 ngày trước) / Giá mở cửa 5 ngày trước) * 100
+      let change5DaysGain = null;
+      if (open5DaysAgo > 0 && closeYesterday > 0) {
+        change5DaysGain = ((closeYesterday - open5DaysAgo) / open5DaysAgo) * 100;
       }
 
-      // --- 2. LOGIC 3 NGÀY TĂNG GIÁ ---
-      // Giá cao nhất trong 3 ngày (từ nến [0] hiện tại đến nến [3])
-      const highestPrice3D = Math.max(...candles1D.slice(0, 4).map(c => parseFloat(c[2])));
-      
-      let gainPercentage3D = null;
-      if (open3DaysAgo > 0 && highestPrice3D > 0) {
-        gainPercentage3D = ((highestPrice3D - open3DaysAgo) / open3DaysAgo) * 100;
-      }
-
-      // --- 3. BIẾN ĐỘNG NẾN VỪA ĐÓNG HÔM QUA (nến index [1]) ---
+      // Biến động nến vừa đóng hôm qua (index [1])
       const open1D = parseFloat(candles1D[1][1]);
-      const close1D = parseFloat(candles1D[1][4]);
-      const change1DPercentage = open1D > 0 ? ((close1D - open1D) / open1D) * 100 : 0;
+      const change1DPercentage = open1D > 0 ? ((closeYesterday - open1D) / open1D) * 100 : 0;
 
       return { 
         symbol, 
-        change3DaysDrop: dropPercentage3D,
-        change3DaysGain: gainPercentage3D,
+        change5DaysGain,
         change1Day: change1DPercentage
       }; 
     } 
@@ -76,7 +67,7 @@ async function fetchCandleData(coin) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 20 GIẢM 3D & TOP 20 TĂNG 3D (VOL > 2M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 30 COIN TĂNG MẠNH NHẤT 5 NGÀY (VOL > 5M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -85,8 +76,9 @@ async function main() {
       return;
     }
 
-    const rawFutures = response.data.data.filter(t => t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 1900000); 
-    console.log(`Tìm thấy ${rawFutures.length} coin thoả mãn Volume 24h.`); 
+    // Lọc Volume 24h > 5,000,000 USD
+    const rawFutures = response.data.data.filter(t => t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 5000000); 
+    console.log(`Tìm thấy ${rawFutures.length} coin thoả mãn Volume 24h (> 5M USD).`); 
     if (rawFutures.length === 0) return; 
     
     console.log('Đang quét lịch sử nến 1D song song...'); 
@@ -94,53 +86,36 @@ async function main() {
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetchCandleData(coin)); 
     const poolData = results.filter(r => r !== null); 
     
-    // 1. Sắp xếp & Lấy Top 20 Giảm 3 ngày
-    const top20Losers = poolData
-      .filter(r => r.change3DaysDrop !== null)
-      .sort((a, b) => b.change3DaysDrop - a.change3DaysDrop) 
-      .slice(0, 20)
+    // Sắp xếp & Lấy Top 30 Tăng giá trong 5 ngày
+    const top30Gainers5D = poolData
+      .filter(r => r.change5DaysGain !== null)
+      .sort((a, b) => b.change5DaysGain - a.change5DaysGain)
+      .slice(0, 30)
       .map((item, index) => ({
         symbol: item.symbol,
-        rank3dDrop: index + 1,
-        change3DaysDrop: parseFloat(item.change3DaysDrop.toFixed(2)),
-        change1Day: parseFloat(item.change1Day.toFixed(2))
-      }));
-
-    // 2. Sắp xếp & Lấy Top 20 Tăng 3 ngày
-    const top20Gainers3D = poolData
-      .filter(r => r.change3DaysGain !== null)
-      .sort((a, b) => b.change3DaysGain - a.change3DaysGain)
-      .slice(0, 20)
-      .map((item, index) => ({
-        symbol: item.symbol,
-        rank3dGain: index + 1,
-        change3DaysGain: parseFloat(item.change3DaysGain.toFixed(2)),
+        rank5dGain: index + 1,
+        change5DaysGain: parseFloat(item.change5DaysGain.toFixed(2)),
         change1Day: parseFloat(item.change1Day.toFixed(2))
       }));
 
     const finalState = { 
-      top20Losers,
-      top20Gainers3D
+      updatedAt: new Date().toISOString(),
+      top30Gainers5D
     }; 
     
     fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8'); 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
-    console.log(`- Đã lưu kết quả vào statetop_5d.json`); 
+    console.log(`- Đã lưu kết quả vào ${STATE_FILE}`); 
 
-    console.log('\n--- TOP 20 COIN GIẢM GIÁ 3 NGÀY ---'); 
-    top20Losers.forEach((c) => { 
-      console.log(`${c.rank3dDrop}. ${c.symbol}: Max Drop 3D ${c.change3DaysDrop}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
-    }); 
-
-    console.log('\n--- TOP 20 COIN TĂNG GIÁ 3 NGÀY ---'); 
-    top20Gainers3D.forEach((c) => { 
-      console.log(`${c.rank3dGain}. ${c.symbol}: Max Gain 3D ${c.change3DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
+    console.log('\n--- TOP 30 COIN TĂNG GIÁ MẠNH NHẤT 5 NGÀY ---'); 
+    top30Gainers5D.forEach((c) => { 
+      console.log(`${c.rank5dGain}. ${c.symbol}: Gain 5D ${c.change5DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
 
   } catch (error) { 
-    console.error('Lỗi hệ thống file:', error.message); 
+    console.error('Lỗi hệ thống file hoặc mạng:', error.message); 
   } 
 }
 
