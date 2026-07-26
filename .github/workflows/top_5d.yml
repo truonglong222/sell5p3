@@ -27,19 +27,19 @@ jobs:
       - name: Thực thi Tập lệnh top_5d.js
         run: node top_5d.js
 
-      - name: Commit & Push dữ liệu statetop_5d.json mới về kho code
+      - name: Commit & Push dữ liệu statetop_15d.json mới về kho code
         run: |
           # Thiết lập cấu hình danh tính Git hệ thống
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           # Theo dõi tệp kết quả danh sách coin giảm
-          git add statetop_5d.json
+          git add statetop_15d.json
           
           # Chỉ tiến hành đẩy mã nguồn lên nếu danh sách Top 20 coin giảm có sự thay đổi mới
           if git diff --cached --quiet; then
             echo "Không phát hiện thay đổi trong danh sách coin. Bỏ qua bước đẩy mã nguồn lên."
           else
-            git commit -m "🤖 [Bot Action] Cập nhật danh sách Top 20 coin giảm giá statetop_5d.json [skip ci]"
+            git commit -m "🤖 [Bot Action] Cập nhật danh sách Top 20 coin giảm giá statetop_15d.json [skip ci]"
             git push origin HEAD:${{ github.ref }}
           fi
