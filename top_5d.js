@@ -41,18 +41,19 @@ async function fetchCandleData(coin) {
       // Giá mở cửa 5 ngày trước (index [5])
       const open5DaysAgo = parseFloat(candles1D[5][1]); 
 
-      // Giá đóng cửa nến ngày hôm qua vừa đóng (index [1])
-      const closeYesterday = parseFloat(candles1D[1][4]);
+      // Giá đóng cửa nến cách đây 2 ngày (index [2])
+      const close2DaysAgo = parseFloat(candles1D[2][4]);
 
       // --- CÁCH TÍNH MỚI ---
-      // % Tăng/Giảm = ((Giá đóng cửa hôm qua - Giá mở cửa 5 ngày trước) / Giá mở cửa 5 ngày trước) * 100
+      // % Tăng/Giảm = ((Giá đóng cửa 2 ngày trước - Giá mở cửa 5 ngày trước) / Giá mở cửa 5 ngày trước) * 100
       let change5DaysGain = null;
-      if (open5DaysAgo > 0 && closeYesterday > 0) {
-        change5DaysGain = ((closeYesterday - open5DaysAgo) / open5DaysAgo) * 100;
+      if (open5DaysAgo > 0 && close2DaysAgo > 0) {
+        change5DaysGain = ((close2DaysAgo - open5DaysAgo) / open5DaysAgo) * 100;
       }
 
       // Biến động nến vừa đóng hôm qua (index [1])
       const open1D = parseFloat(candles1D[1][1]);
+      const closeYesterday = parseFloat(candles1D[1][4]);
       const change1DPercentage = open1D > 0 ? ((closeYesterday - open1D) / open1D) * 100 : 0;
 
       return { 
