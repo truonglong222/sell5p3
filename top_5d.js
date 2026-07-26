@@ -41,11 +41,10 @@ async function fetchCandleData(coin) {
       // Giá đóng cửa nến cách đây 2 ngày (index [2])
       const close2DaysAgo = parseFloat(candles1D[2][4]);
 
-      // Tìm giá THẤP NHẤT (Low - index [3]) trong 15 ngày (từ nến [1] đến nến [15])
+      // Giá THẤP NHẤT (Low - index [3]) trong 15 ngày (từ nến [1] đến nến [15])
       const lowestPrice15D = Math.min(...candles1D.slice(1, 16).map(c => parseFloat(c[3])));
 
-      // --- CÔNG THỨC MỚI ---
-      // % Tăng = ((Giá đóng cửa cách đây 2 ngày - Giá thấp nhất 15 ngày) / Giá thấp nhất 15 ngày) * 100
+      // % Tăng = ((Close[2] - Low15D) / Low15D) * 100
       let change15DaysGain = null;
       if (lowestPrice15D > 0 && close2DaysAgo > 0) {
         change15DaysGain = ((close2DaysAgo - lowestPrice15D) / lowestPrice15D) * 100;
@@ -77,7 +76,7 @@ async function main() {
       return;
     }
 
-    // Đổi điều kiện lọc Volume 24h > 3,000,000 USD
+    // Lọc Volume 24h > 3,000,000 USD
     const rawFutures = response.data.data.filter(t => t.instId.endsWith('-USDT-SWAP') && parseFloat(t.volCcy24h) > 3000000); 
     console.log(`Tìm thấy ${rawFutures.length} coin thoả mãn Volume 24h (> 3M USD).`); 
     if (rawFutures.length === 0) return; 
@@ -87,7 +86,7 @@ async function main() {
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetchCandleData(coin)); 
     const poolData = results.filter(r => r !== null); 
     
-    // Sắp xếp & Lấy đúng TOP 20 Tăng giá trong 15 ngày
+    // Sắp xếp & Lấy đúng CHUẨN TOP 20
     const top20Gainers15D = poolData
       .filter(r => r.change15DaysGain !== null)
       .sort((a, b) => b.change15DaysGain - a.change15DaysGain)
@@ -99,24 +98,21 @@ async function main() {
         change1Day: parseFloat(item.change1Day.toFixed(2))
       }));
 
+    // Chỉ lưu duy nhất danh sách 20 coin và thời gian cập nhật
     const finalState = { 
       updatedAt: new Date().toISOString(),
-      top20Gainers15D,
-      // Các key dự phòng cho bot SHORT đọc dữ liệu nếu cần
-      top30Gainers15D: top20Gainers15D,
-      top30Gainers7D: top20Gainers15D,
-      top30Gainers5D: top20Gainers15D
+      top20Gainers15D
     }; 
     
     fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8'); 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
-    console.log(`- Đã lưu kết quả ${top20Gainers15D.length} coin vào ${STATE_FILE}`); 
+    console.log(`- Đã lưu đúng ${top20Gainers15D.length} coin vào ${STATE_FILE}`); 
 
     console.log('\n--- TOP 20 COIN TĂNG GIÁ MẠNH NHẤT 15 NGÀY ---'); 
     top20Gainers15D.forEach((c) => { 
-      console.log(`${c.rank15dGain}. ${c.symbol}: Gain 15D (Close[2] - Low15D) +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
+      console.log(`${c.rank15dGain}. ${c.symbol}: Gain 15D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
 
   } catch (error) { 
