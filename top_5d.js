@@ -39,7 +39,7 @@ async function fetchCandleData(coin) {
 
       // Cấu trúc nến OKX: [ts, open, high, low, close, ...]
 
-      // Giá CAO NHẤT nến vừa đóng hôm qua (High - index [2])
+      // Giá CAO NHẤT nến vừa đóng hôm qua (High - index [1])
       const highYesterday = parseFloat(candles1D[1][2]);
 
       // Giá THẤP NHẤT (Low - index [3]) trong 3 ngày vừa qua (từ nến [1] đến nến [3])
@@ -69,7 +69,7 @@ async function fetchCandleData(coin) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: COIN TĂNG GIÁ > 12% TRONG 3 NGÀY (VOL > 3M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: COIN TĂNG GIÁ > 18.5% TRONG 3 NGÀY (VOL > 3M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -88,9 +88,9 @@ async function main() {
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetchCandleData(coin)); 
     const poolData = results.filter(r => r !== null); 
     
-    // Lọc tất cả coin có % tăng > 12% và Sắp xếp từ cao xuống thấp
+    // Lọc tất cả coin có % tăng > 18.5% và Sắp xếp từ cao xuống thấp
     const filteredGainers = poolData
-      .filter(r => r.change15DaysGain !== null && r.change15DaysGain > 12)
+      .filter(r => r.change15DaysGain !== null && r.change15DaysGain > 18.5)
       .sort((a, b) => b.change15DaysGain - a.change15DaysGain)
       .map((item, index) => ({
         symbol: item.symbol,
@@ -110,9 +110,9 @@ async function main() {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
-    console.log(`- Đã lưu đúng ${filteredGainers.length} coin (tăng 3D > 12%) vào ${STATE_FILE}`); 
+    console.log(`- Đã lưu đúng ${filteredGainers.length} coin (tăng 3D > 18.5%) vào ${STATE_FILE}`); 
 
-    console.log('\n--- DANH SÁCH COIN TĂNG GIÁ > 12% TRONG 3 NGÀY ---'); 
+    console.log('\n--- DANH SÁCH COIN TĂNG GIÁ > 18.5% TRONG 3 NGÀY ---'); 
     filteredGainers.forEach((c) => { 
       console.log(`${c.rank15dGain}. ${c.symbol}: Gain 3D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
