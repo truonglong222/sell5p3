@@ -39,20 +39,21 @@ async function fetchCandleData(coin) {
 
       // Cấu trúc nến OKX: [ts, open, high, low, close, ...]
 
-      // Giá đóng cửa nến vừa đóng hôm qua (index [1])
-      const closeYesterday = parseFloat(candles1D[1][4]);
+      // Giá CAO NHẤT nến vừa đóng hôm qua (High - index [2])
+      const highYesterday = parseFloat(candles1D[1][2]);
 
       // Giá THẤP NHẤT (Low - index [3]) trong 3 ngày vừa qua (từ nến [1] đến nến [3])
       const lowestPrice3D = Math.min(...candles1D.slice(1, 4).map(c => parseFloat(c[3])));
 
-      // % Tăng = ((CloseYesterday - Low3D) / Low3D) * 100
+      // % Tăng = ((HighYesterday - Low3D) / Low3D) * 100
       let change3DaysGain = null;
-      if (lowestPrice3D > 0 && closeYesterday > 0) {
-        change3DaysGain = ((closeYesterday - lowestPrice3D) / lowestPrice3D) * 100;
+      if (lowestPrice3D > 0 && highYesterday > 0) {
+        change3DaysGain = ((highYesterday - lowestPrice3D) / lowestPrice3D) * 100;
       }
 
-      // Biến động nến vừa đóng hôm qua (index [1])
+      // Biến động nến vừa đóng hôm qua (index [1]): (Close - Open) / Open
       const open1D = parseFloat(candles1D[1][1]);
+      const closeYesterday = parseFloat(candles1D[1][4]);
       const change1DPercentage = open1D > 0 ? ((closeYesterday - open1D) / open1D) * 100 : 0;
 
       return { 
@@ -93,7 +94,7 @@ async function main() {
       .sort((a, b) => b.change15DaysGain - a.change15DaysGain)
       .map((item, index) => ({
         symbol: item.symbol,
-        // GIỮ NGUYÊN TÊN KEY DƯỚI ĐÂY ĐỂ ĐẮP ỨNG SCHEMA CỦA FILE.JS / .YML KHÁC
+        // GIỮ NGUYÊN TÊN KEY DƯỚI ĐÂY ĐỂ ĐÁP ỨNG SCHEMA CỦA FILE.JS / .YML KHÁC
         rank15dGain: index + 1,
         change15DaysGain: parseFloat(item.change15DaysGain.toFixed(2)),
         change1Day: parseFloat(item.change1Day.toFixed(2))
