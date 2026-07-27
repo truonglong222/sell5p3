@@ -70,35 +70,39 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
     };
 }
 
-// ------------------- LOGIC KIỂM TRA SHORT 1H (BOLLINGER BAND & EMA) -------------------
+// ------------------- LOGIC KIỂM TRA SHORT 1H -------------------
 async function checkShort1HConditions(symbol) {
     try {
-        // Lấy đúng 60 nến khung 1H (1h)
+        // Lấy 60 nến khung 1H
         const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
         const res1H = await axios.get(url1H, { timeout: 5000 });
 
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 51) return null;
 
-        const raw1H = res1H.data.data; // Index 0: nến đang chạy, 1: nến 1H vừa đóng
+        const raw1H = res1H.data.data; // Index 0: nến đang chạy, 1: nến [1], 2: nến [2]
         const candle1 = raw1H[1];
+        const candle2 = raw1H[2];
 
         const open1 = parseFloat(candle1[1]);
-        const high1 = parseFloat(candle1[2]);
         const close1 = parseFloat(candle1[4]);
+        const high2 = parseFloat(candle2[2]);
 
-        // 1. Tính Bollinger Band 1H cho nến [1] (dùng 20 nến từ index 1 đến 20)
-        const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-        const bb = calculateBollingerBands(closedForBB, 20);
-        if (!bb) return null;
+        // ĐIỀU KIỆN 1: Nến [1] vừa đóng phải là nến giảm giá (đỏ)
+        if (close1 >= open1) return null;
 
-        // 2. Điều kiện Râu nến [1] khung 1H chạm BB upper (-1.0% < diffBB < 2.0%)
-        const diffBB = ((high1 - bb.upper) / bb.upper) * 100;
-        if (diffBB <= -1.0 || diffBB >= 2.0) return null;
+        // ĐIỀU KIỆN 2: Tính BB cho nến [2] (20 nến tính từ index 2 đến 21)
+        const closedForBB2 = raw1H.slice(2, 22).reverse().map(c => parseFloat(c[4]));
+        const bb2 = calculateBollingerBands(closedForBB2, 20);
+        if (!bb2) return null;
+
+        // Râu trên (High) nến [2] sát BB Upper: -0.5% < diffBB < 1.0%
+        const diffBB = ((high2 - bb2.upper) / bb2.upper) * 100;
+        if (diffBB <= -0.5 || diffBB >= 1.0) return null;
 
         // ---------------- ĐIỀU KIỆN XÉT 50 NẾN 1H ----------------
         // A. Tìm nến giảm giá lớn nhất trong 50 nến 1H gần nhất (Index 1 đến 50)
         const last50Candles = raw1H.slice(1, 51);
-        let maxDropPct = 0; 
+        let maxDropPct = 0;
 
         for (const c of last50Candles) {
             const o = parseFloat(c[1]);
@@ -106,50 +110,47 @@ async function checkShort1HConditions(symbol) {
             const l = parseFloat(c[3]);
             const cl = parseFloat(c[4]);
 
-            if (cl < o) { // Chỉ xét các nến giảm giá
-                const dropPct = ((h - l) / h) * 100; // Biến động từ High xuống Low (%)
+            if (cl < o) { // Chỉ xét nến giảm
+                const dropPct = ((h - l) / h) * 100;
                 if (dropPct > maxDropPct) {
                     maxDropPct = dropPct;
                 }
             }
         }
 
-        // B. Tính biến động trung bình của 20 nến 1H gần nhất (Index 1 đến 20)
+        // B. Tính biến động trung bình 20 nến 1H gần nhất (Index 1 đến 20)
         const last20Candles = raw1H.slice(1, 21);
         let totalAbsChange20 = 0;
 
         for (const c of last20Candles) {
             const o = parseFloat(c[1]);
             const cl = parseFloat(c[4]);
-            const absChange = (Math.abs(cl - o) / o) * 100;
-            totalAbsChange20 += absChange;
+            totalAbsChange20 += (Math.abs(cl - o) / o) * 100;
         }
 
         const avgChange20 = totalAbsChange20 / 20;
         if (avgChange20 === 0) return null;
 
-        // C. Tỉ số x = Nến giảm max 50 nến (High-Low) / TB biến động 20 nến 1H
+        // C. ĐIỀU KIỆN 3: Tỉ số x > 5
         const x = maxDropPct / avgChange20;
-        if (x <= 3) return null;
+        if (x <= 5) return null;
 
-        // 3. Điều kiện: Diff EMA20 khung 1H (< 4%) trên chuỗi 60 nến
-        const closedAll1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4])); // Mảng chứa 59 nến đã đóng
+        // ĐIỀU KIỆN 4: Diff EMA20 (1H) < 2%
+        const closedAll1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
         const ema20_1 = calculateEMA(closedAll1H, 20);
 
-        // Lấy dữ liệu lùi về 20 nến trước đó để tính EMA20 tại thời điểm đó
         const closed1H_20 = closedAll1H.slice(0, closedAll1H.length - 20);
         const ema20_20 = calculateEMA(closed1H_20, 20);
 
         if (!ema20_1 || !ema20_20) return null;
 
         const diffEMA = ((ema20_1 - ema20_20) / ema20_20) * 100;
-        if (diffEMA >= 4.0) return null;
+        if (diffEMA >= 2.0) return null;
 
         return {
             diffBB,
             xRatio: x,
-            diffEMA,
-            candle1BodyPct: ((close1 - open1) / open1) * 100
+            diffEMA
         };
     } catch (error) {
         console.error(`Lỗi SHORT 1H (${symbol}):`, error.message);
@@ -160,7 +161,7 @@ async function checkShort1HConditions(symbol) {
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU SHORT 1H (BOLLINGER BAND & EMA) ---');
+        console.log('--- BẤT ĐẦU QUÉT TÍN HIỆU SHORT 1H (BB + EMA) ---');
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
@@ -168,7 +169,6 @@ async function main() {
 
         if (fs.existsSync(STATE_TOP15D_FILE)) {
             const stateTop15dData = JSON.parse(fs.readFileSync(STATE_TOP15D_FILE, 'utf8'));
-            
             const topGainers15D = stateTop15dData.top30Gainers15D || stateTop15dData.top20Gainers15D || [];
             console.log(`📋 Quét SHORT 1H (${topGainers15D.length} coins từ Top Tăng 15D)...`);
 
@@ -185,19 +185,17 @@ async function main() {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    // Tin nhắn Telegram ngắn gọn mới
-                    const message = `🔴 <b>SHORT #${coinName}</b> (Top ${i + 1} - 15D)\n` +
-                                    `• <b>X:</b> <code>${shortSignal.xRatio.toFixed(2)}</code>\n` +
-                                    `• <b>BB:</b> <code>${shortSignal.diffBB.toFixed(2)}%</code>\n` +
-                                    `• <b>EMA:</b> <code>${shortSignal.diffEMA.toFixed(2)}%</code>\n` +
-                                    `👉 <a href="${link}">Trade OKX</a>`;
+                    // Nội dung tin nhắn rút gọn
+                    const message = `🔴 <b>SHORT #${coinName} 1H</b>\n` +
+                                    `Top ${i + 1} 15D | x: <b>${shortSignal.xRatio.toFixed(2)}</b>\n` +
+                                    `BB: <code>${shortSignal.diffBB.toFixed(2)}%</code> | EMA: <code>${shortSignal.diffEMA.toFixed(2)}%</code>\n` +
+                                    `👉 <a href="${link}">OKX</a>`;
 
                     console.log(`🚀 [SHORT 1H] Gửi Telegram ${symbol}...`);
                     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         chat_id: TELEGRAM_CHAT_ID,
                         text: message,
-                        parse_mode: 'HTML',
-                        disable_web_page_preview: true
+                        parse_mode: 'HTML'
                     }).catch(err => console.error(err.message));
 
                     sentLog[symbol]._short1h = currentTime;
