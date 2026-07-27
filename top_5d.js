@@ -7,6 +7,7 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Giữ nguyên đường dẫn file JSON để workflow .yml và file.js khác đọc đúng
 const STATE_FILE = path.join(__dirname, 'statetop_15d.json');
 const MAX_CONCURRENT_REQUESTS = 8;
 
@@ -29,36 +30,35 @@ async function asyncPool(limit, array, iteratorFn) {
 async function fetchCandleData(coin) {
   const symbol = coin.instId;
   try {
-    // Lấy 6 nến 1D để truy cập từ nến hôm qua [1] đến nến 5 ngày trước [5]
-    const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=6`;
+    // Lấy 4 nến 1D để truy cập từ nến vừa đóng hôm qua [1] đến nến 3 ngày trước [3]
+    const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=4`;
     const candleRes = await axios.get(candle1DUrl, { timeout: 5000 });
 
-    if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 6) { 
+    if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 4) { 
       const candles1D = candleRes.data.data; 
 
       // Cấu trúc nến OKX: [ts, open, high, low, close, ...]
 
-      // Giá đóng cửa nến cách đây 2 ngày (index [2])
-      const close2DaysAgo = parseFloat(candles1D[2][4]);
+      // Giá đóng cửa nến vừa đóng hôm qua (index [1])
+      const closeYesterday = parseFloat(candles1D[1][4]);
 
-      // Giá THẤP NHẤT (Low - index [3]) trong 5 ngày (từ nến [1] đến nến [5])
-      const lowestPrice5D = Math.min(...candles1D.slice(1, 6).map(c => parseFloat(c[3])));
+      // Giá THẤP NHẤT (Low - index [3]) trong 3 ngày vừa qua (từ nến [1] đến nến [3])
+      const lowestPrice3D = Math.min(...candles1D.slice(1, 4).map(c => parseFloat(c[3])));
 
-      // % Tăng = ((Close[2] - Low5D) / Low5D) * 100
-      let change5DaysGain = null;
-      if (lowestPrice5D > 0 && close2DaysAgo > 0) {
-        change5DaysGain = ((close2DaysAgo - lowestPrice5D) / lowestPrice5D) * 100;
+      // % Tăng = ((CloseYesterday - Low3D) / Low3D) * 100
+      let change3DaysGain = null;
+      if (lowestPrice3D > 0 && closeYesterday > 0) {
+        change3DaysGain = ((closeYesterday - lowestPrice3D) / lowestPrice3D) * 100;
       }
 
       // Biến động nến vừa đóng hôm qua (index [1])
       const open1D = parseFloat(candles1D[1][1]);
-      const closeYesterday = parseFloat(candles1D[1][4]);
       const change1DPercentage = open1D > 0 ? ((closeYesterday - open1D) / open1D) * 100 : 0;
 
       return { 
         symbol, 
-        // Giữ nguyên tên thuộc tính change15DaysGain để tương thích với các file đọc dữ liệu
-        change15DaysGain: change5DaysGain,
+        // GIỮ NGUYÊN TÊN THUỘC TÍNH `change15DaysGain` để file.js và .yml đọc không bị hư
+        change15DaysGain: change3DaysGain,
         change1Day: change1DPercentage
       }; 
     } 
@@ -68,7 +68,7 @@ async function fetchCandleData(coin) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: COIN TĂNG GIÁ > 12% TRONG 5 NGÀY (VOL > 3M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: COIN TĂNG GIÁ > 12% TRONG 3 NGÀY (VOL > 3M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -93,12 +93,13 @@ async function main() {
       .sort((a, b) => b.change15DaysGain - a.change15DaysGain)
       .map((item, index) => ({
         symbol: item.symbol,
+        // GIỮ NGUYÊN TÊN KEY DƯỚI ĐÂY ĐỂ ĐẮP ỨNG SCHEMA CỦA FILE.JS / .YML KHÁC
         rank15dGain: index + 1,
         change15DaysGain: parseFloat(item.change15DaysGain.toFixed(2)),
         change1Day: parseFloat(item.change1Day.toFixed(2))
       }));
 
-    // Giữ nguyên tên key top30Gainers15D trong file JSON để các file khác đọc bình thường
+    // GIỮ NGUYÊN KEY `top30Gainers15D` ĐỂ FILE KHÁC BÓC TÁCH JSON BÌNH THƯỜNG
     const finalState = { 
       updatedAt: new Date().toISOString(),
       top30Gainers15D: filteredGainers
@@ -108,11 +109,11 @@ async function main() {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
-    console.log(`- Đã lưu đúng ${filteredGainers.length} coin (tăng > 12%) vào ${STATE_FILE}`); 
+    console.log(`- Đã lưu đúng ${filteredGainers.length} coin (tăng 3D > 12%) vào ${STATE_FILE}`); 
 
-    console.log('\n--- DANH SÁCH COIN TĂNG GIÁ > 12% TRONG 5 NGÀY ---'); 
+    console.log('\n--- DANH SÁCH COIN TĂNG GIÁ > 12% TRONG 3 NGÀY ---'); 
     filteredGainers.forEach((c) => { 
-      console.log(`${c.rank15dGain}. ${c.symbol}: Gain 5D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
+      console.log(`${c.rank15dGain}. ${c.symbol}: Gain 3D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
 
   } catch (error) { 
