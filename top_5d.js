@@ -57,7 +57,7 @@ async function fetchCandleData(coin) {
 
       return { 
         symbol, 
-        // Giữ nguyên tên thuộc tính change15DaysGain để tương thích dữ liệu đầu ra
+        // Giữ nguyên tên thuộc tính change15DaysGain để tương thích với các file đọc dữ liệu
         change15DaysGain: change5DaysGain,
         change1Day: change1DPercentage
       }; 
@@ -68,7 +68,7 @@ async function fetchCandleData(coin) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 30 COIN TĂNG MẠNH NHẤT 5 NGÀY (VOL > 3M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: COIN TĂNG GIÁ > 12% TRONG 5 NGÀY (VOL > 3M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -87,11 +87,10 @@ async function main() {
     const results = await asyncPool(MAX_CONCURRENT_REQUESTS, rawFutures, (coin) => fetchCandleData(coin)); 
     const poolData = results.filter(r => r !== null); 
     
-    // Sắp xếp & Lấy đúng TOP 30
-    const top30Gainers15D = poolData
-      .filter(r => r.change15DaysGain !== null)
+    // Lọc tất cả coin có % tăng > 12% và Sắp xếp từ cao xuống thấp
+    const filteredGainers = poolData
+      .filter(r => r.change15DaysGain !== null && r.change15DaysGain > 12)
       .sort((a, b) => b.change15DaysGain - a.change15DaysGain)
-      .slice(0, 30)
       .map((item, index) => ({
         symbol: item.symbol,
         rank15dGain: index + 1,
@@ -99,20 +98,20 @@ async function main() {
         change1Day: parseFloat(item.change1Day.toFixed(2))
       }));
 
-    // Giữ nguyên tên key top30Gainers15D trong file JSON
+    // Giữ nguyên tên key top30Gainers15D trong file JSON để các file khác đọc bình thường
     const finalState = { 
       updatedAt: new Date().toISOString(),
-      top30Gainers15D
+      top30Gainers15D: filteredGainers
     }; 
     
     fs.writeFileSync(STATE_FILE, JSON.stringify(finalState, null, 2), 'utf8'); 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2); 
     
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
-    console.log(`- Đã lưu đúng ${top30Gainers15D.length} coin vào ${STATE_FILE}`); 
+    console.log(`- Đã lưu đúng ${filteredGainers.length} coin (tăng > 12%) vào ${STATE_FILE}`); 
 
-    console.log('\n--- TOP 30 COIN TĂNG GIÁ MẠNH NHẤT 5 NGÀY ---'); 
-    top30Gainers15D.forEach((c) => { 
+    console.log('\n--- DANH SÁCH COIN TĂNG GIÁ > 12% TRONG 5 NGÀY ---'); 
+    filteredGainers.forEach((c) => { 
       console.log(`${c.rank15dGain}. ${c.symbol}: Gain 5D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
 
