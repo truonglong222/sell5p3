@@ -29,11 +29,11 @@ async function asyncPool(limit, array, iteratorFn) {
 async function fetchCandleData(coin) {
   const symbol = coin.instId;
   try {
-    // Lấy 16 nến 1D để truy cập từ nến hôm qua [1] đến nến 15 ngày trước [15]
-    const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=16`;
+    // Lấy 6 nến 1D để truy cập từ nến hôm qua [1] đến nến 5 ngày trước [5]
+    const candle1DUrl = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=6`;
     const candleRes = await axios.get(candle1DUrl, { timeout: 5000 });
 
-    if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 16) { 
+    if (candleRes.data && candleRes.data.code === '0' && candleRes.data.data.length >= 6) { 
       const candles1D = candleRes.data.data; 
 
       // Cấu trúc nến OKX: [ts, open, high, low, close, ...]
@@ -41,13 +41,13 @@ async function fetchCandleData(coin) {
       // Giá đóng cửa nến cách đây 2 ngày (index [2])
       const close2DaysAgo = parseFloat(candles1D[2][4]);
 
-      // Giá THẤP NHẤT (Low - index [3]) trong 15 ngày (từ nến [1] đến nến [15])
-      const lowestPrice15D = Math.min(...candles1D.slice(1, 16).map(c => parseFloat(c[3])));
+      // Giá THẤP NHẤT (Low - index [3]) trong 5 ngày (từ nến [1] đến nến [5])
+      const lowestPrice5D = Math.min(...candles1D.slice(1, 6).map(c => parseFloat(c[3])));
 
-      // % Tăng = ((Close[2] - Low15D) / Low15D) * 100
-      let change15DaysGain = null;
-      if (lowestPrice15D > 0 && close2DaysAgo > 0) {
-        change15DaysGain = ((close2DaysAgo - lowestPrice15D) / lowestPrice15D) * 100;
+      // % Tăng = ((Close[2] - Low5D) / Low5D) * 100
+      let change5DaysGain = null;
+      if (lowestPrice5D > 0 && close2DaysAgo > 0) {
+        change5DaysGain = ((close2DaysAgo - lowestPrice5D) / lowestPrice5D) * 100;
       }
 
       // Biến động nến vừa đóng hôm qua (index [1])
@@ -57,7 +57,8 @@ async function fetchCandleData(coin) {
 
       return { 
         symbol, 
-        change15DaysGain,
+        // Giữ nguyên tên thuộc tính change15DaysGain để tương thích dữ liệu đầu ra
+        change15DaysGain: change5DaysGain,
         change1Day: change1DPercentage
       }; 
     } 
@@ -67,7 +68,7 @@ async function fetchCandleData(coin) {
 
 async function main() {
   const startTime = Date.now();
-  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 30 COIN TĂNG MẠNH NHẤT 15 NGÀY (VOL > 3M USD) ---');
+  console.log('--- BẤT ĐẦU LỌC SONG SONG: TOP 30 COIN TĂNG MẠNH NHẤT 5 NGÀY (VOL > 3M USD) ---');
   try {
     const tickersUrl = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const response = await axios.get(tickersUrl);
@@ -98,7 +99,7 @@ async function main() {
         change1Day: parseFloat(item.change1Day.toFixed(2))
       }));
 
-    // Chỉ lưu duy nhất danh sách 30 coin và thời gian cập nhật
+    // Giữ nguyên tên key top30Gainers15D trong file JSON
     const finalState = { 
       updatedAt: new Date().toISOString(),
       top30Gainers15D
@@ -110,9 +111,9 @@ async function main() {
     console.log(`--- HOÀN THÀNH LỌC TRONG ${duration} GIÂY ---`); 
     console.log(`- Đã lưu đúng ${top30Gainers15D.length} coin vào ${STATE_FILE}`); 
 
-    console.log('\n--- TOP 30 COIN TĂNG GIÁ MẠNH NHẤT 15 NGÀY ---'); 
+    console.log('\n--- TOP 30 COIN TĂNG GIÁ MẠNH NHẤT 5 NGÀY ---'); 
     top30Gainers15D.forEach((c) => { 
-      console.log(`${c.rank15dGain}. ${c.symbol}: Gain 15D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
+      console.log(`${c.rank15dGain}. ${c.symbol}: Gain 5D +${c.change15DaysGain}% | Nến 1D Vừa Đóng: ${c.change1Day}%`); 
     }); 
 
   } catch (error) { 
