@@ -97,7 +97,6 @@ async function checkShort1HConditions(symbol) {
 
         // ---------------- ĐIỀU KIỆN XÉT 50 NẾN 1H ----------------
         // A. Tìm nến giảm giá lớn nhất trong 50 nến 1H gần nhất (Index 1 đến 50)
-        // Tính bằng biến động từ Giá cao nhất (High) đến Giá thấp nhất (Low)
         const last50Candles = raw1H.slice(1, 51);
         let maxDropPct = 0; 
 
@@ -176,7 +175,6 @@ async function main() {
             for (let i = 0; i < topGainers15D.length; i++) {
                 const item = topGainers15D[i];
                 const symbol = typeof item === 'object' ? item.symbol : item;
-                const gain15dVal = typeof item === 'object' ? (item.change15DaysGain ?? 'N/A') : 'N/A';
 
                 if (!sentLog[symbol]) sentLog[symbol] = {};
                 const lastSent = sentLog[symbol]._short1h || 0;
@@ -187,19 +185,19 @@ async function main() {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    const message = `🔴 <b>SHORT #${coinName} (BB + EMA 1H)</b>\n` +
-                                    `🏆 Xếp hạng: <b>Top ${i + 1} Tăng 15D (+${gain15dVal}%)</b>\n` +
-                                    `🎯 Râu High[1] lệch BB Upper 1H: <code>${shortSignal.diffBB.toFixed(2)}%</code>\n` +
-                                    `🔻 Nến 1H vừa đóng: <code>${shortSignal.candle1BodyPct.toFixed(2)}%</code>\n` +
-                                    `📉 Tỉ số Xả (High-Low 50 nến)/TB20 (x): <code>${shortSignal.xRatio.toFixed(2)}</code> (> 3)\n` +
-                                    `⚡ Diff EMA20 (1H): <code>${shortSignal.diffEMA.toFixed(2)}%</code> (< 4%)\n` +
-                                    `👉 <a href="${link}">Đồ thị OKX</a>`;
+                    // Tin nhắn Telegram ngắn gọn mới
+                    const message = `🔴 <b>SHORT #${coinName}</b> (Top ${i + 1} - 15D)\n` +
+                                    `• <b>X:</b> <code>${shortSignal.xRatio.toFixed(2)}</code>\n` +
+                                    `• <b>BB:</b> <code>${shortSignal.diffBB.toFixed(2)}%</code>\n` +
+                                    `• <b>EMA:</b> <code>${shortSignal.diffEMA.toFixed(2)}%</code>\n` +
+                                    `👉 <a href="${link}">Trade OKX</a>`;
 
                     console.log(`🚀 [SHORT 1H] Gửi Telegram ${symbol}...`);
                     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         chat_id: TELEGRAM_CHAT_ID,
                         text: message,
-                        parse_mode: 'HTML'
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: true
                     }).catch(err => console.error(err.message));
 
                     sentLog[symbol]._short1h = currentTime;
