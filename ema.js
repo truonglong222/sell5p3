@@ -175,6 +175,7 @@ async function main() {
             for (let i = 0; i < topGainers15D.length; i++) {
                 const item = topGainers15D[i];
                 const symbol = typeof item === 'object' ? item.symbol : item;
+                const gain = typeof item === 'object' ? item.change15DaysGain : 0;
 
                 if (!sentLog[symbol]) sentLog[symbol] = {};
                 const lastSent = sentLog[symbol]._short1h || 0;
@@ -185,9 +186,9 @@ async function main() {
                     const coinName = symbol.replace('-USDT-SWAP', '');
                     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                    // Nội dung tin nhắn rút gọn
+                    // Nội dung tin nhắn rút gọn hiển thị % tăng giá
                     const message = `🔴 <b>SHORT #${coinName} 1H</b>\n` +
-                                    `Top ${i + 1} 15D | x: <b>${shortSignal.xRatio.toFixed(2)}</b>\n` +
+                                    `Gain 3D: <b>+${gain}%</b> | x: <b>${shortSignal.xRatio.toFixed(2)}</b>\n` +
                                     `BB: <code>${shortSignal.diffBB.toFixed(2)}%</code> | EMA: <code>${shortSignal.diffEMA.toFixed(2)}%</code>\n` +
                                     `👉 <a href="${link}">OKX</a>`;
 
