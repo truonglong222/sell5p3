@@ -80,23 +80,20 @@ async function checkShort1HConditions(symbol) {
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 51) return null;
 
         const raw1H = res1H.data.data; // Index 0: nến đang chạy, 1: nến [1], 2: nến [2]
-        const candle1 = raw1H[1];
-        const candle2 = raw1H[2];
+        
+        // --- [ĐÃ SỬA] ĐIỀU KIỆN 1: Bỏ kiểm tra nến [1] phải là nến đỏ ---
 
-        const open1 = parseFloat(candle1[1]);
-        const close1 = parseFloat(candle1[4]);
-        const high2 = parseFloat(candle2[2]);
+        // --- [ĐÃ SỬA] ĐIỀU KIỆN 2: Tính BB & diffBB cho nến HIỆN TẠI (Index 0) ---
+        const candle0 = raw1H[0];
+        const high0 = parseFloat(candle0[2]);
 
-        // ĐIỀU KIỆN 1: Nến [1] vừa đóng phải là nến giảm giá (đỏ)
-        if (close1 >= open1) return null;
+        // Tính BB bằng 20 nến gần nhất tính từ nến hiện tại về trước (index 0 đến 19)
+        const closedForBB0 = raw1H.slice(0, 20).reverse().map(c => parseFloat(c[4]));
+        const bb0 = calculateBollingerBands(closedForBB0, 20);
+        if (!bb0) return null;
 
-        // ĐIỀU KIỆN 2: Tính BB cho nến [2] (20 nến tính từ index 2 đến 21)
-        const closedForBB2 = raw1H.slice(2, 22).reverse().map(c => parseFloat(c[4]));
-        const bb2 = calculateBollingerBands(closedForBB2, 20);
-        if (!bb2) return null;
-
-        // Râu trên (High) nến [2] sát BB Upper: -0.5% < diffBB < 1.0%
-        const diffBB = ((high2 - bb2.upper) / bb2.upper) * 100;
+        // Râu trên (High) nến HIỆN TẠI sát BB Upper: -0.5% < diffBB < 1.0%
+        const diffBB = ((high0 - bb0.upper) / bb0.upper) * 100;
         if (diffBB <= -0.5 || diffBB >= 1.0) return null;
 
         // ---------------- ĐIỀU KIỆN XÉT 50 NẾN 1H ----------------
