@@ -128,9 +128,9 @@ async function checkShort1HConditions(symbol) {
         const avgChange20 = totalAbsChange20 / 20;
         if (avgChange20 === 0) return null;
 
-        // C. ĐIỀU KIỆN 3: Tỉ số x > 5
+        // C. ĐIỀU KIỆN 3: Tỉ số x > 4
         const x = maxDropPct / avgChange20;
-        if (x <= 5) return null;
+        if (x <= 4) return null;
 
         // ĐIỀU KIỆN 4: Diff EMA20 (1H) < 2%
         const closedAll1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
