@@ -73,17 +73,15 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
 // ------------------- LOGIC KIỂM TRA SHORT 1H -------------------
 async function checkShort1HConditions(symbol) {
     try {
-        // Lấy 60 nến khung 1H
-        const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
+        // [ĐÃ SỬA] Lấy 70 nến khung 1H từ OKX API
+        const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=70`;
         const res1H = await axios.get(url1H, { timeout: 5000 });
 
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 51) return null;
 
-        const raw1H = res1H.data.data; // Index 0: nến đang chạy, 1: nến [1], 2: nến [2]
-        
-        // --- [ĐÃ SỬA] ĐIỀU KIỆN 1: Bỏ kiểm tra nến [1] phải là nến đỏ ---
+        const raw1H = res1H.data.data; // Index 0: nến đang chạy, 1: nến [1], 2: nến [2]...
 
-        // --- [ĐÃ SỬA] ĐIỀU KIỆN 2: Tính BB & diffBB cho nến HIỆN TẠI (Index 0) ---
+        // --- ĐIỀU KIỆN 2: Tính BB & diffBB cho nến HIỆN TẠI (Index 0) ---
         const candle0 = raw1H[0];
         const high0 = parseFloat(candle0[2]);
 
@@ -96,12 +94,13 @@ async function checkShort1HConditions(symbol) {
         const diffBB = ((high0 - bb0.upper) / bb0.upper) * 100;
         if (diffBB <= -0.5 || diffBB >= 1.0) return null;
 
-        // ---------------- ĐIỀU KIỆN XÉT 50 NẾN 1H ----------------
-        // A. Tìm nến giảm giá lớn nhất trong 50 nến 1H gần nhất (Index 1 đến 50)
-        const last50Candles = raw1H.slice(1, 51);
+        // ---------------- ĐIỀU KIỆN XÉT NẾN GIẢM VÀ 20 NẾN TRƯỚC NÓ ----------------
+        // [ĐÃ SỬA] A. Tìm nến giảm giá lớn nhất trong 50 nến 1H gần nhất (Index 1 đến 50)
         let maxDropPct = 0;
+        let maxDropIndex = -1; // Lưu lại vị trí (index) của nến giảm lớn nhất
 
-        for (const c of last50Candles) {
+        for (let i = 1; i <= 50 && i < raw1H.length; i++) {
+            const c = raw1H[i];
             const o = parseFloat(c[1]);
             const h = parseFloat(c[2]);
             const l = parseFloat(c[3]);
@@ -111,15 +110,26 @@ async function checkShort1HConditions(symbol) {
                 const dropPct = ((h - l) / h) * 100;
                 if (dropPct > maxDropPct) {
                     maxDropPct = dropPct;
+                    maxDropIndex = i;
                 }
             }
         }
 
-        // B. Tính biến động trung bình 20 nến 1H gần nhất (Index 1 đến 20)
-        const last20Candles = raw1H.slice(1, 21);
+        // Nếu không tìm thấy nến giảm nào trong 50 nến gần nhất thì bỏ qua
+        if (maxDropIndex === -1 || maxDropPct === 0) return null;
+
+        // [ĐÃ SỬA] B. Tính biến động trung bình của 20 nến TÍNH TỪ TRƯỚC cây nến giảm lớn nhất
+        // Nến nằm ngay trước nến maxDropIndex sẽ bắt đầu từ index (maxDropIndex + 1) đến (maxDropIndex + 20)
+        const startIndex = maxDropIndex + 1;
+        const endIndex = maxDropIndex + 21;
+
+        // Kiểm tra xem dữ liệu fetch về có đủ 20 nến trước đó hay không
+        if (raw1H.length < endIndex) return null;
+
+        const candlesBeforeMaxDrop = raw1H.slice(startIndex, endIndex);
         let totalAbsChange20 = 0;
 
-        for (const c of last20Candles) {
+        for (const c of candlesBeforeMaxDrop) {
             const o = parseFloat(c[1]);
             const cl = parseFloat(c[4]);
             totalAbsChange20 += (Math.abs(cl - o) / o) * 100;
