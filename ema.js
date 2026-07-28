@@ -142,7 +142,7 @@ async function checkShort1HConditions(symbol) {
         const x = maxDropPct / avgChange20;
         if (x <= 4) return null;
 
-        // ĐIỀU KIỆN 4: Diff EMA20 (1H) < 3%
+        // ĐIỀU KIỆN 4: Diff EMA20 (1H) < 4%
         const closedAll1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
         const ema20_1 = calculateEMA(closedAll1H, 20);
 
@@ -152,7 +152,7 @@ async function checkShort1HConditions(symbol) {
         if (!ema20_1 || !ema20_20) return null;
 
         const diffEMA = ((ema20_1 - ema20_20) / ema20_20) * 100;
-        if (diffEMA >= 3.0) return null;
+        if (diffEMA >= 4.0) return null;
 
         return {
             diffBB,
