@@ -1,12 +1,11 @@
 name: Auto Daily Top 5D Scan
 
 on:
-  # Kích hoạt tự động bằng lịch hẹn giờ nội bộ của GitHub
-  schedule:
-    # Chạy 1 ngày / 1 lần lúc 00:02 UTC (Tương đương đúng 07:02 sáng giờ Việt Nam GMT+7)
-    - cron: '30 21 * * *'
-    
-  # Cho phép bạn bấm nút chạy thử thủ công trực tiếp trên giao diện Web GitHub nếu cần
+  # Kích hoạt từ Webhook / Web Cron Job bên ngoài
+  repository_dispatch:
+    types: [run-top5dscan]
+
+  # Giữ lại nút kích hoạt thủ công trên giao diện Web GitHub
   workflow_dispatch:
 
 jobs:
