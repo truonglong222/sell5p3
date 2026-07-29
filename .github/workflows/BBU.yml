@@ -1,40 +1,47 @@
-name: Execute Top 4H Bot From External Cron
+name: BBU Short Scanner
 
 on:
-  # Mở cổng nhận tín hiệu trigger kích hoạt từ trang web cron-job.org bên ngoài
+  # 1. Chạy theo lịch trình (Cronjob)
+  # Ví dụ: Chạy mỗi tiếng một lần vào phút thứ 0
+  schedule:
+    - cron: '0 * * * *'
+
+  # 2. Cho phép kích hoạt thủ công từ giao diện GitHub hoặc gọi API từ web bên ngoài
   workflow_dispatch:
 
 jobs:
-  run-top-4h-bot:
+  run-scanner:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout mã nguồn từ Repository
+      # Bước 1: Checkout mã nguồn từ repository
+      - name: Checkout repository code
         uses: actions/checkout@v4
 
-      - name: Khởi tạo môi trường Node.js
+      # Bước 2: Cài đặt môi trường Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: '20'
+          cache: 'npm' # Giúp cache node_modules để tăng tốc lần chạy sau
 
-      - name: Cài đặt thư viện dependencies
-        run: npm install
+      # Bước 3: Cài đặt dependencies
+      - name: Install dependencies
+        run: npm ci || npm install
 
-      - name: Thực thi Tập lệnh top3_4h.js
-        run: node top_4h.js
+      # Bước 4: Chạy file BBU.js với các biến môi trường
+      - name: Run BBU.js script
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: node BBU.js
 
-      - name: Commit & Push dữ liệu statetop3_4h.json mới về kho code
+      # Bước 5: Lưu lại lịch sử gửi tin nhắn (sent_ema.json và statetop_15d.json)
+      - name: Commit and push updated JSON state files
         run: |
-          # Thiết lập cấu hình danh tính Git hệ thống
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          # ĐÃ SỬA: Theo dõi tệp kết quả danh sách coin top tăng/giảm 4h mới
-          git add statetop3_4h.json
-          
-          # Chỉ tiến hành đẩy mã nguồn lên nếu danh sách có sự thay đổi mới
-          if git diff --cached --quiet; then
-            echo "Không phát hiện thay đổi trong danh sách coin. Bỏ qua bước đẩy mã nguồn lên."
-          else
-            git commit -m "🤖 [Bot Action] Cập nhật danh sách Top 3 tăng/giảm 4h statetop3_4h.json [skip ci]"
-            git push origin HEAD:${{ github.ref }}
-          fi
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add sent_ema.json statetop_15d.json
+          git status
+          git diff-index --quiet HEAD || git commit -m "chore: update scanner state logs [skip ci]"
+          git push
