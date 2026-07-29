@@ -1,12 +1,11 @@
 name: BBU Short Scanner
 
 on:
-  # 1. Chạy theo lịch trình (Cronjob)
-  # Ví dụ: Chạy mỗi tiếng một lần vào phút thứ 0
-  schedule:
-    - cron: '0 * * * *'
+  # 1. Cho phép kích hoạt từ bên thứ 3 (như cron-job.org) qua API Hook
+  repository_dispatch:
+    types: [trigger-bbu-scan]
 
-  # 2. Cho phép kích hoạt thủ công từ giao diện GitHub hoặc gọi API từ web bên ngoài
+  # 2. Vẫn giữ cho phép ấn nút chạy thủ công trên giao diện GitHub Action
   workflow_dispatch:
 
 jobs:
@@ -14,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Checkout mã nguồn từ repository
+      # Bước 1: Checkout mã nguồn
       - name: Checkout repository code
         uses: actions/checkout@v4
 
@@ -23,7 +22,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm' # Giúp cache node_modules để tăng tốc lần chạy sau
+          cache: 'npm'
 
       # Bước 3: Cài đặt dependencies
       - name: Install dependencies
@@ -36,7 +35,7 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: node BBU.js
 
-      # Bước 5: Lưu lại lịch sử gửi tin nhắn (sent_ema.json và statetop_15d.json)
+      # Bước 5: Lưu lại lịch sử dữ liệu (sent_ema.json và statetop_15d.json)
       - name: Commit and push updated JSON state files
         run: |
           git config --global user.name "github-actions[bot]"
