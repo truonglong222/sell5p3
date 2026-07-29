@@ -46,17 +46,21 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-function save24hJson(topMaxDiffEma, topMinDiffEma) {
+// Ghi file 24h.json phân chia làm 4 nhóm
+function save24hJson(groupedData) {
     try {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
-            totalMaxDiffEma: topMaxDiffEma.length,
-            totalMinDiffEma: topMinDiffEma.length,
-            top20MaxDiffEma: topMaxDiffEma,
-            top40MinDiffEma: topMinDiffEma
+            counts: {
+                group6To10: groupedData.group6To10.length,
+                groupAbove10: groupedData.groupAbove10.length,
+                groupNeg15ToNeg6: groupedData.groupNeg15ToNeg6.length,
+                groupBelowNeg15: groupedData.groupBelowNeg15.length
+            },
+            data: groupedData
         };
         fs.writeFileSync(FILE_24H, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`💾 Đã lưu Top ${topMaxDiffEma.length} Max diffEMA và Top ${topMinDiffEma.length} Min diffEMA vào ${FILE_24H}`);
+        console.log(`💾 Đã lưu phân loại 4 nhóm diffEMA vào ${FILE_24H}`);
     } catch (e) {
         console.error('Lỗi khi ghi file 24h.json:', e.message);
     }
@@ -96,7 +100,7 @@ async function getHighVolumeCoins() {
         if (!res.data || res.data.code !== '0') return [];
 
         const tickers = res.data.data;
-        const validCoins = tickers.filter(item => {
+        return tickers.filter(item => {
             if (!item.instId.endsWith('-USDT-SWAP')) return false;
             const volCcy = parseFloat(item.volCcy24h || 0);
             return volCcy >= MIN_VOLUME_USDT;
@@ -104,15 +108,13 @@ async function getHighVolumeCoins() {
             instId: item.instId,
             volCcy24h: parseFloat(item.volCcy24h || 0)
         }));
-
-        return validCoins;
     } catch (error) {
         console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
         return [];
     }
 }
 
-// ------------------- TÍNH DIFF EMA BÌNH THƯỜNG DÀNH CHO TẤT CẢ COIN -------------------
+// ------------------- TÍNH DIFF EMA BÌNH THƯỜNG CHO TẤT CẢ COIN -------------------
 async function getCoinDataWithDiffEma(symbol, volCcy24h) {
     try {
         // Lấy 60 nến 1H
@@ -121,15 +123,13 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 45) return null;
 
-        const raw1H = res1H.data.data; // Index 0 là nến đang chạy, 1 là nến vừa đóng...
+        const raw1H = res1H.data.data; // Index 0: nến đang chạy, Index 1: nến vừa đóng
 
-        // Lấy giá đóng cửa từ nến n=1 trở về quá khứ (đảo ngược để tính EMA theo thứ tự thời gian)
+        // Bỏ nến 0 đang chạy, đảo ngược chuỗi để tính EMA
         const closedPrices = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
 
-        // EMA20 tại nến số 1
         const ema20_1 = calculateEMA(closedPrices, 20);
 
-        // EMA20 tại nến cách đó 20 phiên (bỏ đi 20 nến gần nhất)
         const closedPrices20Ago = closedPrices.slice(0, closedPrices.length - 20);
         const ema20_20Ago = calculateEMA(closedPrices20Ago, 20);
 
@@ -141,7 +141,7 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
             symbol,
             volCcy24h,
             diffEMA,
-            raw1H // Giữ lại raw1H để dùng kiểm tra điều kiện Long/Short sau này
+            raw1H
         };
     } catch (error) {
         console.error(`Lỗi tính diffEMA (${symbol}):`, error.message);
@@ -149,66 +149,73 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
     }
 }
 
-// ------------------- KIỂM TRA ĐIỀU KIỆN LONG -------------------
-function checkLongCondition(coinData) {
+// ------------------- KIỂM TRA ĐIỀU KIỆN LONG / SHORT NẾN VỪA ĐÓNG -------------------
+
+// 1. Nhóm 6% < diffEMA < 10% -> LONG khi Low1 sát BB Lower (diffbbl < 0.7%)
+function checkSignalGroup6To10(coinData) {
     const { raw1H } = coinData;
+    const candle1 = raw1H[1]; // Nến vừa đóng
+    const low1 = parseFloat(candle1[3]);
 
-    // 1. Nến vừa đóng (nến số 1) là nến tăng (close1 > open1)
-    const candle1 = raw1H[1];
-    const open1 = parseFloat(candle1[1]);
-    const close1 = parseFloat(candle1[4]);
-    if (close1 <= open1) return null;
+    // Tính BB20 tại thời điểm nến 1 vừa đóng
+    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb1 = calculateBollingerBands(closedForBB1, 20);
+    if (!bb1) return null;
 
-    // 2. Nến số 2 (index 2): Low2 sát Bollinger Bands Dưới (diffbbl < 0.5%)
-    const candle2 = raw1H[2];
-    const low2 = parseFloat(candle2[3]);
-
-    const closedForBB2 = raw1H.slice(2, 22).reverse().map(c => parseFloat(c[4]));
-    const bb2 = calculateBollingerBands(closedForBB2, 20);
-    if (!bb2) return null;
-
-    // diffbbl = ((low2 - lower2) / lower2) * 100
-    const diffbbl = ((low2 - bb2.lower) / bb2.lower) * 100;
-
-    if (diffbbl < 0.5) {
-        return {
-            type: 'LONG',
-            diffBB: diffbbl,
-            low2,
-            bbLower: bb2.lower
-        };
+    const diffbbl = ((low1 - bb1.lower) / bb1.lower) * 100;
+    if (diffbbl < 0.7) {
+        return { type: 'LONG', diffBB: diffbbl, targetBB: 'BB Dưới' };
     }
     return null;
 }
 
-// ------------------- KIỂM TRA ĐIỀU KIỆN SHORT -------------------
-function checkShortCondition(coinData) {
+// 2. Nhóm diffEMA > 10% -> LONG khi Low1 sát BB Middle (diffbbm < 0.7%)
+function checkSignalGroupAbove10(coinData) {
     const { raw1H } = coinData;
-
-    // 1. Nến vừa đóng (nến số 1) là nến giảm (close1 < open1)
     const candle1 = raw1H[1];
-    const open1 = parseFloat(candle1[1]);
-    const close1 = parseFloat(candle1[4]);
-    if (close1 >= open1) return null;
+    const low1 = parseFloat(candle1[3]);
 
-    // 2. Nến số 2 (index 2): High2 sát Bollinger Bands Trên (diffbbu > -0.5%)
-    const candle2 = raw1H[2];
-    const high2 = parseFloat(candle2[2]);
+    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb1 = calculateBollingerBands(closedForBB1, 20);
+    if (!bb1) return null;
 
-    const closedForBB2 = raw1H.slice(2, 22).reverse().map(c => parseFloat(c[4]));
-    const bb2 = calculateBollingerBands(closedForBB2, 20);
-    if (!bb2) return null;
+    const diffbbm = ((low1 - bb1.middle) / bb1.middle) * 100;
+    if (diffbbm < 0.7) {
+        return { type: 'LONG', diffBB: diffbbm, targetBB: 'BB Giữa' };
+    }
+    return null;
+}
 
-    // diffbbu = ((high2 - upper2) / upper2) * 100
-    const diffbbu = ((high2 - bb2.upper) / bb2.upper) * 100;
+// 3. Nhóm -15% < diffEMA < -6% -> SHORT khi High1 sát BB Upper (diffbbu > -0.7%)
+function checkSignalGroupNeg15ToNeg6(coinData) {
+    const { raw1H } = coinData;
+    const candle1 = raw1H[1];
+    const high1 = parseFloat(candle1[2]);
 
-    if (diffbbu > -0.5) {
-        return {
-            type: 'SHORT',
-            diffBB: diffbbu,
-            high2,
-            bbUpper: bb2.upper
-        };
+    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb1 = calculateBollingerBands(closedForBB1, 20);
+    if (!bb1) return null;
+
+    const diffbbu = ((high1 - bb1.upper) / bb1.upper) * 100;
+    if (diffbbu > -0.7) {
+        return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Trên' };
+    }
+    return null;
+}
+
+// 4. Nhóm diffEMA < -15% -> SHORT khi High1 sát BB Middle (diffbbm > -0.7%)
+function checkSignalGroupBelowNeg15(coinData) {
+    const { raw1H } = coinData;
+    const candle1 = raw1H[1];
+    const high1 = parseFloat(candle1[2]);
+
+    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb1 = calculateBollingerBands(closedForBB1, 20);
+    if (!bb1) return null;
+
+    const diffbbm = ((high1 - bb1.middle) / bb1.middle) * 100;
+    if (diffbbm > -0.7) {
+        return { type: 'SHORT', diffBB: diffbbm, targetBB: 'BB Giữa' };
     }
     return null;
 }
@@ -227,98 +234,93 @@ async function main() {
         console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 5M USDT...`);
 
         // BƯỚC 2: Tính diffEMA cho tất cả coin vừa lọc được
-        console.log('⏳ Đang tính diffEMA cho danh sách coin...');
+        console.log('⏳ Đang tính diffEMA cho các coin...');
         const calculatedCoins = [];
 
         for (const coin of highVolCoins) {
             const data = await getCoinDataWithDiffEma(coin.instId, coin.volCcy24h);
             if (data) calculatedCoins.push(data);
-            await sleep(80); // Tránh rate limit API OKX
+            await sleep(80); // Rate limit API OKX
         }
 
-        // BƯỚC 3: Chọn Top 20 diffEMA LỚN NHẤT và Top 40 diffEMA NHỎ NHẤT
-        const sortedMaxDiff = [...calculatedCoins].sort((a, b) => b.diffEMA - a.diffEMA);
-        const sortedMinDiff = [...calculatedCoins].sort((a, b) => a.diffEMA - b.diffEMA);
+        // BƯỚC 3: Phân loại 4 nhóm diffEMA
+        const group6To10 = calculatedCoins.filter(c => c.diffEMA > 6 && c.diffEMA < 10);
+        const groupAbove10 = calculatedCoins.filter(c => c.diffEMA >= 10); // Lấy bao gồm >=10%
+        const groupNeg15ToNeg6 = calculatedCoins.filter(c => c.diffEMA > -15 && c.diffEMA < -6);
+        const groupBelowNeg15 = calculatedCoins.filter(c => c.diffEMA <= -15); // Lấy bao gồm <=-15%
 
-        const top20MaxDiffEma = sortedMaxDiff.slice(0, 20);
-        const top40MinDiffEma = sortedMinDiff.slice(0, 40);
-
-        // BƯỚC 4: Lưu thông tin vào 24h.json (loại bỏ raw1H để file nhẹ và gọn)
-        const formatForSave = item => ({
-            symbol: item.symbol,
-            diffEMA: parseFloat(item.diffEMA.toFixed(2)),
-            volCcy24h: item.volCcy24h
+        // Dữ liệu định dạng lưu file JSON
+        const formatItem = c => ({
+            symbol: c.symbol,
+            diffEMA: parseFloat(c.diffEMA.toFixed(2)),
+            volCcy24h: c.volCcy24h
         });
 
-        save24hJson(
-            top20MaxDiffEma.map(formatForSave),
-            top40MinDiffEma.map(formatForSave)
-        );
+        const groupedForSave = {
+            group6To10: group6To10.map(formatItem),
+            groupAbove10: groupAbove10.map(formatItem),
+            groupNeg15ToNeg6: groupNeg15ToNeg6.map(formatItem),
+            groupBelowNeg15: groupBelowNeg15.map(formatItem)
+        };
 
-        // BƯỚC 5: Kiểm tra báo LONG cho Top 20 diffEMA lớn nhất
-        console.log('🔍 Kiểm tra báo LONG trong Top 20 diffEMA lớn nhất...');
-        for (const item of top20MaxDiffEma) {
-            const symbol = item.symbol;
-            const longResult = checkLongCondition(item);
+        // BƯỚC 4: Ghi vào file 24h.json
+        save24hJson(groupedForSave);
 
-            if (longResult) {
-                if (!sentLog[symbol]) sentLog[symbol] = {};
-                const lastSent = sentLog[symbol]._long1h || 0;
+        // BƯỚC 5: Xử lý và Báo Tín Hiệu
 
-                if (currentTime - lastSent >= COOLDOWN_TIME) {
-                    const coinName = symbol.replace('-USDT-SWAP', '');
-                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+        // Helper gửi tin nhắn Telegram
+        const sendAlert = async (symbol, type, diffEmaVal, diffBBVal, targetBB, cooldownKey) => {
+            if (!sentLog[symbol]) sentLog[symbol] = {};
+            const lastSent = sentLog[symbol][cooldownKey] || 0;
 
-                    const message = `🟢 <b>LONG TÍN HIỆU #${coinName} 1H</b>\n` +
-                                    `diffEMA 1H: <b>+${item.diffEMA.toFixed(2)}%</b>\n` +
-                                    `Nến 1: <b>Nến Tăng</b>\n` +
-                                    `Nến 2 Low sát BB Dưới (diffbbl): <code>${longResult.diffBB.toFixed(2)}%</code> (< 0.5%)\n` +
-                                    `👉 <a href="${link}">Trade trên OKX</a>`;
+            if (currentTime - lastSent >= COOLDOWN_TIME) {
+                const coinName = symbol.replace('-USDT-SWAP', '');
+                const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+                const icon = type === 'LONG' ? '🟢' : '🔴';
 
-                    console.log(`🚀 [LONG MATCHED] Gửi Telegram cho ${symbol}...`);
-                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: message,
-                        parse_mode: 'HTML'
-                    }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
+                const message = `${icon} <b>${type} TÍN HIỆU #${coinName} 1H</b>\n` +
+                                `diffEMA 1H: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n` +
+                                `Nến vừa đóng sát ${targetBB}: <code>${diffBBVal.toFixed(2)}%</code>\n` +
+                                `👉 <a href="${link}">Trade trên OKX</a>`;
 
-                    sentLog[symbol]._long1h = currentTime;
-                    hasNewAlert = true;
-                }
+                console.log(`🚀 [${type} MATCHED] Gửi Telegram cho ${symbol}...`);
+                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'HTML'
+                }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
+
+                sentLog[symbol][cooldownKey] = currentTime;
+                hasNewAlert = true;
             }
+        };
+
+        // 1. Quét LONG nhóm 6% < diffEMA < 10%
+        console.log(`🔍 Quét LONG Nhóm 6% < diffEMA < 10% (${group6To10.length} coins)...`);
+        for (const item of group6To10) {
+            const sig = checkSignalGroup6To10(item);
+            if (sig) await sendAlert(item.symbol, 'LONG', item.diffEMA, sig.diffBB, sig.targetBB, '_long1h');
         }
 
-        // BƯỚC 6: Kiểm tra báo SHORT cho Top 40 diffEMA nhỏ nhất
-        console.log('🔍 Kiểm tra báo SHORT trong Top 40 diffEMA nhỏ nhất...');
-        for (const item of top40MinDiffEma) {
-            const symbol = item.symbol;
-            const shortResult = checkShortCondition(item);
+        // 2. Quét LONG nhóm diffEMA > 10%
+        console.log(`🔍 Quét LONG Nhóm diffEMA > 10% (${groupAbove10.length} coins)...`);
+        for (const item of groupAbove10) {
+            const sig = checkSignalGroupAbove10(item);
+            if (sig) await sendAlert(item.symbol, 'LONG', item.diffEMA, sig.diffBB, sig.targetBB, '_long1h');
+        }
 
-            if (shortResult) {
-                if (!sentLog[symbol]) sentLog[symbol] = {};
-                const lastSent = sentLog[symbol]._short1h || 0;
+        // 3. Quét SHORT nhóm -15% < diffEMA < -6%
+        console.log(`🔍 Quét SHORT Nhóm -15% < diffEMA < -6% (${groupNeg15ToNeg6.length} coins)...`);
+        for (const item of groupNeg15ToNeg6) {
+            const sig = checkSignalGroupNeg15ToNeg6(item);
+            if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h');
+        }
 
-                if (currentTime - lastSent >= COOLDOWN_TIME) {
-                    const coinName = symbol.replace('-USDT-SWAP', '');
-                    const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-
-                    const message = `🔴 <b>SHORT TÍN HIỆU #${coinName} 1H</b>\n` +
-                                    `diffEMA 1H: <b>${item.diffEMA.toFixed(2)}%</b>\n` +
-                                    `Nến 1: <b>Nến Giảm</b>\n` +
-                                    `Nến 2 High sát BB Trên (diffbbu): <code>${shortResult.diffBB.toFixed(2)}%</code> (> -0.5%)\n` +
-                                    `👉 <a href="${link}">Trade trên OKX</a>`;
-
-                    console.log(`🚀 [SHORT MATCHED] Gửi Telegram cho ${symbol}...`);
-                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: message,
-                        parse_mode: 'HTML'
-                    }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
-
-                    sentLog[symbol]._short1h = currentTime;
-                    hasNewAlert = true;
-                }
-            }
+        // 4. Quét SHORT nhóm diffEMA < -15%
+        console.log(`🔍 Quét SHORT Nhóm diffEMA < -15% (${groupBelowNeg15.length} coins)...`);
+        for (const item of groupBelowNeg15) {
+            const sig = checkSignalGroupBelowNeg15(item);
+            if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h');
         }
 
         if (hasNewAlert) saveSentLog(sentLog);
