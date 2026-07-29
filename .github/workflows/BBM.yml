@@ -35,12 +35,12 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: node BBM.js
 
-      # Bước 5: Lưu lại lịch sử dữ liệu (sent_ema.json và statetop_15d.json)
-      - name: Commit and push updated JSON state files
+      # Bước 5: Lưu lại lịch sử dữ liệu (chỉ lưu 24h.json)
+      - name: Commit and push updated 24h.json
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add sent_ema.json statetop_15d.json
+          git add 24h.json
           git status
-          git diff-index --quiet HEAD || git commit -m "chore: update scanner state logs [skip ci]"
+          git diff-index --quiet HEAD || git commit -m "chore: update scanner state 24h.json [skip ci]"
           git push
