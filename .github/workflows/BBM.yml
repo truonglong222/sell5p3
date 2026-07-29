@@ -1,47 +1,46 @@
-name: Execute EMA and RSI Bots Simultaneously
+name: BBM Short Scanner
 
 on:
-  # Kích hoạt đơn giản từ bên ngoài, không cần truyền tham số đầu vào (inputs) nữa
+  # 1. Kích hoạt từ bên thứ 3 (cron-job.org) qua API Hook
+  repository_dispatch:
+    types: [trigger-bbu-scan]
+
+  # 2. Cho phép kích hoạt thủ công từ giao diện GitHub Actions
   workflow_dispatch:
 
 jobs:
-  run-crypto-bots:
+  run-scanner:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout mã nguồn từ Repository
+      # Bước 1: Checkout mã nguồn
+      - name: Checkout repository code
         uses: actions/checkout@v4
 
-      - name: Khởi tạo môi trường Node.js
+      # Bước 2: Cài đặt môi trường Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Cài đặt thư viện dependencies
-        run: npm install
+      # Bước 3: Cài đặt dependencies
+      - name: Install dependencies
+        run: npm ci || npm install
 
-      - name: Thực thi tập lệnh BBM.js
+      # Bước 4: Chạy file BBM.js với các biến môi trường
+      - name: Run BBM.js script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          echo "🤖 Bắt đầu chu kỳ quét tổng hợp 5 phút..."
-          
-          # Chỉ chạy duy nhất file BBM.js
-          node BBM.js
-          
-          echo "✓ Hoàn thành lượt quét."
+        run: node BBM.js
 
-      - name: Commit & Push tất cả file log thay đổi về kho code
+      # Bước 5: Lưu lại lịch sử dữ liệu (sent_ema.json và statetop_15d.json)
+      - name: Commit and push updated JSON state files
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          # Chỉ theo dõi sự thay đổi của file log chống trùng ema
-          git add sent_ema.json
-          
-          if git diff --cached --quiet; then
-            echo "Không phát hiện thay đổi trong các file log. Bỏ qua bước đẩy mã nguồn lên."
-          else
-            git commit -m "🤖 [Bot Action] Cập nhật bộ đếm ngược chống trùng lệnh ema [skip ci]"
-            git push origin HEAD:${{ github.ref }}
-          fi
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add sent_ema.json statetop_15d.json
+          git status
+          git diff-index --quiet HEAD || git commit -m "chore: update scanner state logs [skip ci]"
+          git push
