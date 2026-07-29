@@ -19,17 +19,17 @@ jobs:
       - name: Cài đặt thư viện dependencies
         run: npm install
 
-      - name: Thực thi tập lệnh ema.js
+      - name: Thực thi tập lệnh BBM.js
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           echo "🤖 Bắt đầu chu kỳ quét tổng hợp 5 phút..."
           
-          # Chỉ chạy duy nhất file ema.js
-          node ema.js
+          # Chỉ chạy duy nhất file BBM.js
+          node BBM.js
           
-          echo "✓ Hoàn thành lượt quét của chiến lược EMA."
+          echo "✓ Hoàn thành lượt quét."
 
       - name: Commit & Push tất cả file log thay đổi về kho code
         run: |
