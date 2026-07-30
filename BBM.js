@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const FILE_24H = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 4 tiếng
-const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
+// Cấu hình Cooldown: TĂNG LÊN 8 TIẾNG
+const COOLDOWN_TIME = 8 * 60 * 60 * 1000; 
 const MIN_VOLUME_USDT = 5000000; // 5 Triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -123,9 +123,9 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 45) return null;
 
-        const raw1H = res1H.data.data; // Index 0: nến đang chạy, Index 1: nến vừa đóng
+        const raw1H = res1H.data.data; // Index 0: nến đang chạy
 
-        // Bỏ nến 0 đang chạy, đảo ngược chuỗi để tính EMA
+        // Bỏ nến 0 đang chạy, đảo ngược chuỗi các nến ĐÃ ĐÓNG để tính EMA
         const closedPrices = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
 
         const ema20_1 = calculateEMA(closedPrices, 20);
@@ -149,71 +149,71 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
     }
 }
 
-// ------------------- KIỂM TRA ĐIỀU KIỆN LONG / SHORT NẾN VỪA ĐÓNG -------------------
+// ------------------- KIỂM TRA ĐIỀU KIỆN LONG / SHORT NẾN ĐANG CHẠY (INDEX 0) -------------------
 
-// 1. Nhóm 6% < diffEMA < 10% -> LONG khi Low1 sát BB Lower (diffbbl < 0.7%)
+// 1. Nhóm 6% < diffEMA < 10% -> LONG khi Low0 (nến đang chạy) sát BB Lower (diffbbl < 0.7%)
 function checkSignalGroup6To10(coinData) {
     const { raw1H } = coinData;
-    const candle1 = raw1H[1]; // Nến vừa đóng
-    const low1 = parseFloat(candle1[3]);
+    const candle0 = raw1H[0]; // Nến HIỆN TẠI ĐANG CHẠY
+    const low0 = parseFloat(candle0[3]);
 
-    // Tính BB20 tại thời điểm nến 1 vừa đóng
-    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-    const bb1 = calculateBollingerBands(closedForBB1, 20);
-    if (!bb1) return null;
+    // Tính BB20 từ 20 nến vừa đóng (Index 1 đến 20)
+    const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb = calculateBollingerBands(closedForBB, 20);
+    if (!bb) return null;
 
-    const diffbbl = ((low1 - bb1.lower) / bb1.lower) * 100;
+    const diffbbl = ((low0 - bb.lower) / bb.lower) * 100;
     if (diffbbl < 0.7) {
         return { type: 'LONG', diffBB: diffbbl, targetBB: 'BB Dưới' };
     }
     return null;
 }
 
-// 2. Nhóm diffEMA > 10% -> LONG khi Low1 sát BB Middle (diffbbm < 0.7%)
+// 2. Nhóm diffEMA > 10% -> LONG khi Low0 (nến đang chạy) sát BB Middle (diffbbm < 0.7%)
 function checkSignalGroupAbove10(coinData) {
     const { raw1H } = coinData;
-    const candle1 = raw1H[1];
-    const low1 = parseFloat(candle1[3]);
+    const candle0 = raw1H[0]; // Nến HIỆN TẠI ĐANG CHẠY
+    const low0 = parseFloat(candle0[3]);
 
-    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-    const bb1 = calculateBollingerBands(closedForBB1, 20);
-    if (!bb1) return null;
+    const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb = calculateBollingerBands(closedForBB, 20);
+    if (!bb) return null;
 
-    const diffbbm = ((low1 - bb1.middle) / bb1.middle) * 100;
+    const diffbbm = ((low0 - bb.middle) / bb.middle) * 100;
     if (diffbbm < 0.7) {
         return { type: 'LONG', diffBB: diffbbm, targetBB: 'BB Giữa' };
     }
     return null;
 }
 
-// 3. Nhóm -15% < diffEMA < -6% -> SHORT khi High1 sát BB Upper (diffbbu > -0.7%)
+// 3. Nhóm -15% < diffEMA < -6% -> SHORT khi High0 (nến đang chạy) sát BB Upper (diffbbu > -0.7%)
 function checkSignalGroupNeg15ToNeg6(coinData) {
     const { raw1H } = coinData;
-    const candle1 = raw1H[1];
-    const high1 = parseFloat(candle1[2]);
+    const candle0 = raw1H[0]; // Nến HIỆN TẠI ĐANG CHẠY
+    const high0 = parseFloat(candle0[2]);
 
-    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-    const bb1 = calculateBollingerBands(closedForBB1, 20);
-    if (!bb1) return null;
+    const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb = calculateBollingerBands(closedForBB, 20);
+    if (!bb) return null;
 
-    const diffbbu = ((high1 - bb1.upper) / bb1.upper) * 100;
+    const diffbbu = ((high0 - bb.upper) / bb.upper) * 100;
     if (diffbbu > -0.7) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Trên' };
     }
     return null;
 }
 
-// 4. Nhóm diffEMA < -15% -> SHORT khi High1 sát BB Middle (diffbbm > -0.7%)
+// 4. Nhóm diffEMA < -15% -> SHORT khi High0 (nến đang chạy) sát BB Middle (diffbbm > -0.7%)
 function checkSignalGroupBelowNeg15(coinData) {
     const { raw1H } = coinData;
-    const candle1 = raw1H[1];
-    const high1 = parseFloat(candle1[2]);
+    const candle0 = raw1H[0]; // Nến HIỆN TẠI ĐANG CHẠY
+    const high0 = parseFloat(candle0[2]);
 
-    const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-    const bb1 = calculateBollingerBands(closedForBB1, 20);
-    if (!bb1) return null;
+    const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb = calculateBollingerBands(closedForBB, 20);
+    if (!bb) return null;
 
-    const diffbbm = ((high1 - bb1.middle) / bb1.middle) * 100;
+    const diffbbm = ((high0 - bb.middle) / bb.middle) * 100;
     if (diffbbm > -0.7) {
         return { type: 'SHORT', diffBB: diffbbm, targetBB: 'BB Giữa' };
     }
@@ -245,9 +245,9 @@ async function main() {
 
         // BƯỚC 3: Phân loại 4 nhóm diffEMA
         const group6To10 = calculatedCoins.filter(c => c.diffEMA > 6 && c.diffEMA < 10);
-        const groupAbove10 = calculatedCoins.filter(c => c.diffEMA >= 10); // Lấy bao gồm >=10%
+        const groupAbove10 = calculatedCoins.filter(c => c.diffEMA >= 10);
         const groupNeg15ToNeg6 = calculatedCoins.filter(c => c.diffEMA > -15 && c.diffEMA < -6);
-        const groupBelowNeg15 = calculatedCoins.filter(c => c.diffEMA <= -15); // Lấy bao gồm <=-15%
+        const groupBelowNeg15 = calculatedCoins.filter(c => c.diffEMA <= -15);
 
         // Dữ liệu định dạng lưu file JSON
         const formatItem = c => ({
@@ -278,9 +278,9 @@ async function main() {
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
                 const icon = type === 'LONG' ? '🟢' : '🔴';
 
-                const message = `${icon} <b>${type} TÍN HIỆU #${coinName} 1H</b>\n` +
+                const message = `${icon} <b>${type} TÍN HIỆU #${coinName} 1H (Nến đang chạy)</b>\n` +
                                 `diffEMA 1H: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n` +
-                                `Nến vừa đóng sát ${targetBB}: <code>${diffBBVal.toFixed(2)}%</code>\n` +
+                                `Nến đang chạy sát ${targetBB}: <code>${diffBBVal.toFixed(2)}%</code>\n` +
                                 `👉 <a href="${link}">Trade trên OKX</a>`;
 
                 console.log(`🚀 [${type} MATCHED] Gửi Telegram cho ${symbol}...`);
