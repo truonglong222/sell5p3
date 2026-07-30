@@ -1,42 +1,42 @@
 {
-  "updatedAt": "2026-07-30T06:46:43.927Z",
+  "updatedAt": "2026-07-30T07:02:19.547Z",
   "counts": {
-    "group6To10": 4,
-    "groupAbove10": 2
+    "group6To10": 5,
+    "groupAbove10": 1
   },
   "data": {
     "group6To10": [
       {
+        "symbol": "ACH-USDT-SWAP",
+        "diffEMA": 9.88,
+        "volCcy24h": 3297103000
+      },
+      {
         "symbol": "SENT-USDT-SWAP",
-        "diffEMA": 6.24,
-        "volCcy24h": 277933000
+        "diffEMA": 6.46,
+        "volCcy24h": 279789300
       },
       {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": 9.36,
-        "volCcy24h": 963710580
+        "diffEMA": 8.84,
+        "volCcy24h": 950335810
       },
       {
         "symbol": "LAB-USDT-SWAP",
-        "diffEMA": 6.79,
-        "volCcy24h": 189591545
+        "diffEMA": 6.77,
+        "volCcy24h": 191103811
       },
       {
         "symbol": "BEAT-USDT-SWAP",
-        "diffEMA": 8.1,
-        "volCcy24h": 71610924
+        "diffEMA": 7.36,
+        "volCcy24h": 71150148
       }
     ],
     "groupAbove10": [
       {
-        "symbol": "ACH-USDT-SWAP",
-        "diffEMA": 10.78,
-        "volCcy24h": 3263688700
-      },
-      {
         "symbol": "RE-USDT-SWAP",
-        "diffEMA": 12.02,
-        "volCcy24h": 163802650
+        "diffEMA": 13.11,
+        "volCcy24h": 164805770
       }
     ]
   }
