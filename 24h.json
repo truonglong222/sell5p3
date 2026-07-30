@@ -1,83 +1,42 @@
 {
-  "updatedAt": "2026-07-30T04:31:48.693Z",
+  "updatedAt": "2026-07-30T04:46:33.774Z",
   "counts": {
     "group6To10": 3,
-    "groupAbove10": 3,
-    "groupNeg15ToNeg6": 6,
-    "groupBelowNeg15": 1
+    "groupAbove10": 3
   },
   "data": {
     "group6To10": [
       {
         "symbol": "RE-USDT-SWAP",
         "diffEMA": 9.56,
-        "volCcy24h": 157210370
+        "volCcy24h": 158361530
       },
       {
         "symbol": "LAB-USDT-SWAP",
         "diffEMA": 6.08,
-        "volCcy24h": 187078315
+        "volCcy24h": 187319972
       },
       {
         "symbol": "FLOW-USDT-SWAP",
         "diffEMA": 6.16,
-        "volCcy24h": 153579280
+        "volCcy24h": 151143670
       }
     ],
     "groupAbove10": [
       {
         "symbol": "ACH-USDT-SWAP",
         "diffEMA": 12.19,
-        "volCcy24h": 3112232100
+        "volCcy24h": 3144132100
       },
       {
         "symbol": "AEON-USDT-SWAP",
         "diffEMA": 11.25,
-        "volCcy24h": 1110862670
+        "volCcy24h": 1110168990
       },
       {
         "symbol": "BEAT-USDT-SWAP",
         "diffEMA": 10.35,
-        "volCcy24h": 71152925
-      }
-    ],
-    "groupNeg15ToNeg6": [
-      {
-        "symbol": "BRETT-USDT-SWAP",
-        "diffEMA": -6.09,
-        "volCcy24h": 68313900
-      },
-      {
-        "symbol": "SNXX-USDT-SWAP",
-        "diffEMA": -10.35,
-        "volCcy24h": 15910016
-      },
-      {
-        "symbol": "0G-USDT-SWAP",
-        "diffEMA": -7.55,
-        "volCcy24h": 19919077
-      },
-      {
-        "symbol": "ESP-USDT-SWAP",
-        "diffEMA": -7.98,
-        "volCcy24h": 379018600
-      },
-      {
-        "symbol": "SOXL-USDT-SWAP",
-        "diffEMA": -9.26,
-        "volCcy24h": 5764205.01
-      },
-      {
-        "symbol": "LA-USDT-SWAP",
-        "diffEMA": -13.15,
-        "volCcy24h": 442091300
-      }
-    ],
-    "groupBelowNeg15": [
-      {
-        "symbol": "SOON-USDT-SWAP",
-        "diffEMA": -19.55,
-        "volCcy24h": 215088072
+        "volCcy24h": 71112503
       }
     ]
   }
