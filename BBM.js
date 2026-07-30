@@ -43,7 +43,7 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Ghi file 24h.json (Chỉ lưu 2 nhóm SHORT)
+// Ghi file 24h.json (Lưu 2 nhóm SHORT)
 function save24hJson(groupedData) {
     try {
         const dataToSave = {
@@ -144,7 +144,7 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY -------------------
 
-// 1. Nhóm -15% < diffEMA < -6% -> SHORT khi High0 sát BB Upper (diffbbu > -0.7%)
+// 1. Nhóm A (-15% < diffEMA < -6%) -> SHORT khi High0 sát BB Upper: -0.7% < diffbbu < 1%
 function checkSignalGroupNeg15ToNeg6(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -155,13 +155,15 @@ function checkSignalGroupNeg15ToNeg6(coinData) {
     if (!bb) return null;
 
     const diffbbu = ((high0 - bb.upper) / bb.upper) * 100;
-    if (diffbbu > -0.7) {
+    
+    // Đã sửa: -0.7% < diffBB < 1%
+    if (diffbbu > -0.7 && diffbbu < 1) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Trên' };
     }
     return null;
 }
 
-// 2. Nhóm diffEMA <= -15% -> SHORT khi High0 thỏa mãn: -0.7% < diffbbm < 1%
+// 2. Nhóm B (diffEMA <= -15%) -> SHORT khi High0 sát BB Middle: -0.5% < diffbbm < 1%
 function checkSignalGroupBelowNeg15(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -173,7 +175,8 @@ function checkSignalGroupBelowNeg15(coinData) {
 
     const diffbbm = ((high0 - bb.middle) / bb.middle) * 100;
     
-    if (diffbbm > -0.7 && diffbbm < 1) {
+    // Đã sửa: -0.5% < diffBB < 1%
+    if (diffbbm > -0.5 && diffbbm < 1) {
         return { type: 'SHORT', diffBB: diffbbm, targetBB: 'BB Giữa' };
     }
     return null;
@@ -182,7 +185,7 @@ function checkSignalGroupBelowNeg15(coinData) {
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẮT ĐẦU TIẾN TRÌNH QUÉT THỊ TRƯỜNG (CHỈ 2 NHÓM SHORT) ---');
+        console.log('--- BẮT ĐẦU TIẾN TRÌNH QUÉT THỊ TRƯỜNG (2 NHÓM SHORT) ---');
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
@@ -202,7 +205,7 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại CHỈ 2 nhóm diffEMA SHORT
+        // BƯỚC 3: Phân loại 2 nhóm diffEMA SHORT
         const groupNeg15ToNeg6 = calculatedCoins.filter(c => c.diffEMA > -15 && c.diffEMA < -6);
         const groupBelowNeg15 = calculatedCoins.filter(c => c.diffEMA <= -15);
 
@@ -248,15 +251,15 @@ async function main() {
             }
         };
 
-        // 1. Quét SHORT nhóm -15% < diffEMA < -6%
-        console.log(`🔍 Quét SHORT Nhóm -15% < diffEMA < -6% (${groupNeg15ToNeg6.length} coins)...`);
+        // 1. Quét SHORT Nhóm A (-15% < diffEMA < -6%)
+        console.log(`🔍 Quét SHORT Nhóm A (-15% < diffEMA < -6%) (${groupNeg15ToNeg6.length} coins)...`);
         for (const item of groupNeg15ToNeg6) {
             const sig = checkSignalGroupNeg15ToNeg6(item);
             if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h');
         }
 
-        // 2. Quét SHORT nhóm diffEMA <= -15%
-        console.log(`🔍 Quét SHORT Nhóm diffEMA <= -15% (${groupBelowNeg15.length} coins)...`);
+        // 2. Quét SHORT Nhóm B (diffEMA <= -15%)
+        console.log(`🔍 Quét SHORT Nhóm B (diffEMA <= -15%) (${groupBelowNeg15.length} coins)...`);
         for (const item of groupBelowNeg15) {
             const sig = checkSignalGroupBelowNeg15(item);
             if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h');
