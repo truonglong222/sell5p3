@@ -1,20 +1,25 @@
 {
-  "updatedAt": "2026-07-30T18:46:35.718Z",
+  "updatedAt": "2026-07-30T19:02:11.769Z",
   "counts": {
-    "groupNeg15ToNeg6": 2,
+    "groupNeg15ToNeg6": 3,
     "groupBelowNeg15": 0
   },
   "data": {
     "groupNeg15ToNeg6": [
       {
+        "symbol": "AEON-USDT-SWAP",
+        "diffEMA": -7.31,
+        "volCcy24h": 723576900
+      },
+      {
         "symbol": "KAITO-USDT-SWAP",
-        "diffEMA": -9.42,
-        "volCcy24h": 169620674
+        "diffEMA": -10.07,
+        "volCcy24h": 169336917
       },
       {
         "symbol": "ZAMA-USDT-SWAP",
-        "diffEMA": -7.27,
-        "volCcy24h": 1025307980
+        "diffEMA": -6.97,
+        "volCcy24h": 1019946080
       }
     ],
     "groupBelowNeg15": []
