@@ -1,83 +1,78 @@
 {
-  "updatedAt": "2026-07-30T01:46:34.890Z",
+  "updatedAt": "2026-07-30T02:02:02.223Z",
   "counts": {
     "group6To10": 2,
-    "groupAbove10": 2,
-    "groupNeg15ToNeg6": 8,
+    "groupAbove10": 3,
+    "groupNeg15ToNeg6": 6,
     "groupBelowNeg15": 1
   },
   "data": {
     "group6To10": [
       {
-        "symbol": "ACH-USDT-SWAP",
-        "diffEMA": 9.99,
-        "volCcy24h": 2694437900
+        "symbol": "RE-USDT-SWAP",
+        "diffEMA": 7.06,
+        "volCcy24h": 145222490
       },
       {
         "symbol": "FLOW-USDT-SWAP",
-        "diffEMA": 7.74,
-        "volCcy24h": 153787490
+        "diffEMA": 7.26,
+        "volCcy24h": 154617580
       }
     ],
     "groupAbove10": [
       {
+        "symbol": "ACH-USDT-SWAP",
+        "diffEMA": 11.37,
+        "volCcy24h": 2717594800
+      },
+      {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": 15.07,
-        "volCcy24h": 1093400170
+        "diffEMA": 13.77,
+        "volCcy24h": 1093089820
       },
       {
         "symbol": "BEAT-USDT-SWAP",
-        "diffEMA": 14.06,
-        "volCcy24h": 64591048
+        "diffEMA": 12.92,
+        "volCcy24h": 64875249
       }
     ],
     "groupNeg15ToNeg6": [
       {
         "symbol": "BRETT-USDT-SWAP",
-        "diffEMA": -7.14,
-        "volCcy24h": 69933500
+        "diffEMA": -6.75,
+        "volCcy24h": 69932500
       },
       {
         "symbol": "SNXX-USDT-SWAP",
-        "diffEMA": -11.78,
-        "volCcy24h": 16774537
+        "diffEMA": -10.79,
+        "volCcy24h": 16646288.5
       },
       {
         "symbol": "0G-USDT-SWAP",
-        "diffEMA": -8.94,
-        "volCcy24h": 23143154
+        "diffEMA": -8.4,
+        "volCcy24h": 22997977
       },
       {
         "symbol": "ESP-USDT-SWAP",
-        "diffEMA": -8.34,
-        "volCcy24h": 402677600
+        "diffEMA": -8.48,
+        "volCcy24h": 399078000
       },
       {
         "symbol": "SOXL-USDT-SWAP",
-        "diffEMA": -9.44,
-        "volCcy24h": 5862544.87
+        "diffEMA": -8.98,
+        "volCcy24h": 5813671.79
       },
       {
         "symbol": "LA-USDT-SWAP",
-        "diffEMA": -14.77,
-        "volCcy24h": 456467480
-      },
-      {
-        "symbol": "KORU-USDT-SWAP",
-        "diffEMA": -7.75,
-        "volCcy24h": 15495896.1
-      },
-      {
-        "symbol": "SIGN-USDT-SWAP",
-        "diffEMA": -6.09,
-        "volCcy24h": 59887600
+        "diffEMA": -14.31,
+        "volCcy24h": 461138660
       }
     ],
     "groupBelowNeg15": [
       {
         "symbol": "SOON-USDT-SWAP",
-        "diffEMA": -17.69,
-        "volCcy24h": 239060246
+        "diffEMA": -18.08,
+        "volCcy24h": 236488225
       }
     ]
   }
