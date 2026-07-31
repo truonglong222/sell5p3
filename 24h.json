@@ -1,50 +1,53 @@
 {
-  "updatedAt": "2026-07-31T02:46:20.421Z",
+  "updatedAt": "2026-07-31T03:01:52.840Z",
   "counts": {
-    "groupNeg15ToNeg6": 3,
+    "groupNeg15ToNeg6": 5,
     "groupBelowNeg15": 0,
-    "groupNeg6ToPos5": 3
+    "groupNeg6ToPos5": 2
   },
   "data": {
     "groupNeg15ToNeg6": [
       {
+        "symbol": "ACH-USDT-SWAP",
+        "diffEMA": -6.16,
+        "volCcy24h": 930836900
+      },
+      {
         "symbol": "ALLO-USDT-SWAP",
-        "diffEMA": -6.56,
-        "volCcy24h": 129008170
+        "diffEMA": -6.78,
+        "volCcy24h": 129666320
       },
       {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": -12.26,
-        "volCcy24h": 547003520
+        "diffEMA": -12.75,
+        "volCcy24h": 546467970
       },
       {
         "symbol": "KAITO-USDT-SWAP",
-        "diffEMA": -9.67,
-        "volCcy24h": 163908022
+        "diffEMA": -9.35,
+        "volCcy24h": 163987718
+      },
+      {
+        "symbol": "ZAMA-USDT-SWAP",
+        "diffEMA": -6.01,
+        "volCcy24h": 815392850
       }
     ],
     "groupBelowNeg15": [],
     "groupNeg6ToPos5": [
       {
         "symbol": "KGEN-USDT-SWAP",
-        "diffEMA": 1.04,
-        "vol60h": 11.74,
-        "ratioX": 4.13,
-        "volCcy24h": 5772140
+        "diffEMA": 1.1,
+        "vol60h": 12.38,
+        "ratioX": 4.27,
+        "volCcy24h": 5605260
       },
       {
         "symbol": "SOON-USDT-SWAP",
         "diffEMA": -1.33,
-        "vol60h": 14.29,
-        "ratioX": 3.89,
-        "volCcy24h": 108820226
-      },
-      {
-        "symbol": "LA-USDT-SWAP",
-        "diffEMA": -3.35,
-        "vol60h": 11.89,
-        "ratioX": 5.56,
-        "volCcy24h": 317464270
+        "vol60h": 12.86,
+        "ratioX": 4.04,
+        "volCcy24h": 107723808
       }
     ]
   }
