@@ -181,23 +181,42 @@ function checkSignalGroupBelowNeg15(coinData) {
     return null;
 }
 
-// 3. Nhóm C (-6% < diffEMA < 5%) -> SHORT khi sát BB Upper (-0.7% < diffbbu < 1%) VÀ x > 3
+// 3. Nhóm C (-6% < diffEMA < 5%) -> SHORT khi:
+// - Sát BB Upper (-0.7% < diffbbu < 1%)
+// - Tỷ số x > 3
+// - Biến động 60h > 10%
 function checkSignalGroupNeg6ToPos5(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
     const high0 = parseFloat(candle0[2]);
 
-    // Tính Bollinger Bands 20 nến đã đóng
+    // ------------------- ĐIỀU KIỆN 1: BIẾN ĐỘNG 60H > 10% -------------------
+    // Giá cao nhất của nến vừa đóng (index 1)
+    const highClosed = parseFloat(raw1H[1][2]);
+
+    // Giá thấp nhất trong 60 nến (index 0 -> 59)
+    let minLow60 = Infinity;
+    for (let i = 0; i < raw1H.length; i++) {
+        const low = parseFloat(raw1H[i][3]);
+        if (low < minLow60) {
+            minLow60 = low;
+        }
+    }
+
+    if (minLow60 === 0 || minLow60 === Infinity) return null;
+
+    const vol60h = ((highClosed - minLow60) / minLow60) * 100;
+    if (vol60h <= 10) return null; // Loại nếu biến động <= 10%
+
+    // ------------------- ĐIỀU KIỆN 2: SÁT BB UPPER -------------------
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb) return null;
 
     const diffbbu = ((high0 - bb.upper) / bb.upper) * 100;
-
-    // Kiểm tra điều kiện BB Upper
     if (diffbbu <= -0.7 || diffbbu >= 1) return null;
 
-    // --- TÍNH TỶ SỐ X ---
+    // ------------------- ĐIỀU KIỆN 3: TỶ SỐ X > 3 -------------------
     // Mẫu số: Trị tuyệt đối trung bình biến động (|High - Low|) 20 nến gần nhất (từ nến 1 đến 20)
     let sumVol20 = 0;
     for (let i = 1; i <= 20 && i < raw1H.length; i++) {
@@ -208,7 +227,7 @@ function checkSignalGroupNeg6ToPos5(coinData) {
     const avgVol20 = sumVol20 / 20;
     if (avgVol20 === 0) return null;
 
-    // Tử số: Trị tuyệt đối nến giảm giá lớn nhất (|Close - Open|) trong 60 nến
+    // Tử số: Trị tuyệt đối nến giảm giá lớn nhất (|Open - Close|) trong 60 nến
     let maxBearishBody = 0;
     for (let i = 0; i < raw1H.length; i++) {
         const open = parseFloat(raw1H[i][1]);
@@ -222,13 +241,15 @@ function checkSignalGroupNeg6ToPos5(coinData) {
     }
 
     const x = maxBearishBody / avgVol20;
+    if (x <= 3) return null;
 
-    // Điều kiện X > 3
-    if (x > 3) {
-        return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Trên', ratioX: x };
-    }
-
-    return null;
+    return { 
+        type: 'SHORT', 
+        diffBB: diffbbu, 
+        targetBB: 'BB Trên', 
+        ratioX: x, 
+        vol60h: vol60h 
+    };
 }
 
 // ------------------- HÀM CHÍNH -------------------
@@ -276,7 +297,7 @@ async function main() {
         save24hJson(groupedForSave);
 
         // BƯỚC 5: Xử lý và Báo Tín Hiệu SHORT
-        const sendAlert = async (symbol, type, diffEmaVal, diffBBVal, targetBB, cooldownKey, ratioX = null) => {
+        const sendAlert = async (symbol, type, diffEmaVal, diffBBVal, targetBB, cooldownKey, extraData = {}) => {
             if (!sentLog[symbol]) sentLog[symbol] = {};
             const lastSent = sentLog[symbol][cooldownKey] || 0;
 
@@ -286,8 +307,11 @@ async function main() {
                 const icon = '🔴';
 
                 let extraInfo = '';
-                if (ratioX !== null) {
-                    extraInfo = `Tỷ số X (MaxBear/AvgVol20): <b>${ratioX.toFixed(2)}</b>\n`;
+                if (extraData.ratioX !== undefined) {
+                    extraInfo += `Tỷ số X (MaxBear/AvgVol20): <b>${extraData.ratioX.toFixed(2)}</b>\n`;
+                }
+                if (extraData.vol60h !== undefined) {
+                    extraInfo += `Biến động 60h: <b>+${extraData.vol60h.toFixed(2)}%</b>\n`;
                 }
 
                 const message = `${icon} <b>${type} TÍN HIỆU #${coinName} 1H (Nến đang chạy)</b>\n` +
@@ -326,7 +350,7 @@ async function main() {
         console.log(`🔍 Quét SHORT Nhóm C (-6% < diffEMA < 5%) (${groupNeg6ToPos5.length} coins)...`);
         for (const item of groupNeg6ToPos5) {
             const sig = checkSignalGroupNeg6ToPos5(item);
-            if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h', sig.ratioX);
+            if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h', { ratioX: sig.ratioX, vol60h: sig.vol60h });
         }
 
         if (hasNewAlert) saveSentLog(sentLog);
