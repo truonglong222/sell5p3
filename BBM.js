@@ -43,19 +43,20 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Ghi file 24h.json (Lưu 2 nhóm SHORT)
+// Ghi file 24h.json (Lưu 3 nhóm SHORT)
 function save24hJson(groupedData) {
     try {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
             counts: {
                 groupNeg15ToNeg6: groupedData.groupNeg15ToNeg6.length,
-                groupBelowNeg15: groupedData.groupBelowNeg15.length
+                groupBelowNeg15: groupedData.groupBelowNeg15.length,
+                groupNeg6ToPos5: groupedData.groupNeg6ToPos5.length
             },
             data: groupedData
         };
         fs.writeFileSync(FILE_24H, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`💾 Đã lưu phân loại 2 nhóm SHORT diffEMA vào ${FILE_24H}`);
+        console.log(`💾 Đã lưu phân loại 3 nhóm SHORT diffEMA vào ${FILE_24H}`);
     } catch (e) {
         console.error('Lỗi khi ghi file 24h.json:', e.message);
     }
@@ -156,7 +157,6 @@ function checkSignalGroupNeg15ToNeg6(coinData) {
 
     const diffbbu = ((high0 - bb.upper) / bb.upper) * 100;
     
-    // Đã sửa: -0.7% < diffBB < 1%
     if (diffbbu > -0.7 && diffbbu < 1) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Trên' };
     }
@@ -175,17 +175,66 @@ function checkSignalGroupBelowNeg15(coinData) {
 
     const diffbbm = ((high0 - bb.middle) / bb.middle) * 100;
     
-    // Đã sửa: -0.5% < diffBB < 1%
     if (diffbbm > -0.5 && diffbbm < 1) {
         return { type: 'SHORT', diffBB: diffbbm, targetBB: 'BB Giữa' };
     }
     return null;
 }
 
+// 3. Nhóm C (-6% < diffEMA < 5%) -> SHORT khi sát BB Upper (-0.7% < diffbbu < 1%) VÀ x > 3
+function checkSignalGroupNeg6ToPos5(coinData) {
+    const { raw1H } = coinData;
+    const candle0 = raw1H[0];
+    const high0 = parseFloat(candle0[2]);
+
+    // Tính Bollinger Bands 20 nến đã đóng
+    const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bb = calculateBollingerBands(closedForBB, 20);
+    if (!bb) return null;
+
+    const diffbbu = ((high0 - bb.upper) / bb.upper) * 100;
+
+    // Kiểm tra điều kiện BB Upper
+    if (diffbbu <= -0.7 || diffbbu >= 1) return null;
+
+    // --- TÍNH TỶ SỐ X ---
+    // Mẫu số: Trị tuyệt đối trung bình biến động (|High - Low|) 20 nến gần nhất (từ nến 1 đến 20)
+    let sumVol20 = 0;
+    for (let i = 1; i <= 20 && i < raw1H.length; i++) {
+        const h = parseFloat(raw1H[i][2]);
+        const l = parseFloat(raw1H[i][3]);
+        sumVol20 += Math.abs(h - l);
+    }
+    const avgVol20 = sumVol20 / 20;
+    if (avgVol20 === 0) return null;
+
+    // Tử số: Trị tuyệt đối nến giảm giá lớn nhất (|Close - Open|) trong 60 nến
+    let maxBearishBody = 0;
+    for (let i = 0; i < raw1H.length; i++) {
+        const open = parseFloat(raw1H[i][1]);
+        const close = parseFloat(raw1H[i][4]);
+        if (close < open) { // Chỉ xét nến giảm
+            const body = open - close;
+            if (body > maxBearishBody) {
+                maxBearishBody = body;
+            }
+        }
+    }
+
+    const x = maxBearishBody / avgVol20;
+
+    // Điều kiện X > 3
+    if (x > 3) {
+        return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Trên', ratioX: x };
+    }
+
+    return null;
+}
+
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẮT ĐẦU TIẾN TRÌNH QUÉT THỊ TRƯỜNG (2 NHÓM SHORT) ---');
+        console.log('--- BẮT ĐẦU TIẾN TRÌNH QUÉT THỊ TRƯỜNG (3 NHÓM SHORT) ---');
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
@@ -205,9 +254,10 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại 2 nhóm diffEMA SHORT
+        // BƯỚC 3: Phân loại 3 nhóm diffEMA SHORT
         const groupNeg15ToNeg6 = calculatedCoins.filter(c => c.diffEMA > -15 && c.diffEMA < -6);
         const groupBelowNeg15 = calculatedCoins.filter(c => c.diffEMA <= -15);
+        const groupNeg6ToPos5 = calculatedCoins.filter(c => c.diffEMA > -6 && c.diffEMA < 5);
 
         // Định dạng lưu file
         const formatItem = c => ({
@@ -218,14 +268,15 @@ async function main() {
 
         const groupedForSave = {
             groupNeg15ToNeg6: groupNeg15ToNeg6.map(formatItem),
-            groupBelowNeg15: groupBelowNeg15.map(formatItem)
+            groupBelowNeg15: groupBelowNeg15.map(formatItem),
+            groupNeg6ToPos5: groupNeg6ToPos5.map(formatItem)
         };
 
         // BƯỚC 4: Ghi vào file 24h.json
         save24hJson(groupedForSave);
 
         // BƯỚC 5: Xử lý và Báo Tín Hiệu SHORT
-        const sendAlert = async (symbol, type, diffEmaVal, diffBBVal, targetBB, cooldownKey) => {
+        const sendAlert = async (symbol, type, diffEmaVal, diffBBVal, targetBB, cooldownKey, ratioX = null) => {
             if (!sentLog[symbol]) sentLog[symbol] = {};
             const lastSent = sentLog[symbol][cooldownKey] || 0;
 
@@ -234,9 +285,15 @@ async function main() {
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
                 const icon = '🔴';
 
+                let extraInfo = '';
+                if (ratioX !== null) {
+                    extraInfo = `Tỷ số X (MaxBear/AvgVol20): <b>${ratioX.toFixed(2)}</b>\n`;
+                }
+
                 const message = `${icon} <b>${type} TÍN HIỆU #${coinName} 1H (Nến đang chạy)</b>\n` +
                                 `diffEMA 1H: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n` +
                                 `Nến đang chạy sát ${targetBB}: <code>${diffBBVal.toFixed(2)}%</code>\n` +
+                                extraInfo +
                                 `👉 <a href="${link}">Trade trên OKX</a>`;
 
                 console.log(`🚀 [${type} MATCHED] Gửi Telegram cho ${symbol}...`);
@@ -263,6 +320,13 @@ async function main() {
         for (const item of groupBelowNeg15) {
             const sig = checkSignalGroupBelowNeg15(item);
             if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h');
+        }
+
+        // 3. Quét SHORT Nhóm C (-6% < diffEMA < 5%)
+        console.log(`🔍 Quét SHORT Nhóm C (-6% < diffEMA < 5%) (${groupNeg6ToPos5.length} coins)...`);
+        for (const item of groupNeg6ToPos5) {
+            const sig = checkSignalGroupNeg6ToPos5(item);
+            if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h', sig.ratioX);
         }
 
         if (hasNewAlert) saveSentLog(sentLog);
