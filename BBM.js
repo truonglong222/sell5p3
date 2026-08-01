@@ -49,7 +49,7 @@ function save24hJson(groupedData) {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
             counts: {
-                groupNeg13ToNeg6: groupedData.groupNeg13ToNeg6.length, // Đã cập nhật tên key
+                groupNeg13ToNeg6: groupedData.groupNeg13ToNeg6.length,
                 groupBelowNeg13: groupedData.groupBelowNeg13.length,
                 groupNeg6ToPos5: groupedData.groupNeg6ToPos5.length
             },
@@ -227,7 +227,7 @@ function checkSignalGroupBelowNeg13(coinData) {
     return null;
 }
 
-// 3. Nhóm C (-6% < diffEMA < 5%, Vol60h > 7%, X < -7) -> SHORT khi sát BB Upper (-0.7% < diffbbu < 1%)
+// 3. Nhóm C (-6% < diffEMA < -1%, Vol60h > 7%, X < -7) -> SHORT khi sát BB Upper (-0.7% < diffbbu < 1%)
 function checkSignalGroupNeg6ToPos5(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -269,15 +269,15 @@ async function main() {
         }
 
         // BƯỚC 3: Phân loại 3 nhóm diffEMA SHORT
-        // NHÓM A: Cập nhật điều kiện -13% < diffEMA < -6%
+        // NHÓM A: -13% < diffEMA < -6%
         const groupNeg13ToNeg6 = calculatedCoins.filter(c => c.diffEMA > -13 && c.diffEMA < -6);
         
         // NHÓM B: diffEMA <= -13%
         const groupBelowNeg13 = calculatedCoins.filter(c => c.diffEMA <= -13);
         
-        // NHÓM C: Điều kiện Biến động 60h > 7% VÀ X < -7
+        // NHÓM C: Đã cập nhật điều kiện diffEMA trong khoảng (-6% < diffEMA < -1%)
         const groupNeg6ToPos5 = calculatedCoins.filter(c => {
-            if (c.diffEMA <= -6 || c.diffEMA >= 5) return false;
+            if (c.diffEMA <= -6 || c.diffEMA >= -1) return false;
 
             const metrics = calculateXAndVol60h(c.raw1H);
             if (!metrics) return false;
@@ -362,8 +362,8 @@ async function main() {
             if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h');
         }
 
-        // 3. Quét SHORT Nhóm C (-6% < diffEMA < 5% && Vol60h > 7% && X < -7)
-        console.log(`🔍 Quét SHORT Nhóm C (-6% < diffEMA < 5%, Vol60h > 7%, X < -7) (${groupNeg6ToPos5.length} coins)...`);
+        // 3. Quét SHORT Nhóm C (-6% < diffEMA < -1%, Vol60h > 7%, X < -7)
+        console.log(`🔍 Quét SHORT Nhóm C (-6% < diffEMA < -1%, Vol60h > 7%, X < -7) (${groupNeg6ToPos5.length} coins)...`);
         for (const item of groupNeg6ToPos5) {
             const sig = checkSignalGroupNeg6ToPos5(item);
             if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h', { ratioX: item.ratioX, vol60h: item.vol60h });
