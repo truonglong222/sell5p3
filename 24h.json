@@ -1,63 +1,70 @@
 {
-  "updatedAt": "2026-08-01T04:46:24.084Z",
+  "updatedAt": "2026-08-01T05:01:49.943Z",
   "counts": {
     "groupNeg15ToNeg6": 2,
     "groupBelowNeg13": 2,
-    "groupNeg6ToPos5": 4
+    "groupNeg6ToPos5": 5
   },
   "data": {
     "groupNeg15ToNeg6": [
       {
         "symbol": "EDGE-USDT-SWAP",
-        "diffEMA": -7.73,
-        "volCcy24h": 10117020
+        "diffEMA": -7.72,
+        "volCcy24h": 9806660
       },
       {
         "symbol": "SNXX-USDT-SWAP",
-        "diffEMA": -8.95,
-        "volCcy24h": 12232064.1
+        "diffEMA": -9.98,
+        "volCcy24h": 12168607.3
       }
     ],
     "groupBelowNeg13": [
       {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": -16.94,
-        "volCcy24h": 558073570
+        "diffEMA": -16.8,
+        "volCcy24h": 556063640
       },
       {
         "symbol": "MMT-USDT-SWAP",
-        "diffEMA": -18.22,
-        "volCcy24h": 1194138190
+        "diffEMA": -19.65,
+        "volCcy24h": 1194199430
       }
     ],
     "groupNeg6ToPos5": [
       {
         "symbol": "LAYER-USDT-SWAP",
-        "diffEMA": 0.95,
-        "vol60h": 9.34,
-        "ratioX": -12.27,
-        "volCcy24h": 13951904
+        "diffEMA": 0.88,
+        "vol60h": 9.74,
+        "ratioX": -13.38,
+        "volCcy24h": 12896591
+      },
+      {
+        "symbol": "SENT-USDT-SWAP",
+        "diffEMA": 2.6,
+        "vol60h": 7.85,
+        "ratioX": -7.11,
+        "volCcy24h": 186617900
       },
       {
         "symbol": "UB-USDT-SWAP",
-        "diffEMA": 3.93,
-        "vol60h": 35.92,
-        "ratioX": -11.59,
-        "volCcy24h": 185379200
+        "diffEMA": 3.62,
+        "vol60h": 34.38,
+        "ratioX": -11.48,
+        "volCcy24h": 180251800
       },
       {
         "symbol": "ESP-USDT-SWAP",
-        "diffEMA": -5.41,
-        "vol60h": 11.97,
-        "ratioX": -7.03,
-        "volCcy24h": 186410800
+        "diffEMA": -5.17,
+        "vol60h": 11.78,
+        "ratioX": -7.05,
+        "volCcy24h": 185016000
       },
       {
         "symbol": "KORU-USDT-SWAP",
-        "diffEMA": -4.74,
-        "vol60h": 32.46,
-        "ratioX": -9.44,
-        "volCcy24h": 5772046.86
+        "diffEMA": -5.78,
+        "vol60h": 32.28,
+        "ratioX": -9.49,
+        "volCcy24h": 5725364.64
       }
     ]
   }
