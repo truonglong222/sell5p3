@@ -103,7 +103,7 @@ function calculateXAndVol60h(raw1H) {
     if (minLow60 === 0 || minLow60 === Infinity) return null;
     const vol60h = ((highClosed - minLow60) / minLow60) * 100;
 
-    // 2. Tính Tỷ số X = (Low - High) của nến giảm âm nhất trong 60 nến / Trung bình |Open - Close| 20 nến
+    // 2. Tính Tỷ số X = (Low - High) của nến giảm âm nhất trong 40 NẾN GẦN NHẤT / Trung bình |Open - Close| 20 nến
     // Mẫu số: Trung bình trị tuyệt đối biến động thân nến (|Open - Close|) của 20 nến vừa đóng (index 1 -> 20)
     let sumBody20 = 0;
     for (let i = 1; i <= 20 && i < raw1H.length; i++) {
@@ -114,9 +114,11 @@ function calculateXAndVol60h(raw1H) {
     const avgBody20 = sumBody20 / 20;
     if (avgBody20 === 0) return null;
 
-    // Tử số: (Low - High) âm nhất của NẾN GIẢM (Close < Open) trong 60 nến
-    let minLowHighBearish = 0; // Khởi tạo 0, giá trị âm nhất sẽ nhỏ hơn 0
-    for (let i = 0; i < raw1H.length; i++) {
+    // Tử số: (Low - High) âm nhất của NẾN GIẢM (Close < Open) trong 40 NẾN GẦN NHẤT
+    let minLowHighBearish = 0; 
+    const maxCandlesToCheck = Math.min(40, raw1H.length); // Chỉ xét tối đa 40 nến gần nhất
+
+    for (let i = 0; i < maxCandlesToCheck; i++) {
         const open = parseFloat(raw1H[i][1]);
         const high = parseFloat(raw1H[i][2]);
         const low = parseFloat(raw1H[i][3]);
@@ -130,7 +132,7 @@ function calculateXAndVol60h(raw1H) {
         }
     }
 
-    // Tỷ số X = (Low - High âm nhất của nến giảm) / Trung bình biến động thân nến 20h
+    // Tỷ số X = (Low - High âm nhất của nến giảm trong 40 nến) / Trung bình biến động thân nến 20h
     const ratioX = minLowHighBearish / avgBody20;
 
     return { vol60h, ratioX };
@@ -229,7 +231,7 @@ function checkSignalGroupBelowNeg15(coinData) {
     return null;
 }
 
-// 3. Nhóm C (-6% < diffEMA < 5%, Vol60h > 7%, X < -3) -> SHORT khi sát BB Upper (-0.7% < diffbbu < 1%)
+// 3. Nhóm C (-6% < diffEMA < 5%, Vol60h > 7%, X < -7) -> SHORT khi sát BB Upper (-0.7% < diffbbu < 1%)
 function checkSignalGroupNeg6ToPos5(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -274,7 +276,7 @@ async function main() {
         const groupNeg15ToNeg6 = calculatedCoins.filter(c => c.diffEMA > -15 && c.diffEMA < -6);
         const groupBelowNeg15 = calculatedCoins.filter(c => c.diffEMA <= -15);
         
-        // NHÓM C: Điều kiện Biến động 60h > 7% VÀ X < -3
+        // NHÓM C: Điều kiện Biến động 60h > 7% VÀ X < -7 (nến giảm 40h gần nhất)
         const groupNeg6ToPos5 = calculatedCoins.filter(c => {
             if (c.diffEMA <= -6 || c.diffEMA >= 5) return false;
 
@@ -325,7 +327,7 @@ async function main() {
 
                 let extraInfo = '';
                 if (extraData.ratioX !== undefined) {
-                    extraInfo += `Tỷ số X (Min(Low-High)/AvgBody20): <b>${extraData.ratioX.toFixed(2)}</b>\n`;
+                    extraInfo += `Tỷ số X (Min(Low-High 40h)/AvgBody20): <b>${extraData.ratioX.toFixed(2)}</b>\n`;
                 }
                 if (extraData.vol60h !== undefined) {
                     extraInfo += `Biến động 60h: <b>+${extraData.vol60h.toFixed(2)}%</b>\n`;
@@ -363,8 +365,8 @@ async function main() {
             if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h');
         }
 
-        // 3. Quét SHORT Nhóm C (-6% < diffEMA < 5% && Vol60h > 7% && X < -3)
-        console.log(`🔍 Quét SHORT Nhóm C (-6% < diffEMA < 5%, Vol60h > 7%, X < -3) (${groupNeg6ToPos5.length} coins)...`);
+        // 3. Quét SHORT Nhóm C (-6% < diffEMA < 5% && Vol60h > 7% && X < -7)
+        console.log(`🔍 Quét SHORT Nhóm C (-6% < diffEMA < 5%, Vol60h > 7%, X < -7) (${groupNeg6ToPos5.length} coins)...`);
         for (const item of groupNeg6ToPos5) {
             const sig = checkSignalGroupNeg6ToPos5(item);
             if (sig) await sendAlert(item.symbol, 'SHORT', item.diffEMA, sig.diffBB, sig.targetBB, '_short1h', { ratioX: item.ratioX, vol60h: item.vol60h });
