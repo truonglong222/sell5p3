@@ -285,8 +285,8 @@ async function main() {
             c.vol60h = metrics.vol60h;
             c.ratioX = metrics.ratioX;
 
-            // Điều kiện lọc Nhóm C: vol60h > 7% và ratioX < -3
-            return metrics.vol60h > 7 && metrics.ratioX < -3;
+            // Điều kiện lọc Nhóm C: vol60h > 7% và ratioX < -6
+            return metrics.vol60h > 7 && metrics.ratioX < -6;
         });
 
         // Định dạng lưu file
