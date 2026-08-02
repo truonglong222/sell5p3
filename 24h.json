@@ -1,60 +1,63 @@
 {
-  "updatedAt": "2026-08-02T05:46:23.718Z",
+  "updatedAt": "2026-08-02T06:01:50.845Z",
   "counts": {
-    "groupNeg8ToNeg4": 6,
+    "groupNeg8ToNeg4": 5,
     "groupBelowNeg8": 3,
-    "groupNeg4To0": 0
+    "groupNeg4To0": 1
   },
   "data": {
     "groupNeg8ToNeg4": [
       {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": -6.95,
-        "volCcy24h": 288941030
+        "diffEMA": -7.11,
+        "volCcy24h": 285527640
       },
       {
         "symbol": "GIGGLE-USDT-SWAP",
-        "diffEMA": -6.03,
-        "volCcy24h": 10086208
+        "diffEMA": -6.38,
+        "volCcy24h": 9964215.16
       },
       {
         "symbol": "BASED-USDT-SWAP",
-        "diffEMA": -4.03,
-        "volCcy24h": 148378860
+        "diffEMA": -4.14,
+        "volCcy24h": 147149990
       },
       {
         "symbol": "BLEND-USDT-SWAP",
-        "diffEMA": -4.18,
-        "volCcy24h": 6507660
+        "diffEMA": -4.36,
+        "volCcy24h": 6466530
       },
       {
         "symbol": "ROBO-USDT-SWAP",
-        "diffEMA": -4.36,
-        "volCcy24h": 337412000
-      },
-      {
-        "symbol": "BOME-USDT-SWAP",
-        "diffEMA": -4.14,
-        "volCcy24h": 9041607000
+        "diffEMA": -4.07,
+        "volCcy24h": 335840000
       }
     ],
     "groupBelowNeg8": [
       {
         "symbol": "LAB-USDT-SWAP",
-        "diffEMA": -8.4,
-        "volCcy24h": 210813848
+        "diffEMA": -8.42,
+        "volCcy24h": 207281058
       },
       {
         "symbol": "MMT-USDT-SWAP",
-        "diffEMA": -11.37,
-        "volCcy24h": 293790980
+        "diffEMA": -11.39,
+        "volCcy24h": 290974030
       },
       {
         "symbol": "CAP-USDT-SWAP",
-        "diffEMA": -18.66,
-        "volCcy24h": 1641336700
+        "diffEMA": -18.89,
+        "volCcy24h": 1650358500
       }
     ],
-    "groupNeg4To0": []
+    "groupNeg4To0": [
+      {
+        "symbol": "GRVT-USDT-SWAP",
+        "diffEMA": -0.01,
+        "vol60h": 19.25,
+        "ratioX": -8.71,
+        "volCcy24h": 296928010
+      }
+    ]
   }
 }
