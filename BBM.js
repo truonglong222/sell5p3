@@ -187,55 +187,55 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY -------------------
 
-// 1. Nhóm A (-8% < diffEMA < -4%) -> SHORT khi High0 sát BB Upper: -0.7% < diffbbu < 1%
+// 1. Nhóm A (-8% < diffEMA < -4%) -> SHORT khi Giá hiện tại sát BB Upper: -0.7% < diffbbu < 2%
 function checkSignalGroupNeg8ToNeg4(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
-    const high0 = parseFloat(candle0[2]);
+    const currentPrice0 = parseFloat(candle0[4]); // Lấy giá hiện tại (close0)
 
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb) return null;
 
-    const diffbbu = ((high0 - bb.upper) / bb.upper) * 100;
+    const diffbbu = ((currentPrice0 - bb.upper) / bb.upper) * 100;
     
-    if (diffbbu > -0.7 && diffbbu < 1) {
+    if (diffbbu > -0.7 && diffbbu < 2) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Upper' };
     }
     return null;
 }
 
-// 2. Nhóm B (diffEMA <= -8%) -> SHORT khi High0 sát BB Middle: -0.5% < diffbbm < 1%
+// 2. Nhóm B (diffEMA <= -8%) -> SHORT khi Giá hiện tại sát BB Middle: -0.5% < diffbbm < 2%
 function checkSignalGroupBelowNeg8(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
-    const high0 = parseFloat(candle0[2]);
+    const currentPrice0 = parseFloat(candle0[4]); // Lấy giá hiện tại (close0)
 
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb) return null;
 
-    const diffbbm = ((high0 - bb.middle) / bb.middle) * 100;
+    const diffbbm = ((currentPrice0 - bb.middle) / bb.middle) * 100;
     
-    if (diffbbm > -0.5 && diffbbm < 1) {
+    if (diffbbm > -0.5 && diffbbm < 2) {
         return { type: 'SHORT', diffBB: diffbbm, targetBB: 'BB Mid' };
     }
     return null;
 }
 
-// 3. Nhóm C (-4% < diffEMA < 0%, Vol60h > 7%, X < -7) -> SHORT khi sát BB Upper (-0.7% < diffbbu < 1%)
+// 3. Nhóm C (-4% < diffEMA < 0%, Vol60h > 7%, X < -7) -> SHORT khi Giá hiện tại sát BB Upper: -0.7% < diffbbu < 2%
 function checkSignalGroupNeg4To0(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
-    const high0 = parseFloat(candle0[2]);
+    const currentPrice0 = parseFloat(candle0[4]); // Lấy giá hiện tại (close0)
 
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb) return null;
 
-    const diffbbu = ((high0 - bb.upper) / bb.upper) * 100;
+    const diffbbu = ((currentPrice0 - bb.upper) / bb.upper) * 100;
 
-    if (diffbbu > -0.7 && diffbbu < 1) {
+    if (diffbbu > -0.7 && diffbbu < 2) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Upper' };
     }
     return null;
@@ -264,7 +264,7 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại 3 nhóm diffEMA SHORT mới
+        // BƯỚC 3: Phân loại 3 nhóm diffEMA SHORT
         // NHÓM A: -8% < diffEMA < -4%
         const groupNeg8ToNeg4 = calculatedCoins.filter(c => c.diffEMA > -8 && c.diffEMA < -4);
         
@@ -317,12 +317,10 @@ async function main() {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                // Định dạng tin nhắn tối giản, theo thứ tự yêu cầu
                 let message = `🔴 <b>${coinName} (${type})</b>\n` +
                               `• DiffEMA: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n` +
                               `• <a href="${link}">Trade trên OKX</a>`;
 
-                // Chỉ thêm X và Vol 60h nếu là Nhóm C
                 if (extraData.ratioX !== undefined && extraData.vol60h !== undefined) {
                     message += `\n• X: <b>${extraData.ratioX.toFixed(2)}</b> | Vol 60h: <b>+${extraData.vol60h.toFixed(2)}%</b>`;
                 }
