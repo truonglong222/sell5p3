@@ -1,62 +1,74 @@
 {
-  "updatedAt": "2026-08-02T12:46:30.049Z",
+  "updatedAt": "2026-08-02T13:01:48.074Z",
   "counts": {
     "groupNeg8ToNeg4": 6,
-    "groupBelowNeg8": 2,
-    "groupNeg4To0": 1
+    "groupBelowNeg8": 3,
+    "groupNeg4To0": 2
   },
   "data": {
     "groupNeg8ToNeg4": [
       {
         "symbol": "ALLO-USDT-SWAP",
-        "diffEMA": -4.14,
-        "volCcy24h": 57308750
+        "diffEMA": -4.45,
+        "volCcy24h": 57642630
       },
       {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": -6.68,
-        "volCcy24h": 273547100
+        "diffEMA": -5.93,
+        "volCcy24h": 273993900
       },
       {
         "symbol": "LAB-USDT-SWAP",
-        "diffEMA": -7.64,
-        "volCcy24h": 166854926
+        "diffEMA": -7.45,
+        "volCcy24h": 164896759
+      },
+      {
+        "symbol": "MET-USDT-SWAP",
+        "diffEMA": -4.07,
+        "volCcy24h": 5754284
       },
       {
         "symbol": "BASED-USDT-SWAP",
-        "diffEMA": -4.95,
-        "volCcy24h": 141207980
-      },
-      {
-        "symbol": "BEAT-USDT-SWAP",
-        "diffEMA": -6.92,
-        "volCcy24h": 84508825
+        "diffEMA": -4.88,
+        "volCcy24h": 140939070
       },
       {
         "symbol": "BABY-USDT-SWAP",
-        "diffEMA": -4.21,
-        "volCcy24h": 129765780
+        "diffEMA": -4.37,
+        "volCcy24h": 127258080
       }
     ],
     "groupBelowNeg8": [
       {
         "symbol": "MMT-USDT-SWAP",
-        "diffEMA": -11.34,
-        "volCcy24h": 182953820
+        "diffEMA": -11.22,
+        "volCcy24h": 179054400
+      },
+      {
+        "symbol": "BEAT-USDT-SWAP",
+        "diffEMA": -8.14,
+        "volCcy24h": 84827022
       },
       {
         "symbol": "CAP-USDT-SWAP",
-        "diffEMA": -10.3,
-        "volCcy24h": 2012149200
+        "diffEMA": -9.16,
+        "volCcy24h": 2021465700
       }
     ],
     "groupNeg4To0": [
       {
         "symbol": "GIGGLE-USDT-SWAP",
-        "diffEMA": -3.96,
-        "vol60h": 48.36,
+        "diffEMA": -2.57,
+        "vol60h": 46.79,
+        "ratioX": -7.08,
+        "volCcy24h": 7622561.26
+      },
+      {
+        "symbol": "AEVO-USDT-SWAP",
+        "diffEMA": -0.97,
+        "vol60h": 7.94,
         "ratioX": -7.01,
-        "volCcy24h": 7682844.33
+        "volCcy24h": 820305679
       }
     ]
   }
