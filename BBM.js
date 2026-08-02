@@ -187,17 +187,17 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY -------------------
 
-// 1. Nhóm A (-8% < diffEMA < -4%) -> SHORT khi Giá hiện tại sát BB Upper: -2% < diffbbu < 2%
+// 1. Nhóm A (-8% < diffEMA < -4%) -> SHORT khi Giá High nến hiện tại sát BB Upper: -2% < diffbbu < 2%
 function checkSignalGroupNeg8ToNeg4(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
-    const currentPrice0 = parseFloat(candle0[4]); // Lấy giá hiện tại (close0)
+    const highPrice0 = parseFloat(candle0[2]); // Lấy giá cao nhất (high0) của nến hiện tại
 
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb) return null;
 
-    const diffbbu = ((currentPrice0 - bb.upper) / bb.upper) * 100;
+    const diffbbu = ((highPrice0 - bb.upper) / bb.upper) * 100;
     
     // Đã nới rộng khoảng điều kiện: -2% < diffbbu < 2%
     if (diffbbu > -2 && diffbbu < 2) {
@@ -206,17 +206,17 @@ function checkSignalGroupNeg8ToNeg4(coinData) {
     return null;
 }
 
-// 2. Nhóm B (diffEMA <= -8%) -> SHORT khi Giá hiện tại sát BB Middle: -1% < diffbbm < 2%
+// 2. Nhóm B (diffEMA <= -8%) -> SHORT khi Giá High nến hiện tại sát BB Middle: -1% < diffbbm < 2%
 function checkSignalGroupBelowNeg8(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
-    const currentPrice0 = parseFloat(candle0[4]); // Lấy giá hiện tại (close0)
+    const highPrice0 = parseFloat(candle0[2]); // Lấy giá cao nhất (high0) của nến hiện tại
 
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb) return null;
 
-    const diffbbm = ((currentPrice0 - bb.middle) / bb.middle) * 100;
+    const diffbbm = ((highPrice0 - bb.middle) / bb.middle) * 100;
     
     // Đã nới rộng khoảng điều kiện: -1% < diffbbm < 2%
     if (diffbbm > -1 && diffbbm < 2) {
@@ -225,17 +225,17 @@ function checkSignalGroupBelowNeg8(coinData) {
     return null;
 }
 
-// 3. Nhóm C (-4% < diffEMA < 0%, Vol60h > 7%, X < -7) -> SHORT khi Giá hiện tại sát BB Upper: -2% < diffbbu < 2%
+// 3. Nhóm C (-4% < diffEMA < 0%, Vol60h > 7%, X < -7) -> SHORT khi Giá High nến hiện tại sát BB Upper: -2% < diffbbu < 2%
 function checkSignalGroupNeg4To0(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
-    const currentPrice0 = parseFloat(candle0[4]); // Lấy giá hiện tại (close0)
+    const highPrice0 = parseFloat(candle0[2]); // Lấy giá cao nhất (high0) của nến hiện tại
 
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb) return null;
 
-    const diffbbu = ((currentPrice0 - bb.upper) / bb.upper) * 100;
+    const diffbbu = ((highPrice0 - bb.upper) / bb.upper) * 100;
 
     // Đã nới rộng khoảng điều kiện: -2% < diffbbu < 2%
     if (diffbbu > -2 && diffbbu < 2) {
