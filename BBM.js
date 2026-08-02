@@ -187,7 +187,7 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY -------------------
 
-// 1. Nhóm A (-8% < diffEMA < -4%) -> SHORT khi Giá hiện tại sát BB Upper: -0.7% < diffbbu < 2%
+// 1. Nhóm A (-8% < diffEMA < -4%) -> SHORT khi Giá hiện tại sát BB Upper: -2% < diffbbu < 2%
 function checkSignalGroupNeg8ToNeg4(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -199,13 +199,14 @@ function checkSignalGroupNeg8ToNeg4(coinData) {
 
     const diffbbu = ((currentPrice0 - bb.upper) / bb.upper) * 100;
     
-    if (diffbbu > -0.7 && diffbbu < 2) {
+    // Đã nới rộng khoảng điều kiện: -2% < diffbbu < 2%
+    if (diffbbu > -2 && diffbbu < 2) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Upper' };
     }
     return null;
 }
 
-// 2. Nhóm B (diffEMA <= -8%) -> SHORT khi Giá hiện tại sát BB Middle: -0.5% < diffbbm < 2%
+// 2. Nhóm B (diffEMA <= -8%) -> SHORT khi Giá hiện tại sát BB Middle: -1% < diffbbm < 2%
 function checkSignalGroupBelowNeg8(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -217,13 +218,14 @@ function checkSignalGroupBelowNeg8(coinData) {
 
     const diffbbm = ((currentPrice0 - bb.middle) / bb.middle) * 100;
     
-    if (diffbbm > -0.5 && diffbbm < 2) {
+    // Đã nới rộng khoảng điều kiện: -1% < diffbbm < 2%
+    if (diffbbm > -1 && diffbbm < 2) {
         return { type: 'SHORT', diffBB: diffbbm, targetBB: 'BB Mid' };
     }
     return null;
 }
 
-// 3. Nhóm C (-4% < diffEMA < 0%, Vol60h > 7%, X < -7) -> SHORT khi Giá hiện tại sát BB Upper: -0.7% < diffbbu < 2%
+// 3. Nhóm C (-4% < diffEMA < 0%, Vol60h > 7%, X < -7) -> SHORT khi Giá hiện tại sát BB Upper: -2% < diffbbu < 2%
 function checkSignalGroupNeg4To0(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -235,7 +237,8 @@ function checkSignalGroupNeg4To0(coinData) {
 
     const diffbbu = ((currentPrice0 - bb.upper) / bb.upper) * 100;
 
-    if (diffbbu > -0.7 && diffbbu < 2) {
+    // Đã nới rộng khoảng điều kiện: -2% < diffbbu < 2%
+    if (diffbbu > -2 && diffbbu < 2) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Upper' };
     }
     return null;
