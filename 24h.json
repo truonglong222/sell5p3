@@ -1,68 +1,60 @@
 {
-  "updatedAt": "2026-08-02T17:46:26.782Z",
+  "updatedAt": "2026-08-02T18:01:51.482Z",
   "counts": {
     "groupNeg8ToNeg4": 7,
     "groupBelowNeg8": 2,
-    "groupNeg4To0": 1
+    "groupNeg4To0": 0
   },
   "data": {
     "groupNeg8ToNeg4": [
       {
         "symbol": "ALLO-USDT-SWAP",
-        "diffEMA": -5.14,
-        "volCcy24h": 69410370
+        "diffEMA": -5.08,
+        "volCcy24h": 70266640
       },
       {
         "symbol": "OFC-USDT-SWAP",
-        "diffEMA": -4.61,
-        "volCcy24h": 937137700
-      },
-      {
-        "symbol": "AEON-USDT-SWAP",
-        "diffEMA": -4.12,
-        "volCcy24h": 191648920
+        "diffEMA": -5.32,
+        "volCcy24h": 883047600
       },
       {
         "symbol": "ARX-USDT-SWAP",
-        "diffEMA": -4.19,
-        "volCcy24h": 14096790
+        "diffEMA": -4.47,
+        "volCcy24h": 14063390
+      },
+      {
+        "symbol": "LA-USDT-SWAP",
+        "diffEMA": -4.07,
+        "volCcy24h": 66686260
       },
       {
         "symbol": "BABY-USDT-SWAP",
-        "diffEMA": -4.57,
-        "volCcy24h": 127884190
+        "diffEMA": -4.44,
+        "volCcy24h": 126255030
       },
       {
         "symbol": "CAP-USDT-SWAP",
-        "diffEMA": -5.26,
-        "volCcy24h": 1788978400
+        "diffEMA": -4.43,
+        "volCcy24h": 1778833800
       },
       {
         "symbol": "GRVT-USDT-SWAP",
-        "diffEMA": -5.77,
-        "volCcy24h": 226802070
+        "diffEMA": -6.19,
+        "volCcy24h": 222984030
       }
     ],
     "groupBelowNeg8": [
       {
         "symbol": "MMT-USDT-SWAP",
-        "diffEMA": -11.04,
-        "volCcy24h": 157056050
+        "diffEMA": -11.13,
+        "volCcy24h": 156675050
       },
       {
         "symbol": "BEAT-USDT-SWAP",
-        "diffEMA": -9.45,
-        "volCcy24h": 84086196
+        "diffEMA": -10.08,
+        "volCcy24h": 82079170
       }
     ],
-    "groupNeg4To0": [
-      {
-        "symbol": "CORE-USDT-SWAP",
-        "diffEMA": -0.03,
-        "vol60h": 7.12,
-        "ratioX": -7.18,
-        "volCcy24h": 183042743
-      }
-    ]
+    "groupNeg4To0": []
   }
 }
