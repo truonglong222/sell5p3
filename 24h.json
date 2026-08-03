@@ -1,55 +1,65 @@
 {
-  "updatedAt": "2026-08-02T23:46:22.739Z",
+  "updatedAt": "2026-08-03T00:01:58.885Z",
   "counts": {
-    "groupNeg8ToNeg4": 5,
+    "groupNeg8ToNeg4": 4,
     "groupBelowNeg8": 3,
-    "groupNeg4To0": 0
+    "groupNeg4To0": 2
   },
   "data": {
     "groupNeg8ToNeg4": [
       {
-        "symbol": "RE-USDT-SWAP",
-        "diffEMA": -4.03,
-        "volCcy24h": 30277570
-      },
-      {
         "symbol": "ALLO-USDT-SWAP",
-        "diffEMA": -5.3,
-        "volCcy24h": 64727840
+        "diffEMA": -5.34,
+        "volCcy24h": 64384140
       },
       {
         "symbol": "KAITO-USDT-SWAP",
-        "diffEMA": -6.1,
-        "volCcy24h": 97024549
+        "diffEMA": -7.07,
+        "volCcy24h": 96941061
       },
       {
         "symbol": "ARX-USDT-SWAP",
-        "diffEMA": -4.71,
-        "volCcy24h": 13714200
+        "diffEMA": -4.68,
+        "volCcy24h": 13688950
       },
       {
         "symbol": "GRVT-USDT-SWAP",
-        "diffEMA": -6.14,
-        "volCcy24h": 233838390
+        "diffEMA": -6.22,
+        "volCcy24h": 234013170
       }
     ],
     "groupBelowNeg8": [
       {
         "symbol": "OFC-USDT-SWAP",
-        "diffEMA": -8.86,
-        "volCcy24h": 780348300
+        "diffEMA": -9.38,
+        "volCcy24h": 770191900
       },
       {
         "symbol": "MMT-USDT-SWAP",
-        "diffEMA": -9.33,
-        "volCcy24h": 148226550
+        "diffEMA": -8.96,
+        "volCcy24h": 147889930
       },
       {
         "symbol": "BEAT-USDT-SWAP",
-        "diffEMA": -14.63,
-        "volCcy24h": 74097932
+        "diffEMA": -14.08,
+        "volCcy24h": 74139232
       }
     ],
-    "groupNeg4To0": []
+    "groupNeg4To0": [
+      {
+        "symbol": "SATS-USDT-SWAP",
+        "diffEMA": -1.3,
+        "vol60h": 16.55,
+        "ratioX": -7.5,
+        "volCcy24h": 924022440000000
+      },
+      {
+        "symbol": "GIGGLE-USDT-SWAP",
+        "diffEMA": -0.38,
+        "vol60h": 13.78,
+        "ratioX": -7.76,
+        "volCcy24h": 5506282.29
+      }
+    ]
   }
 }
