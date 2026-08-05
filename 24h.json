@@ -1,67 +1,46 @@
 {
-  "updatedAt": "2026-08-05T03:56:16.584Z",
+  "updatedAt": "2026-08-05T04:01:51.048Z",
   "counts": {
     "groupBelowNeg8": 4,
-    "groupNeg8ToNeg4": 5
+    "groupNeg8ToNeg4": 2
   },
   "data": {
     "groupBelowNeg8": [
       {
         "symbol": "UB-USDT-SWAP",
-        "diffEMA": -19.65,
-        "volCcy24h": 1347183100
+        "diffEMA": -20.42,
+        "volCcy24h": 1350923400
       },
       {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": -8.82,
-        "volCcy24h": 241787610
+        "diffEMA": -9.02,
+        "volCcy24h": 241221860
       },
       {
         "symbol": "BEAT-USDT-SWAP",
-        "diffEMA": -14.71,
-        "volCcy24h": 62657403
+        "diffEMA": -14.21,
+        "volCcy24h": 61450652
       },
       {
         "symbol": "LDO-USDT-SWAP",
-        "diffEMA": -11.47,
-        "volCcy24h": 81032012
+        "diffEMA": -11.64,
+        "volCcy24h": 81103368
       }
     ],
     "groupNeg8ToNeg4": [
       {
-        "symbol": "LIGHT-USDT-SWAP",
-        "diffEMA": -4.24,
-        "vol60h": -8.2,
-        "ratioX": -8.32,
-        "volCcy24h": 8686196
-      },
-      {
-        "symbol": "GRASS-USDT-SWAP",
-        "diffEMA": -4.24,
-        "vol60h": -5.36,
-        "ratioX": -4.43,
-        "volCcy24h": 20171292
-      },
-      {
-        "symbol": "ETHFI-USDT-SWAP",
-        "diffEMA": -7.43,
-        "vol60h": -9.54,
-        "ratioX": -4.76,
-        "volCcy24h": 32857959
-      },
-      {
         "symbol": "RECALL-USDT-SWAP",
-        "diffEMA": -5.11,
-        "vol60h": -5.5,
-        "ratioX": -18.02,
-        "volCcy24h": 8987950
+        "diffEMA": -4.3,
+        "vol60h": -3.57,
+        "ratioX": -18.7,
+        "volCcy24h": 9006890
       },
       {
         "symbol": "CORE-USDT-SWAP",
-        "diffEMA": -5.62,
-        "vol60h": 2.15,
-        "ratioX": -8.69,
-        "volCcy24h": 308118173
+        "diffEMA": -5.8,
+        "vol60h": 1.94,
+        "ratioX": -9.11,
+        "volCcy24h": 308033807
       }
     ]
   }
