@@ -123,63 +123,41 @@ async function getHighVolumeCoins() {
     }
 }
 
-// ------------------- BƯỚC 1: QUÉT NẾN 1H VÀ LỌC BIẾN ĐỘNG 60H -------------------
-async function process1HCandles(symbol, volCcy24h) {
+// ------------------- LẤY NẾN 1H VÀ 4H DÀNH CHO MỖI COIN -------------------
+async function fetchCoinCandles(symbol, volCcy24h) {
     try {
+        // Fetch 1H Candles
         const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
         const res1H = await axios.get(url1H, { timeout: 5000 });
 
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 60) return null;
-
         const raw1H = res1H.data.data;
-
-        // Biến động 60h (%) = (Giá đóng nến 1 - Giá đóng nến 59) / Giá đóng nến 59 * 100
-        const close1 = parseFloat(raw1H[1][4]);
-        const close59 = parseFloat(raw1H[59][4]);
-
-        if (close59 === 0) return null;
-        const vol60h = ((close1 - close59) / close59) * 100;
-
-        // Điều kiện: -15% < vol60h < 15%
-        if (vol60h <= -15 || vol60h >= 15) return null;
-
-        // Tính diffEMA 1H
         const closedPrices1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
         const diffEMA1h = calculateDiffEMA(closedPrices1H);
+
+        // Fetch 4H Candles
+        const url4H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=4H&limit=60`;
+        const res4H = await axios.get(url4H, { timeout: 5000 });
+
+        let raw4H = null;
+        let diffEMA4h = null;
+        if (res4H.data && res4H.data.code === '0' && res4H.data.data.length >= 60) {
+            raw4H = res4H.data.data;
+            const closedPrices4H = raw4H.slice(1).reverse().map(c => parseFloat(c[4]));
+            diffEMA4h = calculateDiffEMA(closedPrices4H);
+        }
 
         return {
             symbol,
             volCcy24h,
-            vol60h,
             diffEMA1h,
-            raw1H
-        };
-    } catch (error) {
-        console.error(`Lỗi lấy nến 1H (${symbol}):`, error.message);
-        return null;
-    }
-}
-
-// ------------------- BƯỚC 2: LẤY THÊM NẾN 4H CHO COIN ĐÃ LỌC -------------------
-async function fetch4HCandles(coinData) {
-    try {
-        const url4H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${coinData.symbol}&bar=4H&limit=60`;
-        const res4H = await axios.get(url4H, { timeout: 5000 });
-
-        if (!res4H.data || res4H.data.code !== '0' || res4H.data.data.length < 60) return coinData;
-
-        const raw4H = res4H.data.data;
-        const closedPrices4H = raw4H.slice(1).reverse().map(c => parseFloat(c[4]));
-        const diffEMA4h = calculateDiffEMA(closedPrices4H);
-
-        return {
-            ...coinData,
             diffEMA4h,
+            raw1H,
             raw4H
         };
     } catch (error) {
-        console.error(`Lỗi lấy nến 4H (${coinData.symbol}):`, error.message);
-        return coinData;
+        console.error(`Lỗi lấy dữ liệu nến (${symbol}):`, error.message);
+        return null;
     }
 }
 
@@ -236,27 +214,17 @@ async function main() {
         const highVolCoins = await getHighVolumeCoins();
         console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 10M USDT...`);
 
-        // BƯỚC 2: Quét nến 1H và lọc biến động 60h (-15% < vol60h < 15%)
-        console.log('⏳ Đang lấy dữ liệu 1H & lọc biến động 60h...');
-        const qualified1H = [];
+        // BƯỚC 2: Lấy nến 1H & 4H cho từng coin
+        console.log('⏳ Đang lấy dữ liệu nến 1H và 4H...');
+        const fullDataCoins = [];
 
         for (const coin of highVolCoins) {
-            const data = await process1HCandles(coin.instId, coin.volCcy24h);
-            if (data) qualified1H.push(data);
-            await sleep(80);
-        }
-        console.log(`🎯 Có ${qualified1H.length} coins thỏa điều kiện -15% < biến động 60h < 15%`);
-
-        // BƯỚC 3: Lấy thêm dữ liệu nến 4H cho các coin đạt điều kiện
-        console.log('⏳ Đang lấy thêm dữ liệu nến 4H...');
-        const fullDataCoins = [];
-        for (const coinData of qualified1H) {
-            const fullData = await fetch4HCandles(coinData);
-            fullDataCoins.push(fullData);
+            const data = await fetchCoinCandles(coin.instId, coin.volCcy24h);
+            if (data) fullDataCoins.push(data);
             await sleep(80);
         }
 
-        // BƯỚC 4: Phân loại Nhóm A và Nhóm B
+        // BƯỚC 3: Phân loại Nhóm A và Nhóm B
         // Nhóm A: diffEMA1h < -8%
         const groupA = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h < -8);
 
@@ -268,7 +236,6 @@ async function main() {
             symbol: c.symbol,
             diffEMA1h: c.diffEMA1h !== null ? parseFloat(c.diffEMA1h.toFixed(2)) : null,
             diffEMA4h: c.diffEMA4h !== null ? parseFloat(c.diffEMA4h.toFixed(2)) : null,
-            vol60h: parseFloat(c.vol60h.toFixed(2)),
             volCcy24h: c.volCcy24h
         });
 
@@ -280,7 +247,7 @@ async function main() {
         // Ghi vào file 24h.json
         save24hJson(groupedForSave);
 
-        // BƯỚC 5: Xử lý và Báo Tín Hiệu Telegram
+        // BƯỚC 4: Xử lý và Báo Tín Hiệu Telegram
         const sendAlert = async (symbol, type, diffEmaVal, cooldownKey) => {
             if (!sentLog[symbol]) sentLog[symbol] = {};
             const lastSent = sentLog[symbol][cooldownKey] || 0;
