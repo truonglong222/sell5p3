@@ -1,14 +1,19 @@
 {
-  "updatedAt": "2026-08-05T17:56:05.474Z",
+  "updatedAt": "2026-08-05T18:01:44.773Z",
   "counts": {
-    "groupA": 1
+    "groupA": 2
   },
   "data": {
     "groupA": [
       {
+        "symbol": "UB-USDT-SWAP",
+        "diffEMA1h": -18.26,
+        "volCcy24h": 2543799200
+      },
+      {
         "symbol": "BEAT-USDT-SWAP",
-        "diffEMA1h": -7.39,
-        "volCcy24h": 43472553
+        "diffEMA1h": -7.1,
+        "volCcy24h": 43439995
       }
     ]
   }
