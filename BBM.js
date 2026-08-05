@@ -37,28 +37,24 @@ function saveSentLog(logData) {
             if (timeData._short1h && now - timeData._short1h < COOLDOWN_TIME) {
                 temp._short1h = timeData._short1h;
             }
-            if (timeData._short4h && now - timeData._short4h < COOLDOWN_TIME) {
-                temp._short4h = timeData._short4h;
-            }
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
         }
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
     } catch (e) {}
 }
 
-// Ghi file 24h.json (Lưu Nhóm A & Nhóm B)
+// Ghi file 24h.json (Lưu Nhóm A)
 function save24hJson(groupedData) {
     try {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
             counts: {
-                groupA: groupedData.groupA.length,
-                groupB: groupedData.groupB.length
+                groupA: groupedData.groupA.length
             },
             data: groupedData
         };
         fs.writeFileSync(FILE_24H, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`💾 Đã lưu phân loại Nhóm A & Nhóm B vào ${FILE_24H}`);
+        console.log(`💾 Đã lưu phân loại Nhóm A vào ${FILE_24H}`);
     } catch (e) {
         console.error('Lỗi khi ghi file 24h.json:', e.message);
     }
@@ -123,7 +119,7 @@ async function getHighVolumeCoins() {
     }
 }
 
-// ------------------- LẤY NẾN 1H VÀ 4H DÀNH CHO MỖI COIN -------------------
+// ------------------- LẤY NẾN 1H DÀNH CHO MỖI COIN -------------------
 async function fetchCoinCandles(symbol, volCcy24h) {
     try {
         // Fetch 1H Candles
@@ -135,25 +131,11 @@ async function fetchCoinCandles(symbol, volCcy24h) {
         const closedPrices1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
         const diffEMA1h = calculateDiffEMA(closedPrices1H);
 
-        // Fetch 4H Candles
-        const url4H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=4H&limit=60`;
-        const res4H = await axios.get(url4H, { timeout: 5000 });
-
-        let raw4H = null;
-        let diffEMA4h = null;
-        if (res4H.data && res4H.data.code === '0' && res4H.data.data.length >= 60) {
-            raw4H = res4H.data.data;
-            const closedPrices4H = raw4H.slice(1).reverse().map(c => parseFloat(c[4]));
-            diffEMA4h = calculateDiffEMA(closedPrices4H);
-        }
-
         return {
             symbol,
             volCcy24h,
             diffEMA1h,
-            diffEMA4h,
-            raw1H,
-            raw4H
+            raw1H
         };
     } catch (error) {
         console.error(`Lỗi lấy dữ liệu nến (${symbol}):`, error.message);
@@ -163,7 +145,7 @@ async function fetchCoinCandles(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT -------------------
 
-// Kiểm tra tín hiệu SHORT 1H (Nhóm A): -1% < diffbbm1h < 2%
+// Kiểm tra tín hiệu SHORT 1H: -1% < diffbbm1h < 2%
 function checkSignalShort1H(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -181,26 +163,6 @@ function checkSignalShort1H(coinData) {
     return null;
 }
 
-// Kiểm tra tín hiệu SHORT 4H (Nhóm B): -2% < diffbbm4h < 2%
-function checkSignalShort4H(coinData) {
-    const { raw4H } = coinData;
-    if (!raw4H) return null;
-
-    const candle0 = raw4H[0];
-    const highPrice0 = parseFloat(candle0[2]);
-
-    const closedForBB = raw4H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-    const bb = calculateBollingerBands(closedForBB, 20);
-    if (!bb) return null;
-
-    const diffbbm4h = ((highPrice0 - bb.middle) / bb.middle) * 100;
-
-    if (diffbbm4h > -2 && diffbbm4h < 2) {
-        return { type: 'SHORT 4H', diffBB: diffbbm4h };
-    }
-    return null;
-}
-
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
@@ -214,8 +176,8 @@ async function main() {
         const highVolCoins = await getHighVolumeCoins();
         console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 10M USDT...`);
 
-        // BƯỚC 2: Lấy nến 1H & 4H cho từng coin
-        console.log('⏳ Đang lấy dữ liệu nến 1H và 4H...');
+        // BƯỚC 2: Lấy nến 1H cho từng coin
+        console.log('⏳ Đang lấy dữ liệu nến 1H...');
         const fullDataCoins = [];
 
         for (const coin of highVolCoins) {
@@ -224,24 +186,18 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại Nhóm A và Nhóm B
-        // Nhóm A: diffEMA1h < -8%
-        const groupA = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h < -8);
-
-        // Nhóm B: diffEMA4h < -10%
-        const groupB = fullDataCoins.filter(c => c.diffEMA4h !== null && c.diffEMA4h < -10);
+        // BƯỚC 3: Phân loại Nhóm A (-20% < diffEMA1h < -6%)
+        const groupA = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -20 && c.diffEMA1h < -6);
 
         // Định dạng lưu file
         const formatItem = c => ({
             symbol: c.symbol,
             diffEMA1h: c.diffEMA1h !== null ? parseFloat(c.diffEMA1h.toFixed(2)) : null,
-            diffEMA4h: c.diffEMA4h !== null ? parseFloat(c.diffEMA4h.toFixed(2)) : null,
             volCcy24h: c.volCcy24h
         });
 
         const groupedForSave = {
-            groupA: groupA.map(formatItem),
-            groupB: groupB.map(formatItem)
+            groupA: groupA.map(formatItem)
         };
 
         // Ghi vào file 24h.json
@@ -273,21 +229,12 @@ async function main() {
             }
         };
 
-        // 1. Quét NHÓM A -> Báo SHORT 1H
-        console.log(`🔍 Quét NHÓM A (diffEMA 1H < -8%) (${groupA.length} coins)...`);
+        // Quét NHÓM A -> Báo SHORT 1H
+        console.log(`🔍 Quét NHÓM A (-20% < diffEMA 1H < -6%) (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalShort1H(item);
             if (sig) {
                 await sendAlert(item.symbol, 'SHORT 1H', item.diffEMA1h, '_short1h');
-            }
-        }
-
-        // 2. Quét NHÓM B -> Báo SHORT 4H
-        console.log(`🔍 Quét NHÓM B (diffEMA 4H < -10%) (${groupB.length} coins)...`);
-        for (const item of groupB) {
-            const sig = checkSignalShort4H(item);
-            if (sig) {
-                await sendAlert(item.symbol, 'SHORT 4H', item.diffEMA4h, '_short4h');
             }
         }
 
