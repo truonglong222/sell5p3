@@ -205,7 +205,7 @@ function checkSignalGroupBelowNeg8(coinData) {
     return null;
 }
 
-// 2. NHÓM B (-8% < diffEMA < -4%, Vol60h > 7%, X < -7) -> SHORT khi Giá High nến hiện tại sát BB Upper: -2% < diffbbu < 2%
+// 2. NHÓM B (-8% < diffEMA < -4%, Vol60h > 7%, X < -4) -> SHORT khi Giá High nến hiện tại sát BB Upper: -2% < diffbbu < 2%
 function checkSignalGroupNeg8ToNeg4(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -252,7 +252,7 @@ async function main() {
         // NHÓM A: diffEMA <= -8%
         const groupBelowNeg8 = calculatedCoins.filter(c => c.diffEMA <= -8);
 
-        // NHÓM B: -8% < diffEMA < -4% AND Vol60h > 7% AND X < -7
+        // NHÓM B: -8% < diffEMA < -4% AND Vol60h > 7% AND X < -4
         const groupNeg8ToNeg4 = calculatedCoins.filter(c => {
             if (c.diffEMA <= -8 || c.diffEMA >= -4) return false;
 
@@ -262,7 +262,7 @@ async function main() {
             c.vol60h = metrics.vol60h;
             c.ratioX = metrics.ratioX;
 
-            return metrics.vol60h > 7 && metrics.ratioX < -7;
+            return metrics.vol60h > 7 && metrics.ratioX < -4;
         });
 
         // Định dạng lưu file
