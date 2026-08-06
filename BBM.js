@@ -226,9 +226,9 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại các nhóm A, B, C
+        // BƯỚC 3: Phân loại các nhóm A, B, C (Cập nhật Nhóm B: -25% < diffEMA1h < -4%)
         const groupA = fullDataCoins.filter(c => c.diffEMA15m !== null && c.diffEMA15m > -15 && c.diffEMA15m < -2);
-        const groupB = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -3);
+        const groupB = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -4);
         const groupC = fullDataCoins.filter(c => c.diffEMA4h !== null && c.diffEMA4h < -5);
 
         // Định dạng lưu file 24h.json
@@ -282,7 +282,7 @@ async function main() {
         // 1. Quét Coin thỏa mãn cả Nhóm A & Nhóm B -> Kiểm tra SHORT 15M (Cooldown 2 tiếng)
         const groupA_and_B = fullDataCoins.filter(c => 
             c.diffEMA15m !== null && c.diffEMA15m > -15 && c.diffEMA15m < -2 &&
-            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -3
+            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -4
         );
 
         console.log(`🔍 Quét NHÓM A & B -> SHORT 15M (${groupA_and_B.length} coins)...`);
@@ -295,7 +295,7 @@ async function main() {
 
         // 2. Quét Coin thỏa mãn cả Nhóm B & Nhóm C -> Kiểm tra SHORT 1H (Cooldown 6 tiếng)
         const groupB_and_C = fullDataCoins.filter(c => 
-            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -3 &&
+            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -4 &&
             c.diffEMA4h !== null && c.diffEMA4h < -5
         );
 
