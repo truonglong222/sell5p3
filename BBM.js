@@ -12,8 +12,11 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const FILE_24H = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 6 TIẾNG
-const COOLDOWN_TIME = 6 * 60 * 60 * 1000; 
+// Cấu hình Cooldown mặc định cho 1H là 6 TIẾNG
+const COOLDOWN_1H = 6 * 60 * 60 * 1000; 
+// Cooldown cho 15M là 2 TIẾNG
+const COOLDOWN_15M = 2 * 60 * 60 * 1000; 
+
 const MIN_VOLUME_USDT = 5000000; // 5 Triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -34,7 +37,11 @@ function saveSentLog(logData) {
         const cleanedLog = {};
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
-            if (timeData._short1h && now - timeData._short1h < COOLDOWN_TIME) {
+            // Lọc dọn dẹp log cooldown
+            if (timeData._short15m && now - timeData._short15m < COOLDOWN_15M) {
+                temp._short15m = timeData._short15m;
+            }
+            if (timeData._short1h && now - timeData._short1h < COOLDOWN_1H) {
                 temp._short1h = timeData._short1h;
             }
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
@@ -43,18 +50,20 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Ghi file 24h.json (Lưu Nhóm A)
+// Ghi file 24h.json (Lưu Nhóm A, B, C)
 function save24hJson(groupedData) {
     try {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
             counts: {
-                groupA: groupedData.groupA.length
+                groupA: groupedData.groupA.length,
+                groupB: groupedData.groupB.length,
+                groupC: groupedData.groupC.length
             },
             data: groupedData
         };
         fs.writeFileSync(FILE_24H, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`💾 Đã lưu phân loại Nhóm A vào ${FILE_24H}`);
+        console.log(`💾 Đã lưu phân loại Nhóm A, B, C vào ${FILE_24H}`);
     } catch (e) {
         console.error('Lỗi khi ghi file 24h.json:', e.message);
     }
@@ -73,7 +82,7 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Tối ưu: Chỉ tính Mid Band (giá trị trung bình SMA của 20 nến gần nhất)
+// Tính Mid Band (SMA 20)
 function calculateBBMiddle(prices, period = 20) {
     if (prices.length < period) return null;
     const slice = prices.slice(-period);
@@ -114,22 +123,28 @@ async function getHighVolumeCoins() {
     }
 }
 
-// ------------------- LẤY NẾN 1H VÀ 4H DÀNH CHO MỖI COIN -------------------
+// ------------------- LẤY NẾN 15M, 1H VÀ 4H DÀNH CHO MỖI COIN -------------------
 async function fetchCoinCandles(symbol, volCcy24h) {
     try {
-        // Fetch 1H Candles
+        // 1. Fetch 15M Candles
+        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=60`;
+        const res15M = await axios.get(url15M, { timeout: 5000 });
+        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 60) return null;
+        const raw15M = res15M.data.data;
+        const closedPrices15M = raw15M.slice(1).reverse().map(c => parseFloat(c[4]));
+        const diffEMA15m = calculateDiffEMA(closedPrices15M);
+
+        // 2. Fetch 1H Candles
         const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
         const res1H = await axios.get(url1H, { timeout: 5000 });
-
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 60) return null;
         const raw1H = res1H.data.data;
         const closedPrices1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
         const diffEMA1h = calculateDiffEMA(closedPrices1H);
 
-        // Fetch 4H Candles
+        // 3. Fetch 4H Candles
         const url4H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=4H&limit=60`;
         const res4H = await axios.get(url4H, { timeout: 5000 });
-
         if (!res4H.data || res4H.data.code !== '0' || res4H.data.data.length < 60) return null;
         const raw4H = res4H.data.data;
         const closedPrices4H = raw4H.slice(1).reverse().map(c => parseFloat(c[4]));
@@ -138,8 +153,10 @@ async function fetchCoinCandles(symbol, volCcy24h) {
         return {
             symbol,
             volCcy24h,
+            diffEMA15m,
             diffEMA1h,
             diffEMA4h,
+            raw15M,
             raw1H
         };
     } catch (error) {
@@ -150,10 +167,28 @@ async function fetchCoinCandles(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT -------------------
 
+// Kiểm tra tín hiệu SHORT 15M: -0.5% < diffbbm15m < 1%
+function checkSignalShort15M(coinData) {
+    const { raw15M } = coinData;
+    const candle0 = raw15M[0]; // Nến 15m hiện tại
+    const highPrice0 = parseFloat(candle0[2]);
+
+    const closedForBB = raw15M.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+    const bbMiddle = calculateBBMiddle(closedForBB, 20);
+    if (!bbMiddle) return null;
+
+    const diffbbm15m = ((highPrice0 - bbMiddle) / bbMiddle) * 100;
+    
+    if (diffbbm15m > -0.5 && diffbbm15m < 1) {
+        return { type: 'SHORT 15M', diffBB: diffbbm15m };
+    }
+    return null;
+}
+
 // Kiểm tra tín hiệu SHORT 1H: -1% < diffbbm1h < 2%
 function checkSignalShort1H(coinData) {
     const { raw1H } = coinData;
-    const candle0 = raw1H[0];
+    const candle0 = raw1H[0]; // Nến 1h hiện tại
     const highPrice0 = parseFloat(candle0[2]);
 
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
@@ -181,8 +216,8 @@ async function main() {
         const highVolCoins = await getHighVolumeCoins();
         console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 5M USDT...`);
 
-        // BƯỚC 2: Lấy nến 1H và 4H cho từng coin
-        console.log('⏳ Đang lấy dữ liệu nến 1H và 4H...');
+        // BƯỚC 2: Lấy nến 15M, 1H và 4H cho từng coin
+        console.log('⏳ Đang lấy dữ liệu nến 15M, 1H và 4H...');
         const fullDataCoins = [];
 
         for (const coin of highVolCoins) {
@@ -191,42 +226,42 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại Nhóm A (-25% < diffEMA1h < -4% VA diffEMA4h < -10%)
-        const groupA = fullDataCoins.filter(c => 
-            c.diffEMA1h !== null && 
-            c.diffEMA4h !== null && 
-            c.diffEMA1h > -25 && 
-            c.diffEMA1h < -4 && 
-            c.diffEMA4h < -5
-        );
+        // BƯỚC 3: Phân loại các nhóm A, B, C
+        const groupA = fullDataCoins.filter(c => c.diffEMA15m !== null && c.diffEMA15m > -15 && c.diffEMA15m < -2);
+        const groupB = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -3);
+        const groupC = fullDataCoins.filter(c => c.diffEMA4h !== null && c.diffEMA4h < -5);
 
-        // Định dạng lưu file
+        // Định dạng lưu file 24h.json
         const formatItem = c => ({
             symbol: c.symbol,
+            diffEMA15m: c.diffEMA15m !== null ? parseFloat(c.diffEMA15m.toFixed(2)) : null,
             diffEMA1h: c.diffEMA1h !== null ? parseFloat(c.diffEMA1h.toFixed(2)) : null,
             diffEMA4h: c.diffEMA4h !== null ? parseFloat(c.diffEMA4h.toFixed(2)) : null,
             volCcy24h: c.volCcy24h
         });
 
         const groupedForSave = {
-            groupA: groupA.map(formatItem)
+            groupA: groupA.map(formatItem),
+            groupB: groupB.map(formatItem),
+            groupC: groupC.map(formatItem)
         };
 
-        // Ghi vào file 24h.json
         save24hJson(groupedForSave);
 
-        // BƯỚC 4: Xử lý và Báo Tín Hiệu Telegram
-        const sendAlert = async (symbol, type, diffEma1hVal, diffEma4hVal, cooldownKey) => {
+        // BƯỚC 4: Hàm gửi Báo Tín Hiệu Telegram
+        const sendAlert = async (item, type, cooldownKey, cooldownDuration) => {
+            const symbol = item.symbol;
             if (!sentLog[symbol]) sentLog[symbol] = {};
             const lastSent = sentLog[symbol][cooldownKey] || 0;
 
-            if (currentTime - lastSent >= COOLDOWN_TIME) {
+            if (currentTime - lastSent >= cooldownDuration) {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                 const message = `🔴 <b>${coinName} (${type})</b>\n` +
-                                `• DiffEMA 1H: <b>${diffEma1hVal > 0 ? '+' : ''}${diffEma1hVal.toFixed(2)}%</b>\n` +
-                                `• DiffEMA 4H: <b>${diffEma4hVal > 0 ? '+' : ''}${diffEma4hVal.toFixed(2)}%</b>\n` +
+                                `• DiffEMA 15M: <b>${item.diffEMA15m > 0 ? '+' : ''}${item.diffEMA15m.toFixed(2)}%</b>\n` +
+                                `• DiffEMA 1H: <b>${item.diffEMA1h > 0 ? '+' : ''}${item.diffEMA1h.toFixed(2)}%</b>\n` +
+                                `• DiffEMA 4H: <b>${item.diffEMA4h > 0 ? '+' : ''}${item.diffEMA4h.toFixed(2)}%</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
 
                 console.log(`🚀 [${type} MATCHED] Gửi Telegram cho ${symbol}...`);
@@ -242,12 +277,33 @@ async function main() {
             }
         };
 
-        // Quét NHÓM A -> Báo SHORT 1H
-        console.log(`🔍 Quét NHÓM A (-25% < diffEMA 1H < -4% & diffEMA 4H < -10%) (${groupA.length} coins)...`);
-        for (const item of groupA) {
+        // ------------------- BƯỚC 5: XỬ LÝ TÍN HIỆU -------------------
+
+        // 1. Quét Coin thỏa mãn cả Nhóm A & Nhóm B -> Kiểm tra SHORT 15M (Cooldown 2 tiếng)
+        const groupA_and_B = fullDataCoins.filter(c => 
+            c.diffEMA15m !== null && c.diffEMA15m > -15 && c.diffEMA15m < -2 &&
+            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -3
+        );
+
+        console.log(`🔍 Quét NHÓM A & B -> SHORT 15M (${groupA_and_B.length} coins)...`);
+        for (const item of groupA_and_B) {
+            const sig = checkSignalShort15M(item);
+            if (sig) {
+                await sendAlert(item, 'SHORT 15M', '_short15m', COOLDOWN_15M);
+            }
+        }
+
+        // 2. Quét Coin thỏa mãn cả Nhóm B & Nhóm C -> Kiểm tra SHORT 1H (Cooldown 6 tiếng)
+        const groupB_and_C = fullDataCoins.filter(c => 
+            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -3 &&
+            c.diffEMA4h !== null && c.diffEMA4h < -5
+        );
+
+        console.log(`🔍 Quét NHÓM B & C -> SHORT 1H (${groupB_and_C.length} coins)...`);
+        for (const item of groupB_and_C) {
             const sig = checkSignalShort1H(item);
             if (sig) {
-                await sendAlert(item.symbol, 'SHORT 1H', item.diffEMA1h, item.diffEMA4h, '_short1h');
+                await sendAlert(item, 'SHORT 1H', '_short1h', COOLDOWN_1H);
             }
         }
 
