@@ -174,7 +174,7 @@ async function main() {
 
         // BƯỚC 1: Lấy các coin có Volume > 10M USDT
         const highVolCoins = await getHighVolumeCoins();
-        console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 10M USDT...`);
+        console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 5M USDT...`);
 
         // BƯỚC 2: Lấy nến 1H cho từng coin
         console.log('⏳ Đang lấy dữ liệu nến 1H...');
