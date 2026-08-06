@@ -186,8 +186,8 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại Nhóm A (-20% < diffEMA1h < -5%)
-        const groupA = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -20 && c.diffEMA1h < -5);
+        // BƯỚC 3: Phân loại Nhóm A (-24% < diffEMA1h < -5%)
+        const groupA = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -24 && c.diffEMA1h < -5);
 
         // Định dạng lưu file
         const formatItem = c => ({
