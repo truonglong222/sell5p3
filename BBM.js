@@ -14,7 +14,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 8 TIẾNG
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000; 
-const MIN_VOLUME_USDT = 10000000; // 10 Triệu USDT
+const MIN_VOLUME_USDT = 5000000; // 5 Triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -97,7 +97,7 @@ function calculateDiffEMA(closedPrices) {
     return ((ema20_1 - ema20_20Ago) / ema20_20Ago) * 100;
 }
 
-// ------------------- LẤY DANH SÁCH COIN VOLUME > 10M USDT -------------------
+// ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
 async function getHighVolumeCoins() {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
