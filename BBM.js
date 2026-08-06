@@ -197,7 +197,7 @@ async function main() {
             c.diffEMA4h !== null && 
             c.diffEMA1h > -25 && 
             c.diffEMA1h < -4 && 
-            c.diffEMA4h < -10
+            c.diffEMA4h < -5
         );
 
         // Định dạng lưu file
