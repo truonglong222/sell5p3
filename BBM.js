@@ -189,13 +189,13 @@ async function main() {
 
         // BƯỚC 3: Lọc nhóm coin thỏa mãn cả 2 điều kiện:
         // 1. -25% < diffEMA1h < -4%
-        // 2. diffEMA15m < -5%
+        // 2. diffEMA15m < -2%
         const targetCoins = fullDataCoins.filter(c => 
             c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -4 &&
-            c.diffEMA15m !== null && c.diffEMA15m < -5
+            c.diffEMA15m !== null && c.diffEMA15m < -2
         );
 
-        console.log(`🎯 Tìm thấy ${targetCoins.length} coin thỏa mãn (diffEMA1h trong (-25%, -4%) VÀ diffEMA15m < -5%)`);
+        console.log(`🎯 Tìm thấy ${targetCoins.length} coin thỏa mãn (diffEMA1h trong (-25%, -4%) VÀ diffEMA15m < -2%)`);
 
         // Lưu danh sách coin đủ điều kiện vào 24h.json
         const dataToSave = targetCoins.map(c => ({
