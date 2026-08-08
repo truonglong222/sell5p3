@@ -1,4 +1,4 @@
-import axios from 'axios';
+Import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -90,15 +90,15 @@ function calculateBBMiddle(prices, period = 20) {
     return mean;
 }
 
-// Tính diffEMA so sánh EMA20 hiện tại với EMA20 cách đây 10 nến
+// Tính diffEMA dựa trên danh sách giá đóng cửa
 function calculateDiffEMA(closedPrices) {
-    if (closedPrices.length < 30) return null; // Đảm bảo đủ dữ liệu (20 nến EMA + 10 nến offset)
+    if (closedPrices.length < 40) return null;
     const ema20_1 = calculateEMA(closedPrices, 20);
-    const closedPrices10Ago = closedPrices.slice(0, closedPrices.length - 10);
-    const ema20_10Ago = calculateEMA(closedPrices10Ago, 20);
+    const closedPrices20Ago = closedPrices.slice(0, closedPrices.length - 20);
+    const ema20_20Ago = calculateEMA(closedPrices20Ago, 20);
 
-    if (!ema20_1 || !ema20_10Ago) return null;
-    return ((ema20_1 - ema20_10Ago) / ema20_10Ago) * 100;
+    if (!ema20_1 || !ema20_20Ago) return null;
+    return ((ema20_1 - ema20_20Ago) / ema20_20Ago) * 100;
 }
 
 // ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
@@ -226,7 +226,7 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại các nhóm A, B, C
+        // BƯỚC 3: Phân loại các nhóm A, B, C (Cập nhật Nhóm B: -25% < diffEMA1h < -4%)
         const groupA = fullDataCoins.filter(c => c.diffEMA15m !== null && c.diffEMA15m > -15 && c.diffEMA15m < -2);
         const groupB = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -4);
         const groupC = fullDataCoins.filter(c => c.diffEMA4h !== null && c.diffEMA4h < -5);
