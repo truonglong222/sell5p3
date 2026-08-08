@@ -44,19 +44,16 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Ghi file 24h.json (Lưu danh sách phân loại Nhóm A và B)
-function save24hJson(groupedData) {
+// Ghi file 24h.json (Lưu danh sách coin thỏa mãn các tiêu chuẩn lọc)
+function save24hJson(qualifiedCoins) {
     try {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
-            counts: {
-                groupA: groupedData.groupA.length,
-                groupB: groupedData.groupB.length
-            },
-            data: groupedData
+            count: qualifiedCoins.length,
+            data: qualifiedCoins
         };
         fs.writeFileSync(FILE_24H, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`💾 Đã lưu phân loại Nhóm A (${groupedData.groupA.length}) & B (${groupedData.groupB.length}) vào ${FILE_24H}`);
+        console.log(`💾 Đã lưu ${qualifiedCoins.length} coin đủ điều kiện vào ${FILE_24H}`);
     } catch (e) {
         console.error('Lỗi khi ghi file 24h.json:', e.message);
     }
@@ -75,35 +72,26 @@ function calculateEMA(prices, period = 20) {
     return ema;
 }
 
-// Tính Bollinger Bands (Middle và Upper) từ 20 nến đã đóng cửa
-function calculateBollingerBands15M(closedPrices, multiplier = 2) {
-    const period = closedPrices.length;
-    if (period < 20) return null;
-
-    // 1. Tính Middle Band (SMA 20)
-    const mean = closedPrices.reduce((a, b) => a + b, 0) / period;
-    
-    // 2. Tính Standard Deviation
-    const variance = closedPrices.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
-    const stdDev = Math.sqrt(variance);
-    
-    // 3. Tính Upper Band
-    const upper = mean + (multiplier * stdDev);
-
-    return { middle: mean, upper };
+// Tính Middle Band (SMA 20) của Bollinger Bands từ các nến 15M đã đóng cửa
+function calculateBBMiddle15M(closedPrices) {
+    if (closedPrices.length < 20) return null;
+    // Lấy 20 nến đóng cửa gần nhất
+    const recent20 = closedPrices.slice(closedPrices.length - 20);
+    const sum = recent20.reduce((a, b) => a + b, 0);
+    return sum / 20;
 }
 
-// Tính diffEMA dựa trên danh sách giá đóng cửa (Đã đổi thành so sánh với 10 nến trước)
+// Tính diffEMA dựa trên danh sách giá đóng cửa (so sánh với 10 nến trước)
 function calculateDiffEMA(closedPrices) {
     if (closedPrices.length < 30) return null;
-    const ema20_1 = calculateEMA(closedPrices, 20);
+    const ema20_Current = calculateEMA(closedPrices, 20);
     
     // Lấy mảng giá cắt bớt 10 nến gần nhất để tính EMA20 ở thời điểm 10 nến trước
     const closedPrices10Ago = closedPrices.slice(0, closedPrices.length - 10);
     const ema20_10Ago = calculateEMA(closedPrices10Ago, 20);
 
-    if (!ema20_1 || !ema20_10Ago) return null;
-    return ((ema20_1 - ema20_10Ago) / ema20_10Ago) * 100;
+    if (!ema20_Current || !ema20_10Ago) return null;
+    return ((ema20_Current - ema20_10Ago) / ema20_10Ago) * 100;
 }
 
 // ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
@@ -128,16 +116,20 @@ async function getHighVolumeCoins() {
     }
 }
 
-// ------------------- LẤY NẾN 15M (21 nến) VÀ 1H (50 nến) CHO MỖI COIN -------------------
+// ------------------- LẤY NẾN 15M VÀ 1H CHO MỖI COIN -------------------
 async function fetchCoinCandles(symbol, volCcy24h) {
     try {
-        // 1. Fetch 15M Candles -> Chỉ lấy 21 nến
-        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=21`;
+        // 1. Fetch 15M Candles -> Lấy 35 nến (Đủ 30 nến đã đóng để tính DiffEMA 15M + 1 nến đang chạy)
+        const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=35`;
         const res15M = await axios.get(url15M, { timeout: 5000 });
-        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 21) return null;
+        if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 35) return null;
         const raw15M = res15M.data.data;
 
-        // 2. Fetch 1H Candles (Cần tối thiểu 30 nến để tính EMA20 trước đó 10 nến)
+        // Tách các giá đóng cửa 15M đã đóng (bỏ nến 0)
+        const closedPrices15M = raw15M.slice(1).reverse().map(c => parseFloat(c[4]));
+        const diffEMA15m = calculateDiffEMA(closedPrices15M);
+
+        // 2. Fetch 1H Candles -> Lấy 50 nến (Đủ tính DiffEMA 1H)
         const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=50`;
         const res1H = await axios.get(url1H, { timeout: 5000 });
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 50) return null;
@@ -149,7 +141,9 @@ async function fetchCoinCandles(symbol, volCcy24h) {
             symbol,
             volCcy24h,
             diffEMA1h,
-            raw15M
+            diffEMA15m,
+            raw15M,
+            closedPrices15M
         };
     } catch (error) {
         console.error(`Lỗi lấy dữ liệu nến (${symbol}):`, error.message);
@@ -157,50 +151,35 @@ async function fetchCoinCandles(symbol, volCcy24h) {
     }
 }
 
-// ------------------- KIỂM TRA ĐIỀU KIỆN SHORT -------------------
+// ------------------- KIỂM TRA ĐIỀU KIỆN SHORT MỚI -------------------
+function checkShortSignal(coinData) {
+    const { raw15M, closedPrices15M, diffEMA1h, diffEMA15m } = coinData;
 
-// Nhóm A: Kiểm tra sát Bollinger Band TRÊN 15M
-function checkSignalGroupA(coinData) {
-    const { raw15M } = coinData;
-    const candle0 = raw15M[0]; // Nến hiện tại
+    // 1. Kiểm tra DiffEMA 1H < -4% và DiffEMA 15M < -2%
+    if (diffEMA1h === null || diffEMA1h >= -4) return null;
+    if (diffEMA15m === null || diffEMA15m >= -2) return null;
+
+    // 2. Tính diffBBM15 với giá cao nhất của nến 0
+    const candle0 = raw15M[0]; // Nến 15M hiện tại
     const highPrice0 = parseFloat(candle0[2]);
 
-    // Lấy 20 nến đã đóng cửa trước đó
-    const closedForBB = raw15M.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-    const bb = calculateBollingerBands15M(closedForBB, 2);
-    if (!bb) return null;
+    const bbMiddle = calculateBBMiddle15M(closedPrices15M);
+    if (!bbMiddle) return null;
 
-    const diffBB = ((highPrice0 - bb.upper) / bb.upper) * 100;
-    
-    if (diffBB > -0.5 && diffBB < 1) {
-        return { type: 'SHORT TRÊN', diffBB };
+    const diffBBM15 = ((highPrice0 - bbMiddle) / bbMiddle) * 100;
+
+    // 3. Kiểm tra điều kiện -0.5% < diffBBM15 < 1%
+    if (diffBBM15 > -0.5 && diffBBM15 < 1) {
+        return { diffBBM15 };
     }
-    return null;
-}
 
-// Nhóm B: Kiểm tra sát Bollinger Band GIỮA 15M
-function checkSignalGroupB(coinData) {
-    const { raw15M } = coinData;
-    const candle0 = raw15M[0]; // Nến hiện tại
-    const highPrice0 = parseFloat(candle0[2]);
-
-    // Lấy 20 nến đã đóng cửa trước đó
-    const closedForBB = raw15M.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-    const bb = calculateBollingerBands15M(closedForBB, 2);
-    if (!bb) return null;
-
-    const diffBB = ((highPrice0 - bb.middle) / bb.middle) * 100;
-    
-    if (diffBB > -0.5 && diffBB < 1) {
-        return { type: 'SHORT GIỮA', diffBB };
-    }
     return null;
 }
 
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẮT ĐẦU TIẾN TRÌNH QUÉT THỊ TRƯỜNG ---');
+        console.log('--- BẮT ĐẦU TIẾN TRÌNH QUÉT THỊ TRƯỜNG SHORT ---');
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
@@ -208,38 +187,35 @@ async function main() {
 
         // BƯỚC 1: Lấy các coin có Volume > 5M USDT
         const highVolCoins = await getHighVolumeCoins();
-        console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 5M USDT...`);
+        console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h >= 5M USDT...`);
 
-        // BƯỚC 2: Lấy nến 15M (21 nến) và 1H cho từng coin
-        console.log('⏳ Đang lấy dữ liệu nến 15M và 1H...');
-        const fullDataCoins = [];
+        // BƯỚC 2: Lấy dữ liệu nến và lọc ban đầu
+        console.log('⏳ Đang phân tích dữ liệu nến 15M và 1H...');
+        const qualifiedCoins = [];
 
         for (const coin of highVolCoins) {
             const data = await fetchCoinCandles(coin.instId, coin.volCcy24h);
-            if (data) fullDataCoins.push(data);
+            if (data) {
+                // Kiểm tra xem coin có đủ các điều kiện Tín hiệu Short không
+                const signal = checkShortSignal(data);
+                if (signal) {
+                    qualifiedCoins.push({
+                        symbol: data.symbol,
+                        volCcy24h: data.volCcy24h,
+                        diffEMA1h: parseFloat(data.diffEMA1h.toFixed(2)),
+                        diffEMA15m: parseFloat(data.diffEMA15m.toFixed(2)),
+                        diffBBM15: parseFloat(signal.diffBBM15.toFixed(2))
+                    });
+                }
+            }
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại Nhóm A và Nhóm B theo diffEMA 1H
-        // Nhóm A: -6% < diffEMA1h < -4%
-        const groupA = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -6 && c.diffEMA1h < -4);
-        
-        // Nhóm B: -25% < diffEMA1h < -6%
-        const groupB = fullDataCoins.filter(c => c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -6);
+        // BƯỚC 3: Lưu lại dữ liệu phân tích ra 24h.json
+        save24hJson(qualifiedCoins);
 
-        const formatItem = c => ({
-            symbol: c.symbol,
-            diffEMA1h: parseFloat(c.diffEMA1h.toFixed(2)),
-            volCcy24h: c.volCcy24h
-        });
-
-        save24hJson({
-            groupA: groupA.map(formatItem),
-            groupB: groupB.map(formatItem)
-        });
-
-        // BƯỚC 4: Hàm gửi Báo Tín Hiệu Telegram
-        const sendAlert = async (item, signalType, diffBB) => {
+        // BƯỚC 4: Gửi cảnh báo Telegram cho các coin thỏa điều kiện
+        for (const item of qualifiedCoins) {
             const symbol = item.symbol;
             if (!sentLog[symbol]) sentLog[symbol] = {};
             const lastSent = sentLog[symbol]._short15m || 0;
@@ -248,13 +224,14 @@ async function main() {
                 const coinName = symbol.replace('-USDT-SWAP', '');
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-                const message = `🔴 <b>TÍN HIỆU ${signalType.toUpperCase()}: ${coinName}</b>\n` +
-                                `• DiffEMA 1H (10 nến): <b>${item.diffEMA1h.toFixed(2)}%</b>\n` +
-                                `• Diff BB 15M: <b>${diffBB > 0 ? '+' : ''}${diffBB.toFixed(2)}%</b>\n` +
+                const message = `🔴 <b>TÍN HIỆU SHORT COIN: ${coinName}</b>\n` +
+                                `• DiffEMA 1H: <b>${item.diffEMA1h}%</b> (< -4%)\n` +
+                                `• DiffEMA 15M: <b>${item.diffEMA15m}%</b> (< -2%)\n` +
+                                `• Diff BB Mid 15M: <b>${item.diffBBM15 > 0 ? '+' : ''}${item.diffBBM15}%</b>\n` +
                                 `• Volume 24h: <b>${(item.volCcy24h / 1000000).toFixed(2)}M USDT</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
 
-                console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
+                console.log(`🚀 Gửi Telegram cho ${symbol}...`);
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                     chat_id: TELEGRAM_CHAT_ID,
                     text: message,
@@ -264,26 +241,6 @@ async function main() {
 
                 sentLog[symbol]._short15m = currentTime;
                 hasNewAlert = true;
-            }
-        };
-
-        // BƯỚC 5: Kiểm tra tín hiệu cho từng nhóm
-        
-        // 1. Quét Nhóm A -> Tín hiệu "Short Trên" (Band Trên 15m)
-        console.log(`🔍 Quét NHÓM A (-6 < diffEMA1h < -4) -> "Short Trên" (${groupA.length} coins)...`);
-        for (const item of groupA) {
-            const sig = checkSignalGroupA(item);
-            if (sig) {
-                await sendAlert(item, sig.type, sig.diffBB);
-            }
-        }
-
-        // 2. Quét Nhóm B -> Tín hiệu "Short Giữa" (Band Giữa 15m)
-        console.log(`🔍 Quét NHÓM B (-25 < diffEMA1h < -6) -> "Short Giữa" (${groupB.length} coins)...`);
-        for (const item of groupB) {
-            const sig = checkSignalGroupB(item);
-            if (sig) {
-                await sendAlert(item, sig.type, sig.diffBB);
             }
         }
 
