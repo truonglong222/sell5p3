@@ -45,7 +45,7 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Ghi file 24h.json (Lưu danh sách Coin lọc theo diffEMA 1H)
+// Ghi file 24h.json (Lưu danh sách Coin lọc theo diffEMA 1H và diffEMA 15M)
 function save24hJson(filteredData) {
     try {
         const dataToSave = {
@@ -54,7 +54,7 @@ function save24hJson(filteredData) {
             data: filteredData
         };
         fs.writeFileSync(FILE_24H, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`💾 Đã lưu ${filteredData.length} coin thỏa điều kiện diffEMA 1H vào ${FILE_24H}`);
+        console.log(`💾 Đã lưu ${filteredData.length} coin thỏa điều kiện diffEMA 1H & 15M vào ${FILE_24H}`);
     } catch (e) {
         console.error('Lỗi khi ghi file 24h.json:', e.message);
     }
@@ -121,6 +121,8 @@ async function fetchCoinCandles(symbol, volCcy24h) {
         const res15M = await axios.get(url15M, { timeout: 5000 });
         if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 60) return null;
         const raw15M = res15M.data.data;
+        const closedPrices15M = raw15M.slice(1).reverse().map(c => parseFloat(c[4]));
+        const diffEMA15m = calculateDiffEMA(closedPrices15M);
 
         // 2. Fetch 1H Candles
         const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
@@ -133,6 +135,7 @@ async function fetchCoinCandles(symbol, volCcy24h) {
         return {
             symbol,
             volCcy24h,
+            diffEMA15m,
             diffEMA1h,
             raw15M
         };
@@ -184,17 +187,21 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Lọc nhóm coin thỏa mãn condition: -25% < diffEMA1h < -4%
+        // BƯỚC 3: Lọc nhóm coin thỏa mãn cả 2 điều kiện:
+        // 1. -25% < diffEMA1h < -4%
+        // 2. diffEMA15m < -2%
         const targetCoins = fullDataCoins.filter(c => 
-            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -4
+            c.diffEMA1h !== null && c.diffEMA1h > -25 && c.diffEMA1h < -4 &&
+            c.diffEMA15m !== null && c.diffEMA15m < -2
         );
 
-        console.log(`🎯 Tìm thấy ${targetCoins.length} coin thỏa mãn (-25% < diffEMA1h < -4%)`);
+        console.log(`🎯 Tìm thấy ${targetCoins.length} coin thỏa mãn (diffEMA1h trong (-25%, -4%) VÀ diffEMA15m < -2%)`);
 
         // Lưu danh sách coin đủ điều kiện vào 24h.json
         const dataToSave = targetCoins.map(c => ({
             symbol: c.symbol,
             diffEMA1h: parseFloat(c.diffEMA1h.toFixed(2)),
+            diffEMA15m: parseFloat(c.diffEMA15m.toFixed(2)),
             volCcy24h: c.volCcy24h
         }));
         save24hJson(dataToSave);
@@ -210,6 +217,7 @@ async function main() {
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                 const message = `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
+                                `• DiffEMA 15M: <b>${item.diffEMA15m.toFixed(2)}%</b>\n` +
                                 `• DiffEMA 1H: <b>${item.diffEMA1h.toFixed(2)}%</b>\n` +
                                 `• Diff BBM 15M: <b>${diffBB > 0 ? '+' : ''}${diffBB.toFixed(2)}%</b>\n` +
                                 `• Volume 24h: <b>${(item.volCcy24h / 1000000).toFixed(2)}M USDT</b>\n` +
