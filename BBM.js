@@ -93,15 +93,17 @@ function calculateBollingerBands15M(closedPrices, multiplier = 2) {
     return { middle: mean, upper };
 }
 
-// Tính diffEMA dựa trên danh sách giá đóng cửa (dùng cho 1H)
+// Tính diffEMA dựa trên danh sách giá đóng cửa (Đã đổi thành so sánh với 10 nến trước)
 function calculateDiffEMA(closedPrices) {
-    if (closedPrices.length < 40) return null;
+    if (closedPrices.length < 30) return null;
     const ema20_1 = calculateEMA(closedPrices, 20);
-    const closedPrices20Ago = closedPrices.slice(0, closedPrices.length - 20);
-    const ema20_20Ago = calculateEMA(closedPrices20Ago, 20);
+    
+    // Lấy mảng giá cắt bớt 10 nến gần nhất để tính EMA20 ở thời điểm 10 nến trước
+    const closedPrices10Ago = closedPrices.slice(0, closedPrices.length - 10);
+    const ema20_10Ago = calculateEMA(closedPrices10Ago, 20);
 
-    if (!ema20_1 || !ema20_20Ago) return null;
-    return ((ema20_1 - ema20_20Ago) / ema20_20Ago) * 100;
+    if (!ema20_1 || !ema20_10Ago) return null;
+    return ((ema20_1 - ema20_10Ago) / ema20_10Ago) * 100;
 }
 
 // ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
@@ -126,7 +128,7 @@ async function getHighVolumeCoins() {
     }
 }
 
-// ------------------- LẤY NẾN 15M (21 nến) VÀ 1H (60 nến) CHO MỖI COIN -------------------
+// ------------------- LẤY NẾN 15M (21 nến) VÀ 1H (50 nến) CHO MỖI COIN -------------------
 async function fetchCoinCandles(symbol, volCcy24h) {
     try {
         // 1. Fetch 15M Candles -> Chỉ lấy 21 nến
@@ -135,10 +137,10 @@ async function fetchCoinCandles(symbol, volCcy24h) {
         if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 21) return null;
         const raw15M = res15M.data.data;
 
-        // 2. Fetch 1H Candles (vẫn cần 60 nến để tính diffEMA 1H)
-        const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
+        // 2. Fetch 1H Candles (Cần tối thiểu 30 nến để tính EMA20 trước đó 10 nến)
+        const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=50`;
         const res1H = await axios.get(url1H, { timeout: 5000 });
-        if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 60) return null;
+        if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 50) return null;
         const raw1H = res1H.data.data;
         const closedPrices1H = raw1H.slice(1).reverse().map(c => parseFloat(c[4]));
         const diffEMA1h = calculateDiffEMA(closedPrices1H);
@@ -209,7 +211,7 @@ async function main() {
         console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 5M USDT...`);
 
         // BƯỚC 2: Lấy nến 15M (21 nến) và 1H cho từng coin
-        console.log('⏳ Đang lấy dữ liệu nến 15M (21 nến) và 1H...');
+        console.log('⏳ Đang lấy dữ liệu nến 15M và 1H...');
         const fullDataCoins = [];
 
         for (const coin of highVolCoins) {
@@ -247,7 +249,7 @@ async function main() {
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                 const message = `🔴 <b>TÍN HIỆU ${signalType.toUpperCase()}: ${coinName}</b>\n` +
-                                `• DiffEMA 1H: <b>${item.diffEMA1h.toFixed(2)}%</b>\n` +
+                                `• DiffEMA 1H (10 nến): <b>${item.diffEMA1h.toFixed(2)}%</b>\n` +
                                 `• Diff BB 15M: <b>${diffBB > 0 ? '+' : ''}${diffBB.toFixed(2)}%</b>\n` +
                                 `• Volume 24h: <b>${(item.volCcy24h / 1000000).toFixed(2)}M USDT</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
