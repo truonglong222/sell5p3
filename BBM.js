@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const FILE_24H = path.join(__dirname, '24h.json');
 
-// Cooldown 2 tiếng cho tín hiệu 1H
-const COOLDOWN_1H = 2 * 60 * 60 * 1000; 
+// Cooldown 12 tiếng cho tín hiệu 1H
+const COOLDOWN_1H = 12 * 60 * 60 * 1000; 
 
 const MIN_VOLUME_USDT = 5000000; // 5 Triệu USDT
 
@@ -86,7 +86,7 @@ function calculateBBUpper1H(closedPrices, multiplier = 2) {
     const variance = recent20.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / 20;
     const stdDev = Math.sqrt(variance);
     
-    // 3. Tra về Upper Band
+    // 3. Trả về Upper Band
     return mean + (multiplier * stdDev);
 }
 
@@ -152,12 +152,12 @@ async function fetchCoinCandles(symbol, volCcy24h) {
     }
 }
 
-// ------------------- KIỂM TRA ĐIỀU KIỆN SHORT MỚI (KHUNG 1H) -------------------
+// ------------------- KIỂM TRA ĐIỀU KIỆN SHORT (KHUNG 1H) -------------------
 function checkShortSignal(coinData) {
     const { raw1H, closedPrices1H, diffEMA1h } = coinData;
 
-    // 1. Kiểm tra DiffEMA 1H < -3%
-    if (diffEMA1h === null || diffEMA1h >= -3) return null;
+    // 1. Kiểm tra DiffEMA 1H < -2%
+    if (diffEMA1h === null || diffEMA1h >= -2) return null;
 
     // 2. Tính diffbbu1h với Giá cao nhất của nến 0 khung 1H
     const candle0 = raw1H[0]; // Nến 1H hiện tại
@@ -224,7 +224,7 @@ async function main() {
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                 const message = `🔴 <b>TÍN HIỆU SHORT 1H: ${coinName}</b>\n` +
-                                `• DiffEMA 1H: <b>${item.diffEMA1h}%</b> (< -3%)\n` +
+                                `• DiffEMA 1H: <b>${item.diffEMA1h}%</b> (< -2%)\n` +
                                 `• Diff BB Upper 1H: <b>${item.diffbbu1h > 0 ? '+' : ''}${item.diffbbu1h}%</b>\n` +
                                 `• Volume 24h: <b>${(item.volCcy24h / 1000000).toFixed(2)}M USDT</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
