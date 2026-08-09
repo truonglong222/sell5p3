@@ -59,7 +59,7 @@ function save24hJson(qualifiedCoins) {
 }
 
 // ------------------- HÀM TÍNH EMA & BOLLINGER BANDS -------------------
-function calculateEMA(prices, period = 10) {
+function calculateEMA(prices, period) {
     if (prices.length < period) return null;
     const k = 2 / (period + 1);
     let sum = 0;
@@ -93,7 +93,7 @@ function calculateBB(closedPrices, multiplier = 2) {
 
 // Tính diffEMA cho khung 1H dựa trên 10 nến
 function calculateDiffEMA1H(closedPrices) {
-    if (closedPrices.length < 20) return null; // Cần tối thiểu 20 nến để tính EMA10 hiện tại và EMA10 của 10 nến trước
+    if (closedPrices.length < 20) return null;
     const ema10_Current = calculateEMA(closedPrices, 10);
     
     const closedPrices10Ago = closedPrices.slice(0, closedPrices.length - 10);
@@ -101,6 +101,18 @@ function calculateDiffEMA1H(closedPrices) {
 
     if (!ema10_Current || !ema10_10Ago) return null;
     return ((ema10_Current - ema10_10Ago) / ema10_10Ago) * 100;
+}
+
+// Tính diffEMA cho khung 15M dựa trên 20 nến
+function calculateDiffEMA15M(closedPrices) {
+    if (closedPrices.length < 40) return null; // Cần tối thiểu 40 nến để tính EMA20 hiện tại và EMA20 của 20 nến trước
+    const ema20_Current = calculateEMA(closedPrices, 20);
+    
+    const closedPrices20Ago = closedPrices.slice(0, closedPrices.length - 20);
+    const ema20_20Ago = calculateEMA(closedPrices20Ago, 20);
+
+    if (!ema20_Current || !ema20_20Ago) return null;
+    return ((ema20_Current - ema20_20Ago) / ema20_20Ago) * 100;
 }
 
 // ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
@@ -146,11 +158,13 @@ async function fetchCoinCandles(symbol, volCcy24h) {
         const closedPrices15M = raw15M.slice(1).reverse().map(c => parseFloat(c[4]));
 
         const diffEMA1h = calculateDiffEMA1H(closedPrices1H);
+        const diffEMA15m = calculateDiffEMA15M(closedPrices15M);
 
         return {
             symbol,
             volCcy24h,
             diffEMA1h,
+            diffEMA15m,
             raw15M,
             closedPrices15M
         };
@@ -162,7 +176,7 @@ async function fetchCoinCandles(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT -------------------
 function checkShortSignal(coinData) {
-    const { raw15M, closedPrices15M, diffEMA1h } = coinData;
+    const { raw15M, closedPrices15M, diffEMA1h, diffEMA15m } = coinData;
 
     // 1. Lấy thông số Bollinger Bands khung 15m
     const bb15M = calculateBB(closedPrices15M);
@@ -174,12 +188,15 @@ function checkShortSignal(coinData) {
     const diffbbu15m = ((currentPrice - bb15M.upper) / bb15M.upper) * 100;
     const diffbbul15m = ((bb15M.upper - bb15M.lower) / bb15M.lower) * 100;
 
-    // BƯỚC 1: Kiểm tra 2 điều kiện đầu tiên trên 15M
-    // -0.5% < diffbbu15m < 1% VÀ diffbbul15m > 3%
+    // BƯỚC 1: Kiểm tra các điều kiện trên 15M
+    // - -0.5% < diffbbu15m < 1%
+    // - diffbbul15m > 3%
+    // - -1% < diffEMA15m < 1% (EMA 20 nến 15M)
     const isBBUpperValid = diffbbu15m > -0.5 && diffbbu15m < 1;
     const isBBSpreadValid = diffbbul15m > 3;
+    const isDiffEMA15mValid = diffEMA15m !== null && diffEMA15m > -1 && diffEMA15m < 1;
 
-    if (!isBBUpperValid || !isBBSpreadValid) return null;
+    if (!isBBUpperValid || !isBBSpreadValid || !isDiffEMA15mValid) return null;
 
     // BƯỚC 2: Kiểm tra tiếp điều kiện DiffEMA 1H (10 nến)
     // -2% < diffema1h < 2%
@@ -187,6 +204,7 @@ function checkShortSignal(coinData) {
 
     return {
         diffbbul15m,
+        diffEMA15m,
         diffEMA1h
     };
 }
@@ -218,6 +236,7 @@ async function main() {
                         symbol: data.symbol,
                         volCcy24h: data.volCcy24h,
                         diffbbul15m: parseFloat(signal.diffbbul15m.toFixed(2)),
+                        diffEMA15m: parseFloat(signal.diffEMA15m.toFixed(2)),
                         diffEMA1h: parseFloat(signal.diffEMA1h.toFixed(2))
                     });
                 }
@@ -240,6 +259,7 @@ async function main() {
 
                 const message = `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
                                 `• Diff BB Upper-Lower 15M: <b>${item.diffbbul15m}%</b>\n` +
+                                `• DiffEMA 15M (20 nến): <b>${item.diffEMA15m}%</b>\n` +
                                 `• DiffEMA 1H (10 nến): <b>${item.diffEMA1h}%</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
 
