@@ -191,10 +191,10 @@ function checkShortSignal(coinData) {
     // BƯỚC 1: Kiểm tra các điều kiện trên 15M
     // - -0.5% < diffbbu15m < 1%
     // - diffbbul15m > 3%
-    // - -1% < diffEMA15m < 1% (EMA 20 nến 15M)
+    // - -1% < diffEMA15m < 0.5% (EMA 20 nến 15M)
     const isBBUpperValid = diffbbu15m > -0.5 && diffbbu15m < 1;
     const isBBSpreadValid = diffbbul15m > 3;
-    const isDiffEMA15mValid = diffEMA15m !== null && diffEMA15m > -1 && diffEMA15m < 1;
+    const isDiffEMA15mValid = diffEMA15m !== null && diffEMA15m > -1 && diffEMA15m < 0.5;
 
     if (!isBBUpperValid || !isBBSpreadValid || !isDiffEMA15mValid) return null;
 
