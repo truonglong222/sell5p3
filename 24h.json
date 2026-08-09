@@ -1,13 +1,20 @@
 {
-  "updatedAt": "2026-08-09T07:41:44.387Z",
-  "count": 1,
+  "updatedAt": "2026-08-09T07:46:49.098Z",
+  "count": 2,
   "data": [
     {
+      "symbol": "KGEN-USDT-SWAP",
+      "volCcy24h": 19363090,
+      "diffEMA1h": -5.08,
+      "diffEMA15m": -1.1,
+      "diffbbu15m": 0.57
+    },
+    {
       "symbol": "GRVT-USDT-SWAP",
-      "volCcy24h": 117289650,
+      "volCcy24h": 117308240,
       "diffEMA1h": -4.1,
-      "diffEMA15m": -2.98,
-      "diffbbu15m": 0.79
+      "diffEMA15m": -2.52,
+      "diffbbu15m": 0.35
     }
   ]
 }
