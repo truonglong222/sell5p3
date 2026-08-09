@@ -90,17 +90,18 @@ function calculateBBUpper1H(closedPrices, multiplier = 2) {
     return mean + (multiplier * stdDev);
 }
 
-// Tính diffEMA 1H (so sánh EMA20 hiện tại với EMA20 của 10 nến trước)
+// Tính diffEMA 1H (so sánh EMA20 hiện tại với EMA20 của 15 nến trước)
 function calculateDiffEMA(closedPrices) {
-    if (closedPrices.length < 30) return null;
+    // Cần tối thiểu 20 + 15 = 35 nến đã đóng để tính EMA20 tại thời điểm 15 nến trước
+    if (closedPrices.length < 35) return null;
     const ema20_Current = calculateEMA(closedPrices, 20);
     
-    // Lấy mảng giá cắt bớt 10 nến gần nhất để tính EMA20 ở thời điểm 10 nến trước
-    const closedPrices10Ago = closedPrices.slice(0, closedPrices.length - 10);
-    const ema20_10Ago = calculateEMA(closedPrices10Ago, 20);
+    // Lấy mảng giá cắt bớt 15 nến gần nhất để tính EMA20 ở thời điểm 15 nến trước
+    const closedPrices15Ago = closedPrices.slice(0, closedPrices.length - 15);
+    const ema20_15Ago = calculateEMA(closedPrices15Ago, 20);
 
-    if (!ema20_Current || !ema20_10Ago) return null;
-    return ((ema20_Current - ema20_10Ago) / ema20_10Ago) * 100;
+    if (!ema20_Current || !ema20_15Ago) return null;
+    return ((ema20_Current - ema20_15Ago) / ema20_15Ago) * 100;
 }
 
 // ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
@@ -128,7 +129,7 @@ async function getHighVolumeCoins() {
 // ------------------- LẤY NẾN 1H CHO MỖI COIN -------------------
 async function fetchCoinCandles(symbol, volCcy24h) {
     try {
-        // Fetch 1H Candles -> Lấy 50 nến (Đủ tính DiffEMA 1H và Bollinger Upper)
+        // Fetch 1H Candles -> Lấy 50 nến (Đủ tính DiffEMA 1H 15 nến trước và Bollinger Upper)
         const url1H = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=50`;
         const res1H = await axios.get(url1H, { timeout: 5000 });
         if (!res1H.data || res1H.data.code !== '0' || res1H.data.data.length < 50) return null;
@@ -224,7 +225,7 @@ async function main() {
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                 const message = `🔴 <b>TÍN HIỆU SHORT 1H: ${coinName}</b>\n` +
-                                `• DiffEMA 1H: <b>${item.diffEMA1h}%</b> (< -2%)\n` +
+                                `• DiffEMA 1H (15 nến): <b>${item.diffEMA1h}%</b> (< -2%)\n` +
                                 `• Diff BB Upper 1H: <b>${item.diffbbu1h > 0 ? '+' : ''}${item.diffbbu1h}%</b>\n` +
                                 `• Volume 24h: <b>${(item.volCcy24h / 1000000).toFixed(2)}M USDT</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
