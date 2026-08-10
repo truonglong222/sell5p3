@@ -1,57 +1,50 @@
 {
-  "updatedAt": "2026-08-10T13:56:14.817Z",
+  "updatedAt": "2026-08-10T14:01:57.784Z",
   "counts": {
-    "groupNeg6ToNeg3": 5,
+    "groupNeg6ToNeg3": 4,
     "groupNeg24ToNeg10": 2
   },
   "data": {
     "groupNeg6ToNeg3": [
       {
         "symbol": "ALGO-USDT-SWAP",
-        "diffEMA": -3.72,
-        "vol60h": -4.67,
-        "ratioX": -6.11,
-        "volCcy24h": 52684300
-      },
-      {
-        "symbol": "IRYS-USDT-SWAP",
-        "diffEMA": -3.06,
-        "vol60h": -6.07,
-        "ratioX": -3.7,
-        "volCcy24h": 27453300
+        "diffEMA": -3.64,
+        "vol60h": -4.87,
+        "ratioX": -5.74,
+        "volCcy24h": 52555000
       },
       {
         "symbol": "AEON-USDT-SWAP",
-        "diffEMA": -4.86,
-        "vol60h": 3.79,
-        "ratioX": -5.14,
-        "volCcy24h": 170541630
+        "diffEMA": -4.52,
+        "vol60h": 4.07,
+        "ratioX": -5.25,
+        "volCcy24h": 170301870
       },
       {
         "symbol": "MMT-USDT-SWAP",
-        "diffEMA": -3.63,
-        "vol60h": 4.53,
-        "ratioX": -4.88,
-        "volCcy24h": 180585230
+        "diffEMA": -3.75,
+        "vol60h": 1.87,
+        "ratioX": -5.4,
+        "volCcy24h": 179871820
       },
       {
         "symbol": "RAVE-USDT-SWAP",
         "diffEMA": -3.2,
-        "vol60h": 0.09,
-        "ratioX": -11.36,
-        "volCcy24h": 24337110.4
+        "vol60h": 1.14,
+        "ratioX": -12.02,
+        "volCcy24h": 24371348.5
       }
     ],
     "groupNeg24ToNeg10": [
       {
         "symbol": "BICO-USDT-SWAP",
-        "diffEMA": -17.78,
-        "volCcy24h": 6076401371
+        "diffEMA": -16.87,
+        "volCcy24h": 6056439623
       },
       {
         "symbol": "BEAT-USDT-SWAP",
-        "diffEMA": -10.45,
-        "volCcy24h": 120901241
+        "diffEMA": -13.05,
+        "volCcy24h": 120894469
       }
     ]
   }
