@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-10T23:56:10.035Z",
+  "updatedAt": "2026-08-11T00:01:51.087Z",
   "counts": {
     "groupNeg6ToNeg3": 6,
     "groupNeg24ToNeg10": 1
@@ -7,53 +7,53 @@
   "data": {
     "groupNeg6ToNeg3": [
       {
+        "symbol": "HMSTR-USDT-SWAP",
+        "diffEMA": -5.96,
+        "vol60h": -7.16,
+        "ratioX": -17.56,
+        "volCcy24h": 14200523400
+      },
+      {
         "symbol": "KAITO-USDT-SWAP",
-        "diffEMA": -3.32,
-        "vol60h": -4.27,
-        "ratioX": -4.61,
-        "volCcy24h": 102978291
+        "diffEMA": -3.44,
+        "vol60h": -7.84,
+        "ratioX": -5.48,
+        "volCcy24h": 102716654
       },
       {
         "symbol": "RLS-USDT-SWAP",
-        "diffEMA": -4.23,
-        "vol60h": 3.38,
-        "ratioX": -7.03,
-        "volCcy24h": 305886700
+        "diffEMA": -4.56,
+        "vol60h": 3.25,
+        "ratioX": -7.62,
+        "volCcy24h": 304429600
       },
       {
         "symbol": "PARTI-USDT-SWAP",
-        "diffEMA": -3.48,
-        "vol60h": 4.99,
-        "ratioX": -6.88,
-        "volCcy24h": 69962330
-      },
-      {
-        "symbol": "RAVE-USDT-SWAP",
-        "diffEMA": -4.48,
-        "vol60h": -8.25,
-        "ratioX": -14.85,
-        "volCcy24h": 17948389.7
+        "diffEMA": -3.46,
+        "vol60h": 7.27,
+        "ratioX": -6.21,
+        "volCcy24h": 70333530
       },
       {
         "symbol": "AZTEC-USDT-SWAP",
-        "diffEMA": -3.06,
+        "diffEMA": -3.1,
         "vol60h": -6.02,
-        "ratioX": -6.61,
-        "volCcy24h": 9579800
+        "ratioX": -7.04,
+        "volCcy24h": 9569500
       },
       {
         "symbol": "WOO-USDT-SWAP",
-        "diffEMA": -3.32,
-        "vol60h": -2.71,
-        "ratioX": -4.68,
-        "volCcy24h": 15446290
+        "diffEMA": -3.34,
+        "vol60h": -2.19,
+        "ratioX": -4.93,
+        "volCcy24h": 15409590
       }
     ],
     "groupNeg24ToNeg10": [
       {
         "symbol": "BICO-USDT-SWAP",
-        "diffEMA": -11.73,
-        "volCcy24h": 3965054400
+        "diffEMA": -10.32,
+        "volCcy24h": 3953973852
       }
     ]
   }
