@@ -49,7 +49,7 @@ function save24hJson(groupedData) {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
             counts: {
-                groupNeg6ToNeg3: groupedData.groupNeg6ToNeg3.length,
+                groupNeg10ToNeg3: groupedData.groupNeg10ToNeg3.length,
                 groupNeg24ToNeg10: groupedData.groupNeg24ToNeg10.length
             },
             data: groupedData
@@ -186,7 +186,7 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY -------------------
 
-// 1. NHÓM A MỚI (-6% < diffEMA < -3%, Vol60h > -10%, X < -3) -> SHORT khi Giá High nến hiện tại sát BB Upper: -1% < diffbbu < 2%
+// 1. NHÓM A (-10% < diffEMA < -3%, Vol60h > -10%, X < -3) -> SHORT khi Giá High nến hiện tại sát BB Upper: -1% < diffbbu < 2%
 function checkSignalGroupA(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -205,7 +205,7 @@ function checkSignalGroupA(coinData) {
     return null;
 }
 
-// 2. NHÓM B MỚI (-24% < diffEMA < -10%) -> SHORT khi Giá High nến hiện tại sát BB Middle: 1% < diffbbm < 5%
+// 2. NHÓM B (-24% < diffEMA < -10%) -> SHORT khi Giá High nến hiện tại sát BB Middle: 1% < diffbbm < 5%
 function checkSignalGroupB(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -217,7 +217,7 @@ function checkSignalGroupB(coinData) {
 
     const diffbbm = ((highPrice0 - bb.middle) / bb.middle) * 100;
     
-    // Dung sai mới: 1% < diffbbm < 5%
+    // Dung sai: 1% < diffbbm < 5%
     if (diffbbm > 1 && diffbbm < 5) {
         return { type: 'SHORT', diffBB: diffbbm, targetBB: 'BB Mid' };
     }
@@ -249,9 +249,9 @@ async function main() {
 
         // BƯỚC 3: Phân loại 2 nhóm diffEMA SHORT
         
-        // NHÓM A MỚI: -6% < diffEMA < -3% AND Vol60h > -10% AND X < -3
+        // NHÓM A (CẬP NHẬT): -10% < diffEMA < -3% AND Vol60h > -10% AND X < -3
         const groupA = calculatedCoins.filter(c => {
-            if (c.diffEMA <= -6 || c.diffEMA >= -3) return false;
+            if (c.diffEMA <= -10 || c.diffEMA >= -3) return false;
 
             const metrics = calculateXAndVol60h(c.raw1H);
             if (!metrics) return false;
@@ -262,7 +262,7 @@ async function main() {
             return metrics.vol60h > -10 && metrics.ratioX < -3;
         });
 
-        // NHÓM B MỚI: -24% < diffEMA < -10%
+        // NHÓM B: -24% < diffEMA < -10%
         const groupB = calculatedCoins.filter(c => c.diffEMA > -24 && c.diffEMA < -10);
 
         // Định dạng lưu file
@@ -281,7 +281,7 @@ async function main() {
         });
 
         const groupedForSave = {
-            groupNeg6ToNeg3: groupA.map(formatItemA),
+            groupNeg10ToNeg3: groupA.map(formatItemA),
             groupNeg24ToNeg10: groupB.map(formatItemB)
         };
 
@@ -320,8 +320,8 @@ async function main() {
 
         // BƯỚC 6: Thứ tự chạy quét tín hiệu
 
-        // 1. Quét NHÓM A MỚI (-6% < diffEMA < -3%, Vol60h > -10%, X < -3) trước
-        console.log(`🔍 Quét NHÓM A (-6% < diffEMA < -3%) (${groupA.length} coins)...`);
+        // 1. Quét NHÓM A (-10% < diffEMA < -3%, Vol60h > -10%, X < -3) trước
+        console.log(`🔍 Quét NHÓM A (-10% < diffEMA < -3%) (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
             if (sig) {
@@ -329,7 +329,7 @@ async function main() {
             }
         }
 
-        // 2. Sau đó quét NHÓM B MỚI (-24% < diffEMA < -10% & 1% < diffbbm < 5%)
+        // 2. Sau đó quét NHÓM B (-24% < diffEMA < -10% & 1% < diffbbm < 5%)
         console.log(`🔍 Quét NHÓM B (-24% < diffEMA < -10%) (${groupB.length} coins)...`);
         for (const item of groupB) {
             const sig = checkSignalGroupB(item);
