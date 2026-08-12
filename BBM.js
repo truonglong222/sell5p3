@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const FILE_24H = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 2 TIẾNG
-const COOLDOWN_TIME = 2 * 60 * 60 * 1000; 
+// Cấu hình Cooldown: 8 TIẾNG
+const COOLDOWN_TIME = 8 * 60 * 60 * 1000; 
 const MIN_VOLUME_USDT = 5000000; // 5 Triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -49,7 +49,7 @@ function save24hJson(groupedData) {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
             counts: {
-                groupNeg10ToNeg3: groupedData.groupNeg10ToNeg3.length,
+                groupNeg8ToNeg3: groupedData.groupNeg8ToNeg3.length,
                 groupNeg24ToNeg10: groupedData.groupNeg24ToNeg10.length
             },
             data: groupedData
@@ -87,47 +87,16 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
     };
 }
 
-// ------------------- HÀM TÍNH TỶ SỐ X VÀ BIẾN ĐỘNG 60H -------------------
-function calculateXAndVol60h(raw1H) {
+// ------------------- HÀM TÍNH BIẾN ĐỘNG 60H -------------------
+function calculateVol60h(raw1H) {
     if (!raw1H || raw1H.length < 60) return null;
 
-    // 1. Biến động 60h (%) = (Giá đóng nến vừa qua raw1H[1] - Giá đóng nến thứ 60 raw1H[59]) / raw1H[59] * 100
+    // Biến động 60h (%) = (Giá đóng nến vừa qua raw1H[1] - Giá đóng nến thứ 60 raw1H[59]) / raw1H[59] * 100
     const close1 = parseFloat(raw1H[1][4]);
     const close60 = parseFloat(raw1H[59][4]);
 
     if (close60 === 0) return null;
-    const vol60h = ((close1 - close60) / close60) * 100;
-
-    // 2. Tính Tỷ số X = (Low - High) của nến giảm âm nhất trong 40 NẾN GẦN NHẤT / Trung bình |Open - Close| 20 nến
-    let sumBody20 = 0;
-    for (let i = 1; i <= 20 && i < raw1H.length; i++) {
-        const open = parseFloat(raw1H[i][1]);
-        const close = parseFloat(raw1H[i][4]);
-        sumBody20 += Math.abs(open - close);
-    }
-    const avgBody20 = sumBody20 / 20;
-    if (avgBody20 === 0) return null;
-
-    let minLowHighBearish = 0; 
-    const maxCandlesToCheck = Math.min(40, raw1H.length);
-
-    for (let i = 0; i < maxCandlesToCheck; i++) {
-        const open = parseFloat(raw1H[i][1]);
-        const high = parseFloat(raw1H[i][2]);
-        const low = parseFloat(raw1H[i][3]);
-        const close = parseFloat(raw1H[i][4]);
-
-        if (close < open) { // Chỉ xét nến giảm
-            const lowMinusHigh = low - high; // Luôn <= 0
-            if (lowMinusHigh < minLowHighBearish) {
-                minLowHighBearish = lowMinusHigh;
-            }
-        }
-    }
-
-    const ratioX = minLowHighBearish / avgBody20;
-
-    return { vol60h, ratioX };
+    return ((close1 - close60) / close60) * 100;
 }
 
 // ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
@@ -186,7 +155,7 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY -------------------
 
-// 1. NHÓM A (-10% < diffEMA < -3%, Vol60h > -10%, X < -3) -> SHORT khi Giá High nến hiện tại sát BB Upper: -1% < diffbbu < 2%
+// 1. NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) -> SHORT khi Giá High nến hiện tại sát BB Upper: -1% < diffbbu < 2%
 function checkSignalGroupA(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -249,17 +218,16 @@ async function main() {
 
         // BƯỚC 3: Phân loại 2 nhóm diffEMA SHORT
         
-        // NHÓM A (CẬP NHẬT): -10% < diffEMA < -3% AND Vol60h > -10% AND X < -3
+        // NHÓM A (CẬP NHẬT MỚI): -8% < diffEMA < -3% AND -8% < Vol60h < 8%
         const groupA = calculatedCoins.filter(c => {
-            if (c.diffEMA <= -10 || c.diffEMA >= -3) return false;
+            if (c.diffEMA <= -8 || c.diffEMA >= -3) return false;
 
-            const metrics = calculateXAndVol60h(c.raw1H);
-            if (!metrics) return false;
+            const vol60h = calculateVol60h(c.raw1H);
+            if (vol60h === null) return false;
 
-            c.vol60h = metrics.vol60h;
-            c.ratioX = metrics.ratioX;
+            c.vol60h = vol60h;
 
-            return metrics.vol60h > -10 && metrics.ratioX < -3;
+            return vol60h > -8 && vol60h < 8;
         });
 
         // NHÓM B: -24% < diffEMA < -10%
@@ -270,7 +238,6 @@ async function main() {
             symbol: c.symbol,
             diffEMA: parseFloat(c.diffEMA.toFixed(2)),
             vol60h: parseFloat(c.vol60h.toFixed(2)),
-            ratioX: parseFloat(c.ratioX.toFixed(2)),
             volCcy24h: c.volCcy24h
         });
 
@@ -281,7 +248,7 @@ async function main() {
         });
 
         const groupedForSave = {
-            groupNeg10ToNeg3: groupA.map(formatItemA),
+            groupNeg8ToNeg3: groupA.map(formatItemA),
             groupNeg24ToNeg10: groupB.map(formatItemB)
         };
 
@@ -301,8 +268,8 @@ async function main() {
                               `• DiffEMA: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n` +
                               `• <a href="${link}">Trade trên OKX</a>`;
 
-                if (extraData.ratioX !== undefined && extraData.vol60h !== undefined) {
-                    message += `\n• X: <b>${extraData.ratioX.toFixed(2)}</b> | Vol 60h: <b>+${extraData.vol60h.toFixed(2)}%</b>`;
+                if (extraData.vol60h !== undefined) {
+                    message += `\n• Vol 60h: <b>${extraData.vol60h > 0 ? '+' : ''}${extraData.vol60h.toFixed(2)}%</b>`;
                 }
 
                 console.log(`🚀 [${type} MATCHED] Gửi Telegram cho ${symbol}...`);
@@ -320,12 +287,12 @@ async function main() {
 
         // BƯỚC 6: Thứ tự chạy quét tín hiệu
 
-        // 1. Quét NHÓM A (-10% < diffEMA < -3%, Vol60h > -10%, X < -3) trước
-        console.log(`🔍 Quét NHÓM A (-10% < diffEMA < -3%) (${groupA.length} coins)...`);
+        // 1. Quét NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) trước
+        console.log(`🔍 Quét NHÓM A (-8% < diffEMA < -3%) (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
             if (sig) {
-                await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { ratioX: item.ratioX, vol60h: item.vol60h });
+                await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { vol60h: item.vol60h });
             }
         }
 
