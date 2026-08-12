@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const FILE_24H = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 8 TIẾNG
-const COOLDOWN_TIME = 8 * 60 * 60 * 1000; 
+// Cấu hình Cooldown: 2 TIẾNG
+const COOLDOWN_TIME = 2 * 60 * 60 * 1000; 
 const MIN_VOLUME_USDT = 5000000; // 5 Triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -155,7 +155,7 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY -------------------
 
-// 1. NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) -> SHORT khi Giá High nến hiện tại sát BB Upper: -1% < diffbbu < 2%
+// 1. NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) -> SHORT khi Giá High nến hiện tại sát BB Upper: -0.5% < diffbbu < 2%
 function checkSignalGroupA(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -167,8 +167,8 @@ function checkSignalGroupA(coinData) {
 
     const diffbbu = ((highPrice0 - bb.upper) / bb.upper) * 100;
     
-    // Dung sai: -1% < diffbbu < 2%
-    if (diffbbu > -1 && diffbbu < 2) {
+    // Dung sai cập nhật: -0.5% < diffbbu < 2%
+    if (diffbbu > -0.5 && diffbbu < 2) {
         return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Upper' };
     }
     return null;
@@ -218,7 +218,7 @@ async function main() {
 
         // BƯỚC 3: Phân loại 2 nhóm diffEMA SHORT
         
-        // NHÓM A (CẬP NHẬT MỚI): -8% < diffEMA < -3% AND -8% < Vol60h < 8%
+        // NHÓM A (-8% < diffEMA < -3% AND -8% < Vol60h < 8%)
         const groupA = calculatedCoins.filter(c => {
             if (c.diffEMA <= -8 || c.diffEMA >= -3) return false;
 
