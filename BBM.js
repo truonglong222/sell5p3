@@ -154,21 +154,37 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY (NHÓM A) -------------------
 
-// NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) -> SHORT khi Giá High nến hiện tại sát BB Upper: -0.5% < diffbbu < 2%
+// NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) 
+// -> ĐIỀU KIỆN SHORT:
+// 1. Độ rộng Bollinger Band của 20 nến 1H đã đóng: Hbb = (upper - lower) / upper > 3%
+// 2. Giá High nến hiện tại sát BB Upper: -0.5% < diffbbu < 2%
 function checkSignalGroupA(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
     const highPrice0 = parseFloat(candle0[2]); // Lấy giá cao nhất (high0) của nến hiện tại
 
+    // Lấy 20 nến 1H vừa mới ĐÓNG (raw1H[1] đến raw1H[20])
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
-    if (!bb) return null;
+    if (!bb || bb.upper === 0) return null;
 
+    // Tính độ rộng Bollinger Band (Hbb)
+    const hBB = ((bb.upper - bb.lower) / bb.upper) * 100;
+    
+    // Điều kiện 1: Hbb phải lớn hơn 3%
+    if (hBB <= 3) return null;
+
+    // Tính khoảng cách giữa High nến hiện tại và BB Upper
     const diffbbu = ((highPrice0 - bb.upper) / bb.upper) * 100;
     
-    // Dung sai: -0.5% < diffbbu < 2%
+    // Điều kiện 2: Dung sai: -0.5% < diffbbu < 2%
     if (diffbbu > -0.5 && diffbbu < 2) {
-        return { type: 'SHORT', diffBB: diffbbu, targetBB: 'BB Upper' };
+        return { 
+            type: 'SHORT', 
+            diffBB: diffbbu, 
+            hBB: hBB,
+            targetBB: 'BB Upper' 
+        };
     }
     return null;
 }
@@ -233,12 +249,17 @@ async function main() {
                 const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
                 let message = `🔴 <b>${coinName} (${type})</b>\n` +
-                              `• DiffEMA: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n` +
-                              `• <a href="${link}">Trade trên OKX</a>`;
+                              `• DiffEMA: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n`;
+
+                if (extraData.hBB !== undefined) {
+                    message += `• Hbb (BB Width): <b>${extraData.hBB.toFixed(2)}%</b>\n`;
+                }
 
                 if (extraData.vol60h !== undefined) {
-                    message += `\n• Vol 60h: <b>${extraData.vol60h > 0 ? '+' : ''}${extraData.vol60h.toFixed(2)}%</b>`;
+                    message += `• Vol 60h: <b>${extraData.vol60h > 0 ? '+' : ''}${extraData.vol60h.toFixed(2)}%</b>\n`;
                 }
+
+                message += `• <a href="${link}">Trade trên OKX</a>`;
 
                 console.log(`🚀 [${type} MATCHED] Gửi Telegram cho ${symbol}...`);
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -258,7 +279,10 @@ async function main() {
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
             if (sig) {
-                await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { vol60h: item.vol60h });
+                await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { 
+                    vol60h: item.vol60h,
+                    hBB: sig.hBB 
+                });
             }
         }
 
