@@ -154,7 +154,7 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY (NHÓM A) -------------------
 
-// NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) 
+// NHÓM A (-8% < diffEMA < -3%, Vol60h < 8%) 
 // -> ĐIỀU KIỆN SHORT:
 // 1. Độ rộng Bollinger Band của 20 nến 1H đã đóng: Hbb = (upper - lower) / upper > 3%
 // 2. Giá High nến hiện tại sát BB Upper: -0.5% < diffbbu < 2%
@@ -212,7 +212,7 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3% AND -8% < Vol60h < 8%)
+        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3% AND Vol60h < 8%)
         const groupA = calculatedCoins.filter(c => {
             if (c.diffEMA <= -8 || c.diffEMA >= -3) return false;
 
@@ -221,7 +221,7 @@ async function main() {
 
             c.vol60h = vol60h;
 
-            return vol60h > -8 && vol60h < 8;
+            return vol60h < 8;
         });
 
         // Định dạng lưu file
@@ -274,7 +274,7 @@ async function main() {
             }
         };
 
-        // BƯỚC 6: Quét NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%)
+        // BƯỚC 6: Quét NHÓM A (-8% < diffEMA < -3%, Vol60h < 8%)
         console.log(`🔍 Quét NHÓM A (-8% < diffEMA < -3%) (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
