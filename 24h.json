@@ -1,57 +1,63 @@
 {
-  "updatedAt": "2026-08-14T08:56:10.494Z",
+  "updatedAt": "2026-08-14T09:01:49.845Z",
   "counts": {
-    "groupNeg8ToNeg3": 8
+    "groupNeg8ToNeg3": 9
   },
   "data": {
     "groupNeg8ToNeg3": [
       {
         "symbol": "OFC-USDT-SWAP",
-        "diffEMA": -3.39,
-        "vol60h": -2.89,
-        "volCcy24h": 95632000
+        "diffEMA": -3.35,
+        "vol60h": -3.65,
+        "volCcy24h": 95675300
+      },
+      {
+        "symbol": "STABLE-USDT-SWAP",
+        "diffEMA": -3.29,
+        "vol60h": -1.67,
+        "volCcy24h": 14789300
       },
       {
         "symbol": "RLS-USDT-SWAP",
-        "diffEMA": -3.25,
-        "vol60h": -7.7,
-        "volCcy24h": 247766600
+        "diffEMA": -3.74,
+        "vol60h": -6.65,
+        "volCcy24h": 253679200
       },
       {
         "symbol": "SOON-USDT-SWAP",
-        "diffEMA": -3.73,
-        "vol60h": -5.28,
-        "volCcy24h": 7158740
+        "diffEMA": -3.7,
+        "vol60h": -3.73,
+        "volCcy24h": 7183161
       },
       {
         "symbol": "TRUST-USDT-SWAP",
-        "diffEMA": -3.08,
-        "vol60h": -4.25,
-        "volCcy24h": 17319100
+        "diffEMA": -3.17,
+        "vol60h": -3.65,
+        "volCcy24h": 17222300
       },
       {
         "symbol": "ACT-USDT-SWAP",
-        "diffEMA": -4.28,
-        "vol60h": -7.07,
-        "volCcy24h": 176336027
+        "diffEMA": -4.31,
+        "vol60h": -6.69,
+        "volCcy24h": 175759946
       },
       {
         "symbol": "BARD-USDT-SWAP",
-        "diffEMA": -3.41,
-        "vol60h": -2.71,
-        "volCcy24h": 11176875
+        "diffEMA": -3.45,
+        "vol60h": -2.35,
+        "volCcy24h": 11152238
       },
       {
         "symbol": "AI-USDT-SWAP",
-        "diffEMA": -3.39,
-        "vol60h": -5.58,
-        "volCcy24h": 83493500
+        "diffEMA": -3.31,
+        "vol60h": -4.34,
+        "volCcy24h": 83541700
       },
       {
         "symbol": "BOME-USDT-SWAP",
-        "diffEMA": -4.68,
-        "vol60h": -4.08,
-        "volCcy24h": 10821771000
+        "diffEMA": -4.39,
+        "vol60h": -5.2,
+        "volCcy24h": 10679292000
       }
     ]
   }
