@@ -154,10 +154,9 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY (NHÓM A) -------------------
 
-// NHÓM A (-8% < diffEMA < -3%, Vol60h < 8%) 
+// NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) 
 // -> ĐIỀU KIỆN SHORT:
-// 1. Độ rộng Bollinger Band của 20 nến 1H đã đóng: Hbb = (upper - lower) / upper > 3%
-// 2. Giá High nến hiện tại sát BB Upper: -0.5% < diffbbu < 2%
+// Giá High nến hiện tại sát BB Upper: -0.5% < diffbbu < 2% (Vẫn tính Hbb để gửi thông số)
 function checkSignalGroupA(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -168,21 +167,18 @@ function checkSignalGroupA(coinData) {
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb || bb.upper === 0) return null;
 
-    // Tính độ rộng Bollinger Band (Hbb)
+    // Tính độ rộng Bollinger Band (Hbb) để truyền vào Telegram
     const hBB = ((bb.upper - bb.lower) / bb.upper) * 100;
-    
-    // Điều kiện 1: Hbb phải lớn hơn 3%
-    if (hBB <= 3) return null;
 
     // Tính khoảng cách giữa High nến hiện tại và BB Upper
     const diffbbu = ((highPrice0 - bb.upper) / bb.upper) * 100;
     
-    // Điều kiện 2: Dung sai: -0.5% < diffbbu < 2%
+    // Điều kiện duy nhất: Dung sai -0.5% < diffbbu < 2%
     if (diffbbu > -0.5 && diffbbu < 2) {
         return { 
             type: 'SHORT', 
             diffBB: diffbbu, 
-            hBB: hBB,
+            hBB: hBB, 
             targetBB: 'BB Upper' 
         };
     }
@@ -212,7 +208,7 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3% AND Vol60h < 8%)
+        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3% AND -8% < Vol60h < 8%)
         const groupA = calculatedCoins.filter(c => {
             if (c.diffEMA <= -8 || c.diffEMA >= -3) return false;
 
@@ -221,7 +217,7 @@ async function main() {
 
             c.vol60h = vol60h;
 
-            return vol60h < 8;
+            return vol60h > -8 && vol60h < 8;
         });
 
         // Định dạng lưu file
@@ -274,7 +270,7 @@ async function main() {
             }
         };
 
-        // BƯỚC 6: Quét NHÓM A (-8% < diffEMA < -3%, Vol60h < 8%)
+        // BƯỚC 6: Quét NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%)
         console.log(`🔍 Quét NHÓM A (-8% < diffEMA < -3%) (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
