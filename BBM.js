@@ -90,12 +90,43 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
 function calculateVol60h(raw1H) {
     if (!raw1H || raw1H.length < 60) return null;
 
-    // Biến động 60h (%) = (Giá đóng nến vừa qua raw1H[1] - Giá đóng nến thứ 60 raw1H[59]) / raw1H[59] * 100
     const close1 = parseFloat(raw1H[1][4]);
     const close60 = parseFloat(raw1H[59][4]);
 
     if (close60 === 0) return null;
     return ((close1 - close60) / close60) * 100;
+}
+
+// ------------------- LẤY NẾN KHUNG 1D & TÍNH DIFF BB LOWER 1D -------------------
+async function checkDiff1D(symbol) {
+    try {
+        const url1D = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=30`;
+        const res1D = await axios.get(url1D, { timeout: 5000 });
+
+        if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 21) return null;
+
+        const raw1D = res1D.data.data;
+        // Giá thấp nhất của nến ngày vừa đóng (raw1D[1][3] là giá Low của nến 1D trước đó)
+        const lowClosed1D = parseFloat(raw1D[1][3]);
+
+        // Lấy 20 nến 1D đã đóng (raw1D[1] đến raw1D[20]) để tính BB
+        const closedPrices1D = raw1D.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+        const bb1D = calculateBollingerBands(closedPrices1D, 20);
+
+        if (!bb1D || bb1D.lower === 0) return null;
+
+        // Tính khoảng cách giữa Low nến ngày trước đó và BB Lower 1D (%)
+        const diff1DBBLower = ((lowClosed1D - bb1D.lower) / bb1D.lower) * 100;
+
+        return {
+            diff1DBBLower,
+            lowClosed1D,
+            bbLower1D: bb1D.lower
+        };
+    } catch (error) {
+        console.error(`Lỗi lấy dữ liệu 1D (${symbol}):`, error.message);
+        return null;
+    }
 }
 
 // ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
@@ -156,17 +187,17 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 function checkSignalGroupA(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
-    const highPrice0 = parseFloat(candle0[2]); // Lấy giá cao nhất (high0) của nến hiện tại
+    const highPrice0 = parseFloat(candle0[2]); 
 
     // Lấy 20 nến 1H vừa mới ĐÓNG (raw1H[1] đến raw1H[20])
     const closedForBB = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
     const bb = calculateBollingerBands(closedForBB, 20);
     if (!bb || bb.upper === 0) return null;
 
-    // Tính độ rộng Bollinger Band (Hbb) để truyền vào Telegram
+    // Tính độ rộng Bollinger Band (Hbb)
     const hBB = ((bb.upper - bb.lower) / bb.upper) * 100;
 
-    // Tính khoảng cách giữa High nến hiện tại và BB Upper
+    // Tính khoảng cách giữa High nến hiện tại và BB Upper 1H
     const diffbbu = ((highPrice0 - bb.upper) / bb.upper) * 100;
     
     // Điều kiện: Dung sai -0.5% < diffbbu < 2%
@@ -174,7 +205,7 @@ function checkSignalGroupA(coinData) {
         return { 
             type: 'SHORT', 
             diffBB: diffbbu, 
-            diffbbu: diffbbu, // Đảm bảo truyền diffbbu
+            diffbbu: diffbbu,
             hBB: hBB, 
             targetBB: 'BB Upper' 
         };
@@ -244,9 +275,12 @@ async function main() {
                 let message = `🔴 <b>${coinName} (${type})</b>\n` +
                               `• DiffEMA: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n`;
 
-                // Hiển thị DiffBBu
                 if (extraData.diffbbu !== undefined) {
-                    message += `• DiffBBu: <b>${extraData.diffbbu > 0 ? '+' : ''}${extraData.diffbbu.toFixed(2)}%</b>\n`;
+                    message += `• DiffBBu (1H): <b>${extraData.diffbbu > 0 ? '+' : ''}${extraData.diffbbu.toFixed(2)}%</b>\n`;
+                }
+
+                if (extraData.diff1DBBLower !== undefined) {
+                    message += `• Diff 1D-BBL: <b>${extraData.diff1DBBLower > 0 ? '+' : ''}${extraData.diff1DBBLower.toFixed(2)}%</b>\n`;
                 }
 
                 if (extraData.hBB !== undefined) {
@@ -277,11 +311,20 @@ async function main() {
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
             if (sig) {
-                await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { 
-                    vol60h: item.vol60h,
-                    diffbbu: sig.diffbbu,
-                    hBB: sig.hBB 
-                });
+                // Kiểm tra điều kiện nến 1D: Low nến ngày trước cách BB Lower 1D > 1%
+                const data1D = await checkDiff1D(item.symbol);
+                await sleep(60); // Rate-limit buffer cho API 1D
+
+                if (data1D && data1D.diff1DBBLower > 1) {
+                    await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { 
+                        vol60h: item.vol60h,
+                        diffbbu: sig.diffbbu,
+                        diff1DBBLower: data1D.diff1DBBLower,
+                        hBB: sig.hBB 
+                    });
+                } else {
+                    console.log(`⏩ [BỎ QUA SHORT] ${item.symbol} do nến 1D quá sát BB Lower (${data1D?.diff1DBBLower?.toFixed(2)}% <= 1%)`);
+                }
             }
         }
 
