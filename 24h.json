@@ -1,87 +1,75 @@
 {
-  "updatedAt": "2026-08-15T02:56:03.787Z",
+  "updatedAt": "2026-08-15T03:01:46.711Z",
   "counts": {
-    "groupNeg8ToNeg3": 13
+    "groupNeg8ToNeg3": 11
   },
   "data": {
     "groupNeg8ToNeg3": [
       {
+        "symbol": "UNI-USDT-SWAP",
+        "diffEMA": -6.4,
+        "vol60h": -7.33,
+        "volCcy24h": 12441866
+      },
+      {
         "symbol": "KITE-USDT-SWAP",
-        "diffEMA": -4.18,
-        "vol60h": -4.41,
-        "volCcy24h": 6754540
+        "diffEMA": -4.03,
+        "vol60h": -4.63,
+        "volCcy24h": 6754720
       },
       {
         "symbol": "ATH-USDT-SWAP",
-        "diffEMA": -3.77,
-        "vol60h": -6.12,
-        "volCcy24h": 199860100
+        "diffEMA": -3.58,
+        "vol60h": -4.82,
+        "volCcy24h": 199813200
       },
       {
         "symbol": "STABLE-USDT-SWAP",
-        "diffEMA": -3.16,
-        "vol60h": -4.32,
-        "volCcy24h": 11012000
-      },
-      {
-        "symbol": "ONE-USDT-SWAP",
-        "diffEMA": -5.56,
-        "vol60h": -2.36,
-        "volCcy24h": 8324095100
+        "diffEMA": -3,
+        "vol60h": -6.6,
+        "volCcy24h": 11164600
       },
       {
         "symbol": "BILL-USDT-SWAP",
-        "diffEMA": -4.55,
-        "vol60h": -6.17,
-        "volCcy24h": 132366400
+        "diffEMA": -4.36,
+        "vol60h": -7.25,
+        "volCcy24h": 132405500
       },
       {
         "symbol": "ZAMA-USDT-SWAP",
-        "diffEMA": -4.25,
-        "vol60h": -2.91,
-        "volCcy24h": 110106070
+        "diffEMA": -4.51,
+        "vol60h": -2.52,
+        "volCcy24h": 110126200
       },
       {
         "symbol": "DATA-USDT-SWAP",
-        "diffEMA": -3.74,
-        "vol60h": -4.56,
-        "volCcy24h": 5598310
+        "diffEMA": -3.79,
+        "vol60h": -4.36,
+        "volCcy24h": 5602900
       },
       {
         "symbol": "MEGA-USDT-SWAP",
-        "diffEMA": -3.83,
-        "vol60h": -4.43,
-        "volCcy24h": 49476560
+        "diffEMA": -3.61,
+        "vol60h": -4.35,
+        "volCcy24h": 49042230
       },
       {
         "symbol": "BARD-USDT-SWAP",
-        "diffEMA": -3.99,
-        "vol60h": -4.57,
-        "volCcy24h": 5357208
+        "diffEMA": -4,
+        "vol60h": -4.21,
+        "volCcy24h": 5363691
       },
       {
         "symbol": "HOME-USDT-SWAP",
-        "diffEMA": -4.55,
-        "vol60h": 2.12,
-        "volCcy24h": 4522340700
-      },
-      {
-        "symbol": "BSB-USDT-SWAP",
-        "diffEMA": -3.06,
-        "vol60h": -5.51,
-        "volCcy24h": 21289490
-      },
-      {
-        "symbol": "GRVT-USDT-SWAP",
-        "diffEMA": -4.48,
-        "vol60h": -7.14,
-        "volCcy24h": 160425090
+        "diffEMA": -5.8,
+        "vol60h": 3.34,
+        "volCcy24h": 4517461800
       },
       {
         "symbol": "HUMA-USDT-SWAP",
-        "diffEMA": -3.16,
-        "vol60h": -4.13,
-        "volCcy24h": 23851200
+        "diffEMA": -3.09,
+        "vol60h": -4.03,
+        "volCcy24h": 23867800
       }
     ]
   }
