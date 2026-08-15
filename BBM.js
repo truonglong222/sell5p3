@@ -153,10 +153,6 @@ async function getCoinDataWithDiffEma(symbol, volCcy24h) {
 }
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT NẾN ĐANG CHẠY (NHÓM A) -------------------
-
-// NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%) 
-// -> ĐIỀU KIỆN SHORT:
-// Giá High nến hiện tại sát BB Upper: -0.5% < diffbbu < 2% (Vẫn tính Hbb để gửi thông số)
 function checkSignalGroupA(coinData) {
     const { raw1H } = coinData;
     const candle0 = raw1H[0];
@@ -173,11 +169,12 @@ function checkSignalGroupA(coinData) {
     // Tính khoảng cách giữa High nến hiện tại và BB Upper
     const diffbbu = ((highPrice0 - bb.upper) / bb.upper) * 100;
     
-    // Điều kiện duy nhất: Dung sai -0.5% < diffbbu < 2%
+    // Điều kiện: Dung sai -0.5% < diffbbu < 2%
     if (diffbbu > -0.5 && diffbbu < 2) {
         return { 
             type: 'SHORT', 
             diffBB: diffbbu, 
+            diffbbu: diffbbu, // Đảm bảo truyền diffbbu
             hBB: hBB, 
             targetBB: 'BB Upper' 
         };
@@ -247,6 +244,11 @@ async function main() {
                 let message = `🔴 <b>${coinName} (${type})</b>\n` +
                               `• DiffEMA: <b>${diffEmaVal > 0 ? '+' : ''}${diffEmaVal.toFixed(2)}%</b>\n`;
 
+                // Hiển thị DiffBBu
+                if (extraData.diffbbu !== undefined) {
+                    message += `• DiffBBu: <b>${extraData.diffbbu > 0 ? '+' : ''}${extraData.diffbbu.toFixed(2)}%</b>\n`;
+                }
+
                 if (extraData.hBB !== undefined) {
                     message += `• Hbb (BB Width): <b>${extraData.hBB.toFixed(2)}%</b>\n`;
                 }
@@ -277,6 +279,7 @@ async function main() {
             if (sig) {
                 await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { 
                     vol60h: item.vol60h,
+                    diffbbu: sig.diffbbu,
                     hBB: sig.hBB 
                 });
             }
