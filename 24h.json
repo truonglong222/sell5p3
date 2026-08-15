@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-08-15T08:21:15.689Z",
+  "updatedAt": "2026-08-15T08:26:13.483Z",
   "counts": {
-    "groupNeg8ToNeg3": 3
+    "groupNeg8ToNeg3": 4
   },
   "data": {
     "groupNeg8ToNeg3": [
@@ -9,19 +9,25 @@
         "symbol": "BILL-USDT-SWAP",
         "diffEMA": -4.3,
         "vol60h": -7.25,
-        "volCcy24h": 120116500
+        "volCcy24h": 120067200
       },
       {
         "symbol": "ZAMA-USDT-SWAP",
         "diffEMA": -5.2,
         "vol60h": -6.07,
-        "volCcy24h": 105560270
+        "volCcy24h": 105895350
+      },
+      {
+        "symbol": "BARD-USDT-SWAP",
+        "diffEMA": -3.44,
+        "vol60h": -7.38,
+        "volCcy24h": 5075949
       },
       {
         "symbol": "GRVT-USDT-SWAP",
         "diffEMA": -7.12,
         "vol60h": -3.44,
-        "volCcy24h": 164123810
+        "volCcy24h": 164273550
       }
     ]
   }
