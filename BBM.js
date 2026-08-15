@@ -106,8 +106,8 @@ async function checkDiff1D(symbol) {
         if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 21) return null;
 
         const raw1D = res1D.data.data;
-        // Giá thấp nhất của nến ngày vừa đóng (raw1D[1][3] là giá Low của nến 1D trước đó)
-        const lowClosed1D = parseFloat(raw1D[1][3]);
+        // Đổi sang lấy GIÁ ĐÓNG CỬA (Close) của nến ngày vừa đóng: raw1D[1][4]
+        const closeClosed1D = parseFloat(raw1D[1][4]);
 
         // Lấy 20 nến 1D đã đóng (raw1D[1] đến raw1D[20]) để tính BB
         const closedPrices1D = raw1D.slice(1, 21).reverse().map(c => parseFloat(c[4]));
@@ -115,12 +115,12 @@ async function checkDiff1D(symbol) {
 
         if (!bb1D || bb1D.lower === 0) return null;
 
-        // Tính khoảng cách giữa Low nến ngày trước đó và BB Lower 1D (%)
-        const diff1DBBLower = ((lowClosed1D - bb1D.lower) / bb1D.lower) * 100;
+        // Tính khoảng cách giữa Close nến ngày trước đó và BB Lower 1D (%)
+        const diff1DBBLower = ((closeClosed1D - bb1D.lower) / bb1D.lower) * 100;
 
         return {
             diff1DBBLower,
-            lowClosed1D,
+            closeClosed1D,
             bbLower1D: bb1D.lower
         };
     } catch (error) {
@@ -236,16 +236,14 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3% AND -8% < Vol60h < 8%)
+        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3%) - BỎ LỌC VOL 60H, NHƯNG VẪN TÍNH ĐỂ GỬI TELEGRAM
         const groupA = calculatedCoins.filter(c => {
             if (c.diffEMA <= -8 || c.diffEMA >= -3) return false;
 
             const vol60h = calculateVol60h(c.raw1H);
-            if (vol60h === null) return false;
+            c.vol60h = vol60h !== null ? vol60h : 0;
 
-            c.vol60h = vol60h;
-
-            return vol60h > -8 && vol60h < 8;
+            return true;
         });
 
         // Định dạng lưu file
@@ -280,7 +278,7 @@ async function main() {
                 }
 
                 if (extraData.diff1DBBLower !== undefined) {
-                    message += `• Diff 1D-BBL: <b>${extraData.diff1DBBLower > 0 ? '+' : ''}${extraData.diff1DBBLower.toFixed(2)}%</b>\n`;
+                    message += `• DiffBBL (1D): <b>${extraData.diff1DBBLower > 0 ? '+' : ''}${extraData.diff1DBBLower.toFixed(2)}%</b>\n`;
                 }
 
                 if (extraData.hBB !== undefined) {
@@ -306,16 +304,16 @@ async function main() {
             }
         };
 
-        // BƯỚC 6: Quét NHÓM A (-8% < diffEMA < -3%, -8% < Vol60h < 8%)
+        // BƯỚC 6: Quét NHÓM A (-8% < diffEMA < -3%)
         console.log(`🔍 Quét NHÓM A (-8% < diffEMA < -3%) (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
             if (sig) {
-                // Kiểm tra điều kiện nến 1D: Low nến ngày trước cách BB Lower 1D > 1%
+                // Kiểm tra điều kiện nến 1D: Giá Close nến ngày trước cách BB Lower 1D > 2%
                 const data1D = await checkDiff1D(item.symbol);
                 await sleep(60); // Rate-limit buffer cho API 1D
 
-                if (data1D && data1D.diff1DBBLower > 1) {
+                if (data1D && data1D.diff1DBBLower > 2) {
                     await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { 
                         vol60h: item.vol60h,
                         diffbbu: sig.diffbbu,
@@ -323,7 +321,7 @@ async function main() {
                         hBB: sig.hBB 
                     });
                 } else {
-                    console.log(`⏩ [BỎ QUA SHORT] ${item.symbol} do nến 1D quá sát BB Lower (${data1D?.diff1DBBLower?.toFixed(2)}% <= 1%)`);
+                    console.log(`⏩ [BỎ QUA SHORT] ${item.symbol} do Close nến 1D quá sát BB Lower (${data1D?.diff1DBBLower?.toFixed(2)}% <= 2%)`);
                 }
             }
         }
