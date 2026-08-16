@@ -97,30 +97,32 @@ function calculateVol60h(raw1H) {
     return ((close1 - close60) / close60) * 100;
 }
 
-// ------------------- LẤY NẾN KHUNG 1D & TÍNH DIFF BB LOWER 1D (diffbbl1d) -------------------
+// ------------------- LẤY NẾN KHUNG 1D & TÍNH DIFF BB LOWER 1D -------------------
 async function checkDiff1D(symbol) {
     try {
         const url1D = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=30`;
         const res1D = await axios.get(url1D, { timeout: 5000 });
 
-        if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 21) return null;
+        if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 20) return null;
 
         const raw1D = res1D.data.data;
-        // Lấy GIÁ ĐÓNG CỬA (Close) của nến ngày vừa đóng: raw1D[1][4]
-        const closeClosed1D = parseFloat(raw1D[1][4]);
+        
+        // Giá hiện tại của nến 1D đang chạy (raw1D[0][4])
+        const currentPrice = parseFloat(raw1D[0][4]);
+        if (currentPrice === 0) return null;
 
-        // Lấy 20 nến 1D đã đóng (raw1D[1] đến raw1D[20]) để tính BB
-        const closedPrices1D = raw1D.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-        const bb1D = calculateBollingerBands(closedPrices1D, 20);
+        // Lấy 20 nến 1D gần nhất TÍNH CẢ NẾN ĐANG CHẠY (raw1D[0] đến raw1D[19]) để tính BB 1D
+        const prices1D = raw1D.slice(0, 20).reverse().map(c => parseFloat(c[4]));
+        const bb1D = calculateBollingerBands(prices1D, 20);
 
         if (!bb1D || bb1D.lower === 0) return null;
 
-        // Tính khoảng cách giữa Close nến ngày trước đó và BB Lower 1D (%)
-        const diffbbl1d = ((closeClosed1D - bb1D.lower) / bb1D.lower) * 100;
+        // Công thức: (giá hiện tại - BB Lower nến đang chạy) / giá hiện tại * 100
+        const diffbbl1d = ((currentPrice - bb1D.lower) / currentPrice) * 100;
 
         return {
             diffbbl1d,
-            closeClosed1D,
+            currentPrice,
             bbLower1D: bb1D.lower
         };
     } catch (error) {
@@ -244,7 +246,7 @@ async function main() {
                 const vol60h = calculateVol60h(c.raw1H);
                 c.vol60h = vol60h !== null ? vol60h : 0;
 
-                // Lấy diffbbl1d cho từng coin nhóm A để lưu vào file 24h.json
+                // Lấy diffbbl1d theo công thức mới
                 const data1D = await checkDiff1D(c.symbol);
                 c.diffbbl1d = data1D ? data1D.diffbbl1d : null;
                 groupA.push(c);
@@ -317,7 +319,7 @@ async function main() {
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
             if (sig) {
-                // Kiểm tra điều kiện nến 1D: Close nến ngày trước cách BB Lower 1D > 2%
+                // Điều kiện lọc: diffbbl1d > 2%
                 if (item.diffbbl1d !== null && item.diffbbl1d > 2) {
                     await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { 
                         vol60h: item.vol60h,
@@ -326,7 +328,7 @@ async function main() {
                         hBB: sig.hBB 
                     });
                 } else {
-                    console.log(`⏩ [BỎ QUA SHORT] ${item.symbol} do Close 1D quá sát BB Lower (${item.diffbbl1d !== null ? item.diffbbl1d.toFixed(2) : 'N/A'}% <= 2%)`);
+                    console.log(`⏩ [BỎ QUA SHORT] ${item.symbol} do diffbbl1d quá sát BB Lower 1D (${item.diffbbl1d !== null ? item.diffbbl1d.toFixed(2) : 'N/A'}% <= 2%)`);
                 }
             }
         }
