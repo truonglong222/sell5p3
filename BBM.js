@@ -49,7 +49,7 @@ function save24hJson(groupedData) {
         const dataToSave = {
             updatedAt: new Date().toISOString(),
             counts: {
-                groupNeg8ToNeg3: groupedData.groupNeg8ToNeg3.length
+                groupLessThanNeg2_5: groupedData.groupLessThanNeg2_5.length
             },
             data: groupedData
         };
@@ -228,7 +228,7 @@ async function main() {
         const stats = {
             step1_volume5M: 0,
             step2_validEma: 0,
-            step3_groupA_diffEma: 0,     // -8% < diffEMA < -3%
+            step3_groupA_diffEma: 0,     // diffEMA < -2.5%
             step4_groupA_signalBB: 0,    // -0.5% < diffbbu < 2%
             step5_groupA_diffbbl1d: 0,   // diffbbl1d > 2%
             step6_passedCooldown: 0      // Vượt qua thời gian chờ & gửi Telegram
@@ -250,11 +250,11 @@ async function main() {
         }
         stats.step2_validEma = calculatedCoins.length;
 
-        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3%) & Tính Vol 60h, diffbbl1d
-        console.log('⏳ [Bước 3] Đang lọc Nhóm A (-8% < diffEMA < -3%) và lấy dữ liệu 1D...');
+        // BƯỚC 3: Phân loại NHÓM A (diffEMA < -2.5%) & Tính Vol 60h, diffbbl1d
+        console.log('⏳ [Bước 3] Đang lọc Nhóm A (diffEMA < -2.5%) và lấy dữ liệu 1D...');
         const groupA = [];
         for (const c of calculatedCoins) {
-            if (c.diffEMA > -8 && c.diffEMA < -3) {
+            if (c.diffEMA < -2.5) {
                 const vol60h = calculateVol60h(c.raw1H);
                 c.vol60h = vol60h !== null ? vol60h : 0;
 
@@ -278,7 +278,7 @@ async function main() {
         });
 
         // BƯỚC 4: Ghi vào file 24h.json
-        save24hJson({ groupNeg8ToNeg3: groupA.map(formatItemA) });
+        save24hJson({ groupLessThanNeg2_5: groupA.map(formatItemA) });
 
         // BƯỚC 5: Hàm gửi Tín Hiệu SHORT về Telegram
         const sendAlert = async (symbol, type, diffEmaVal, cooldownKey, extraData = {}) => {
@@ -327,7 +327,7 @@ async function main() {
             }
         };
 
-        // BƯỚC 6: Quét tín hiệu NHÓM A (-8% < diffEMA < -3%)
+        // BƯỚC 6: Quét tín hiệu NHÓM A (diffEMA < -2.5%)
         console.log(`🔍 [Bước 4 & 5] Quét tín hiệu NHÓM A (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
@@ -355,7 +355,7 @@ async function main() {
         console.log('\n================ BÁO CÁO PHỄU LỌC (FUNNEL REPORT) ================');
         console.log(`1. Volume >= 5M USDT                 : ${stats.step1_volume5M} coins`);
         console.log(`2. Lấy đủ nến & tính diffEMA         : ${stats.step2_validEma} coins`);
-        console.log(`3. Nhóm A (-8% < diffEMA < -3%)      : ${stats.step3_groupA_diffEma} coins`);
+        console.log(`3. Nhóm A (diffEMA < -2.5%)          : ${stats.step3_groupA_diffEma} coins`);
         console.log(`4. Khớp BB 1H (-0.5% < diffbbu < 2%) : ${stats.step4_groupA_signalBB} coins`);
         console.log(`5. Khớp BB 1D (diffbbl1d > 2%)       : ${stats.step5_groupA_diffbbl1d} coins`);
         console.log(`6. Bắn Telegram (qua Cooldown)       : ${stats.step6_passedCooldown} coins`);
