@@ -43,7 +43,7 @@ function saveSentLog(logData) {
     } catch (e) {}
 }
 
-// Ghi file 24h.json (Lưu danh sách Nhóm A)
+// Ghi file 24h.json (Lưu danh sách Nhóm A kèm diffbbl1d)
 function save24hJson(groupedData) {
     try {
         const dataToSave = {
@@ -97,7 +97,7 @@ function calculateVol60h(raw1H) {
     return ((close1 - close60) / close60) * 100;
 }
 
-// ------------------- LẤY NẾN KHUNG 1D & TÍNH DIFF BB LOWER 1D -------------------
+// ------------------- LẤY NẾN KHUNG 1D & TÍNH DIFF BB LOWER 1D (diffbbl1d) -------------------
 async function checkDiff1D(symbol) {
     try {
         const url1D = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1D&limit=30`;
@@ -106,7 +106,7 @@ async function checkDiff1D(symbol) {
         if (!res1D.data || res1D.data.code !== '0' || res1D.data.data.length < 21) return null;
 
         const raw1D = res1D.data.data;
-        // Đổi sang lấy GIÁ ĐÓNG CỬA (Close) của nến ngày vừa đóng: raw1D[1][4]
+        // Lấy GIÁ ĐÓNG CỬA (Close) của nến ngày vừa đóng: raw1D[1][4]
         const closeClosed1D = parseFloat(raw1D[1][4]);
 
         // Lấy 20 nến 1D đã đóng (raw1D[1] đến raw1D[20]) để tính BB
@@ -116,10 +116,10 @@ async function checkDiff1D(symbol) {
         if (!bb1D || bb1D.lower === 0) return null;
 
         // Tính khoảng cách giữa Close nến ngày trước đó và BB Lower 1D (%)
-        const diff1DBBLower = ((closeClosed1D - bb1D.lower) / bb1D.lower) * 100;
+        const diffbbl1d = ((closeClosed1D - bb1D.lower) / bb1D.lower) * 100;
 
         return {
-            diff1DBBLower,
+            diffbbl1d,
             closeClosed1D,
             bbLower1D: bb1D.lower
         };
@@ -236,21 +236,29 @@ async function main() {
             await sleep(80);
         }
 
-        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3%) - BỎ LỌC VOL 60H, NHƯNG VẪN TÍNH ĐỂ GỬI TELEGRAM
-        const groupA = calculatedCoins.filter(c => {
-            if (c.diffEMA <= -8 || c.diffEMA >= -3) return false;
+        // BƯỚC 3: Phân loại NHÓM A (-8% < diffEMA < -3%) & Tính Vol 60h, diffbbl1d
+        console.log('⏳ Đang lấy dữ liệu 1D (diffbbl1d) cho Nhóm A...');
+        const groupA = [];
+        for (const c of calculatedCoins) {
+            if (c.diffEMA > -8 && c.diffEMA < -3) {
+                const vol60h = calculateVol60h(c.raw1H);
+                c.vol60h = vol60h !== null ? vol60h : 0;
 
-            const vol60h = calculateVol60h(c.raw1H);
-            c.vol60h = vol60h !== null ? vol60h : 0;
+                // Lấy diffbbl1d cho từng coin nhóm A để lưu vào file 24h.json
+                const data1D = await checkDiff1D(c.symbol);
+                c.diffbbl1d = data1D ? data1D.diffbbl1d : null;
+                groupA.push(c);
 
-            return true;
-        });
+                await sleep(60); // Buffer rate-limit
+            }
+        }
 
-        // Định dạng lưu file
+        // Định dạng lưu file (có diffbbl1d)
         const formatItemA = c => ({
             symbol: c.symbol,
             diffEMA: parseFloat(c.diffEMA.toFixed(2)),
             vol60h: parseFloat(c.vol60h.toFixed(2)),
+            diffbbl1d: c.diffbbl1d !== null ? parseFloat(c.diffbbl1d.toFixed(2)) : null,
             volCcy24h: c.volCcy24h
         });
 
@@ -261,7 +269,7 @@ async function main() {
         // BƯỚC 4: Ghi vào file 24h.json
         save24hJson(groupedForSave);
 
-        // BƯỚC 5: Xử lý và Báo Tín Hiệu SHORT
+        // BƯỚC 5: Hàm gửi Tín Hiệu SHORT về Telegram
         const sendAlert = async (symbol, type, diffEmaVal, cooldownKey, extraData = {}) => {
             if (!sentLog[symbol]) sentLog[symbol] = {};
             const lastSent = sentLog[symbol][cooldownKey] || 0;
@@ -277,8 +285,8 @@ async function main() {
                     message += `• DiffBBu (1H): <b>${extraData.diffbbu > 0 ? '+' : ''}${extraData.diffbbu.toFixed(2)}%</b>\n`;
                 }
 
-                if (extraData.diff1DBBLower !== undefined) {
-                    message += `• DiffBBL (1D): <b>${extraData.diff1DBBLower > 0 ? '+' : ''}${extraData.diff1DBBLower.toFixed(2)}%</b>\n`;
+                if (extraData.diffbbl1d !== undefined && extraData.diffbbl1d !== null) {
+                    message += `• DiffBBL (1D): <b>${extraData.diffbbl1d > 0 ? '+' : ''}${extraData.diffbbl1d.toFixed(2)}%</b>\n`;
                 }
 
                 if (extraData.hBB !== undefined) {
@@ -304,24 +312,21 @@ async function main() {
             }
         };
 
-        // BƯỚC 6: Quét NHÓM A (-8% < diffEMA < -3%)
-        console.log(`🔍 Quét NHÓM A (-8% < diffEMA < -3%) (${groupA.length} coins)...`);
+        // BƯỚC 6: Quét tín hiệu NHÓM A (-8% < diffEMA < -3%)
+        console.log(`🔍 Quét tín hiệu NHÓM A (${groupA.length} coins)...`);
         for (const item of groupA) {
             const sig = checkSignalGroupA(item);
             if (sig) {
-                // Kiểm tra điều kiện nến 1D: Giá Close nến ngày trước cách BB Lower 1D > 2%
-                const data1D = await checkDiff1D(item.symbol);
-                await sleep(60); // Rate-limit buffer cho API 1D
-
-                if (data1D && data1D.diff1DBBLower > 2) {
+                // Kiểm tra điều kiện nến 1D: Close nến ngày trước cách BB Lower 1D > 2%
+                if (item.diffbbl1d !== null && item.diffbbl1d > 2) {
                     await sendAlert(item.symbol, 'SHORT', item.diffEMA, '_short1h', { 
                         vol60h: item.vol60h,
                         diffbbu: sig.diffbbu,
-                        diff1DBBLower: data1D.diff1DBBLower,
+                        diffbbl1d: item.diffbbl1d,
                         hBB: sig.hBB 
                     });
                 } else {
-                    console.log(`⏩ [BỎ QUA SHORT] ${item.symbol} do Close nến 1D quá sát BB Lower (${data1D?.diff1DBBLower?.toFixed(2)}% <= 2%)`);
+                    console.log(`⏩ [BỎ QUA SHORT] ${item.symbol} do Close 1D quá sát BB Lower (${item.diffbbl1d !== null ? item.diffbbl1d.toFixed(2) : 'N/A'}% <= 2%)`);
                 }
             }
         }
