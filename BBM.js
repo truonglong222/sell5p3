@@ -126,7 +126,7 @@ function checkShortSignal(raw15M) {
   // Độ lệch giữa giá mở nến hiện tại và BB Upper
   const diffbbu15m = ((openPrice0 - bb15m.upper) / bb15m.upper) * 100;
 
-  if (diffbbu15m > 1) {
+  if (diffbbu15m > 0.5) {
     return {
       diffbbu15m,
       openPrice0,
