@@ -1,19 +1,46 @@
 {
-  "lastScanAt": "2026-08-17T15:46:29.626Z",
-  "totalScanned": 179,
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "ARX-USDT-SWAP",
-      "volCcy24h": 10587250,
-      "diffbbu15m": 0.5060845471800565,
-      "teleSent": true
-    },
-    {
-      "symbol": "EDEN-USDT-SWAP",
-      "volCcy24h": 134918319,
-      "diffbbu15m": 0.97345538931363,
-      "teleSent": false
-    }
-  ]
+  "updatedAt": "2026-08-17T16:01:42.963Z",
+  "counts": {
+    "groupNeg8ToNeg3": 6
+  },
+  "data": {
+    "groupNeg8ToNeg3": [
+      {
+        "symbol": "WAL-USDT-SWAP",
+        "diffEMA": -4.09,
+        "vol60h": 1.25,
+        "volCcy24h": 57015230
+      },
+      {
+        "symbol": "PLUME-USDT-SWAP",
+        "diffEMA": -3.81,
+        "vol60h": -5.6,
+        "volCcy24h": 207505610
+      },
+      {
+        "symbol": "ME-USDT-SWAP",
+        "diffEMA": -3.04,
+        "vol60h": -6.26,
+        "volCcy24h": 9706111
+      },
+      {
+        "symbol": "GRASS-USDT-SWAP",
+        "diffEMA": -3.44,
+        "vol60h": -2.79,
+        "volCcy24h": 6931091
+      },
+      {
+        "symbol": "BOME-USDT-SWAP",
+        "diffEMA": -3.83,
+        "vol60h": 3.28,
+        "volCcy24h": 9951119000
+      },
+      {
+        "symbol": "GRVT-USDT-SWAP",
+        "diffEMA": -4.59,
+        "vol60h": -7.12,
+        "volCcy24h": 63560570
+      }
+    ]
+  }
 }
