@@ -1,12 +1,18 @@
 {
-  "lastScanAt": "2026-08-17T13:46:24.296Z",
+  "lastScanAt": "2026-08-17T14:01:53.344Z",
   "totalScanned": 179,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "ACU-USDT-SWAP",
-      "volCcy24h": 79871820,
-      "diffbbu15m": 1.6680327289386367,
+      "volCcy24h": 79749390,
+      "diffbbu15m": 0.763847063837996,
+      "teleSent": false
+    },
+    {
+      "symbol": "SNXX-USDT-SWAP",
+      "volCcy24h": 9277924.2,
+      "diffbbu15m": 1.270290650545992,
       "teleSent": true
     }
   ]
