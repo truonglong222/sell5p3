@@ -1,13 +1,19 @@
 {
-  "lastScanAt": "2026-08-17T15:16:26.763Z",
-  "totalScanned": 178,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-17T15:46:29.626Z",
+  "totalScanned": 179,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "EDEN-USDT-SWAP",
-      "volCcy24h": 106740960,
-      "diffbbu15m": 2.680898677513364,
+      "symbol": "ARX-USDT-SWAP",
+      "volCcy24h": 10587250,
+      "diffbbu15m": 0.5060845471800565,
       "teleSent": true
+    },
+    {
+      "symbol": "EDEN-USDT-SWAP",
+      "volCcy24h": 134918319,
+      "diffbbu15m": 0.97345538931363,
+      "teleSent": false
     }
   ]
 }
