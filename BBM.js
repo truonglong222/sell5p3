@@ -111,40 +111,36 @@ async function getCandleData(symbol) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT MỚI -------------------
 function checkShortSignal(raw1H) {
-  if (!raw1H || raw1H.length < 25) return null;
+  if (!raw1H || raw1H.length < 27) return null;
 
   const candle0 = raw1H[0];
   const highPrice0 = parseFloat(candle0[2]); // High của nến hiện tại
 
-  // 1. BB của nến vừa đóng (raw1H[1] -> raw1H[20])
+  // 1. BB của nến 1 (vừa đóng: raw1H[1] -> raw1H[20])
   const closedForBB1 = raw1H.slice(1, 21).reverse().map(c => parseFloat(c[4]));
   const bb1 = calculateBollingerBands(closedForBB1, 20);
 
-  // 2. BB của nến hiện tại (raw1H[0] -> raw1H[19])
-  const closedForBB0 = raw1H.slice(0, 20).reverse().map(c => parseFloat(c[4]));
-  const bb0 = calculateBollingerBands(closedForBB0, 20);
+  // 2. BB của nến 6 (raw1H[6] -> raw1H[25])
+  const closedForBB6 = raw1H.slice(6, 26).reverse().map(c => parseFloat(c[4]));
+  const bb6 = calculateBollingerBands(closedForBB6, 20);
 
-  // 3. BB của nến số 4 (raw1H[4] -> raw1H[23])
-  const closedForBB4 = raw1H.slice(4, 24).reverse().map(c => parseFloat(c[4]));
-  const bb4 = calculateBollingerBands(closedForBB4, 20);
+  if (!bb1 || !bb6 || bb1.upper === 0 || bb6.upper === 0) return null;
 
-  if (!bb1 || !bb0 || !bb4 || bb1.upper === 0 || bb4.upper === 0) return null;
-
-  // Tính Hbb từ BB nến vừa đóng
+  // Tính Hbb từ BB nến 1 (vừa đóng)
   const hBB = ((bb1.upper - bb1.lower) / bb1.upper) * 100;
 
   // Điều kiện 1: diffbbu1h (-0.5% < diffbbu < 2%)
   const diffbbu1h = ((highPrice0 - bb1.upper) / bb1.upper) * 100;
   const isMatchDiffBBu1h = diffbbu1h > -0.5 && diffbbu1h < 2;
 
-  // Điều kiện 2: diffbbu4 < -1%
-  const diffbbu4 = ((bb0.upper - bb4.upper) / bb4.upper) * 100;
-  const isMatchDiffBBu4 = diffbbu4 < -1;
+  // Điều kiện 2: diffbbu6n (chênh lệch BB Upper nến 1 so với nến 6 < -1%)
+  const diffbbu6n = ((bb1.upper - bb6.upper) / bb6.upper) * 100;
+  const isMatchDiffBBu6n = diffbbu6n < -1;
 
-  if (isMatchDiffBBu1h && isMatchDiffBBu4) {
+  if (isMatchDiffBBu1h && isMatchDiffBBu6n) {
     return {
       diffbbu1h,
-      diffbbu4,
+      diffbbu6n,
       hBB
     };
   }
@@ -189,7 +185,7 @@ async function main() {
         scanResults.matched.push({
           symbol,
           volCcy24h: coin.volCcy24h,
-          diffbbu4: sig.diffbbu4,
+          diffbbu6n: sig.diffbbu6n,
           diffbbu1h: sig.diffbbu1h,
           hBB: sig.hBB,
           teleSent: !isCooldown
@@ -203,7 +199,7 @@ async function main() {
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
           const message = `🔴 <b>${coinName} (SHORT)</b>\n` +
-            `• DiffBBu4: <b>${sig.diffbbu4.toFixed(2)}%</b>\n` +
+            `• DiffBBu6n: <b>${sig.diffbbu6n.toFixed(2)}%</b>\n` +
             `• DiffBBu1h: <b>${sig.diffbbu1h.toFixed(2)}%</b>\n` +
             `• Hbb (BB Width): <b>${sig.hBB.toFixed(2)}%</b>\n` +
             `• Vol 24h: <b>$${(coin.volCcy24h / 1_000_000).toFixed(2)}M</b>\n` +
@@ -237,7 +233,7 @@ async function main() {
       console.table(scanResults.matched.map(item => ({
         'Symbol': item.symbol,
         'Vol 24h ($M)': (item.volCcy24h / 1_000_000).toFixed(2) + 'M',
-        'DiffBBu4 (%)': item.diffbbu4.toFixed(2) + '%',
+        'DiffBBu6n (%)': item.diffbbu6n.toFixed(2) + '%',
         'DiffBBu1h (%)': item.diffbbu1h.toFixed(2) + '%',
         'Hbb (%)': item.hBB.toFixed(2) + '%',
         'Đã gửi Tele': item.teleSent ? 'Có' : 'Bỏ qua (Cooldown)'
