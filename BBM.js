@@ -10,6 +10,7 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
+const RESULTS_FILE = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 2 TIẾNG
 const COOLDOWN_TIME = 2 * 60 * 60 * 1000; 
@@ -40,6 +41,21 @@ function saveSentLog(logData) {
     }
     fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
   } catch (e) {}
+}
+
+// ------------------- HÀM LƯU KẾT QUẢ QUÉT VÀO FILE 24H.JSON -------------------
+function saveScanResults(results) {
+  try {
+    const outputData = {
+      lastScanAt: new Date().toISOString(),
+      totalScanned: results.totalScanned,
+      matchedCount: results.matched.length,
+      matchedList: results.matched
+    };
+    fs.writeFileSync(RESULTS_FILE, JSON.stringify(outputData, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Lỗi khi lưu 24h.json:', e.message);
+  }
 }
 
 // ------------------- HÀM TÍNH BOLLINGER BANDS -------------------
@@ -145,8 +161,15 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
+    // Danh sách lưu kết quả phiên quét
+    const scanResults = {
+      totalScanned: 0,
+      matched: []
+    };
+
     // BƯỚC 1: Lấy coin có Volume > 5M USDT
     const highVolCoins = await getHighVolumeCoins();
+    scanResults.totalScanned = highVolCoins.length;
     console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 5M USDT...`);
 
     // BƯỚC 2: Quét điều kiện Short
@@ -160,6 +183,18 @@ async function main() {
       const sig = checkShortSignal(raw1H);
       if (sig) {
         const symbol = coin.instId;
+        const isCooldown = sentLog[symbol]?._short1h && (currentTime - sentLog[symbol]._short1h < COOLDOWN_TIME);
+
+        // Lưu thông tin kết quả khớp
+        scanResults.matched.push({
+          symbol,
+          volCcy24h: coin.volCcy24h,
+          diffbbu4: sig.diffbbu4,
+          diffbbu1h: sig.diffbbu1h,
+          hBB: sig.hBB,
+          teleSent: !isCooldown
+        });
+
         if (!sentLog[symbol]) sentLog[symbol] = {};
         const lastSent = sentLog[symbol]._short1h || 0;
 
@@ -191,7 +226,26 @@ async function main() {
     }
 
     if (hasNewAlert) saveSentLog(sentLog);
-    console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---');
+
+    // BƯỚC 3: Lưu vào file 24h.json và in kết quả ra console
+    saveScanResults(scanResults);
+
+    console.log('\n================== KẾT QUẢ QUÉT ==================');
+    console.log(`Tổng số coin đã quét: ${scanResults.totalScanned}`);
+    console.log(`Số tín hiệu thỏa điều kiện: ${scanResults.matched.length}`);
+    if (scanResults.matched.length > 0) {
+      console.table(scanResults.matched.map(item => ({
+        'Symbol': item.symbol,
+        'Vol 24h ($M)': (item.volCcy24h / 1_000_000).toFixed(2) + 'M',
+        'DiffBBu4 (%)': item.diffbbu4.toFixed(2) + '%',
+        'DiffBBu1h (%)': item.diffbbu1h.toFixed(2) + '%',
+        'Hbb (%)': item.hBB.toFixed(2) + '%',
+        'Đã gửi Tele': item.teleSent ? 'Có' : 'Bỏ qua (Cooldown)'
+      })));
+    }
+    console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
+    console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
+
   } catch (err) {
     console.error('Lỗi hệ thống trong main():', err.message);
   }
