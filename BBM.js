@@ -161,10 +161,10 @@ function evaluateSignals(raw15m) {
   let normalShort = null;
   let fastShort = null;
 
-  // NHÁNH 1: Short nhanh (diffbbo > 1%)
+  // NHÁNH 1: Short nhanh (diffbbo > 1.5%)
   if (bb0 && bb0.upper > 0) {
     const diffbbo = ((openPrice0 - bb0.upper) / bb0.upper) * 100;
-    if (diffbbo > 1) {
+    if (diffbbo > 1.5) {
       fastShort = { diffbbo };
     }
   }
