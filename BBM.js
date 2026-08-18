@@ -12,9 +12,9 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 2 TIẾNG
-const COOLDOWN_TIME = 2 * 60 * 60 * 1000;
-const MIN_VOLUME_USDT = 5000000; // 5 Triệu USDT
+// Cấu hình Cooldown: 4 TIẾNG
+const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
+const TOP_GAINERS_LIMIT = 50;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -36,6 +36,9 @@ function saveSentLog(logData) {
       const temp = {};
       if (timeData._short15m && now - timeData._short15m < COOLDOWN_TIME) {
         temp._short15m = timeData._short15m;
+      }
+      if (timeData._shortFast15m && now - timeData._shortFast15m < COOLDOWN_TIME) {
+        temp._shortFast15m = timeData._shortFast15m;
       }
       if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
     }
@@ -71,22 +74,30 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// ------------------- LẤY DANH SÁCH COIN VOLUME > 5M USDT -------------------
-async function getHighVolumeCoins() {
+// ------------------- LẤY TOP 50 COIN TĂNG MẠNH NHẤT 24H -------------------
+async function getTopGainers() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
     if (!res.data || res.data.code !== '0') return [];
 
     const tickers = res.data.data;
-    return tickers.filter(item => {
-      if (!item.instId.endsWith('-USDT-SWAP')) return false;
-      const volCcy = parseFloat(item.volCcy24h || 0);
-      return volCcy >= MIN_VOLUME_USDT;
-    }).map(item => ({
-      instId: item.instId,
-      volCcy24h: parseFloat(item.volCcy24h || 0)
-    }));
+    
+    const swapTickers = tickers.filter(item => item.instId.endsWith('-USDT-SWAP'))
+      .map(item => {
+        const last = parseFloat(item.last || 0);
+        const open24h = parseFloat(item.open24h || 0);
+        const change24h = open24h > 0 ? ((last - open24h) / open24h) * 100 : 0;
+        return {
+          instId: item.instId,
+          lastPrice: last,
+          change24h: change24h,
+          volCcy24h: parseFloat(item.volCcy24h || 0)
+        };
+      });
+
+    swapTickers.sort((a, b) => b.change24h - a.change24h);
+    return swapTickers.slice(0, TOP_GAINERS_LIMIT);
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
     return [];
@@ -94,53 +105,63 @@ async function getHighVolumeCoins() {
 }
 
 // ------------------- LẤY DỮ LIỆU NẾN 15M -------------------
-async function getCandleData(symbol) {
+async function getCandleData15m(symbol) {
   try {
-    // Lấy nến 15m (bar=15m)
-    const url15M = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=40`;
-    const res15M = await axios.get(url15M, { timeout: 5000 });
+    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=40`;
+    const res = await axios.get(url, { timeout: 5000 });
 
-    if (!res15M.data || res15M.data.code !== '0' || res15M.data.data.length < 20) return null;
-
-    return res15M.data.data;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 26) return null;
+    return res.data.data;
   } catch (error) {
-    console.error(`Lỗi lấy dữ liệu nến (${symbol}):`, error.message);
+    console.error(`Lỗi lấy dữ liệu nến 15m (${symbol}):`, error.message);
     return null;
   }
 }
 
-// ------------------- KIỂM TRA ĐIỀU KIỆN SHORT 15M -------------------
-function checkShortSignal(raw15M) {
-  if (!raw15M || raw15M.length < 20) return null;
+// ------------------- KIỂM TRA CÁC ĐIỀU KIỆN SHORT -------------------
+function evaluateSignals(raw15m) {
+  if (!raw15m || raw15m.length < 26) return { normalShort: null, fastShort: null };
 
-  // Nến hiện tại raw15M[0]: [ts, open, high, low, close, ...]
-  const candle0 = raw15M[0];
-  const openPrice0 = parseFloat(candle0[1]); // Giá mở cửa nến 15m hiện tại
+  const openPrice0 = parseFloat(raw15m[0][1]);   // Giá mở nến 15m hiện tại
+  const currentPrice = parseFloat(raw15m[0][4]); // Giá nến 15m hiện tại
 
-  // Tính BB(20) bao gồm cả nến hiện tại (từ index 0 đến 19)
-  const closePrices = raw15M.slice(0, 20).reverse().map(c => parseFloat(c[4]));
-  const bb15m = calculateBollingerBands(closePrices, 20);
+  // 1. BB nến 15m hiện tại (raw15m[0] -> raw15m[19])
+  const closedForBB0 = raw15m.slice(0, 20).reverse().map(c => parseFloat(c[4]));
+  const bb0 = calculateBollingerBands(closedForBB0, 20);
 
-  if (!bb15m || bb15m.upper === 0) return null;
+  // 2. BB nến 15m thứ 6 (raw15m[6] -> raw15m[25])
+  const closedForBB6 = raw15m.slice(6, 26).reverse().map(c => parseFloat(c[4]));
+  const bb6 = calculateBollingerBands(closedForBB6, 20);
 
-  // Độ lệch giữa giá mở nến hiện tại và BB Upper
-  const diffbbu15m = ((openPrice0 - bb15m.upper) / bb15m.upper) * 100;
+  let normalShort = null;
+  let fastShort = null;
 
-  if (diffbbu15m > 1) {
-    return {
-      diffbbu15m,
-      openPrice0,
-      upperBB: bb15m.upper
-    };
+  if (bb0 && bb0.upper > 0) {
+    // NHÁNH MỚI: Short nhanh (diffbbo > 1%)
+    // diffbbo = ((Giá mở nến 15m hiện tại - BB Upper nến hiện tại) / BB Upper) * 100
+    const diffbbo = ((openPrice0 - bb0.upper) / bb0.upper) * 100;
+    if (diffbbo > 1) {
+      fastShort = { diffbbo };
+    }
+
+    // NHÁNH CŨ: Short tiêu chuẩn (-0.5% < diffbbu < 2% & diffbbu6n < -0.5%)
+    if (bb6 && bb6.upper > 0) {
+      const diffbbu = ((currentPrice - bb0.upper) / bb0.upper) * 100;
+      const diffbbu6n = ((bb0.upper - bb6.upper) / bb6.upper) * 100;
+
+      if (diffbbu > -0.5 && diffbbu < 2 && diffbbu6n < -0.5) {
+        normalShort = { diffbbu, diffbbu6n };
+      }
+    }
   }
 
-  return null;
+  return { normalShort, fastShort };
 }
 
-// ------------------- HÀM CHÍNH -------------------
+// ------------------- TIẾN TRÌNH CHÍNH -------------------
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU TIẾN TRÌNH QUÉT THỊ TRƯỜNG SHORT (15M) ---');
+    console.log('--- BẮT ĐẦU QUÉT TOP 50 COIN TĂNG TRƯỞNG CHO TÍN HIỆU SHORT ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -151,44 +172,47 @@ async function main() {
       matched: []
     };
 
-    // BƯỚC 1: Lấy coin có Volume > 5M USDT
-    const highVolCoins = await getHighVolumeCoins();
-    scanResults.totalScanned = highVolCoins.length;
-    console.log(`📋 Tìm thấy ${highVolCoins.length} coins có Vol 24h > 5M USDT...`);
+    // BƯỚC 1: Lấy Top 50 coin tăng mạnh nhất 24h
+    const topCoins = await getTopGainers();
+    scanResults.totalScanned = topCoins.length;
+    console.log(`📋 Đã lấy Top ${topCoins.length} coin tăng mạnh nhất 24h...`);
 
-    // BƯỚC 2: Quét điều kiện Short 15m
-    for (const coin of highVolCoins) {
-      const raw15M = await getCandleData(coin.instId);
-      if (!raw15M) {
+    // BƯỚC 2: Quét tín hiệu trên khung 15m
+    for (const coin of topCoins) {
+      const raw15m = await getCandleData15m(coin.instId);
+      if (!raw15m) {
         await sleep(80);
         continue;
       }
 
-      const sig = checkShortSignal(raw15M);
-      if (sig) {
-        const symbol = coin.instId;
-        const isCooldown = sentLog[symbol]?._short15m && (currentTime - sentLog[symbol]._short15m < COOLDOWN_TIME);
+      const { normalShort, fastShort } = evaluateSignals(raw15m);
+      const symbol = coin.instId;
+      const coinName = symbol.replace('-USDT-SWAP', '');
+      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
+      if (!sentLog[symbol]) sentLog[symbol] = {};
+
+      // XỬ LÝ NHÁNH 1: Short tiêu chuẩn
+      if (normalShort) {
+        const lastSent = sentLog[symbol]._short15m || 0;
+        const isCooldown = currentTime - lastSent < COOLDOWN_TIME;
 
         scanResults.matched.push({
           symbol,
-          volCcy24h: coin.volCcy24h,
-          diffbbu15m: sig.diffbbu15m,
+          type: 'SHORT TIÊU CHUẨN',
+          change24h: coin.change24h,
+          diffVal: `diffbbu: ${normalShort.diffbbu.toFixed(2)}% | 6n: ${normalShort.diffbbu6n.toFixed(2)}%`,
           teleSent: !isCooldown
         });
 
-        if (!sentLog[symbol]) sentLog[symbol] = {};
-        const lastSent = sentLog[symbol]._short15m || 0;
-
-        if (currentTime - lastSent >= COOLDOWN_TIME) {
-          const coinName = symbol.replace('-USDT-SWAP', '');
-          const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-
-          // Tin nhắn ngắn gọn theo yêu cầu
-          const message = `🔴 <b>${coinName} SHORT</b>\n` +
-            `• DiffBBu15m: <b>+${sig.diffbbu15m.toFixed(2)}%</b>\n` +
+        if (!isCooldown) {
+          const message = `🔴 <b>${coinName} (SHORT 15M)</b>\n` +
+            `• Tăng 24h: <b>+${coin.change24h.toFixed(2)}%</b>\n` +
+            `• DiffBBu: <b>${normalShort.diffbbu.toFixed(2)}%</b>\n` +
+            `• DiffBBu6n: <b>${normalShort.diffbbu6n.toFixed(2)}%</b>\n` +
             `• <a href="${link}">Trade trên OKX</a>`;
 
-          console.log(`🚀 [SHORT MATCHED] Gửi Telegram cho ${symbol}...`);
+          console.log(`🚀 [SHORT TIÊU CHUẨN] Gửi Telegram cho ${symbol}...`);
           await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
             text: message,
@@ -201,22 +225,54 @@ async function main() {
         }
       }
 
+      // XỬ LÝ NHÁNH 2: Short Nhanh (Độc lập)
+      if (fastShort) {
+        const lastSentFast = sentLog[symbol]._shortFast15m || 0;
+        const isCooldownFast = currentTime - lastSentFast < COOLDOWN_TIME;
+
+        scanResults.matched.push({
+          symbol,
+          type: 'SHORT NHANH',
+          change24h: coin.change24h,
+          diffVal: `diffbbo: ${fastShort.diffbbo.toFixed(2)}%`,
+          teleSent: !isCooldownFast
+        });
+
+        if (!isCooldownFast) {
+          const message = `⚡ <b>Short nhanh ${coinName}</b>\n` +
+            `• DiffBBo: <b>${fastShort.diffbbo.toFixed(2)}%</b>\n` +
+            `• <a href="${link}">Trade trên OKX</a>`;
+
+          console.log(`⚡ [SHORT NHANH] Gửi Telegram cho ${symbol}...`);
+          await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'HTML',
+            disable_web_page_preview: true
+          }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
+
+          sentLog[symbol]._shortFast15m = currentTime;
+          hasNewAlert = true;
+        }
+      }
+
       await sleep(80);
     }
 
     if (hasNewAlert) saveSentLog(sentLog);
 
-    // BƯỚC 3: Lưu kết quả
+    // BƯỚC 3: Lưu và hiển thị bảng kết quả
     saveScanResults(scanResults);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     console.log(`Tổng số coin đã quét: ${scanResults.totalScanned}`);
-    console.log(`Số tín hiệu thỏa điều kiện: ${scanResults.matched.length}`);
+    console.log(`Số tín hiệu thỏa mãn: ${scanResults.matched.length}`);
     if (scanResults.matched.length > 0) {
       console.table(scanResults.matched.map(item => ({
         'Symbol': item.symbol,
-        'Vol 24h ($M)': (item.volCcy24h / 1_000_000).toFixed(2) + 'M',
-        'DiffBBu15m (%)': item.diffbbu15m.toFixed(2) + '%',
+        'Loại': item.type,
+        'Tăng 24h (%)': '+' + item.change24h.toFixed(2) + '%',
+        'Chi tiết chỉ số': item.diffVal,
         'Đã gửi Tele': item.teleSent ? 'Có' : 'Bỏ qua (Cooldown)'
       })));
     }
