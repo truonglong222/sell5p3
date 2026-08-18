@@ -1,6 +1,21 @@
 {
-  "lastScanAt": "2026-08-18T13:40:49.430Z",
+  "lastScanAt": "2026-08-18T13:45:48.370Z",
   "totalScanned": 50,
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "APR-USDT-SWAP",
+      "type": "SHORT NHANH",
+      "change24h": 17.8688524590164,
+      "diffVal": "diffbbo: 1.45%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ONDS-USDT-SWAP",
+      "type": "SHORT NHANH",
+      "change24h": 2.3416289592760267,
+      "diffVal": "diffbbo: 1.51%",
+      "teleSent": true
+    }
+  ]
 }
