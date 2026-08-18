@@ -1,6 +1,14 @@
 {
-  "lastScanAt": "2026-08-18T23:35:28.602Z",
+  "lastScanAt": "2026-08-18T23:40:32.757Z",
   "totalScanned": 20,
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "EDEN-USDT-SWAP",
+      "type": "SHORT EMA",
+      "change24h": 7.515789473684204,
+      "diffVal": "diffema20: -4.47% | diffema15m: -0.41%",
+      "teleSent": false
+    }
+  ]
 }
