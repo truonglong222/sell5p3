@@ -110,7 +110,7 @@ async function getCandleData15m(symbol) {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=40`;
     const res = await axios.get(url, { timeout: 5000 });
 
-    if (!res.data || res.data.code !== '0' || res.data.data.length < 26) return null;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 24) return null;
     return res.data.data;
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến 15m (${symbol}):`, error.message);
@@ -120,18 +120,19 @@ async function getCandleData15m(symbol) {
 
 // ------------------- KIỂM TRA CÁC ĐIỀU KIỆN SHORT -------------------
 function evaluateSignals(raw15m) {
-  if (!raw15m || raw15m.length < 26) return { normalShort: null, fastShort: null };
+  if (!raw15m || raw15m.length < 24) return { normalShort: null, fastShort: null };
 
-  const openPrice0 = parseFloat(raw15m[0][1]); // Giá mở nến 15m hiện tại
-  const highPrice0 = parseFloat(raw15m[0][2]); // Giá cao nhất nến 15m hiện tại
+  const openPrice0 = parseFloat(raw15m[0][1]);   // Giá mở cửa nến 15m hiện tại
+  const highPrice0 = parseFloat(raw15m[0][2]);   // Giá cao nhất nến 15m hiện tại
+  const currentPrice = parseFloat(raw15m[0][4]); // Giá hiện tại (Close) nến 15m
 
   // 1. BB nến 15m hiện tại (raw15m[0] -> raw15m[19])
   const closedForBB0 = raw15m.slice(0, 20).reverse().map(c => parseFloat(c[4]));
   const bb0 = calculateBollingerBands(closedForBB0, 20);
 
-  // 2. BB nến 15m thứ 6 (raw15m[6] -> raw15m[25])
-  const closedForBB6 = raw15m.slice(6, 26).reverse().map(c => parseFloat(c[4]));
-  const bb6 = calculateBollingerBands(closedForBB6, 20);
+  // 2. BB nến 15m thứ 4 (raw15m[4] -> raw15m[23])
+  const closedForBB4 = raw15m.slice(4, 24).reverse().map(c => parseFloat(c[4]));
+  const bb4 = calculateBollingerBands(closedForBB4, 20);
 
   let normalShort = null;
   let fastShort = null;
@@ -143,14 +144,17 @@ function evaluateSignals(raw15m) {
       fastShort = { diffbbo };
     }
 
-    // NHÁNH 2: Short tiêu chuẩn (-0.5% < diffbbu < 2% & diffbbu6n < -0.5%)
-    // Tính diffbbu theo giá High của nến 15m hiện tại
-    if (bb6 && bb6.upper > 0) {
+    // NHÁNH 2: Short tiêu chuẩn
+    // - Nến 15m hiện tại đang giảm (currentPrice < openPrice0)
+    // - -0.5% < diffbbu < 2%
+    // - diffbbu4n < -1%
+    if (bb4 && bb4.upper > 0) {
+      const isBearishCandle = currentPrice < openPrice0;
       const diffbbu = ((highPrice0 - bb0.upper) / bb0.upper) * 100;
-      const diffbbu6n = ((bb0.upper - bb6.upper) / bb6.upper) * 100;
+      const diffbbu4n = ((bb0.upper - bb4.upper) / bb4.upper) * 100;
 
-      if (diffbbu > -0.5 && diffbbu < 2 && diffbbu6n < -0.5) {
-        normalShort = { diffbbu, diffbbu6n };
+      if (isBearishCandle && diffbbu > -0.5 && diffbbu < 2 && diffbbu4n < -1) {
+        normalShort = { diffbbu, diffbbu4n };
       }
     }
   }
@@ -201,15 +205,16 @@ async function main() {
           symbol,
           type: 'SHORT TIÊU CHUẨN',
           change24h: coin.change24h,
-          diffVal: `diffbbu: ${normalShort.diffbbu.toFixed(2)}% | 6n: ${normalShort.diffbbu6n.toFixed(2)}%`,
+          diffVal: `diffbbu: ${normalShort.diffbbu.toFixed(2)}% | 4n: ${normalShort.diffbbu4n.toFixed(2)}%`,
           teleSent: !isCooldown
         });
 
         if (!isCooldown) {
           const message = `🔴 <b>${coinName} (SHORT 15M)</b>\n` +
             `• Tăng 24h: <b>+${coin.change24h.toFixed(2)}%</b>\n` +
+            `• Nến 15m: <b>Đang giảm 🔻</b>\n` +
             `• DiffBBu (High): <b>${normalShort.diffbbu.toFixed(2)}%</b>\n` +
-            `• DiffBBu6n: <b>${normalShort.diffbbu6n.toFixed(2)}%</b>\n` +
+            `• DiffBBu4n: <b>${normalShort.diffbbu4n.toFixed(2)}%</b>\n` +
             `• <a href="${link}">Trade trên OKX</a>`;
 
           console.log(`🚀 [SHORT TIÊU CHUẨN] Gửi Telegram cho ${symbol}...`);
