@@ -122,8 +122,8 @@ async function getCandleData15m(symbol) {
 function evaluateSignals(raw15m) {
   if (!raw15m || raw15m.length < 26) return { normalShort: null, fastShort: null };
 
-  const openPrice0 = parseFloat(raw15m[0][1]);   // Giá mở nến 15m hiện tại
-  const currentPrice = parseFloat(raw15m[0][4]); // Giá nến 15m hiện tại
+  const openPrice0 = parseFloat(raw15m[0][1]); // Giá mở nến 15m hiện tại
+  const highPrice0 = parseFloat(raw15m[0][2]); // Giá cao nhất nến 15m hiện tại
 
   // 1. BB nến 15m hiện tại (raw15m[0] -> raw15m[19])
   const closedForBB0 = raw15m.slice(0, 20).reverse().map(c => parseFloat(c[4]));
@@ -137,16 +137,16 @@ function evaluateSignals(raw15m) {
   let fastShort = null;
 
   if (bb0 && bb0.upper > 0) {
-    // NHÁNH MỚI: Short nhanh (diffbbo > 1%)
-    // diffbbo = ((Giá mở nến 15m hiện tại - BB Upper nến hiện tại) / BB Upper) * 100
+    // NHÁNH 1: Short nhanh (diffbbo > 1%)
     const diffbbo = ((openPrice0 - bb0.upper) / bb0.upper) * 100;
     if (diffbbo > 1) {
       fastShort = { diffbbo };
     }
 
-    // NHÁNH CŨ: Short tiêu chuẩn (-0.5% < diffbbu < 2% & diffbbu6n < -0.5%)
+    // NHÁNH 2: Short tiêu chuẩn (-0.5% < diffbbu < 2% & diffbbu6n < -0.5%)
+    // Tính diffbbu theo giá High của nến 15m hiện tại
     if (bb6 && bb6.upper > 0) {
-      const diffbbu = ((currentPrice - bb0.upper) / bb0.upper) * 100;
+      const diffbbu = ((highPrice0 - bb0.upper) / bb0.upper) * 100;
       const diffbbu6n = ((bb0.upper - bb6.upper) / bb6.upper) * 100;
 
       if (diffbbu > -0.5 && diffbbu < 2 && diffbbu6n < -0.5) {
@@ -192,7 +192,7 @@ async function main() {
 
       if (!sentLog[symbol]) sentLog[symbol] = {};
 
-      // XỬ LÝ NHÁNH 1: Short tiêu chuẩn
+      // Xử lý tín hiệu Short Tiêu chuẩn
       if (normalShort) {
         const lastSent = sentLog[symbol]._short15m || 0;
         const isCooldown = currentTime - lastSent < COOLDOWN_TIME;
@@ -208,7 +208,7 @@ async function main() {
         if (!isCooldown) {
           const message = `🔴 <b>${coinName} (SHORT 15M)</b>\n` +
             `• Tăng 24h: <b>+${coin.change24h.toFixed(2)}%</b>\n` +
-            `• DiffBBu: <b>${normalShort.diffbbu.toFixed(2)}%</b>\n` +
+            `• DiffBBu (High): <b>${normalShort.diffbbu.toFixed(2)}%</b>\n` +
             `• DiffBBu6n: <b>${normalShort.diffbbu6n.toFixed(2)}%</b>\n` +
             `• <a href="${link}">Trade trên OKX</a>`;
 
@@ -225,7 +225,7 @@ async function main() {
         }
       }
 
-      // XỬ LÝ NHÁNH 2: Short Nhanh (Độc lập)
+      // Xử lý tín hiệu Short Nhanh
       if (fastShort) {
         const lastSentFast = sentLog[symbol]._shortFast15m || 0;
         const isCooldownFast = currentTime - lastSentFast < COOLDOWN_TIME;
@@ -261,7 +261,7 @@ async function main() {
 
     if (hasNewAlert) saveSentLog(sentLog);
 
-    // BƯỚC 3: Lưu và hiển thị bảng kết quả
+    // BƯỚC 3: Lưu và hiển thị kết quả quét
     saveScanResults(scanResults);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
