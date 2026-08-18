@@ -1,13 +1,20 @@
 {
-  "lastScanAt": "2026-08-18T10:05:34.467Z",
+  "lastScanAt": "2026-08-18T10:10:43.288Z",
   "totalScanned": 50,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "CAP-USDT-SWAP",
+      "type": "SHORT TIÊU CHUẨN",
+      "change24h": 7.470551766893994,
+      "diffVal": "diffbbu: 0.02% | 6n: -1.59%",
+      "teleSent": true
+    },
     {
       "symbol": "EGLD-USDT-SWAP",
       "type": "SHORT TIÊU CHUẨN",
-      "change24h": 4.36598329536827,
-      "diffVal": "diffbbu: -0.23% | 6n: -1.29%",
+      "change24h": 4.819734345351052,
+      "diffVal": "diffbbu: 0.13% | 6n: -1.18%",
       "teleSent": false
     }
   ]
