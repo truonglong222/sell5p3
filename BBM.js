@@ -14,7 +14,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 4 TIẾNG
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
-const TOP_GAINERS_LIMIT = 20; // Top 20 coin tăng mạnh nhất
+const TOP_GAINERS_LIMIT = 50; // Top 50 coin tăng mạnh nhất
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -99,7 +99,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LẤY TOP 20 COIN TĂNG MẠNH NHẤT 24H -------------------
+// ------------------- LẤY TOP 50 COIN TĂNG MẠNH NHẤT 24H -------------------
 async function getTopGainers() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -161,7 +161,7 @@ function evaluateSignals(raw15m) {
   let normalShort = null;
   let fastShort = null;
 
-  // NHÁNH 1: Short nhanh (diffbbo > 1.5%)
+  // NHÁNH 1: Short nhanh (diffbbo > 1.3%)
   if (bb0 && bb0.upper > 0) {
     const diffbbo = ((openPrice0 - bb0.upper) / bb0.upper) * 100;
     if (diffbbo > 1.3) {
@@ -202,7 +202,7 @@ function evaluateSignals(raw15m) {
 // ------------------- TIẾN TRÌNH CHÍNH -------------------
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT TOP 20 COIN TĂNG TRƯỞNG CHO TÍN HIỆU SHORT ---');
+    console.log('--- BẮT ĐẦU QUÉT TOP 50 COIN TĂNG TRƯỞNG CHO TÍN HIỆU SHORT ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -213,7 +213,7 @@ async function main() {
       matched: []
     };
 
-    // BƯỚC 1: Lấy Top 20 coin tăng mạnh nhất 24h
+    // BƯỚC 1: Lấy Top 50 coin tăng mạnh nhất 24h
     const topCoins = await getTopGainers();
     scanResults.totalScanned = topCoins.length;
     console.log(`📋 Đã lấy Top ${topCoins.length} coin tăng mạnh nhất 24h...`);
