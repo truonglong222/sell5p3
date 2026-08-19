@@ -164,7 +164,7 @@ function evaluateSignals(raw15m) {
   // NHÁNH 1: Short nhanh (diffbbo > 1.5%)
   if (bb0 && bb0.upper > 0) {
     const diffbbo = ((openPrice0 - bb0.upper) / bb0.upper) * 100;
-    if (diffbbo > 1.5) {
+    if (diffbbo > 1.3) {
       fastShort = { diffbbo };
     }
   }
