@@ -1,6 +1,21 @@
 {
-  "lastScanAt": "2026-08-19T12:15:47.864Z",
+  "lastScanAt": "2026-08-19T12:31:03.792Z",
   "totalScanned": 50,
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "MVLL-USDT-SWAP",
+      "type": "SHORT NHANH",
+      "change24h": 13.363028953229389,
+      "diffVal": "diffbbo: 5.34%",
+      "teleSent": true
+    },
+    {
+      "symbol": "MRVL-USDT-SWAP",
+      "type": "SHORT NHANH",
+      "change24h": 6.982668425601599,
+      "diffVal": "diffbbo: 2.92%",
+      "teleSent": true
+    }
+  ]
 }
