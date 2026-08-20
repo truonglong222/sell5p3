@@ -1,34 +1,43 @@
 {
-  "lastScanAt": "2026-08-20T01:06:25.075Z",
+  "lastScanAt": "2026-08-20T01:07:22.976Z",
   "totalScanned": 20,
-  "matchedCount": 3,
+  "matchedCount": 4,
   "matchedList": [
     {
       "rank": 1,
       "symbol": "RE-USDT-SWAP",
-      "change24h": 36.9902790051761,
-      "diffbbu6": "-0.30%",
-      "x": "-5.85",
-      "diffbbu": "-1.24%",
+      "change24h": 37.755205174853444,
+      "diffbbu6": "-0.52%",
+      "x": "-6.19",
+      "diffbbu": "-0.54%",
+      "teleSent": false
+    },
+    {
+      "rank": 5,
+      "symbol": "BMNR-USDT-SWAP",
+      "change24h": 18.107667210440447,
+      "diffbbu6": "-0.27%",
+      "x": "-6.62",
+      "diffbbu": "-1.07%",
       "teleSent": true
     },
     {
-      "rank": 14,
+      "rank": 15,
       "symbol": "BRETT-USDT-SWAP",
-      "change24h": 13.844893500819227,
-      "diffbbu6": "-0.58%",
-      "x": "-12.66",
-      "diffbbu": "-0.80%",
-      "teleSent": true
+      "change24h": 13.786513786513781,
+      "diffbbu6": "-0.63%",
+      "x": "-13.93",
+      "diffbbu": "-0.72%",
+      "teleSent": false
     },
     {
-      "rank": 16,
+      "rank": 17,
       "symbol": "ETHW-USDT-SWAP",
-      "change24h": 13.330581923235668,
-      "diffbbu6": "-1.11%",
-      "x": "-6.24",
-      "diffbbu": "0.24%",
-      "teleSent": true
+      "change24h": 13.253509496284058,
+      "diffbbu6": "-0.87%",
+      "x": "-6.82",
+      "diffbbu": "0.17%",
+      "teleSent": false
     }
   ]
 }
