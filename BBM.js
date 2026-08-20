@@ -127,12 +127,11 @@ async function getTopGainers() {
 // ------------------- LẤY DỮ LIỆU NẾN 1M -------------------
 async function getCandleData1m(symbol) {
   try {
-    // Lấy 80 nến 1m để đảm bảo đủ dữ liệu tính chuỗi EMA20 và phân tích 30 nến gần nhất
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=80`;
     const res = await axios.get(url, { timeout: 5000 });
 
     if (!res.data || res.data.code !== '0' || res.data.data.length < 50) return null;
-    return res.data.data; // Mảng nến theo thứ tự [nến 0 (mới nhất), nến 1, nến 2, ...]
+    return res.data.data;
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến 1m (${symbol}):`, error.message);
     return null;
@@ -145,23 +144,21 @@ function evaluateShort1m(raw1m) {
 
   const currentCandle = raw1m[0];
   const high0 = parseFloat(currentCandle[2]);
-  const lastPrice0 = parseFloat(currentCandle[4]);
 
   // Chuẩn bị mảng giá đóng cửa từ cũ -> mới để tính EMA và BB
   const closedAsc = raw1m.slice().reverse().map(c => parseFloat(c[4]));
 
   // 1. Tính Bollinger Bands cho nến hiện tại
   const bb0 = calculateBollingerBands(closedAsc, 20);
-  if (!bb0 || bb0.upper <= 0 || lastPrice0 <= 0) return null;
+  if (!bb0 || bb0.upper <= 0 || high0 <= 0) return null;
 
-  // diffbbu = (High hiện tại - BB Upper hiện tại) / Giá hiện tại
-  const diffbbu = ((high0 - bb0.upper) / lastPrice0) * 100;
+  // diffbbu = (High hiện tại - BB Upper hiện tại) / High hiện tại
+  const diffbbu = ((high0 - bb0.upper) / high0) * 100;
 
   // 2. Tính chuỗi EMA20 và diffema20
   const emaSeries = calculateEMAArray(closedAsc, 20);
   if (emaSeries.length < 21) return null;
 
-  // emaSeries phần tử cuối là nến hiện tại (idx 0), lùi lại 20 nến là nến thứ 20
   const currentEMA20 = emaSeries[emaSeries.length - 1];
   const ema20Candle20 = emaSeries[emaSeries.length - 1 - 20];
 
@@ -178,7 +175,7 @@ function evaluateShort1m(raw1m) {
     const l = parseFloat(c[3]);
     return o > 0 ? ((l - o) / o) * 100 : 0;
   });
-  const maxDrop = Math.min(...dropPercentages); // Giá trị âm lớn nhất
+  const maxDrop = Math.min(...dropPercentages);
 
   // Trung bình trị tuyệt đối biến động thân nến (|Close - Open| / Open * 100) của 10 nến gần nhất
   const last10Candles = raw1m.slice(0, 10);
@@ -192,12 +189,12 @@ function evaluateShort1m(raw1m) {
   const x = avgAbsRange10 > 0 ? maxDrop / avgAbsRange10 : 0;
 
   // 4. Kiểm tra các điều kiện:
-  // - diffema20 < -2%
+  // - diffema20 < -1%
   // - x < -3
-  // - -2% < diffbbu < 2%
-  const isMatchDiffEMA20 = diffema20 < -2;
+  // - -1% < diffbbu < 2%
+  const isMatchDiffEMA20 = diffema20 < -1;
   const isMatchX = x < -3;
-  const isMatchDiffbbu = diffbbu > -2 && diffbbu < 2;
+  const isMatchDiffbbu = diffbbu > -1 && diffbbu < 2;
 
   if (isMatchDiffEMA20 && isMatchX && isMatchDiffbbu) {
     return { diffema20, x, diffbbu };
@@ -228,7 +225,7 @@ async function main() {
     // BƯỚC 2: Quét tín hiệu trên khung 1m
     for (let i = 0; i < topCoins.length; i++) {
       const coin = topCoins[i];
-      const rank = i + 1; // Thứ tự Top
+      const rank = i + 1;
       const raw1m = await getCandleData1m(coin.instId);
       if (!raw1m) {
         await sleep(80);
