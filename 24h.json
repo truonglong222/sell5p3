@@ -1,148 +1,32 @@
 {
-  "lastScanAt": "2026-08-20T09:58:24.626Z",
-  "totalTopGainers": 20,
-  "topGainers": [
-    {
-      "rank": 1,
-      "symbol": "BOME-USDT-SWAP",
-      "lastPrice": 0.0011921,
-      "change24h": "+58.69%",
-      "volCcy24h": 79479696000
-    },
-    {
-      "rank": 2,
-      "symbol": "USELESS-USDT-SWAP",
-      "lastPrice": 0.0487,
-      "change24h": "+33.98%",
-      "volCcy24h": 102485270
-    },
-    {
-      "rank": 3,
-      "symbol": "RE-USDT-SWAP",
-      "lastPrice": 0.52533,
-      "change24h": "+31.02%",
-      "volCcy24h": 230414300
-    },
-    {
-      "rank": 4,
-      "symbol": "BIO-USDT-SWAP",
-      "lastPrice": 0.03269,
-      "change24h": "+30.45%",
-      "volCcy24h": 554881773
-    },
-    {
-      "rank": 5,
-      "symbol": "HYPE-USDT-SWAP",
-      "lastPrice": 73.165,
-      "change24h": "+25.56%",
-      "volCcy24h": 12071838.2
-    },
-    {
-      "rank": 6,
-      "symbol": "MET-USDT-SWAP",
-      "lastPrice": 0.2141,
-      "change24h": "+24.26%",
-      "volCcy24h": 112025344
-    },
-    {
-      "rank": 7,
-      "symbol": "EDGE-USDT-SWAP",
-      "lastPrice": 0.349,
-      "change24h": "+23.67%",
-      "volCcy24h": 22614950
-    },
-    {
-      "rank": 8,
-      "symbol": "LIT-USDT-SWAP",
-      "lastPrice": 2.828,
-      "change24h": "+23.65%",
-      "volCcy24h": 23320434
-    },
-    {
-      "rank": 9,
-      "symbol": "MSTR-USDT-SWAP",
-      "lastPrice": 114.14,
-      "change24h": "+22.73%",
-      "volCcy24h": 645226.38
-    },
-    {
-      "rank": 10,
-      "symbol": "PNUT-USDT-SWAP",
-      "lastPrice": 0.05012,
-      "change24h": "+22.66%",
-      "volCcy24h": 210676950
-    },
-    {
-      "rank": 11,
-      "symbol": "MVLL-USDT-SWAP",
-      "lastPrice": 30.76,
-      "change24h": "+22.26%",
-      "volCcy24h": 617424.9
-    },
-    {
-      "rank": 12,
-      "symbol": "NEIRO-USDT-SWAP",
-      "lastPrice": 0.00007524,
-      "change24h": "+20.10%",
-      "volCcy24h": 37441131000
-    },
-    {
-      "rank": 13,
-      "symbol": "PEPE-USDT-SWAP",
-      "lastPrice": 0.000003084,
-      "change24h": "+19.40%",
-      "volCcy24h": 83600179000000
-    },
-    {
-      "rank": 14,
-      "symbol": "BMNR-USDT-SWAP",
-      "lastPrice": 21.94,
-      "change24h": "+19.37%",
-      "volCcy24h": 191700.1
-    },
-    {
-      "rank": 15,
-      "symbol": "SPX-USDT-SWAP",
-      "lastPrice": 0.3829,
-      "change24h": "+18.99%",
-      "volCcy24h": 3121462
-    },
-    {
-      "rank": 16,
-      "symbol": "ORDI-USDT-SWAP",
-      "lastPrice": 4.02,
-      "change24h": "+18.93%",
-      "volCcy24h": 3996481.3
-    },
-    {
-      "rank": 17,
-      "symbol": "ETH-USDT-SWAP",
-      "lastPrice": 2277.86,
-      "change24h": "+18.72%",
-      "volCcy24h": 8536889.912
-    },
-    {
-      "rank": 18,
-      "symbol": "BRETT-USDT-SWAP",
-      "lastPrice": 0.004326,
-      "change24h": "+18.72%",
-      "volCcy24h": 107574700
-    },
-    {
-      "rank": 19,
-      "symbol": "CRCL-USDT-SWAP",
-      "lastPrice": 84.5,
-      "change24h": "+18.41%",
-      "volCcy24h": 1003342.1
-    },
-    {
-      "rank": 20,
-      "symbol": "TRUMP-USDT-SWAP",
-      "lastPrice": 1.666,
-      "change24h": "+18.16%",
-      "volCcy24h": 148202131.9
-    }
-  ],
-  "matchedCount": 0,
-  "matchedList": []
+  "updatedAt": "2026-08-20T10:00:14.321Z",
+  "counts": {
+    "groupBelowNeg8": 4,
+    "groupNeg8ToNeg4": 0
+  },
+  "data": {
+    "groupBelowNeg8": [
+      {
+        "symbol": "H-USDT-SWAP",
+        "diffEMA": -15.1,
+        "volCcy24h": 297023320
+      },
+      {
+        "symbol": "TRIA-USDT-SWAP",
+        "diffEMA": -10.12,
+        "volCcy24h": 1475164900
+      },
+      {
+        "symbol": "GPS-USDT-SWAP",
+        "diffEMA": -12.49,
+        "volCcy24h": 3975202930
+      },
+      {
+        "symbol": "BEAT-USDT-SWAP",
+        "diffEMA": -24.94,
+        "volCcy24h": 617336593
+      }
+    ],
+    "groupNeg8ToNeg4": []
+  }
 }
