@@ -124,10 +124,10 @@ async function getTopGainers() {
   }
 }
 
-// ------------------- LẤY DỮ LIỆU NẾN 1M -------------------
+// ------------------- LẤY DỮ LIỆU NẾN 1M (100 NẾN) -------------------
 async function getCandleData1m(symbol) {
   try {
-    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=80`;
+    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=100`;
     const res = await axios.get(url, { timeout: 5000 });
 
     if (!res.data || res.data.code !== '0' || res.data.data.length < 50) return null;
@@ -188,16 +188,26 @@ function evaluateShort1m(raw1m) {
 
   const x = avgAbsRange10 > 0 ? maxDrop / avgAbsRange10 : 0;
 
-  // 4. Kiểm tra các điều kiện:
+  // 4. Tính diffgia theo nến số 1 và nến cuối cùng của mảng nến
+  const closeCandle1 = parseFloat(raw1m[1][4]);
+  const lastCandleIndex = raw1m.length - 1;
+  const closeLastCandle = parseFloat(raw1m[lastCandleIndex][4]);
+
+  if (closeCandle1 <= 0) return null;
+  const diffgia = ((closeCandle1 - closeLastCandle) / closeCandle1) * 100;
+
+  // 5. Kiểm tra các điều kiện:
   // - diffema20 < -1%
   // - x < -3
   // - -1% < diffbbu < 2%
+  // - diffgia > -1%
   const isMatchDiffEMA20 = diffema20 < -1;
   const isMatchX = x < -3;
   const isMatchDiffbbu = diffbbu > -1 && diffbbu < 2;
+  const isMatchDiffgia = diffgia > -1;
 
-  if (isMatchDiffEMA20 && isMatchX && isMatchDiffbbu) {
-    return { diffema20, x, diffbbu };
+  if (isMatchDiffEMA20 && isMatchX && isMatchDiffbbu && isMatchDiffgia) {
+    return { diffema20, x, diffbbu, diffgia };
   }
 
   return null;
@@ -250,6 +260,7 @@ async function main() {
           diffema20: signal.diffema20.toFixed(2) + '%',
           x: signal.x.toFixed(2),
           diffbbu: signal.diffbbu.toFixed(2) + '%',
+          diffgia: signal.diffgia.toFixed(2) + '%',
           teleSent: !isCooldown
         });
 
@@ -260,6 +271,7 @@ async function main() {
             `• DiffEMA20: <b>${signal.diffema20.toFixed(2)}%</b>\n` +
             `• Giá trị X: <b>${signal.x.toFixed(2)}</b>\n` +
             `• DiffBBU: <b>${signal.diffbbu.toFixed(2)}%</b>\n` +
+            `• DiffGia: <b>${signal.diffgia.toFixed(2)}%</b>\n` +
             `• <a href="${link}">Trade trên OKX</a>`;
 
           console.log(`🚀 [SHORT 1M] Gửi Telegram cho ${symbol} (Top #${rank})...`);
@@ -294,6 +306,7 @@ async function main() {
         'DiffEMA20': item.diffema20,
         'Hệ số X': item.x,
         'DiffBBU': item.diffbbu,
+        'DiffGia': item.diffgia,
         'Đã gửi Tele': item.teleSent ? 'Có' : 'Bỏ qua (Cooldown)'
       })));
     }
