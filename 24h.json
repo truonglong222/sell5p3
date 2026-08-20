@@ -1,15 +1,24 @@
 {
-  "lastScanAt": "2026-08-20T04:52:24.561Z",
+  "lastScanAt": "2026-08-20T04:53:21.214Z",
   "totalScanned": 20,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "rank": 11,
+      "rank": 3,
+      "symbol": "MET-USDT-SWAP",
+      "change24h": 21.461187214611872,
+      "diffema20": "-2.85%",
+      "x": "-5.63",
+      "diffbbu": "-0.60%",
+      "teleSent": false
+    },
+    {
+      "rank": 12,
       "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": 17.793946449359723,
-      "diffema20": "-1.58%",
-      "x": "-4.31",
-      "diffbbu": "-0.73%",
+      "change24h": 17.81508686020753,
+      "diffema20": "-1.51%",
+      "x": "-4.41",
+      "diffbbu": "-0.72%",
       "teleSent": false
     }
   ]
