@@ -1,15 +1,24 @@
 {
-  "lastScanAt": "2026-08-20T05:50:33.970Z",
+  "lastScanAt": "2026-08-20T05:51:22.317Z",
   "totalScanned": 20,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "rank": 1,
+      "symbol": "RE-USDT-SWAP",
+      "change24h": 33.409605100781576,
+      "diffema20": "-1.03%",
+      "x": "-8.62",
+      "diffbbu": "-0.86%",
+      "teleSent": true
+    },
     {
       "rank": 5,
       "symbol": "MET-USDT-SWAP",
-      "change24h": 21.12117780294451,
-      "diffema20": "-1.29%",
-      "x": "-3.81",
-      "diffbbu": "-0.82%",
+      "change24h": 21.1092246745897,
+      "diffema20": "-1.18%",
+      "x": "-3.75",
+      "diffbbu": "-0.64%",
       "teleSent": false
     }
   ]
