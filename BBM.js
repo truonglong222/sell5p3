@@ -204,7 +204,7 @@ function evaluateShort1m(raw1m) {
   const isMatchDiffEMA20 = diffema20 < -1;
   const isMatchX = x < -3;
   const isMatchDiffbbu = diffbbu > -1 && diffbbu < 2;
-  const isMatchDiffgia = diffgia > -1;
+  const isMatchDiffgia = diffgia > 1;
 
   if (isMatchDiffEMA20 && isMatchX && isMatchDiffbbu && isMatchDiffgia) {
     return { diffema20, x, diffbbu, diffgia };
