@@ -47,7 +47,8 @@ function saveScanResults(results) {
   try {
     const outputData = {
       lastScanAt: new Date().toISOString(),
-      totalScanned: results.totalScanned,
+      totalTopGainers: results.topGainers.length,
+      topGainers: results.topGainers,
       matchedCount: results.matched.length,
       matchedList: results.matched
     };
@@ -72,7 +73,6 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
 }
 
 // ------------------- HÀM TÍNH CHUỖI EMA -------------------
-// prices: mảng giá theo thứ tự thời gian tăng dần [cũ nhất -> mới nhất]
 function calculateEMAArray(prices, period = 20) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
@@ -197,14 +197,14 @@ function evaluateShort1m(raw1m) {
   const diffgia = ((closeCandle1 - closeLastCandle) / closeCandle1) * 100;
 
   // 5. Kiểm tra các điều kiện:
-  // - diffema20 < -1%
+  // - diffema20 < -2%
   // - x < -3
   // - -1% < diffbbu < 2%
   // - diffgia > -1%
-  const isMatchDiffEMA20 = diffema20 < -1;
+  const isMatchDiffEMA20 = diffema20 < -2;
   const isMatchX = x < -3;
   const isMatchDiffbbu = diffbbu > -1 && diffbbu < 2;
-  const isMatchDiffgia = diffgia > 1;
+  const isMatchDiffgia = diffgia > -1;
 
   if (isMatchDiffEMA20 && isMatchX && isMatchDiffbbu && isMatchDiffgia) {
     return { diffema20, x, diffbbu, diffgia };
@@ -222,15 +222,20 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    const scanResults = {
-      totalScanned: 0,
-      matched: []
-    };
-
     // BƯỚC 1: Lấy Top 20 coin tăng mạnh nhất 24h
     const topCoins = await getTopGainers();
-    scanResults.totalScanned = topCoins.length;
     console.log(`📋 Đã lấy Top ${topCoins.length} coin tăng mạnh nhất 24h...`);
+
+    const scanResults = {
+      topGainers: topCoins.map((coin, idx) => ({
+        rank: idx + 1,
+        symbol: coin.instId,
+        lastPrice: coin.lastPrice,
+        change24h: '+' + coin.change24h.toFixed(2) + '%',
+        volCcy24h: coin.volCcy24h
+      })),
+      matched: []
+    };
 
     // BƯỚC 2: Quét tín hiệu trên khung 1m
     for (let i = 0; i < topCoins.length; i++) {
@@ -292,11 +297,11 @@ async function main() {
 
     if (hasNewAlert) saveSentLog(sentLog);
 
-    // BƯỚC 3: Lưu và hiển thị bảng kết quả
+    // BƯỚC 3: Lưu file 24h.json chứa Top 20 và danh sách tín hiệu
     saveScanResults(scanResults);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
-    console.log(`Tổng số coin đã quét: ${scanResults.totalScanned}`);
+    console.log(`Tổng số coin Top Gainer đã lưu: ${scanResults.topGainers.length}`);
     console.log(`Số tín hiệu thỏa mãn: ${scanResults.matched.length}`);
     if (scanResults.matched.length > 0) {
       console.table(scanResults.matched.map(item => ({
