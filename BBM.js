@@ -9,7 +9,7 @@ const OKX_BASE_URL = 'https://www.okx.com';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_FILE = path.join(__dirname, 'sent_top3.json');
+const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown: 15 PHÚT
 const COOLDOWN_TIME = 15 * 60 * 1000;
@@ -33,6 +33,7 @@ function saveSentLog(logData) {
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
             for (const [key, timestamp] of Object.entries(timeData)) {
+                // Giữ lại các lệnh vẫn còn trong thời gian cooldown 15m
                 if (now - timestamp < COOLDOWN_TIME) {
                     temp[key] = timestamp;
                 }
@@ -40,7 +41,10 @@ function saveSentLog(logData) {
             if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
         }
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
-    } catch (e) {}
+        console.log(`💾 Đã cập nhật log gửi tin vào ${DB_FILE}`);
+    } catch (e) {
+        console.error('Lỗi khi ghi file sent_ema.json:', e.message);
+    }
 }
 
 // ------------------- HÀM TÍNH TOÁN EMA & BOLLINGER BANDS -------------------
@@ -92,7 +96,7 @@ async function getEma10n5m(symbol) {
     }
 }
 
-// ------------------- LẤY TOP 3 TĂNG VÀ TOP 3 GIẢM 24H (KHÔNG LỌC VOL) -------------------
+// ------------------- LẤY TOP 3 TĂNG VÀ TOP 3 GIẢM 24H -------------------
 async function getTopGainersAndLosers() {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -141,6 +145,7 @@ async function checkCoinSignal(symbol, type, rank) {
         const ema10n = await getEma10n5m(symbol);
         if (ema10n === null) return null;
 
+        // Lọc ema10n theo loại lệnh
         if (type === 'LONG' && ema10n <= 0.5) return null;
         if (type === 'SHORT' && ema10n >= -0.5) return null;
 
@@ -198,7 +203,7 @@ async function checkCoinSignal(symbol, type, rank) {
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẮT ĐẦU QUÉT TOP 3 TĂNG/GIẢM TOÀN BỘ SÀN (1M BB + 5M EMA10N) ---');
+        console.log('--- BẮT ĐẦU QUÉT TOP 3 TĂNG/GIẢM (LƯU VÀO sent_ema.json) ---');
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
@@ -213,6 +218,7 @@ async function main() {
             if (!sentLog[signal.symbol]) sentLog[signal.symbol] = {};
             const lastSent = sentLog[signal.symbol][cooldownKey] || 0;
 
+            // Kiểm tra cooldown 15 phút
             if (currentTime - lastSent >= COOLDOWN_TIME) {
                 const coinName = signal.symbol.replace('-USDT-SWAP', '');
                 const icon = signal.type === 'LONG' ? '🟢' : '🔴';
@@ -236,22 +242,31 @@ async function main() {
 
                 sentLog[signal.symbol][cooldownKey] = currentTime;
                 hasNewAlert = true;
+            } else {
+                const remainMin = Math.ceil((COOLDOWN_TIME - (currentTime - lastSent)) / 60000);
+                console.log(`⏳ Bỏ qua ${signal.symbol} (${signal.type}) - Đang cooldown (còn ${remainMin} phút).`);
             }
         };
 
+        // Quét Long cho Top 3 Tăng
         for (const coin of topGainers) {
             const signal = await checkCoinSignal(coin.instId, 'LONG', coin.rank);
             if (signal) await sendAlert(signal);
             await sleep(100);
         }
 
+        // Quét Short cho Top 3 Giảm
         for (const coin of topLosers) {
             const signal = await checkCoinSignal(coin.instId, 'SHORT', coin.rank);
             if (signal) await sendAlert(signal);
             await sleep(100);
         }
 
-        if (hasNewAlert) saveSentLog(sentLog);
+        // Lưu log mới vào file nếu có gửi tin
+        if (hasNewAlert) {
+            saveSentLog(sentLog);
+        }
+
         console.log('--- HOÀN THÀNH QUÉT ---');
     } catch (err) {
         console.error('Lỗi hệ thống trong main():', err.message);
