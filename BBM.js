@@ -73,25 +73,25 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
     };
 }
 
-// ------------------- TÍNH EMA10N TRÊN KHUNG 5M -------------------
-async function getEma10n5m(symbol) {
+// ------------------- TÍNH EMA10N TRÊN KHUNG 3M -------------------
+async function getEma10n3m(symbol) {
     try {
-        const url5m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=50`;
-        const res5m = await axios.get(url5m, { timeout: 5000 });
-        if (!res5m.data || res5m.data.code !== '0' || res5m.data.data.length < 35) return null;
+        const url3m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=50`;
+        const res3m = await axios.get(url3m, { timeout: 5000 });
+        if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return null;
 
-        const raw5M = res5m.data.data;
-        const closedPrices1 = raw5M.slice(1).reverse().map(c => parseFloat(c[4]));
+        const raw3M = res3m.data.data;
+        const closedPrices1 = raw3M.slice(1).reverse().map(c => parseFloat(c[4]));
         const ema20_Candle1 = calculateEMA(closedPrices1, 20);
 
-        const closedPrices10 = raw5M.slice(10).reverse().map(c => parseFloat(c[4]));
+        const closedPrices10 = raw3M.slice(10).reverse().map(c => parseFloat(c[4]));
         const ema20_Candle10 = calculateEMA(closedPrices10, 20);
 
         if (!ema20_Candle1 || !ema20_Candle10 || ema20_Candle10 === 0) return null;
 
         return ((ema20_Candle1 - ema20_Candle10) / ema20_Candle10) * 100;
     } catch (error) {
-        console.error(`Lỗi tính ema10n 5m (${symbol}):`, error.message);
+        console.error(`Lỗi tính ema10n 3m (${symbol}):`, error.message);
         return null;
     }
 }
@@ -142,12 +142,12 @@ async function getTopGainersAndLosers() {
 // ------------------- LẤY NẾN 1M VÀ KIỂM TRA ĐIỀU KIỆN -------------------
 async function checkCoinSignal(symbol, type, rank) {
     try {
-        const ema10n = await getEma10n5m(symbol);
+        const ema10n = await getEma10n3m(symbol);
         if (ema10n === null) return null;
 
-        // Lọc ema10n theo loại lệnh
-        if (type === 'LONG' && ema10n <= 0.5) return null;
-        if (type === 'SHORT' && ema10n >= -0.5) return null;
+        // Lọc ema10n theo yêu cầu: LONG > 1%, SHORT < -1%
+        if (type === 'LONG' && ema10n <= 1) return null;
+        if (type === 'SHORT' && ema10n >= -1) return null;
 
         const url1m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=30`;
         const res1m = await axios.get(url1m, { timeout: 5000 });
@@ -227,7 +227,7 @@ async function main() {
 
                 const message = `${icon} <b>${coinName} (${signal.type})</b>\n` +
                                 `• Vị trí: <b>${rankText}</b>\n` +
-                                `• ema10n (5m): <b>${signal.ema10n > 0 ? '+' : ''}${signal.ema10n.toFixed(2)}%</b>\n` +
+                                `• ema10n (3m): <b>${signal.ema10n > 0 ? '+' : ''}${signal.ema10n.toFixed(2)}%</b>\n` +
                                 `• Hbb (1m): <b>${signal.hBB.toFixed(2)}%</b>\n` +
                                 `• ${signal.diffLabel}: <b>${signal.diffVal > 0 ? '+' : ''}${signal.diffVal.toFixed(2)}%</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
