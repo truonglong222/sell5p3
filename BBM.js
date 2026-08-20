@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 1 TIẾNG
-const COOLDOWN_TIME = 1 * 60 * 60 * 1000;
+// Cấu hình Cooldown: 4 TIẾNG
+const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
 const TOP_GAINERS_LIMIT = 20; // Top 20 coin tăng mạnh nhất
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -71,6 +71,29 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
+// ------------------- HÀM TÍNH CHUỖI EMA -------------------
+// prices: mảng giá theo thứ tự thời gian tăng dần [cũ nhất -> mới nhất]
+function calculateEMAArray(prices, period = 20) {
+  if (prices.length < period) return [];
+  const k = 2 / (period + 1);
+  const emaArray = [];
+
+  let initialSum = 0;
+  for (let i = 0; i < period; i++) {
+    initialSum += prices[i];
+  }
+  let prevEMA = initialSum / period;
+  emaArray.push(prevEMA);
+
+  for (let i = period; i < prices.length; i++) {
+    const currentEMA = (prices[i] * k) + (prevEMA * (1 - k));
+    emaArray.push(currentEMA);
+    prevEMA = currentEMA;
+  }
+
+  return emaArray;
+}
+
 // ------------------- LẤY TOP 20 COIN TĂNG MẠNH NHẤT 24H -------------------
 async function getTopGainers() {
   try {
@@ -104,12 +127,12 @@ async function getTopGainers() {
 // ------------------- LẤY DỮ LIỆU NẾN 1M -------------------
 async function getCandleData1m(symbol) {
   try {
-    // Lấy 60 nến 1m để đảm bảo đủ dữ liệu tính BB và chuỗi 30 nến
-    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=60`;
+    // Lấy 80 nến 1m để đảm bảo đủ dữ liệu tính chuỗi EMA20 và phân tích 30 nến gần nhất
+    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=80`;
     const res = await axios.get(url, { timeout: 5000 });
 
-    if (!res.data || res.data.code !== '0' || res.data.data.length < 35) return null;
-    return res.data.data; // Thứ tự: [nến 0 (mới nhất), nến 1, nến 2, ...]
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 50) return null;
+    return res.data.data; // Mảng nến theo thứ tự [nến 0 (mới nhất), nến 1, nến 2, ...]
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến 1m (${symbol}):`, error.message);
     return null;
@@ -118,29 +141,36 @@ async function getCandleData1m(symbol) {
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN SHORT 1M -------------------
 function evaluateShort1m(raw1m) {
-  if (!raw1m || raw1m.length < 35) return null;
+  if (!raw1m || raw1m.length < 50) return null;
 
-  // OKX raw1m item: [ts, open, high, low, close, ...]
   const currentCandle = raw1m[0];
   const high0 = parseFloat(currentCandle[2]);
   const lastPrice0 = parseFloat(currentCandle[4]);
 
-  // 1. Tính BB Upper nến hiện tại (idx 0) và nến thứ 6 trước đó (idx 6)
-  const closes0 = raw1m.slice(0, 20).map(c => parseFloat(c[4])).reverse();
-  const bb0 = calculateBollingerBands(closes0, 20);
+  // Chuẩn bị mảng giá đóng cửa từ cũ -> mới để tính EMA và BB
+  const closedAsc = raw1m.slice().reverse().map(c => parseFloat(c[4]));
 
-  const closes6 = raw1m.slice(6, 26).map(c => parseFloat(c[4])).reverse();
-  const bb6 = calculateBollingerBands(closes6, 20);
-
-  if (!bb0 || !bb6 || bb0.upper <= 0 || lastPrice0 <= 0) return null;
-
-  // diffbbu6 = (BB Upper hiện tại - BB Upper nến thứ 6) / BB Upper hiện tại
-  const diffbbu6 = ((bb0.upper - bb6.upper) / bb0.upper) * 100;
+  // 1. Tính Bollinger Bands cho nến hiện tại
+  const bb0 = calculateBollingerBands(closedAsc, 20);
+  if (!bb0 || bb0.upper <= 0 || lastPrice0 <= 0) return null;
 
   // diffbbu = (High hiện tại - BB Upper hiện tại) / Giá hiện tại
   const diffbbu = ((high0 - bb0.upper) / lastPrice0) * 100;
 
-  // 2. Tính hệ số x
+  // 2. Tính chuỗi EMA20 và diffema20
+  const emaSeries = calculateEMAArray(closedAsc, 20);
+  if (emaSeries.length < 21) return null;
+
+  // emaSeries phần tử cuối là nến hiện tại (idx 0), lùi lại 20 nến là nến thứ 20
+  const currentEMA20 = emaSeries[emaSeries.length - 1];
+  const ema20Candle20 = emaSeries[emaSeries.length - 1 - 20];
+
+  if (currentEMA20 <= 0) return null;
+
+  // diffema20 = (EMA20 hiện tại - EMA20 nến thứ 20) / EMA20 hiện tại
+  const diffema20 = ((currentEMA20 - ema20Candle20) / currentEMA20) * 100;
+
+  // 3. Tính hệ số x
   // Mức giảm lớn nhất trong 30 nến gần nhất: (Low - Open) / Open * 100 (mang giá trị âm)
   const last30Candles = raw1m.slice(0, 30);
   const dropPercentages = last30Candles.map(c => {
@@ -150,7 +180,7 @@ function evaluateShort1m(raw1m) {
   });
   const maxDrop = Math.min(...dropPercentages); // Giá trị âm lớn nhất
 
-  // Trung bình biến động tuyệt đối (|Close - Open| / Open * 100) của 10 nến gần nhất (mang giá trị dương)
+  // Trung bình trị tuyệt đối biến động thân nến (|Close - Open| / Open * 100) của 10 nến gần nhất
   const last10Candles = raw1m.slice(0, 10);
   const totalAbsRange = last10Candles.reduce((acc, c) => {
     const o = parseFloat(c[1]);
@@ -159,19 +189,18 @@ function evaluateShort1m(raw1m) {
   }, 0);
   const avgAbsRange10 = totalAbsRange / 10;
 
-  // x mang giá trị âm vì maxDrop < 0 và avgAbsRange10 > 0
   const x = avgAbsRange10 > 0 ? maxDrop / avgAbsRange10 : 0;
 
-  // 3. Kiểm tra các điều kiện:
-  // - diffbbu6 < -0.25%
+  // 4. Kiểm tra các điều kiện:
+  // - diffema20 < -2%
   // - x < -3
   // - -2% < diffbbu < 2%
-  const isMatchDiffbbu6 = diffbbu6 < -0.25;
+  const isMatchDiffEMA20 = diffema20 < -2;
   const isMatchX = x < -3;
   const isMatchDiffbbu = diffbbu > -2 && diffbbu < 2;
 
-  if (isMatchDiffbbu6 && isMatchX && isMatchDiffbbu) {
-    return { diffbbu6, x, diffbbu };
+  if (isMatchDiffEMA20 && isMatchX && isMatchDiffbbu) {
+    return { diffema20, x, diffbbu };
   }
 
   return null;
@@ -199,7 +228,7 @@ async function main() {
     // BƯỚC 2: Quét tín hiệu trên khung 1m
     for (let i = 0; i < topCoins.length; i++) {
       const coin = topCoins[i];
-      const rank = i + 1; // Top 1 đến Top 20
+      const rank = i + 1; // Thứ tự Top
       const raw1m = await getCandleData1m(coin.instId);
       if (!raw1m) {
         await sleep(80);
@@ -221,7 +250,7 @@ async function main() {
           rank,
           symbol,
           change24h: coin.change24h,
-          diffbbu6: signal.diffbbu6.toFixed(2) + '%',
+          diffema20: signal.diffema20.toFixed(2) + '%',
           x: signal.x.toFixed(2),
           diffbbu: signal.diffbbu.toFixed(2) + '%',
           teleSent: !isCooldown
@@ -231,7 +260,7 @@ async function main() {
           const message = `🔴 <b>TÍN HIỆU SHORT 1M: ${coinName}</b>\n` +
             `• Xếp hạng: <b>Top #${rank} Gainer</b>\n` +
             `• Tăng 24h: <b>+${coin.change24h.toFixed(2)}%</b>\n` +
-            `• DiffBBU6: <b>${signal.diffbbu6.toFixed(2)}%</b>\n` +
+            `• DiffEMA20: <b>${signal.diffema20.toFixed(2)}%</b>\n` +
             `• Giá trị X: <b>${signal.x.toFixed(2)}</b>\n` +
             `• DiffBBU: <b>${signal.diffbbu.toFixed(2)}%</b>\n` +
             `• <a href="${link}">Trade trên OKX</a>`;
@@ -265,7 +294,7 @@ async function main() {
         'Top': `#${item.rank}`,
         'Symbol': item.symbol,
         'Tăng 24h (%)': '+' + item.change24h.toFixed(2) + '%',
-        'DiffBBU6': item.diffbbu6,
+        'DiffEMA20': item.diffema20,
         'Hệ số X': item.x,
         'DiffBBU': item.diffbbu,
         'Đã gửi Tele': item.teleSent ? 'Có' : 'Bỏ qua (Cooldown)'
