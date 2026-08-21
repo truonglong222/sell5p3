@@ -11,8 +11,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
-// Cấu hình Cooldown: 20 PHÚT
-const COOLDOWN_TIME = 20 * 60 * 1000;
+// Cấu hình Cooldown: 30 PHÚT
+const COOLDOWN_TIME = 30 * 60 * 1000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -33,7 +33,7 @@ function saveSentLog(logData) {
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
             for (const [key, timestamp] of Object.entries(timeData)) {
-                // Giữ lại các lệnh vẫn còn trong thời gian cooldown 20m
+                // Giữ lại các lệnh còn trong thời gian cooldown 30 phút
                 if (now - timestamp < COOLDOWN_TIME) {
                     temp[key] = timestamp;
                 }
@@ -132,77 +132,110 @@ async function getTopGainersAndLosers() {
 }
 
 // ------------------- KIỂM TRA ĐIỀU KIỆN TÍN HIỆU -------------------
-async function checkCoinSignal(symbol, type, rank) {
+async function checkCoinSignals(symbol, type, rank) {
     try {
-        // Lấy dữ liệu nến 3m
         const url3m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=50`;
         const res3m = await axios.get(url3m, { timeout: 5000 });
-        if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return null;
+        if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return [];
 
         const candles3m = res3m.data.data;
 
         // 1. Kiểm tra ema10n (3m): LONG > 1%, SHORT < -1%
         const ema10n = calculateEma10nFromCandles(candles3m);
-        if (ema10n === null) return null;
+        if (ema10n === null) return [];
 
-        if (type === 'LONG' && ema10n <= 1) return null;
-        if (type === 'SHORT' && ema10n >= -1) return null;
+        if (type === 'LONG' && ema10n <= 1) return [];
+        if (type === 'SHORT' && ema10n >= -1) return [];
 
-        // 2. Tính Bollinger Bands trên khung 3m (dựa trên 20 nến đã đóng gần nhất)
-        const currentCandle = candles3m[0]; // Nến 3m hiện tại đang chạy
+        // 2. Tính Bollinger Bands trên khung 3m
+        const currentCandle = candles3m[0];
         const high0 = parseFloat(currentCandle[2]);
         const low0 = parseFloat(currentCandle[3]);
 
         const closedPrices = candles3m.slice(1, 21).reverse().map(c => parseFloat(c[4]));
         const bb = calculateBollingerBands(closedPrices, 20);
-        if (!bb || bb.upper === 0 || bb.lower === 0 || bb.middle === 0) return null;
+        if (!bb || bb.upper === 0 || bb.lower === 0 || bb.middle === 0) return [];
 
-        // Điều kiện: 3% < Hbb < 15%
+        // Điều kiện độ rộng: 3% < Hbb < 15%
         const hBB = ((bb.upper - bb.lower) / bb.upper) * 100;
-        if (hBB <= 3 || hBB >= 15) return null;
+        if (hBB <= 3 || hBB >= 15) return [];
 
-        // 3. Kiểm tra điều kiện vị trí High/Low của nến hiện tại so với BB Mid (bbm)
+        const matchedSignals = [];
+
+        // 3. Kiểm tra điều kiện vị trí nến so với BB Middle và BB Bands
         if (type === 'LONG') {
-            // bbm (LONG): % chênh lệch giữa Low nến hiện tại và Bollinger Band Middle
+            // Điều kiện 1: Low so với BB Mid (-2% < bbm < +0.5%)
             const bbm = ((low0 - bb.middle) / bb.middle) * 100;
             if (bbm > -2 && bbm < 0.5) {
-                return {
+                matchedSignals.push({
                     symbol,
                     type: 'LONG',
+                    subType: 'bb_mid',
+                    label: 'Low so với BB Mid (bbm)',
+                    diffVal: bbm,
                     rank,
                     hBB,
-                    ema10n,
-                    diffVal: bbm,
-                    diffLabel: 'bbm'
-                };
+                    ema10n
+                });
+            }
+
+            // Điều kiện 2: Low so với BB Low (-2% < bbl < +0.5%)
+            const bbl = ((low0 - bb.lower) / bb.lower) * 100;
+            if (bbl > -2 && bbl < 0.5) {
+                matchedSignals.push({
+                    symbol,
+                    type: 'LONG',
+                    subType: 'bb_low',
+                    label: 'Low so với BB Low (bbl)',
+                    diffVal: bbl,
+                    rank,
+                    hBB,
+                    ema10n
+                });
             }
         } else if (type === 'SHORT') {
-            // bbm (SHORT): % chênh lệch giữa High nến hiện tại và Bollinger Band Middle
+            // Điều kiện 1: High so với BB Mid (-0.5% < bbm < +2%)
             const bbm = ((high0 - bb.middle) / bb.middle) * 100;
             if (bbm > -0.5 && bbm < 2) {
-                return {
+                matchedSignals.push({
                     symbol,
                     type: 'SHORT',
+                    subType: 'bb_mid',
+                    label: 'High so với BB Mid (bbm)',
+                    diffVal: bbm,
                     rank,
                     hBB,
-                    ema10n,
-                    diffVal: bbm,
-                    diffLabel: 'bbm'
-                };
+                    ema10n
+                });
+            }
+
+            // Điều kiện 2: High so với BB Up (-0.5% < bbu < +2%)
+            const bbu = ((high0 - bb.upper) / bb.upper) * 100;
+            if (bbu > -0.5 && bbu < 2) {
+                matchedSignals.push({
+                    symbol,
+                    type: 'SHORT',
+                    subType: 'bb_up',
+                    label: 'High so với BB Up (bbu)',
+                    diffVal: bbu,
+                    rank,
+                    hBB,
+                    ema10n
+                });
             }
         }
 
-        return null;
+        return matchedSignals;
     } catch (error) {
         console.error(`Lỗi kiểm tra nến (${symbol}):`, error.message);
-        return null;
+        return [];
     }
 }
 
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẮT ĐẦU QUÉT TOP 3 TĂNG/GIẢM (LƯU VÀO sent_ema.json) ---');
+        console.log('--- BẮT ĐẦU QUÉT TOP 3 TĂNG/GIẢM ---');
 
         const sentLog = loadSentLog();
         const currentTime = Date.now();
@@ -213,11 +246,12 @@ async function main() {
         console.log(`Top 3 Giảm: ${topLosers.map(c => `${c.instId} (#${c.rank} ${c.change24h.toFixed(2)}%)`).join(', ')}`);
 
         const sendAlert = async (signal) => {
-            const cooldownKey = `_${signal.type.toLowerCase()}3m`;
+            // Key cooldown riêng biệt: _long_bb_mid, _long_bb_low, _short_bb_mid, _short_bb_up
+            const cooldownKey = `_${signal.type.toLowerCase()}_${signal.subType}`;
             if (!sentLog[signal.symbol]) sentLog[signal.symbol] = {};
             const lastSent = sentLog[signal.symbol][cooldownKey] || 0;
 
-            // Kiểm tra cooldown 20 phút
+            // Kiểm tra cooldown 30 phút độc lập
             if (currentTime - lastSent >= COOLDOWN_TIME) {
                 const coinName = signal.symbol.replace('-USDT-SWAP', '');
                 const icon = signal.type === 'LONG' ? '🟢' : '🔴';
@@ -228,10 +262,10 @@ async function main() {
                                 `• Vị trí: <b>${rankText}</b>\n` +
                                 `• ema10n (3m): <b>${signal.ema10n > 0 ? '+' : ''}${signal.ema10n.toFixed(2)}%</b>\n` +
                                 `• Hbb (3m): <b>${signal.hBB.toFixed(2)}%</b>\n` +
-                                `• ${signal.diffLabel}: <b>${signal.diffVal > 0 ? '+' : ''}${signal.diffVal.toFixed(2)}%</b>\n` +
+                                `• ${signal.label}: <b>${signal.diffVal > 0 ? '+' : ''}${signal.diffVal.toFixed(2)}%</b>\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
 
-                console.log(`🚀 [${signal.type} MATCHED] Gửi Telegram cho ${signal.symbol}...`);
+                console.log(`🚀 [${signal.type} - ${signal.subType}] Gửi Telegram cho ${signal.symbol}...`);
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                     chat_id: TELEGRAM_CHAT_ID,
                     text: message,
@@ -243,21 +277,25 @@ async function main() {
                 hasNewAlert = true;
             } else {
                 const remainMin = Math.ceil((COOLDOWN_TIME - (currentTime - lastSent)) / 60000);
-                console.log(`⏳ Bỏ qua ${signal.symbol} (${signal.type}) - Đang cooldown (còn ${remainMin} phút).`);
+                console.log(`⏳ Bỏ qua ${signal.symbol} (${signal.type} - ${signal.subType}) - Đang cooldown (còn ${remainMin} phút).`);
             }
         };
 
         // Quét Long cho Top 3 Tăng
         for (const coin of topGainers) {
-            const signal = await checkCoinSignal(coin.instId, 'LONG', coin.rank);
-            if (signal) await sendAlert(signal);
+            const signals = await checkCoinSignals(coin.instId, 'LONG', coin.rank);
+            for (const sig of signals) {
+                await sendAlert(sig);
+            }
             await sleep(100);
         }
 
         // Quét Short cho Top 3 Giảm
         for (const coin of topLosers) {
-            const signal = await checkCoinSignal(coin.instId, 'SHORT', coin.rank);
-            if (signal) await sendAlert(signal);
+            const signals = await checkCoinSignals(coin.instId, 'SHORT', coin.rank);
+            for (const sig of signals) {
+                await sendAlert(sig);
+            }
             await sleep(100);
         }
 
