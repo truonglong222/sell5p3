@@ -16,7 +16,7 @@ const COOLDOWN_TIME = 30 * 60 * 1000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Đọc log an toàn từ file
+// Đọc log từ file JSON
 function loadSentLog() {
     try {
         if (fs.existsSync(DB_FILE)) {
@@ -99,15 +99,33 @@ function calculateEma10nFromCandles(rawCandles) {
     return ((ema20_Candle1 - ema20_Candle10) / ema20_Candle10) * 100;
 }
 
-function calculateXRatio(candles1m) {
-    if (!candles1m || candles1m.length < 11) return null;
+// ------------------- TÍNH TỶ LỆ X (KHUNG 3M) -------------------
+function calculateXRatio3m(candles3m) {
+    // Cần tối thiểu 16 nến (nến 0 đang chạy, 5 nến đóng xét giảm, 10 nến trước đó)
+    if (!candles3m || candles3m.length < 16) return null;
 
-    const closedCandle1 = candles1m[1];
-    const open1 = parseFloat(closedCandle1[1]);
-    const close1 = parseFloat(closedCandle1[4]);
-    const absDiff1 = Math.abs(close1 - open1);
+    let maxNegativeDiff = 0; // Lưu biến động âm lớn nhất (giá trị âm nhỏ nhất)
+    let maxDropIndex = -1;
 
-    const past10Candles = candles1m.slice(1, 11);
+    // Tìm nến giảm mạnh nhất trong 5 nến 3m vừa đóng (index 1 -> 5)
+    for (let i = 1; i <= 5; i++) {
+        const open = parseFloat(candles3m[i][1]);
+        const close = parseFloat(candles3m[i][4]);
+        const diff = close - open;
+
+        if (diff < maxNegativeDiff) {
+            maxNegativeDiff = diff;
+            maxDropIndex = i;
+        }
+    }
+
+    // Nếu không có nến giảm nào trong 5 nến vừa qua, biến động âm = 0
+    if (maxDropIndex === -1 || maxNegativeDiff >= 0) {
+        return 0; // x = 0 (thoả mãn x > -2.5)
+    }
+
+    // Lấy 10 nến 3m đứng trước nến giảm đó: index (maxDropIndex + 1) đến (maxDropIndex + 10)
+    const past10Candles = candles3m.slice(maxDropIndex + 1, maxDropIndex + 11);
     const totalAbsDiff = past10Candles.reduce((sum, c) => {
         const o = parseFloat(c[1]);
         const cl = parseFloat(c[4]);
@@ -117,7 +135,7 @@ function calculateXRatio(candles1m) {
     const avgAbsDiff = totalAbsDiff / 10;
     if (avgAbsDiff === 0) return null;
 
-    return absDiff1 / avgAbsDiff;
+    return maxNegativeDiff / avgAbsDiff; // Kết quả là số âm
 }
 
 // ------------------- LẤY TOP 3 TĂNG 24H -------------------
@@ -156,20 +174,15 @@ async function getTopGainers() {
 // ------------------- KIỂM TRA ĐIỀU KIỆN LONG -------------------
 async function checkLongSignals(symbol, rank) {
     try {
-        const [res3m, res1m] = await Promise.all([
-            axios.get(`${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=50`, { timeout: 5000 }),
-            axios.get(`${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=20`, { timeout: 5000 })
-        ]);
+        const url3m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=50`;
+        const res3m = await axios.get(url3m, { timeout: 5000 });
 
         if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return [];
-        if (!res1m.data || res1m.data.code !== '0' || res1m.data.data.length < 11) return [];
-
         const candles3m = res3m.data.data;
-        const candles1m = res1m.data.data;
 
-        // 1. Điều kiện x < 3
-        const xRatio = calculateXRatio(candles1m);
-        if (xRatio === null || xRatio >= 3) return [];
+        // 1. Điều kiện x > -2.5 trên khung 3m
+        const xRatio = calculateXRatio3m(candles3m);
+        if (xRatio === null || xRatio <= -2.5) return [];
 
         // 2. Điều kiện ema10n > 1%
         const ema10n = calculateEma10nFromCandles(candles3m);
@@ -239,10 +252,8 @@ async function main() {
             const signals = await checkLongSignals(coin.instId, coin.rank);
 
             for (const sig of signals) {
-                // Key countdown riêng biệt: _long_bb_mid hoặc _long_bb_low
                 const cooldownKey = `_long_${sig.subType}`;
                 
-                // Đọc file mới nhất để kiểm tra cooldown
                 const currentLog = loadSentLog();
                 const lastSent = currentLog[sig.symbol]?.[cooldownKey] || 0;
                 const now = Date.now();
@@ -257,7 +268,7 @@ async function main() {
                                     `• ema10n (3m): <b>+${sig.ema10n.toFixed(2)}%</b>\n` +
                                     `• Hbb (3m): <b>${sig.hBB.toFixed(2)}%</b>\n` +
                                     `• ${sig.label}: <b>${sig.diffVal > 0 ? '+' : ''}${sig.diffVal.toFixed(2)}%</b>\n` +
-                                    `• x (1m body ratio): <b>${sig.xRatio.toFixed(2)}</b> (&lt; 3)\n` +
+                                    `• x (3m drop ratio): <b>${sig.xRatio.toFixed(2)}</b> (&gt; -2.5)\n` +
                                     `• <a href="${link}">Trade trên OKX</a>`;
 
                     console.log(`🚀 [LONG - ${sig.subType}] Gửi Telegram cho ${sig.symbol}...`);
@@ -268,7 +279,6 @@ async function main() {
                         disable_web_page_preview: true
                     }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
 
-                    // Lưu ngay thời gian gửi vào file sent_ema.json
                     updateAndSaveLog(sig.symbol, cooldownKey, now);
                 } else {
                     const remainMin = Math.ceil((COOLDOWN_TIME - (now - lastSent)) / 60000);
