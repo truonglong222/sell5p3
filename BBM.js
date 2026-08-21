@@ -88,6 +88,31 @@ function calculateEma10nFromCandles(rawCandles) {
     return ((ema20_Candle1 - ema20_Candle10) / ema20_Candle10) * 100;
 }
 
+// ------------------- TÍNH TỶ LỆ X (KHUNG 1M) -------------------
+function calculateXRatio(candles1m) {
+    // Cần tối thiểu 11 nến (index 0 là nến đang chạy, index 1..10 là 10 nến đã đóng)
+    if (!candles1m || candles1m.length < 11) return null;
+
+    // Nến 1m vừa đóng gần nhất là index 1
+    const closedCandle1 = candles1m[1];
+    const open1 = parseFloat(closedCandle1[1]);
+    const close1 = parseFloat(closedCandle1[4]);
+    const absDiff1 = Math.abs(close1 - open1);
+
+    // 10 nến 1m đã đóng gần nhất: index 1 đến 10
+    const past10Candles = candles1m.slice(1, 11);
+    const totalAbsDiff = past10Candles.reduce((sum, c) => {
+        const o = parseFloat(c[1]);
+        const cl = parseFloat(c[4]);
+        return sum + Math.abs(cl - o);
+    }, 0);
+
+    const avgAbsDiff = totalAbsDiff / 10;
+    if (avgAbsDiff === 0) return null;
+
+    return absDiff1 / avgAbsDiff;
+}
+
 // ------------------- LẤY TOP 3 TĂNG VÀ TOP 3 GIẢM 24H -------------------
 async function getTopGainersAndLosers() {
     try {
@@ -134,20 +159,30 @@ async function getTopGainersAndLosers() {
 // ------------------- KIỂM TRA ĐIỀU KIỆN TÍN HIỆU -------------------
 async function checkCoinSignals(symbol, type, rank) {
     try {
-        const url3m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=50`;
-        const res3m = await axios.get(url3m, { timeout: 5000 });
+        // Lấy song song dữ liệu nến 3m và 1m
+        const [res3m, res1m] = await Promise.all([
+            axios.get(`${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=50`, { timeout: 5000 }),
+            axios.get(`${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1m&limit=20`, { timeout: 5000 })
+        ]);
+
         if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return [];
+        if (!res1m.data || res1m.data.code !== '0' || res1m.data.data.length < 11) return [];
 
         const candles3m = res3m.data.data;
+        const candles1m = res1m.data.data;
 
-        // 1. Kiểm tra ema10n (3m): LONG > 1%, SHORT < -1%
+        // 1. Kiểm tra điều kiện x < 3 trên khung 1m
+        const xRatio = calculateXRatio(candles1m);
+        if (xRatio === null || xRatio >= 3) return [];
+
+        // 2. Kiểm tra ema10n (3m): LONG > 1%, SHORT < -1%
         const ema10n = calculateEma10nFromCandles(candles3m);
         if (ema10n === null) return [];
 
         if (type === 'LONG' && ema10n <= 1) return [];
         if (type === 'SHORT' && ema10n >= -1) return [];
 
-        // 2. Tính Bollinger Bands trên khung 3m
+        // 3. Tính Bollinger Bands trên khung 3m
         const currentCandle = candles3m[0];
         const high0 = parseFloat(currentCandle[2]);
         const low0 = parseFloat(currentCandle[3]);
@@ -162,7 +197,7 @@ async function checkCoinSignals(symbol, type, rank) {
 
         const matchedSignals = [];
 
-        // 3. Kiểm tra điều kiện vị trí nến so với BB Middle và BB Bands
+        // 4. Kiểm tra điều kiện vị trí nến so với BB Middle và BB Bands
         if (type === 'LONG') {
             // Điều kiện 1: Low so với BB Mid (-2% < bbm < +0.5%)
             const bbm = ((low0 - bb.middle) / bb.middle) * 100;
@@ -175,7 +210,8 @@ async function checkCoinSignals(symbol, type, rank) {
                     diffVal: bbm,
                     rank,
                     hBB,
-                    ema10n
+                    ema10n,
+                    xRatio
                 });
             }
 
@@ -190,7 +226,8 @@ async function checkCoinSignals(symbol, type, rank) {
                     diffVal: bbl,
                     rank,
                     hBB,
-                    ema10n
+                    ema10n,
+                    xRatio
                 });
             }
         } else if (type === 'SHORT') {
@@ -205,7 +242,8 @@ async function checkCoinSignals(symbol, type, rank) {
                     diffVal: bbm,
                     rank,
                     hBB,
-                    ema10n
+                    ema10n,
+                    xRatio
                 });
             }
 
@@ -220,7 +258,8 @@ async function checkCoinSignals(symbol, type, rank) {
                     diffVal: bbu,
                     rank,
                     hBB,
-                    ema10n
+                    ema10n,
+                    xRatio
                 });
             }
         }
@@ -263,6 +302,7 @@ async function main() {
                                 `• ema10n (3m): <b>${signal.ema10n > 0 ? '+' : ''}${signal.ema10n.toFixed(2)}%</b>\n` +
                                 `• Hbb (3m): <b>${signal.hBB.toFixed(2)}%</b>\n` +
                                 `• ${signal.label}: <b>${signal.diffVal > 0 ? '+' : ''}${signal.diffVal.toFixed(2)}%</b>\n` +
+                                `• x (1m body ratio): <b>${signal.xRatio.toFixed(2)}</b> (&lt; 3)\n` +
                                 `• <a href="${link}">Trade trên OKX</a>`;
 
                 console.log(`🚀 [${signal.type} - ${signal.subType}] Gửi Telegram cho ${signal.symbol}...`);
