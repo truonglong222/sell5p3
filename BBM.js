@@ -33,6 +33,7 @@ function saveSentLog(logData) {
         for (const [coin, timeData] of Object.entries(logData)) {
             const temp = {};
             for (const [key, timestamp] of Object.entries(timeData)) {
+                // Giữ lại các lệnh vẫn còn trong thời gian cooldown 20m
                 if (now - timestamp < COOLDOWN_TIME) {
                     temp[key] = timestamp;
                 }
@@ -133,121 +134,60 @@ async function getTopGainersAndLosers() {
 // ------------------- KIỂM TRA ĐIỀU KIỆN TÍN HIỆU -------------------
 async function checkCoinSignal(symbol, type, rank) {
     try {
-        // Cần tối thiểu 70 nến để tính BB cho nến thứ 49
-        const url3m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=100`;
+        // Lấy dữ liệu nến 3m
+        const url3m = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=3m&limit=50`;
         const res3m = await axios.get(url3m, { timeout: 5000 });
-        if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 70) return null;
+        if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return null;
 
         const candles3m = res3m.data.data;
 
-        // 1. Kiểm tra ema10n (3m)
+        // 1. Kiểm tra ema10n (3m): LONG > 1%, SHORT < -1%
         const ema10n = calculateEma10nFromCandles(candles3m);
         if (ema10n === null) return null;
+
         if (type === 'LONG' && ema10n <= 1) return null;
         if (type === 'SHORT' && ema10n >= -1) return null;
 
-        // 2. Tính Bollinger Bands hiện tại (tính từ nến 1 đến 20)
-        const currentPrices = candles3m.slice(1, 21).reverse().map(c => parseFloat(c[4]));
-        const bbCurrent = calculateBollingerBands(currentPrices, 20);
-        if (!bbCurrent || bbCurrent.upper === 0 || bbCurrent.lower === 0 || bbCurrent.middle === 0) return null;
-
-        // Kiểm tra Hbb: 3% < Hbb < 15%
-        const hBB = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.upper) * 100;
-        if (hBB <= 3 || hBB >= 15) return null;
-
-        const currentCandle = candles3m[0];
+        // 2. Tính Bollinger Bands trên khung 3m (dựa trên 20 nến đã đóng gần nhất)
+        const currentCandle = candles3m[0]; // Nến 3m hiện tại đang chạy
         const high0 = parseFloat(currentCandle[2]);
         const low0 = parseFloat(currentCandle[3]);
 
-        // Hàm hỗ trợ tính BB tại nến index bất kỳ (dùng 20 nến tính từ index đó trở về quá khứ)
-        const getBBAtIndex = (idx) => {
-            const prices = candles3m.slice(idx, idx + 20).reverse().map(c => parseFloat(c[4]));
-            return calculateBollingerBands(prices, 20);
-        };
+        const closedPrices = candles3m.slice(1, 21).reverse().map(c => parseFloat(c[4]));
+        const bb = calculateBollingerBands(closedPrices, 20);
+        if (!bb || bb.upper === 0 || bb.lower === 0 || bb.middle === 0) return null;
 
-        // 3. Xét điều kiện cho từng loại lệnh
+        // Điều kiện: 3% < Hbb < 15%
+        const hBB = ((bb.upper - bb.lower) / bb.upper) * 100;
+        if (hBB <= 3 || hBB >= 15) return null;
+
+        // 3. Kiểm tra điều kiện vị trí High/Low của nến hiện tại so với BB Mid (bbm)
         if (type === 'LONG') {
-            // Tìm nến có Low thấp nhất trong 49 nến vừa đóng (index từ 1 đến 49)
-            let minLow = Infinity;
-            let minLowIdx = -1;
-
-            for (let i = 1; i <= 49; i++) {
-                const low = parseFloat(candles3m[i][3]);
-                if (low < minLow) {
-                    minLow = low;
-                    minLowIdx = i;
-                }
-            }
-
-            if (minLowIdx === -1) return null;
-
-            const bbPast = getBBAtIndex(minLowIdx);
-            if (!bbPast) return null;
-
-            // Tính % chênh lệch (dung sai: -1% đến +0.5%)
-            // TH1: Cả 2 cùng sát bbmid
-            const pastDiffMid = ((minLow - bbPast.middle) / bbPast.middle) * 100;
-            const curDiffMid = ((low0 - bbCurrent.middle) / bbCurrent.middle) * 100;
-            const isMidNear = (pastDiffMid >= -1 && pastDiffMid <= 0.5) && (curDiffMid >= -1 && curDiffMid <= 0.5);
-
-            // TH2: Cả 2 cùng sát bblow
-            const pastDiffLow = ((minLow - bbPast.lower) / bbPast.lower) * 100;
-            const curDiffLow = ((low0 - bbCurrent.lower) / bbCurrent.lower) * 100;
-            const isLowNear = (pastDiffLow >= -1 && pastDiffLow <= 0.5) && (curDiffLow >= -1 && curDiffLow <= 0.5);
-
-            if (isMidNear || isLowNear) {
-                const zone = isMidNear ? 'BBMid' : 'BBLow';
-                const diffVal = isMidNear ? curDiffMid : curDiffLow;
+            // bbm (LONG): % chênh lệch giữa Low nến hiện tại và Bollinger Band Middle
+            const bbm = ((low0 - bb.middle) / bb.middle) * 100;
+            if (bbm > -2 && bbm < 0.5) {
                 return {
                     symbol,
                     type: 'LONG',
                     rank,
                     hBB,
                     ema10n,
-                    diffVal,
-                    diffLabel: `Low vs ${zone} (Nến đáy: #${minLowIdx})`
+                    diffVal: bbm,
+                    diffLabel: 'bbm'
                 };
             }
         } else if (type === 'SHORT') {
-            // Tìm nến có High cao nhất trong 49 nến vừa đóng (index từ 1 đến 49)
-            let maxHigh = -Infinity;
-            let maxHighIdx = -1;
-
-            for (let i = 1; i <= 49; i++) {
-                const high = parseFloat(candles3m[i][2]);
-                if (high > maxHigh) {
-                    maxHigh = high;
-                    maxHighIdx = i;
-                }
-            }
-
-            if (maxHighIdx === -1) return null;
-
-            const bbPast = getBBAtIndex(maxHighIdx);
-            if (!bbPast) return null;
-
-            // Tính % chênh lệch (dung sai: -0.5% đến +1%)
-            // TH1: Cả 2 cùng sát bbmid
-            const pastDiffMid = ((maxHigh - bbPast.middle) / bbPast.middle) * 100;
-            const curDiffMid = ((high0 - bbCurrent.middle) / bbCurrent.middle) * 100;
-            const isMidNear = (pastDiffMid >= -0.5 && pastDiffMid <= 1) && (curDiffMid >= -0.5 && curDiffMid <= 1);
-
-            // TH2: Cả 2 cùng sát bbupper
-            const pastDiffUpper = ((maxHigh - bbPast.upper) / bbPast.upper) * 100;
-            const curDiffUpper = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
-            const isUpperNear = (pastDiffUpper >= -0.5 && pastDiffUpper <= 1) && (curDiffUpper >= -0.5 && curDiffUpper <= 1);
-
-            if (isMidNear || isUpperNear) {
-                const zone = isMidNear ? 'BBMid' : 'BBUpper';
-                const diffVal = isMidNear ? curDiffMid : curDiffUpper;
+            // bbm (SHORT): % chênh lệch giữa High nến hiện tại và Bollinger Band Middle
+            const bbm = ((high0 - bb.middle) / bb.middle) * 100;
+            if (bbm > -0.5 && bbm < 2) {
                 return {
                     symbol,
                     type: 'SHORT',
                     rank,
                     hBB,
                     ema10n,
-                    diffVal,
-                    diffLabel: `High vs ${zone} (Nến đỉnh: #${maxHighIdx})`
+                    diffVal: bbm,
+                    diffLabel: 'bbm'
                 };
             }
         }
@@ -277,6 +217,7 @@ async function main() {
             if (!sentLog[signal.symbol]) sentLog[signal.symbol] = {};
             const lastSent = sentLog[signal.symbol][cooldownKey] || 0;
 
+            // Kiểm tra cooldown 20 phút
             if (currentTime - lastSent >= COOLDOWN_TIME) {
                 const coinName = signal.symbol.replace('-USDT-SWAP', '');
                 const icon = signal.type === 'LONG' ? '🟢' : '🔴';
@@ -320,6 +261,7 @@ async function main() {
             await sleep(100);
         }
 
+        // Lưu log mới vào file nếu có gửi tin
         if (hasNewAlert) {
             saveSentLog(sentLog);
         }
