@@ -9,40 +9,53 @@ const OKX_BASE_URL = 'https://www.okx.com';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_FILE = path.join(__dirname, 'sent_ema_long.json');
+const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown: 30 PHÚT
 const COOLDOWN_TIME = 30 * 60 * 1000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Đọc log an toàn từ file
 function loadSentLog() {
     try {
         if (fs.existsSync(DB_FILE)) {
             const data = fs.readFileSync(DB_FILE, 'utf8');
             return data.trim() ? JSON.parse(data) : {};
         }
-    } catch (e) {}
+    } catch (e) {
+        console.error('Lỗi khi đọc file sent_ema.json:', e.message);
+    }
     return {};
 }
 
-function saveSentLog(logData) {
+// Cập nhật timestamp cho từng điều kiện và lưu ngay
+function updateAndSaveLog(symbol, cooldownKey, timestamp) {
     try {
+        const logData = loadSentLog();
         const now = Date.now();
+
+        if (!logData[symbol]) logData[symbol] = {};
+        logData[symbol][cooldownKey] = timestamp;
+
+        // Dọn dẹp các mốc thời gian đã quá hạn 30 phút
         const cleanedLog = {};
         for (const [coin, timeData] of Object.entries(logData)) {
-            const temp = {};
-            for (const [key, timestamp] of Object.entries(timeData)) {
-                if (now - timestamp < COOLDOWN_TIME) {
-                    temp[key] = timestamp;
+            const validKeys = {};
+            for (const [key, time] of Object.entries(timeData)) {
+                if (now - time < COOLDOWN_TIME) {
+                    validKeys[key] = time;
                 }
             }
-            if (Object.keys(temp).length > 0) cleanedLog[coin] = temp;
+            if (Object.keys(validKeys).length > 0) {
+                cleanedLog[coin] = validKeys;
+            }
         }
+
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
-        console.log(`💾 Đã cập nhật log gửi tin vào ${DB_FILE}`);
+        console.log(`💾 [LONG] Đã lưu log (${symbol} -> ${cooldownKey}) vào ${DB_FILE}`);
     } catch (e) {
-        console.error('Lỗi khi ghi file sent_ema_long.json:', e.message);
+        console.error('Lỗi khi ghi file sent_ema.json:', e.message);
     }
 }
 
@@ -154,15 +167,15 @@ async function checkLongSignals(symbol, rank) {
         const candles3m = res3m.data.data;
         const candles1m = res1m.data.data;
 
-        // 1. Kiểm tra x < 3
+        // 1. Điều kiện x < 3
         const xRatio = calculateXRatio(candles1m);
         if (xRatio === null || xRatio >= 3) return [];
 
-        // 2. Kiểm tra ema10n > 1%
+        // 2. Điều kiện ema10n > 1%
         const ema10n = calculateEma10nFromCandles(candles3m);
         if (ema10n === null || ema10n <= 1) return [];
 
-        // 3. Tính Bollinger Bands trên khung 3m & kiểm tra 3% < Hbb < 15%
+        // 3. Bollinger Bands: 3% < Hbb < 15%
         const currentCandle = candles3m[0];
         const low0 = parseFloat(currentCandle[3]);
 
@@ -175,7 +188,7 @@ async function checkLongSignals(symbol, rank) {
 
         const matchedSignals = [];
 
-        // Điều kiện 1: Low so với BB Mid (-2% < bbm < +0.5%)
+        // Trường hợp 1: Low so với BB Mid (-2% < bbm < +0.5%)
         const bbm = ((low0 - bb.middle) / bb.middle) * 100;
         if (bbm > -2 && bbm < 0.5) {
             matchedSignals.push({
@@ -191,7 +204,7 @@ async function checkLongSignals(symbol, rank) {
             });
         }
 
-        // Điều kiện 2: Low so với BB Low (-2% < bbl < +0.5%)
+        // Trường hợp 2: Low so với BB Low (-2% < bbl < +0.5%)
         const bbl = ((low0 - bb.lower) / bb.lower) * 100;
         if (bbl > -2 && bbl < 0.5) {
             matchedSignals.push({
@@ -217,59 +230,52 @@ async function checkLongSignals(symbol, rank) {
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẮT ĐẦU QUÉT CHIỀU LONG (TOP 3 TĂNG) ---');
-
-        const sentLog = loadSentLog();
-        const currentTime = Date.now();
-        let hasNewAlert = false;
+        console.log('--- BẮT ĐẦU QUÉT CHIỀU LONG ---');
 
         const topGainers = await getTopGainers();
         console.log(`Top 3 Tăng: ${topGainers.map(c => `${c.instId} (#${c.rank} ${c.change24h.toFixed(2)}%)`).join(', ')}`);
 
-        const sendAlert = async (signal) => {
-            const cooldownKey = `_long_${signal.subType}`;
-            if (!sentLog[signal.symbol]) sentLog[signal.symbol] = {};
-            const lastSent = sentLog[signal.symbol][cooldownKey] || 0;
-
-            if (currentTime - lastSent >= COOLDOWN_TIME) {
-                const coinName = signal.symbol.replace('-USDT-SWAP', '');
-                const rankText = `Top ${signal.rank} Tăng 24h`;
-                const link = `https://www.okx.com/trade-swap/${signal.symbol.toLowerCase()}`;
-
-                const message = `🟢 <b>${coinName} (LONG)</b>\n` +
-                                `• Vị trí: <b>${rankText}</b>\n` +
-                                `• ema10n (3m): <b>+${signal.ema10n.toFixed(2)}%</b>\n` +
-                                `• Hbb (3m): <b>${signal.hBB.toFixed(2)}%</b>\n` +
-                                `• ${signal.label}: <b>${signal.diffVal > 0 ? '+' : ''}${signal.diffVal.toFixed(2)}%</b>\n` +
-                                `• x (1m body ratio): <b>${signal.xRatio.toFixed(2)}</b> (&lt; 3)\n` +
-                                `• <a href="${link}">Trade trên OKX</a>`;
-
-                console.log(`🚀 [LONG - ${signal.subType}] Gửi Telegram cho ${signal.symbol}...`);
-                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: message,
-                    parse_mode: 'HTML',
-                    disable_web_page_preview: true
-                }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
-
-                sentLog[signal.symbol][cooldownKey] = currentTime;
-                hasNewAlert = true;
-            } else {
-                const remainMin = Math.ceil((COOLDOWN_TIME - (currentTime - lastSent)) / 60000);
-                console.log(`⏳ Bỏ qua ${signal.symbol} (LONG - ${signal.subType}) - Đang cooldown (còn ${remainMin} phút).`);
-            }
-        };
-
         for (const coin of topGainers) {
             const signals = await checkLongSignals(coin.instId, coin.rank);
+
             for (const sig of signals) {
-                await sendAlert(sig);
+                // Key countdown riêng biệt: _long_bb_mid hoặc _long_bb_low
+                const cooldownKey = `_long_${sig.subType}`;
+                
+                // Đọc file mới nhất để kiểm tra cooldown
+                const currentLog = loadSentLog();
+                const lastSent = currentLog[sig.symbol]?.[cooldownKey] || 0;
+                const now = Date.now();
+
+                if (now - lastSent >= COOLDOWN_TIME) {
+                    const coinName = sig.symbol.replace('-USDT-SWAP', '');
+                    const rankText = `Top ${sig.rank} Tăng 24h`;
+                    const link = `https://www.okx.com/trade-swap/${sig.symbol.toLowerCase()}`;
+
+                    const message = `🟢 <b>${coinName} (LONG)</b>\n` +
+                                    `• Vị trí: <b>${rankText}</b>\n` +
+                                    `• ema10n (3m): <b>+${sig.ema10n.toFixed(2)}%</b>\n` +
+                                    `• Hbb (3m): <b>${sig.hBB.toFixed(2)}%</b>\n` +
+                                    `• ${sig.label}: <b>${sig.diffVal > 0 ? '+' : ''}${sig.diffVal.toFixed(2)}%</b>\n` +
+                                    `• x (1m body ratio): <b>${sig.xRatio.toFixed(2)}</b> (&lt; 3)\n` +
+                                    `• <a href="${link}">Trade trên OKX</a>`;
+
+                    console.log(`🚀 [LONG - ${sig.subType}] Gửi Telegram cho ${sig.symbol}...`);
+                    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: true
+                    }).catch(err => console.error('Lỗi gửi Telegram:', err.message));
+
+                    // Lưu ngay thời gian gửi vào file sent_ema.json
+                    updateAndSaveLog(sig.symbol, cooldownKey, now);
+                } else {
+                    const remainMin = Math.ceil((COOLDOWN_TIME - (now - lastSent)) / 60000);
+                    console.log(`⏳ Bỏ qua ${sig.symbol} (LONG - ${sig.subType}) - Đang cooldown (còn ${remainMin} phút).`);
+                }
             }
             await sleep(100);
-        }
-
-        if (hasNewAlert) {
-            saveSentLog(sentLog);
         }
 
         console.log('--- HOÀN THÀNH QUÉT LONG ---');
