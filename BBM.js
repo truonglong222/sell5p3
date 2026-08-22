@@ -12,9 +12,9 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 4 TIẾNG
-const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
-const TOP_GAINERS_LIMIT = 50; // Top 50 coin tăng mạnh nhất
+// Cấu hình Cooldown: 1 TIẾNG
+const COOLDOWN_TIME = 1 * 60 * 60 * 1000;
+const TOP_GAINERS_LIMIT = 100; // Top 100 coin tăng mạnh nhất
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
