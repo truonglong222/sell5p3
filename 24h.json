@@ -1,57 +1,57 @@
 {
-  "lastScanAt": "2026-08-22T22:50:40.577Z",
-  "ud": -227,
-  "totalScanned": 51,
+  "lastScanAt": "2026-08-22T22:55:38.243Z",
+  "ud": -243,
+  "totalScanned": 56,
   "matchedCount": 5,
   "matchedList": [
     {
+      "symbol": "ZKP-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -7.118130679359573,
+      "Hbb": "3.31%",
+      "ud": -243,
+      "x": "0.33",
+      "bb15": "-2.08%",
+      "teleSent": true
+    },
+    {
       "symbol": "KGEN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -11.625514403292172,
-      "Hbb": "3.82%",
-      "ud": -227,
+      "change24h": -11.26614987080104,
+      "Hbb": "3.59%",
+      "ud": -243,
       "x": "0.14",
       "bb15": "-2.01%",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "GALA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -12.359550561797757,
-      "Hbb": "5.25%",
-      "ud": -227,
-      "x": "1.40",
-      "bb15": "-1.85%",
+      "change24h": -11.965811965811973,
+      "Hbb": "5.45%",
+      "ud": -243,
+      "x": "0.57",
+      "bb15": "-1.59%",
       "teleSent": false
     },
     {
       "symbol": "PIPPIN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -8.172147001934238,
-      "Hbb": "3.12%",
-      "ud": -227,
-      "x": "0.47",
-      "bb15": "-1.88%",
+      "change24h": -9.025787965616043,
+      "Hbb": "3.14%",
+      "ud": -243,
+      "x": "1.57",
+      "bb15": "-1.74%",
       "teleSent": false
     },
     {
       "symbol": "FARTCOIN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -7.862903225806453,
-      "Hbb": "4.86%",
-      "ud": -227,
-      "x": "-0.84",
-      "bb15": "-3.21%",
-      "teleSent": false
-    },
-    {
-      "symbol": "COAI-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": -14.880048587913752,
-      "Hbb": "3.45%",
-      "ud": -227,
-      "x": "0.42",
-      "bb15": "-1.67%",
+      "change24h": -8.278976417461122,
+      "Hbb": "4.65%",
+      "ud": -243,
+      "x": "0.50",
+      "bb15": "-2.96%",
       "teleSent": false
     }
   ]
