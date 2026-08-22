@@ -101,13 +101,11 @@ function calculateEma10nFromCandles(rawCandles) {
 
 // ------------------- TÍNH TỶ LỆ X (KHUNG 3M) -------------------
 function calculateXRatio3m(candles3m) {
-    // Cần tối thiểu 16 nến (nến 0 đang chạy, 5 nến đóng xét giảm, 10 nến trước đó)
     if (!candles3m || candles3m.length < 16) return null;
 
-    let maxNegativeDiff = 0; // Lưu biến động âm lớn nhất (giá trị âm nhỏ nhất)
+    let maxNegativeDiff = 0;
     let maxDropIndex = -1;
 
-    // Tìm nến giảm mạnh nhất trong 5 nến 3m vừa đóng (index 1 -> 5)
     for (let i = 1; i <= 5; i++) {
         const open = parseFloat(candles3m[i][1]);
         const close = parseFloat(candles3m[i][4]);
@@ -119,12 +117,10 @@ function calculateXRatio3m(candles3m) {
         }
     }
 
-    // Nếu không có nến giảm nào trong 5 nến vừa qua, biến động âm = 0
     if (maxDropIndex === -1 || maxNegativeDiff >= 0) {
-        return 0; // x = 0 (thoả mãn x > -2.5)
+        return 0;
     }
 
-    // Lấy 10 nến 3m đứng trước nến giảm đó: index (maxDropIndex + 1) đến (maxDropIndex + 10)
     const past10Candles = candles3m.slice(maxDropIndex + 1, maxDropIndex + 11);
     const totalAbsDiff = past10Candles.reduce((sum, c) => {
         const o = parseFloat(c[1]);
@@ -135,10 +131,10 @@ function calculateXRatio3m(candles3m) {
     const avgAbsDiff = totalAbsDiff / 10;
     if (avgAbsDiff === 0) return null;
 
-    return maxNegativeDiff / avgAbsDiff; // Kết quả là số âm
+    return maxNegativeDiff / avgAbsDiff;
 }
 
-// ------------------- LẤY TOP 3 TĂNG 24H -------------------
+// ------------------- LẤY TOP 5 TĂNG 24H -------------------
 async function getTopGainers() {
     try {
         const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -161,7 +157,7 @@ async function getTopGainers() {
         });
 
         validTickers.sort((a, b) => b.change24h - a.change24h);
-        return validTickers.slice(0, 3).map((item, index) => ({
+        return validTickers.slice(0, 5).map((item, index) => ({
             ...item,
             rank: index + 1
         }));
@@ -243,10 +239,10 @@ async function checkLongSignals(symbol, rank) {
 // ------------------- HÀM CHÍNH -------------------
 async function main() {
     try {
-        console.log('--- BẮT ĐẦU QUÉT CHIỀU LONG ---');
+        console.log('--- BẮT ĐẦU QUÉT CHIỀU LONG (TOP 5 TĂNG) ---');
 
         const topGainers = await getTopGainers();
-        console.log(`Top 3 Tăng: ${topGainers.map(c => `${c.instId} (#${c.rank} ${c.change24h.toFixed(2)}%)`).join(', ')}`);
+        console.log(`Top 5 Tăng: ${topGainers.map(c => `${c.instId} (#${c.rank} ${c.change24h.toFixed(2)}%)`).join(', ')}`);
 
         for (const coin of topGainers) {
             const signals = await checkLongSignals(coin.instId, coin.rank);
