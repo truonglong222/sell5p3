@@ -180,9 +180,9 @@ async function checkLongSignals(symbol, rank) {
         if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return [];
         const candles3m = res3m.data.data;
 
-        // 1. Điều kiện x > -2.5 trên khung 3m (xét từ nến 0 đến 4)
+        // 1. Điều kiện x > -3 trên khung 3m (xét từ nến 0 đến 4)
         const xRatio = calculateXRatio3m(candles3m);
-        if (xRatio === null || xRatio <= -2.5) return [];
+        if (xRatio === null || xRatio <= -3) return [];
 
         // 2. Điều kiện ema10n > 1%
         const ema10n = calculateEma10nFromCandles(candles3m);
