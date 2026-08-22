@@ -128,10 +128,10 @@ function evaluateSignals(raw15m) {
 
   let fastShort = null;
 
-  // Điều kiện Short: diffbbo > 1.5%
+  // Điều kiện Short: diffbbo > 1%
   if (bb0 && bb0.upper > 0) {
     const diffbbo = ((openPrice0 - bb0.upper) / bb0.upper) * 100;
-    if (diffbbo > 1.5) {
+    if (diffbbo > 1) {
       fastShort = { diffbbo };
     }
   }
