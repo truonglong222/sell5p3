@@ -1,7 +1,28 @@
 {
-  "lastScanAt": "2026-08-22T21:15:41.315Z",
-  "ud": -159,
-  "totalScanned": 39,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-22T21:20:38.575Z",
+  "ud": -132,
+  "totalScanned": 36,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "LAB-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -14.713188798554652,
+      "Hbb": "3.20%",
+      "ud": -132,
+      "x": "4.50",
+      "bb15": "-1.60%",
+      "teleSent": true
+    },
+    {
+      "symbol": "COAI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -12.633832976445397,
+      "Hbb": "3.41%",
+      "ud": -132,
+      "x": "2.67",
+      "bb15": "-1.54%",
+      "teleSent": true
+    }
+  ]
 }
