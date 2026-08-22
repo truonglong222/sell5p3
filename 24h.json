@@ -1,28 +1,38 @@
 {
-  "lastScanAt": "2026-08-22T23:01:12.119Z",
-  "ud": -236,
-  "totalScanned": 54,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-22T23:05:36.083Z",
+  "ud": -237,
+  "totalScanned": 55,
+  "matchedCount": 3,
   "matchedList": [
     {
-      "symbol": "GALA-USDT-SWAP",
+      "symbol": "KGEN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -11.940298507462684,
-      "Hbb": "5.46%",
-      "ud": -236,
-      "x": "-1.36",
-      "bb15": "-1.30%",
+      "change24h": -10.781249999999998,
+      "Hbb": "3.08%",
+      "ud": -237,
+      "x": "0.40",
+      "bb15": "-2.04%",
       "teleSent": false
     },
     {
-      "symbol": "GRVT-USDT-SWAP",
+      "symbol": "GALA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -12.287027218098263,
-      "Hbb": "3.19%",
-      "ud": -236,
-      "x": "1.27",
-      "bb15": "-1.88%",
-      "teleSent": true
+      "change24h": -11.927437641723357,
+      "Hbb": "5.45%",
+      "ud": -237,
+      "x": "-2.13",
+      "bb15": "-1.02%",
+      "teleSent": false
+    },
+    {
+      "symbol": "FARTCOIN-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -9.168336673346698,
+      "Hbb": "4.34%",
+      "ud": -237,
+      "x": "-2.06",
+      "bb15": "-2.49%",
+      "teleSent": false
     }
   ]
 }
