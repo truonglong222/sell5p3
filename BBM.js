@@ -101,12 +101,14 @@ function calculateEma10nFromCandles(rawCandles) {
 
 // ------------------- TÍNH TỶ LỆ X (KHUNG 3M) -------------------
 function calculateXRatio3m(candles3m) {
-    if (!candles3m || candles3m.length < 16) return null;
+    // Cần tối thiểu 15 nến (5 nến xét gồm nến 0 đến 4, cộng thêm 10 nến trước đó)
+    if (!candles3m || candles3m.length < 15) return null;
 
     let maxNegativeDiff = 0;
     let maxDropIndex = -1;
 
-    for (let i = 1; i <= 5; i++) {
+    // Xét 5 nến bao gồm cả nến hiện tại đang chạy (index 0 -> 4)
+    for (let i = 0; i <= 4; i++) {
         const open = parseFloat(candles3m[i][1]);
         const close = parseFloat(candles3m[i][4]);
         const diff = close - open;
@@ -117,10 +119,12 @@ function calculateXRatio3m(candles3m) {
         }
     }
 
+    // Nếu không có nến nào giảm điểm, giá trị x = 0 (luôn > -2.5)
     if (maxDropIndex === -1 || maxNegativeDiff >= 0) {
         return 0;
     }
 
+    // Lấy 10 nến đứng trước nến giảm đó: từ index (maxDropIndex + 1) đến (maxDropIndex + 10)
     const past10Candles = candles3m.slice(maxDropIndex + 1, maxDropIndex + 11);
     const totalAbsDiff = past10Candles.reduce((sum, c) => {
         const o = parseFloat(c[1]);
@@ -176,7 +180,7 @@ async function checkLongSignals(symbol, rank) {
         if (!res3m.data || res3m.data.code !== '0' || res3m.data.data.length < 35) return [];
         const candles3m = res3m.data.data;
 
-        // 1. Điều kiện x > -2.5 trên khung 3m
+        // 1. Điều kiện x > -2.5 trên khung 3m (xét từ nến 0 đến 4)
         const xRatio = calculateXRatio3m(candles3m);
         if (xRatio === null || xRatio <= -2.5) return [];
 
