@@ -1,18 +1,28 @@
 {
-  "lastScanAt": "2026-08-22T23:10:42.070Z",
+  "lastScanAt": "2026-08-22T23:15:53.711Z",
   "ud": -236,
-  "totalScanned": 56,
-  "matchedCount": 1,
+  "totalScanned": 61,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "FARTCOIN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -8.673726676752391,
-      "Hbb": "4.32%",
+      "change24h": -8.354430379746843,
+      "Hbb": "4.14%",
       "ud": -236,
       "x": "0.90",
-      "bb15": "-2.22%",
+      "bb15": "-1.79%",
       "teleSent": false
+    },
+    {
+      "symbol": "PEOPLE-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -7.171349288935149,
+      "Hbb": "5.78%",
+      "ud": -236,
+      "x": "-1.47",
+      "bb15": "-1.60%",
+      "teleSent": true
     }
   ]
 }
