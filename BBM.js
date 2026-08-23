@@ -115,45 +115,47 @@ async function getFilteredMarkets() {
   }
 }
 
-// ------------------- LẤY DỮ LIỆU NẾN 5M -------------------
-async function getCandleData5m(symbol) {
+// ------------------- LẤY DỮ LIỆU NẾN 15M -------------------
+async function getCandleData15m(symbol) {
   try {
-    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=60`;
+    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=15m&limit=80`;
     const res = await axios.get(url, { timeout: 5000 });
 
-    if (!res.data || res.data.code !== '0' || res.data.data.length < 40) return null;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 55) return null;
     return res.data.data;
   } catch (error) {
-    console.error(`Lỗi lấy dữ liệu nến 5m (${symbol}):`, error.message);
+    console.error(`Lỗi lấy dữ liệu nến 15m (${symbol}):`, error.message);
     return null;
   }
 }
 
-// ------------------- PHÂN TÍCH TÍN HIỆU THEO THUẬT TOÁN -------------------
-function evaluateIndicators(raw5m) {
-  const closes = raw5m.map(c => parseFloat(c[4]));
-  const currentCandle = raw5m[0];
-  const close0 = parseFloat(currentCandle[4]);
+// ------------------- PHÂN TÍCH TÍN HIỆU THEO THUẬT TOÁN (15M) -------------------
+function evaluateIndicators(raw15m) {
+  const closes = raw15m.map(c => parseFloat(c[4]));
+  const currentCandle = raw15m[0];
   const high0 = parseFloat(currentCandle[2]);
   const low0 = parseFloat(currentCandle[3]);
 
+  // BB tại nến hiện tại (index 0 -> 19)
   const closes0 = closes.slice(0, 20).reverse();
   const bb0 = calculateBollingerBands(closes0, 20);
 
-  const closes15 = closes.slice(15, 35).reverse();
-  const bb15_val = calculateBollingerBands(closes15, 20);
+  // BB tại nến số 30 (index 30 -> 49)
+  const closes30 = closes.slice(30, 50).reverse();
+  const bb30_val = calculateBollingerBands(closes30, 20);
 
-  if (!bb0 || !bb15_val) return null;
+  if (!bb0 || !bb30_val) return null;
 
-  const bb15 = ((bb0.middle - bb15_val.middle) / bb15_val.middle) * 100;
+  // % chênh lệch giữa middle band nến 0 và middle band nến 30
+  const bb30 = ((bb0.middle - bb30_val.middle) / bb30_val.middle) * 100;
   const Hbb = ((bb0.upper - bb0.lower) / bb0.lower) * 100;
 
   const currentPriceAnchor = Math.abs(high0 - bb0.middle) >= Math.abs(low0 - bb0.middle) ? high0 : low0;
   const bbm = ((currentPriceAnchor - bb0.middle) / bb0.middle) * 100;
 
   const candleChanges = [0, 1, 2].map(i => {
-    const o = parseFloat(raw5m[i][1]);
-    const c = parseFloat(raw5m[i][4]);
+    const o = parseFloat(raw15m[i][1]);
+    const c = parseFloat(raw15m[i][4]);
     return {
       index: i,
       changePercent: ((c - o) / o) * 100,
@@ -166,9 +168,9 @@ function evaluateIndicators(raw5m) {
   const startIdx = maxCandle.index + 1;
   const prev10Changes = [];
   for (let i = startIdx; i < startIdx + 10; i++) {
-    if (raw5m[i]) {
-      const o = parseFloat(raw5m[i][1]);
-      const c = parseFloat(raw5m[i][4]);
+    if (raw15m[i]) {
+      const o = parseFloat(raw15m[i][1]);
+      const c = parseFloat(raw15m[i][4]);
       prev10Changes.push(Math.abs(((c - o) / o) * 100));
     }
   }
@@ -179,21 +181,13 @@ function evaluateIndicators(raw5m) {
 
   const x = avgPrev10Abs !== 0 ? (maxCandle.changePercent / avgPrev10Abs) : 0;
 
-  // Xét biên độ trong 30 nến gần nhất
-  const candles30 = raw5m.slice(0, 30);
-  const maxHigh30 = Math.max(...candles30.map(c => parseFloat(c[2])));
-  const minLow30 = Math.min(...candles30.map(c => parseFloat(c[3])));
-  
-  const diffHigh30 = maxHigh30 > 0 ? ((close0 - maxHigh30) / maxHigh30) * 100 : 0;
-  const diffLow30 = minLow30 > 0 ? ((close0 - minLow30) / minLow30) * 100 : 0;
-
-  return { bb15, bbm, x, Hbb, diffHigh30, diffLow30 };
+  return { bb30, bbm, x, Hbb };
 }
 
 // ------------------- TIẾN TRÌNH CHÍNH -------------------
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (15M) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -214,22 +208,22 @@ async function main() {
       matched: []
     };
 
-    // BƯỚC 2: Quét tín hiệu LONG
+    // BƯỚC 2: Quét tín hiệu LONG (Khung 15m)
     if (ud > 0) {
       for (const coin of longList) {
-        const raw5m = await getCandleData5m(coin.instId);
-        if (!raw5m) {
+        const raw15m = await getCandleData15m(coin.instId);
+        if (!raw15m) {
           await sleep(80);
           continue;
         }
 
-        const metrics = evaluateIndicators(raw5m);
+        const metrics = evaluateIndicators(raw15m);
         if (!metrics) continue;
 
-        const { bb15, bbm, x, Hbb, diffLow30 } = metrics;
+        const { bb30, bbm, x, Hbb } = metrics;
 
-        // Điều kiện Long: bb15 > 1, -2 < bbm < 0.5, x < -3, Hbb > 3, diffLow30 < 5
-        if (bb15 > 1 && bbm > -2 && bbm < 0.5 && x < -3 && Hbb > 3 && diffLow30 < 5) {
+        // Điều kiện Long: 1% < bb30 < 4%, -2 < bbm < 0.5, x < -3, Hbb > 3
+        if (bb30 > 1 && bb30 < 4 && bbm > -2 && bbm < 0.5 && x < -3 && Hbb > 3) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -244,18 +238,16 @@ async function main() {
             Hbb: Hbb.toFixed(2) + '%',
             ud,
             x: x.toFixed(2),
-            bb15: bb15.toFixed(2) + '%',
-            diffLow30: diffLow30.toFixed(2) + '%',
+            bb30: bb30.toFixed(2) + '%',
             teleSent: !isCooldown
           });
 
           if (!isCooldown) {
-            const message = `🟢 <b>TÍN HIỆU LONG: ${coinName}</b>\n` +
+            const message = `🟢 <b>TÍN HIỆU LONG (15M): ${coinName}</b>\n` +
               `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
               `• <b>Hiệu số ud:</b> ${ud}\n` +
               `• <b>x:</b> ${x.toFixed(2)}\n` +
-              `• <b>bb15:</b> ${bb15.toFixed(2)}%\n` +
-              `• <b>diffLow30:</b> ${diffLow30.toFixed(2)}%\n` +
+              `• <b>bb30:</b> ${bb30.toFixed(2)}%\n` +
               `• <b>Biến động 24h:</b> +${coin.change24h.toFixed(2)}%\n` +
               `• <b>Tổng coin thỏa List Long:</b> ${totalLongSatisfied}\n` +
               `• <a href="${link}">Link OKX</a>`;
@@ -276,22 +268,22 @@ async function main() {
       }
     }
 
-    // BƯỚC 3: Quét tín hiệu SHORT
+    // BƯỚC 3: Quét tín hiệu SHORT (Khung 15m)
     if (ud < -10) {
       for (const coin of shortList) {
-        const raw5m = await getCandleData5m(coin.instId);
-        if (!raw5m) {
+        const raw15m = await getCandleData15m(coin.instId);
+        if (!raw15m) {
           await sleep(80);
           continue;
         }
 
-        const metrics = evaluateIndicators(raw5m);
+        const metrics = evaluateIndicators(raw15m);
         if (!metrics) continue;
 
-        const { bb15, bbm, x, Hbb, diffHigh30 } = metrics;
+        const { bb30, bbm, x, Hbb } = metrics;
 
-        // Điều kiện Short: bb15 < -1, -0.5 < bbm < 2, x < 3, Hbb > 3, diffHigh30 > -4
-        if (bb15 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3 && diffHigh30 > -4) {
+        // Điều kiện Short: -4% < bb30 < -1%, -0.5 < bbm < 2, x < 3, Hbb > 3
+        if (bb30 > -4 && bb30 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -306,18 +298,16 @@ async function main() {
             Hbb: Hbb.toFixed(2) + '%',
             ud,
             x: x.toFixed(2),
-            bb15: bb15.toFixed(2) + '%',
-            diffHigh30: diffHigh30.toFixed(2) + '%',
+            bb30: bb30.toFixed(2) + '%',
             teleSent: !isCooldown
           });
 
           if (!isCooldown) {
-            const message = `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
+            const message = `🔴 <b>TÍN HIỆU SHORT (15M): ${coinName}</b>\n` +
               `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
               `• <b>Hiệu số ud:</b> ${ud}\n` +
               `• <b>x:</b> ${x.toFixed(2)}\n` +
-              `• <b>bb15:</b> ${bb15.toFixed(2)}%\n` +
-              `• <b>diffHigh30:</b> ${diffHigh30.toFixed(2)}%\n` +
+              `• <b>bb30:</b> ${bb30.toFixed(2)}%\n` +
               `• <b>Biến động 24h:</b> ${coin.change24h.toFixed(2)}%\n` +
               `• <b>Tổng coin thỏa List Short:</b> ${totalShortSatisfied}\n` +
               `• <a href="${link}">Link OKX</a>`;
@@ -343,7 +333,7 @@ async function main() {
     // BƯỚC 4: Ghi nhận kết quả
     saveScanResults(scanResults);
 
-    console.log('\n================== KẾT QUẢ QUÉT ==================');
+    console.log('\n================== KẾT QUẢ QUÉT (15M) ==================');
     console.log(`Chỉ số thị trường UD (Vol > 5M): ${scanResults.ud}`);
     console.log(`Số lượng tín hiệu thỏa mãn: ${scanResults.matched.length}`);
     if (scanResults.matched.length > 0) {
