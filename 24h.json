@@ -1,40 +1,51 @@
 {
-  "lastScanAt": "2026-08-23T02:55:53.656Z",
-  "ud": -201,
+  "lastScanAt": "2026-08-23T03:01:34.381Z",
+  "ud": -203,
   "totalScanned": 132,
-  "matchedCount": 3,
+  "matchedCount": 4,
   "matchedList": [
     {
-      "symbol": "BRETT-USDT-SWAP",
+      "symbol": "ATH-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -9.779907703230393,
-      "Hbb": "3.81%",
-      "ud": -201,
-      "x": "1.33",
-      "bb15": "-1.65%",
-      "diffHigh30": "-3.14%",
-      "teleSent": true
-    },
-    {
-      "symbol": "VIRTUAL-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": -8.356845358054537,
-      "Hbb": "3.08%",
-      "ud": -201,
-      "x": "0.87",
-      "bb15": "-1.17%",
-      "diffHigh30": "-2.16%",
-      "teleSent": true
+      "change24h": -7.954545454545454,
+      "Hbb": "3.10%",
+      "ud": -203,
+      "x": "0.85",
+      "bb15": "-1.92%",
+      "diffHigh30": "-3.55%",
+      "teleSent": false
     },
     {
       "symbol": "KAITO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -11.663675980517812,
-      "Hbb": "3.07%",
-      "ud": -201,
-      "x": "2.43",
-      "bb15": "-1.07%",
-      "diffHigh30": "-1.20%",
+      "change24h": -12.000000000000007,
+      "Hbb": "3.14%",
+      "ud": -203,
+      "x": "0.30",
+      "bb15": "-1.03%",
+      "diffHigh30": "-0.95%",
+      "teleSent": false
+    },
+    {
+      "symbol": "LUNA-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -8.90516576715497,
+      "Hbb": "3.16%",
+      "ud": -203,
+      "x": "0.46",
+      "bb15": "-1.68%",
+      "diffHigh30": "-3.13%",
+      "teleSent": true
+    },
+    {
+      "symbol": "WLFI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -10.195465207193125,
+      "Hbb": "3.39%",
+      "ud": -203,
+      "x": "-0.62",
+      "bb15": "-1.85%",
+      "diffHigh30": "-3.05%",
       "teleSent": false
     }
   ]
