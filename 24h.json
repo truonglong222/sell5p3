@@ -1,30 +1,41 @@
 {
-  "lastScanAt": "2026-08-23T02:46:05.160Z",
+  "lastScanAt": "2026-08-23T02:51:02.787Z",
   "ud": -199,
-  "totalScanned": 126,
-  "matchedCount": 2,
+  "totalScanned": 127,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "ATH-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -7.648494711147283,
+      "Hbb": "3.56%",
+      "ud": -199,
+      "x": "1.62",
+      "bb15": "-1.83%",
+      "diffHigh30": "-3.45%",
+      "teleSent": true
+    },
     {
       "symbol": "GALA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -14.368845120859442,
-      "Hbb": "3.57%",
+      "change24h": -14.215246636771308,
+      "Hbb": "3.04%",
       "ud": -199,
-      "x": "-0.80",
-      "bb15": "-1.49%",
+      "x": "0.50",
+      "bb15": "-1.57%",
       "diffHigh30": "-2.99%",
       "teleSent": false
     },
     {
       "symbol": "KAITO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -12.18444100978877,
-      "Hbb": "3.26%",
+      "change24h": -11.868751602153296,
+      "Hbb": "3.12%",
       "ud": -199,
-      "x": "0.94",
-      "bb15": "-1.10%",
-      "diffHigh30": "-1.89%",
-      "teleSent": true
+      "x": "2.43",
+      "bb15": "-1.08%",
+      "diffHigh30": "-1.41%",
+      "teleSent": false
     }
   ]
 }
