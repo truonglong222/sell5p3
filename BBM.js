@@ -104,9 +104,9 @@ async function getFilteredMarkets() {
     const downCount = volFiltered.filter(c => c.change24h < 0).length;
     const ud = upCount - downCount;
 
-    // 3. PHÂN LOẠI LIST LONG VÀ LIST SHORT TỪ DANH SÁCH ĐÃ LỌC VOLUME
-    const longList = volFiltered.filter(c => c.change24h >= 7 && c.change24h <= 15);
-    const shortList = volFiltered.filter(c => c.change24h >= -15 && c.change24h <= -7);
+    // 3. PHÂN LOẠI LIST LONG VÀ LIST SHORT (3% -> 8% và -8% -> -3%)
+    const longList = volFiltered.filter(c => c.change24h >= 3 && c.change24h <= 8);
+    const shortList = volFiltered.filter(c => c.change24h >= -8 && c.change24h <= -3);
 
     return { ud, longList, shortList };
   } catch (error) {
@@ -209,8 +209,8 @@ async function main() {
     const totalShortSatisfied = shortList.length;
 
     console.log(`📊 Chỉ số UD (tính trên tập Vol > 5M): ${ud}`);
-    console.log(`🟢 Số coin thỏa điều kiện List Long (7% -> 15%): ${totalLongSatisfied}`);
-    console.log(`🔴 Số coin thỏa điều kiện List Short (-15% -> -7%): ${totalShortSatisfied}`);
+    console.log(`🟢 Số coin thỏa điều kiện List Long (3% -> 8%): ${totalLongSatisfied}`);
+    console.log(`🔴 Số coin thỏa điều kiện List Short (-8% -> -3%): ${totalShortSatisfied}`);
 
     const scanResults = {
       ud,
@@ -232,8 +232,8 @@ async function main() {
 
         const { bb20, bbm, x, Hbb, diffLow30 } = metrics;
 
-        // Điều kiện Long: bb20 > 1%, -2 < bbm < 0.5, x > -3, Hbb > 3, diffLow30 < 7
-        if (bb20 > 1 && bbm > -2 && bbm < 0.5 && x > -3 && Hbb > 3 && diffLow30 < 7) {
+        // Điều kiện Long: bb20 > 1%, -2 < bbm < 0.5, x > -3, Hbb > 3, diffLow30 < 4
+        if (bb20 > 1 && bbm > -2 && bbm < 0.5 && x > -3 && Hbb > 3 && diffLow30 < 4) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -294,8 +294,8 @@ async function main() {
 
         const { bb20, bbm, x, Hbb, diffHigh30 } = metrics;
 
-        // Điều kiện Short: bb20 < -1%, -0.5 < bbm < 2, x < 3, Hbb > 3, diffHigh30 > -7
-        if (bb20 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3 && diffHigh30 > -7) {
+        // Điều kiện Short: bb20 < -1%, -0.5 < bbm < 2, x < 3, Hbb > 3, diffHigh30 > -4
+        if (bb20 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3 && diffHigh30 > -4) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
