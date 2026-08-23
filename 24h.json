@@ -1,26 +1,15 @@
 {
-  "lastScanAt": "2026-08-23T10:30:58.838Z",
-  "ud": -75,
-  "totalScanned": 75,
-  "matchedCount": 4,
+  "lastScanAt": "2026-08-23T10:35:36.819Z",
+  "ud": -81,
+  "totalScanned": 78,
+  "matchedCount": 3,
   "matchedList": [
-    {
-      "symbol": "ACU-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": -6.74730021598273,
-      "Hbb": "3.03%",
-      "ud": -75,
-      "x": "1.11",
-      "bb20": "-1.34%",
-      "diffHigh30": "-3.67%",
-      "teleSent": true
-    },
     {
       "symbol": "SPACE-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -5.883480260636275,
+      "change24h": -6.387035271687309,
       "Hbb": "3.15%",
-      "ud": -75,
+      "ud": -81,
       "x": "0.76",
       "bb20": "-1.19%",
       "diffHigh30": "-3.29%",
@@ -29,24 +18,24 @@
     {
       "symbol": "DOOD-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -3.2846715328467084,
-      "Hbb": "3.64%",
-      "ud": -75,
+      "change24h": -3.6310820624546056,
+      "Hbb": "3.69%",
+      "ud": -81,
       "x": "1.65",
-      "bb20": "-1.21%",
-      "diffHigh30": "-3.40%",
+      "bb20": "-1.20%",
+      "diffHigh30": "-3.54%",
       "teleSent": false
     },
     {
       "symbol": "2Z-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -5.285520054384775,
-      "Hbb": "3.64%",
-      "ud": -75,
+      "change24h": -5.907172995780584,
+      "Hbb": "3.65%",
+      "ud": -81,
       "x": "0.49",
       "bb20": "-1.07%",
       "diffHigh30": "-3.65%",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
