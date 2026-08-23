@@ -1,7 +1,30 @@
 {
-  "lastScanAt": "2026-08-23T02:20:54.913Z",
-  "ud": -283,
-  "totalScanned": 107,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-23T02:35:51.744Z",
+  "ud": -195,
+  "totalScanned": 109,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "GALA-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -14.737310774710602,
+      "Hbb": "4.26%",
+      "ud": -195,
+      "x": "2.24",
+      "bb15": "-1.27%",
+      "diffHigh30": "-2.89%",
+      "teleSent": true
+    },
+    {
+      "symbol": "WLFI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -7.874141510940739,
+      "Hbb": "4.73%",
+      "ud": -195,
+      "x": "2.97",
+      "bb15": "-1.63%",
+      "diffHigh30": "-2.78%",
+      "teleSent": true
+    }
+  ]
 }
