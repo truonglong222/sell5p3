@@ -75,7 +75,7 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// ------------------- LỌC COIN & TÍNH CHỈ SỐ UD -------------------
+// ------------------- LỌC VOLUME TRƯỚC -> TÍNH UD -> PHÂN LIST -------------------
 async function getFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -96,11 +96,15 @@ async function getFilteredMarkets() {
         };
       });
 
-    const upCount = swapTickers.filter(c => c.change24h > 0).length;
-    const downCount = swapTickers.filter(c => c.change24h < 0).length;
+    // 1. LỌC VOLUME TRƯỚC (> 5 triệu USDT)
+    const volFiltered = swapTickers.filter(c => c.volCcy24h > MIN_VOL_CCY24H);
+
+    // 2. TÍNH HIỆU SỐ UD TRÊN DANH SÁCH ĐÃ LỌC VOLUME
+    const upCount = volFiltered.filter(c => c.change24h > 0).length;
+    const downCount = volFiltered.filter(c => c.change24h < 0).length;
     const ud = upCount - downCount;
 
-    const volFiltered = swapTickers.filter(c => c.volCcy24h > MIN_VOL_CCY24H);
+    // 3. PHÂN LOẠI LIST LONG VÀ LIST SHORT TỪ DANH SÁCH ĐÃ LỌC VOLUME
     const longList = volFiltered.filter(c => c.change24h >= 7 && c.change24h <= 15);
     const shortList = volFiltered.filter(c => c.change24h >= -15 && c.change24h <= -7);
 
@@ -175,7 +179,7 @@ function evaluateIndicators(raw5m) {
 
   const x = avgPrev10Abs !== 0 ? (maxCandle.changePercent / avgPrev10Abs) : 0;
 
-  // 4. Chênh lệch % giá hiện tại so với đỉnh/đáy râu nến trong 30 nến gần nhất
+  // Xét biên độ trong 30 nến gần nhất
   const candles30 = raw5m.slice(0, 30);
   const maxHigh30 = Math.max(...candles30.map(c => parseFloat(c[2])));
   const minLow30 = Math.min(...candles30.map(c => parseFloat(c[3])));
@@ -195,11 +199,12 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
+    // BƯỚC 1: Lọc volume trước -> tính UD -> lấy danh sách coin thỏa mãn 24h
     const { ud, longList, shortList } = await getFilteredMarkets();
     const totalLongSatisfied = longList.length;
     const totalShortSatisfied = shortList.length;
 
-    console.log(`📊 Chỉ số UD (Tăng - Giảm 24h): ${ud}`);
+    console.log(`📊 Chỉ số UD (tính trên tập Vol > 5M): ${ud}`);
     console.log(`🟢 Số coin thỏa điều kiện List Long (7% -> 15%): ${totalLongSatisfied}`);
     console.log(`🔴 Số coin thỏa điều kiện List Short (-15% -> -7%): ${totalShortSatisfied}`);
 
@@ -223,7 +228,7 @@ async function main() {
 
         const { bb15, bbm, x, Hbb, diffLow30 } = metrics;
 
-        // Điều kiện Long cập nhật: diffLow30 < 5
+        // Điều kiện Long: bb15 > 1, -2 < bbm < 0.5, x < -3, Hbb > 3, diffLow30 < 5
         if (bb15 > 1 && bbm > -2 && bbm < 0.5 && x < -3 && Hbb > 3 && diffLow30 < 5) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
@@ -240,6 +245,7 @@ async function main() {
             ud,
             x: x.toFixed(2),
             bb15: bb15.toFixed(2) + '%',
+            diffLow30: diffLow30.toFixed(2) + '%',
             teleSent: !isCooldown
           });
 
@@ -284,6 +290,7 @@ async function main() {
 
         const { bb15, bbm, x, Hbb, diffHigh30 } = metrics;
 
+        // Điều kiện Short: bb15 < -1, -0.5 < bbm < 2, x < 3, Hbb > 3, diffHigh30 > -4
         if (bb15 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3 && diffHigh30 > -4) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
@@ -300,6 +307,7 @@ async function main() {
             ud,
             x: x.toFixed(2),
             bb15: bb15.toFixed(2) + '%',
+            diffHigh30: diffHigh30.toFixed(2) + '%',
             teleSent: !isCooldown
           });
 
@@ -332,10 +340,11 @@ async function main() {
 
     if (hasNewAlert) saveSentLog(sentLog);
 
+    // BƯỚC 4: Ghi nhận kết quả
     saveScanResults(scanResults);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
-    console.log(`Chỉ số thị trường UD: ${scanResults.ud}`);
+    console.log(`Chỉ số thị trường UD (Vol > 5M): ${scanResults.ud}`);
     console.log(`Số lượng tín hiệu thỏa mãn: ${scanResults.matched.length}`);
     if (scanResults.matched.length > 0) {
       console.table(scanResults.matched);
