@@ -96,15 +96,11 @@ async function getFilteredMarkets() {
         };
       });
 
-    // 1. Tính hiệu số ud (Up - Down) toàn bộ thị trường swap USDT
     const upCount = swapTickers.filter(c => c.change24h > 0).length;
     const downCount = swapTickers.filter(c => c.change24h < 0).length;
     const ud = upCount - downCount;
 
-    // 2. Lọc coin Volume > 5 Triệu
     const volFiltered = swapTickers.filter(c => c.volCcy24h > MIN_VOL_CCY24H);
-
-    // 3. Phân loại List Long và List Short
     const longList = volFiltered.filter(c => c.change24h >= 7 && c.change24h <= 15);
     const shortList = volFiltered.filter(c => c.change24h >= -15 && c.change24h <= -7);
 
@@ -118,7 +114,6 @@ async function getFilteredMarkets() {
 // ------------------- LẤY DỮ LIỆU NẾN 5M -------------------
 async function getCandleData5m(symbol) {
   try {
-    // Lấy 60 nến để đủ dữ liệu xét BB nến 15 và 30 nến gần nhất
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=5m&limit=60`;
     const res = await axios.get(url, { timeout: 5000 });
 
@@ -138,27 +133,20 @@ function evaluateIndicators(raw5m) {
   const high0 = parseFloat(currentCandle[2]);
   const low0 = parseFloat(currentCandle[3]);
 
-  // 1. BB nến hiện tại (chỉ số 0)
   const closes0 = closes.slice(0, 20).reverse();
   const bb0 = calculateBollingerBands(closes0, 20);
 
-  // 2. BB nến số 15
   const closes15 = closes.slice(15, 35).reverse();
   const bb15_val = calculateBollingerBands(closes15, 20);
 
   if (!bb0 || !bb15_val) return null;
 
-  // bb15: chênh lệch % giữa BB Mid hiện tại và BB Mid nến 15
   const bb15 = ((bb0.middle - bb15_val.middle) / bb15_val.middle) * 100;
-
-  // Hbb: chênh lệch % giữa BB Upper và BB Lower nến hiện tại
   const Hbb = ((bb0.upper - bb0.lower) / bb0.lower) * 100;
 
-  // bbm: Chênh lệch % giữa giá/râu hiện tại và BB Mid
   const currentPriceAnchor = Math.abs(high0 - bb0.middle) >= Math.abs(low0 - bb0.middle) ? high0 : low0;
   const bbm = ((currentPriceAnchor - bb0.middle) / bb0.middle) * 100;
 
-  // 3. Tính x: nến biến động lớn nhất trên 3 nến gần nhất / trung bình trị tuyệt đối 10 nến trước đó
   const candleChanges = [0, 1, 2].map(i => {
     const o = parseFloat(raw5m[i][1]);
     const c = parseFloat(raw5m[i][4]);
@@ -187,12 +175,15 @@ function evaluateIndicators(raw5m) {
 
   const x = avgPrev10Abs !== 0 ? (maxCandle.changePercent / avgPrev10Abs) : 0;
 
-  // 4. Chênh lệch % giá hiện tại so với đỉnh râu nến cao nhất trong 30 nến gần nhất
+  // 4. Chênh lệch % giá hiện tại so với đỉnh/đáy râu nến trong 30 nến gần nhất
   const candles30 = raw5m.slice(0, 30);
   const maxHigh30 = Math.max(...candles30.map(c => parseFloat(c[2])));
+  const minLow30 = Math.min(...candles30.map(c => parseFloat(c[3])));
+  
   const diffHigh30 = maxHigh30 > 0 ? ((close0 - maxHigh30) / maxHigh30) * 100 : 0;
+  const diffLow30 = minLow30 > 0 ? ((close0 - minLow30) / minLow30) * 100 : 0;
 
-  return { bb15, bbm, x, Hbb, diffHigh30 };
+  return { bb15, bbm, x, Hbb, diffHigh30, diffLow30 };
 }
 
 // ------------------- TIẾN TRÌNH CHÍNH -------------------
@@ -204,7 +195,6 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // BƯỚC 1: Lấy UD và phân nhóm danh sách
     const { ud, longList, shortList } = await getFilteredMarkets();
     const totalLongSatisfied = longList.length;
     const totalShortSatisfied = shortList.length;
@@ -231,10 +221,10 @@ async function main() {
         const metrics = evaluateIndicators(raw5m);
         if (!metrics) continue;
 
-        const { bb15, bbm, x, Hbb, diffHigh30 } = metrics;
+        const { bb15, bbm, x, Hbb, diffLow30 } = metrics;
 
-        // Điều kiện Long: bb15 > 1, -2 < bbm < 0.5, x < -3, Hbb > 3, diffHigh30 > -4
-        if (bb15 > 1 && bbm > -2 && bbm < 0.5 && x < -3 && Hbb > 3 && diffHigh30 > -4) {
+        // Điều kiện Long cập nhật: diffLow30 < 5
+        if (bb15 > 1 && bbm > -2 && bbm < 0.5 && x < -3 && Hbb > 3 && diffLow30 < 5) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -259,6 +249,7 @@ async function main() {
               `• <b>Hiệu số ud:</b> ${ud}\n` +
               `• <b>x:</b> ${x.toFixed(2)}\n` +
               `• <b>bb15:</b> ${bb15.toFixed(2)}%\n` +
+              `• <b>diffLow30:</b> ${diffLow30.toFixed(2)}%\n` +
               `• <b>Biến động 24h:</b> +${coin.change24h.toFixed(2)}%\n` +
               `• <b>Tổng coin thỏa List Long:</b> ${totalLongSatisfied}\n` +
               `• <a href="${link}">Link OKX</a>`;
@@ -293,7 +284,6 @@ async function main() {
 
         const { bb15, bbm, x, Hbb, diffHigh30 } = metrics;
 
-        // Điều kiện Short: bb15 < -1, -0.5 < bbm < 2, x < 3, Hbb > 3, diffHigh30 > -4
         if (bb15 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3 && diffHigh30 > -4) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
@@ -319,6 +309,7 @@ async function main() {
               `• <b>Hiệu số ud:</b> ${ud}\n` +
               `• <b>x:</b> ${x.toFixed(2)}\n` +
               `• <b>bb15:</b> ${bb15.toFixed(2)}%\n` +
+              `• <b>diffHigh30:</b> ${diffHigh30.toFixed(2)}%\n` +
               `• <b>Biến động 24h:</b> ${coin.change24h.toFixed(2)}%\n` +
               `• <b>Tổng coin thỏa List Short:</b> ${totalShortSatisfied}\n` +
               `• <a href="${link}">Link OKX</a>`;
@@ -341,7 +332,6 @@ async function main() {
 
     if (hasNewAlert) saveSentLog(sentLog);
 
-    // BƯỚC 4: Ghi nhận kết quả
     saveScanResults(scanResults);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
