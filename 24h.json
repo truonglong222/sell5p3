@@ -1,18 +1,28 @@
 {
-  "lastScanAt": "2026-08-23T04:10:59.808Z",
-  "ud": -216,
-  "totalScanned": 151,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-23T04:16:12.143Z",
+  "ud": -212,
+  "totalScanned": 157,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "KAITO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": -12.821807168096925,
-      "Hbb": "3.14%",
-      "ud": -216,
-      "x": "-1.24",
-      "bb30": "-1.91%",
+      "change24h": -12.719078617926879,
+      "Hbb": "3.42%",
+      "ud": -212,
+      "x": "1.10",
+      "bb30": "-1.87%",
       "teleSent": false
+    },
+    {
+      "symbol": "EDEN-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": -14.944328462073763,
+      "Hbb": "3.41%",
+      "ud": -212,
+      "x": "1.19",
+      "bb30": "-2.83%",
+      "teleSent": true
     }
   ]
 }
