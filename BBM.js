@@ -232,8 +232,8 @@ async function main() {
 
         const { bb20, bbm, x, Hbb, diffLow30 } = metrics;
 
-        // Điều kiện Long: bb20 > 1%, -2 < bbm < 0.5, x > -3, Hbb > 3, diffLow30 < 4
-        if (bb20 > 1 && bbm > -2 && bbm < 0.5 && x > -3 && Hbb > 3 && diffLow30 < 4) {
+        // Điều kiện Long: bb20 > 1%, -2 < bbm < 0.5, x > -3, Hbb > 3, diffLow30 < 3
+        if (bb20 > 1 && bbm > -2 && bbm < 0.5 && x > -3 && Hbb > 3 && diffLow30 < 3) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -294,8 +294,8 @@ async function main() {
 
         const { bb20, bbm, x, Hbb, diffHigh30 } = metrics;
 
-        // Điều kiện Short: bb20 < -1%, -0.5 < bbm < 2, x < 3, Hbb > 3, diffHigh30 > -4
-        if (bb20 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3 && diffHigh30 > -4) {
+        // Điều kiện Short: bb20 < -1%, -0.5 < bbm < 2, x < 3, Hbb > 3, diffHigh30 > -3
+        if (bb20 < -1 && bbm > -0.5 && bbm < 2 && x < 3 && Hbb > 3 && diffHigh30 > -3) {
           const symbol = coin.instId;
           const coinName = symbol.replace('-USDT-SWAP', '');
           const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
