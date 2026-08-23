@@ -1,7 +1,41 @@
 {
-  "lastScanAt": "2026-08-23T22:45:45.738Z",
+  "lastScanAt": "2026-08-23T22:50:48.853Z",
   "ud": 142,
   "totalScanned": 76,
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 3,
+  "matchedList": [
+    {
+      "symbol": "PARTI-USDT-SWAP",
+      "type": "LONG",
+      "change24h": 4.539669070852771,
+      "Hbb": "3.17%",
+      "ud": 142,
+      "x": "0.50",
+      "bb20": "2.59%",
+      "diffLow20": "3.32%",
+      "teleSent": true
+    },
+    {
+      "symbol": "ZRX-USDT-SWAP",
+      "type": "LONG",
+      "change24h": 4.073884043099027,
+      "Hbb": "3.49%",
+      "ud": 142,
+      "x": "-0.26",
+      "bb20": "2.20%",
+      "diffLow20": "3.89%",
+      "teleSent": true
+    },
+    {
+      "symbol": "BARD-USDT-SWAP",
+      "type": "LONG",
+      "change24h": 3.784693019343978,
+      "Hbb": "3.29%",
+      "ud": 142,
+      "x": "0.89",
+      "bb20": "2.17%",
+      "diffLow20": "3.37%",
+      "teleSent": true
+    }
+  ]
 }
