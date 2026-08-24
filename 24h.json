@@ -1,18 +1,29 @@
 {
-  "lastScanAt": "2026-08-24T01:01:08.900Z",
-  "ud": 15,
+  "lastScanAt": "2026-08-24T01:05:29.997Z",
+  "ud": 17,
   "totalScanned": 47,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "SYRUP-USDT-SWAP",
       "type": "LONG",
-      "change24h": 3.640145605824236,
+      "change24h": 3.6921476859074343,
       "Hbb": "3.96%",
-      "ud": 15,
+      "ud": 17,
       "x": "-2.62",
       "bb20": "1.43%",
       "diffLow20": "3.97%",
+      "teleSent": false
+    },
+    {
+      "symbol": "VIRTUAL-USDT-SWAP",
+      "type": "LONG",
+      "change24h": 4.992064637137493,
+      "Hbb": "3.12%",
+      "ud": 17,
+      "x": "5.10",
+      "bb20": "1.86%",
+      "diffLow20": "3.89%",
       "teleSent": true
     }
   ]
