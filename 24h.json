@@ -1,26 +1,36 @@
 {
-  "lastScanAt": "2026-08-24T19:31:47.710Z",
-  "totalScanned": 158,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-24T19:46:26.444Z",
+  "totalScanned": 160,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "ZK-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "4.23%",
+      "diffema10": "1.14%",
+      "bbd1h": "0.11%",
+      "bbt1h": "-3.95%",
+      "change24h": "-4.98%",
+      "teleSent": false
+    },
     {
       "symbol": "WLFI-USDT-SWAP",
       "type": "LONG",
       "Hbb": "3.56%",
-      "diffema10": "-1.95%",
+      "diffema10": "-1.97%",
       "bbd1h": "0.38%",
       "bbt1h": "-3.08%",
-      "change24h": "-3.28%",
+      "change24h": "-3.50%",
       "teleSent": false
     },
     {
       "symbol": "HOME-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.88%",
-      "diffema10": "-0.38%",
+      "diffema10": "-0.36%",
       "bbd1h": "3.42%",
       "bbt1h": "-0.45%",
-      "change24h": "1.02%",
+      "change24h": "1.84%",
       "teleSent": false
     }
   ]
