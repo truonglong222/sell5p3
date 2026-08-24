@@ -1,28 +1,39 @@
 {
-  "lastScanAt": "2026-08-23T23:55:37.991Z",
-  "ud": 131,
-  "totalScanned": 64,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-24T00:02:40.651Z",
+  "ud": 133,
+  "totalScanned": 59,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "ATH-USDT-SWAP",
       "type": "LONG",
-      "change24h": 4.9676025917926605,
-      "Hbb": "3.33%",
-      "ud": 131,
+      "change24h": 4.969749351771827,
+      "Hbb": "3.45%",
+      "ud": 133,
       "x": "-1.79",
-      "bb20": "1.29%",
+      "bb20": "1.14%",
       "diffLow20": "3.95%",
+      "teleSent": false
+    },
+    {
+      "symbol": "VIRTUAL-USDT-SWAP",
+      "type": "LONG",
+      "change24h": 5.773136060342319,
+      "Hbb": "3.48%",
+      "ud": 133,
+      "x": "-2.15",
+      "bb20": "1.92%",
+      "diffLow20": "3.91%",
       "teleSent": false
     },
     {
       "symbol": "BIGTIME-USDT-SWAP",
       "type": "LONG",
-      "change24h": 3.5316276879610795,
-      "Hbb": "3.17%",
-      "ud": 131,
+      "change24h": 4.055546788701283,
+      "Hbb": "3.20%",
+      "ud": 133,
       "x": "-0.58",
-      "bb20": "2.51%",
+      "bb20": "2.37%",
       "diffLow20": "3.50%",
       "teleSent": false
     }
