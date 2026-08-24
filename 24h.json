@@ -1,51 +1,29 @@
 {
-  "lastScanAt": "2026-08-24T00:10:43.964Z",
-  "ud": 119,
-  "totalScanned": 67,
-  "matchedCount": 4,
+  "lastScanAt": "2026-08-24T00:15:44.565Z",
+  "ud": 106,
+  "totalScanned": 59,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "OFC-USDT-SWAP",
       "type": "LONG",
-      "change24h": 3.354134165366625,
-      "Hbb": "3.73%",
-      "ud": 119,
-      "x": "-1.27",
-      "bb20": "1.03%",
+      "change24h": 4.0689271817676484,
+      "Hbb": "3.46%",
+      "ud": 106,
+      "x": "1.25",
+      "bb20": "1.07%",
       "diffLow20": "3.73%",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "VIRTUAL-USDT-SWAP",
       "type": "LONG",
-      "change24h": 5.830053927998822,
-      "Hbb": "3.51%",
-      "ud": 119,
-      "x": "-2.20",
+      "change24h": 5.7829570284049465,
+      "Hbb": "3.47%",
+      "ud": 106,
+      "x": "-2.44",
       "bb20": "1.90%",
       "diffLow20": "3.91%",
-      "teleSent": false
-    },
-    {
-      "symbol": "GRT-USDT-SWAP",
-      "type": "LONG",
-      "change24h": 7.540173053152033,
-      "Hbb": "3.67%",
-      "ud": 119,
-      "x": "-2.72",
-      "bb20": "2.86%",
-      "diffLow20": "3.86%",
-      "teleSent": true
-    },
-    {
-      "symbol": "BARD-USDT-SWAP",
-      "type": "LONG",
-      "change24h": 3.2939189189189193,
-      "Hbb": "3.41%",
-      "ud": 119,
-      "x": "-1.11",
-      "bb20": "1.55%",
-      "diffLow20": "3.45%",
       "teleSent": false
     }
   ]
