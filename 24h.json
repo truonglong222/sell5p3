@@ -1,27 +1,37 @@
 {
-  "lastScanAt": "2026-08-24T15:46:20.279Z",
-  "totalScanned": 162,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-24T16:01:54.451Z",
+  "totalScanned": 167,
+  "matchedCount": 3,
   "matchedList": [
     {
-      "symbol": "LINK-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "3.64%",
-      "diffema10": "1.68%",
-      "bbd1h": "3.42%",
-      "bbt1h": "-0.21%",
-      "change24h": "0.85%",
+      "symbol": "ONE-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "6.02%",
+      "diffema10": "-0.82%",
+      "bbd1h": "0.33%",
+      "bbt1h": "-5.36%",
+      "change24h": "-3.77%",
       "teleSent": true
     },
     {
-      "symbol": "CAP-USDT-SWAP",
+      "symbol": "MERL-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.60%",
-      "diffema10": "0.30%",
-      "bbd1h": "5.23%",
-      "bbt1h": "-0.35%",
-      "change24h": "0.13%",
-      "teleSent": false
+      "Hbb": "4.99%",
+      "diffema10": "-1.76%",
+      "bbd1h": "6.12%",
+      "bbt1h": "1.07%",
+      "change24h": "0.15%",
+      "teleSent": true
+    },
+    {
+      "symbol": "FARTCOIN-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "7.97%",
+      "diffema10": "1.03%",
+      "bbd1h": "8.17%",
+      "bbt1h": "0.19%",
+      "change24h": "-1.49%",
+      "teleSent": true
     }
   ]
 }
