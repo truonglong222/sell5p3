@@ -1,37 +1,47 @@
 {
-  "lastScanAt": "2026-08-24T23:01:43.429Z",
-  "totalScanned": 155,
-  "matchedCount": 3,
+  "lastScanAt": "2026-08-24T23:16:27.542Z",
+  "totalScanned": 160,
+  "matchedCount": 4,
   "matchedList": [
+    {
+      "symbol": "DOOD-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.54%",
+      "diffema10": "0.17%",
+      "bbd1h": "0.45%",
+      "bbt1h": "-2.98%",
+      "change24h": "-4.82%",
+      "teleSent": true
+    },
     {
       "symbol": "RESOLV-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "6.98%",
-      "diffema10": "0.54%",
+      "diffema10": "0.50%",
       "bbd1h": "6.75%",
       "bbt1h": "-0.21%",
-      "change24h": "1.27%",
+      "change24h": "1.17%",
       "teleSent": false
     },
     {
       "symbol": "BERA-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "5.65%",
-      "diffema10": "1.94%",
+      "diffema10": "1.89%",
       "bbd1h": "5.18%",
       "bbt1h": "-0.45%",
-      "change24h": "-0.11%",
-      "teleSent": true
+      "change24h": "-0.37%",
+      "teleSent": false
     },
     {
       "symbol": "WOO-USDT-SWAP",
       "type": "LONG",
       "Hbb": "3.27%",
-      "diffema10": "0.13%",
+      "diffema10": "0.14%",
       "bbd1h": "0.35%",
       "bbt1h": "-2.83%",
-      "change24h": "-3.41%",
-      "teleSent": true
+      "change24h": "-3.49%",
+      "teleSent": false
     }
   ]
 }
