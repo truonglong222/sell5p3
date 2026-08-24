@@ -1,7 +1,19 @@
 {
-  "lastScanAt": "2026-08-24T00:55:20.771Z",
-  "ud": -5,
-  "totalScanned": 50,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-24T01:01:08.900Z",
+  "ud": 15,
+  "totalScanned": 47,
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "SYRUP-USDT-SWAP",
+      "type": "LONG",
+      "change24h": 3.640145605824236,
+      "Hbb": "3.96%",
+      "ud": 15,
+      "x": "-2.62",
+      "bb20": "1.43%",
+      "diffLow20": "3.97%",
+      "teleSent": true
+    }
+  ]
 }
