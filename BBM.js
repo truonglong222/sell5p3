@@ -185,9 +185,7 @@ async function main() {
         continue;
       }
 
-      const closedCandle1h = candles1h[1] || candles1h[0];
-      const currentPrice1h = parseFloat(closedCandle1h[4]);
-
+      // Tính BB(20) dựa trên 20 nến 1H đã đóng gần nhất [1..20]
       const closes1hForBB = candles1h.slice(1, 21).map(c => parseFloat(c[4])).reverse();
       const bb1h = calculateBollingerBands(closes1hForBB, 20);
 
@@ -196,9 +194,15 @@ async function main() {
         continue;
       }
 
+      // Lấy giá High (index 2) và Low (index 3) của nến 1H hiện tại [0]
+      const currentCandle1h = candles1h[0];
+      const high1hCurrent = parseFloat(currentCandle1h[2]);
+      const low1hCurrent = parseFloat(currentCandle1h[3]);
+
+      // Tính Hbb, bbd1h (theo Low), bbt1h (theo High)
       const Hbb = ((bb1h.upper - bb1h.lower) / bb1h.lower) * 100;
-      const bbd1h = ((currentPrice1h - bb1h.lower) / bb1h.lower) * 100;
-      const bbt1h = ((currentPrice1h - bb1h.upper) / bb1h.upper) * 100;
+      const bbd1h = ((low1hCurrent - bb1h.lower) / bb1h.lower) * 100;
+      const bbt1h = ((high1hCurrent - bb1h.upper) / bb1h.upper) * 100;
 
       // Điều kiện Hbb > 3%
       if (Hbb <= 3) {
@@ -206,9 +210,9 @@ async function main() {
         continue;
       }
 
-      // ĐIỀU KIỆN MỚI
-      // Long: 0% < diffema10 < 2% VÀ -2% < bbd1h < -0.5%
-      const isLong = (diffema10 > 0 && diffema10 < 2) && (bbd1h > -2 && bbd1h < -0.5);
+      // ĐIỀU KIỆN
+      // Long: 0% < diffema10 < 2% VÀ -3% < bbd1h < -0.5%
+      const isLong = (diffema10 > 0 && diffema10 < 2) && (bbd1h > -3 && bbd1h < -0.5);
 
       // Short: -2% < diffema10 < 0% VÀ 0.5% < bbt1h < 3%
       const isShort = (diffema10 > -2 && diffema10 < 0) && (bbt1h > 0.5 && bbt1h < 3);
