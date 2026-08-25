@@ -1,66 +1,46 @@
 {
-  "lastScanAt": "2026-08-24T23:46:29.563Z",
-  "totalScanned": 167,
-  "matchedCount": 6,
+  "lastScanAt": "2026-08-25T00:02:07.136Z",
+  "totalScanned": 168,
+  "matchedCount": 4,
   "matchedList": [
     {
-      "symbol": "APT-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "4.35%",
-      "diffema10": "1.07%",
-      "bbd1h": "0.45%",
-      "bbt1h": "-3.74%",
-      "change24h": "-4.81%",
-      "teleSent": false
-    },
-    {
-      "symbol": "DOOD-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "3.54%",
-      "diffema10": "0.22%",
-      "bbd1h": "0.45%",
-      "bbt1h": "-2.98%",
-      "change24h": "-4.31%",
-      "teleSent": false
-    },
-    {
-      "symbol": "OPN-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "3.83%",
-      "diffema10": "-1.43%",
-      "bbd1h": "0.34%",
-      "bbt1h": "-3.37%",
-      "change24h": "-4.63%",
+      "symbol": "UB-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "6.56%",
+      "diffema10": "0.57%",
+      "bbd1h": "6.79%",
+      "bbt1h": "0.21%",
+      "change24h": "2.95%",
       "teleSent": true
     },
     {
-      "symbol": "RESOLV-USDT-SWAP",
+      "symbol": "RLS-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "6.98%",
-      "diffema10": "0.53%",
-      "bbd1h": "6.75%",
-      "bbt1h": "-0.21%",
-      "change24h": "1.76%",
+      "Hbb": "4.25%",
+      "diffema10": "0.35%",
+      "bbd1h": "3.90%",
+      "bbt1h": "-0.34%",
+      "change24h": "0.80%",
       "teleSent": false
+    },
+    {
+      "symbol": "MOODENG-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.50%",
+      "diffema10": "1.01%",
+      "bbd1h": "3.21%",
+      "bbt1h": "-0.28%",
+      "change24h": "-3.42%",
+      "teleSent": true
     },
     {
       "symbol": "BERA-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.65%",
-      "diffema10": "1.89%",
-      "bbd1h": "5.18%",
-      "bbt1h": "-0.45%",
-      "change24h": "-0.32%",
-      "teleSent": false
-    },
-    {
-      "symbol": "WOO-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "3.27%",
-      "diffema10": "0.15%",
-      "bbd1h": "0.35%",
-      "bbt1h": "-2.83%",
-      "change24h": "-3.16%",
+      "Hbb": "6.14%",
+      "diffema10": "1.93%",
+      "bbd1h": "5.98%",
+      "bbt1h": "-0.15%",
+      "change24h": "-0.58%",
       "teleSent": false
     }
   ]
