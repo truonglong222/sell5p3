@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-25T23:46:14.232Z",
+  "lastScanAt": "2026-08-25T23:51:19.556Z",
   "totalScanned": 142,
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "ZIL-USDT-SWAP",
@@ -9,7 +9,16 @@
       "Hbb": "4.79%",
       "diffema10": "1.17%",
       "bbd1h": "-0.66%",
-      "change24h": "-2.08%",
+      "change24h": "-1.90%",
+      "teleSent": false
+    },
+    {
+      "symbol": "LDO-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "4.68%",
+      "diffema10": "0.49%",
+      "bbd1h": "-2.39%",
+      "change24h": "-2.64%",
       "teleSent": false
     },
     {
@@ -17,8 +26,8 @@
       "type": "LONG",
       "Hbb": "8.58%",
       "diffema10": "1.96%",
-      "bbd1h": "-0.56%",
-      "change24h": "-4.57%",
+      "bbd1h": "-0.61%",
+      "change24h": "-4.35%",
       "teleSent": false
     }
   ]
