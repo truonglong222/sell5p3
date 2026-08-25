@@ -1,26 +1,36 @@
 {
-  "lastScanAt": "2026-08-25T07:02:04.812Z",
+  "lastScanAt": "2026-08-25T07:16:30.402Z",
   "totalScanned": 163,
   "matchedCount": 6,
   "matchedList": [
     {
+      "symbol": "0G-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.52%",
+      "diffema10": "1.55%",
+      "bbd1h": "3.68%",
+      "bbt1h": "0.15%",
+      "change24h": "3.78%",
+      "teleSent": false
+    },
+    {
       "symbol": "ESP-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.84%",
-      "diffema10": "1.93%",
+      "diffema10": "1.92%",
       "bbd1h": "3.48%",
       "bbt1h": "-0.35%",
-      "change24h": "3.73%",
-      "teleSent": true
+      "change24h": "3.25%",
+      "teleSent": false
     },
     {
       "symbol": "NIGHT-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "6.58%",
-      "diffema10": "-1.21%",
+      "diffema10": "-1.25%",
       "bbd1h": "6.70%",
       "bbt1h": "0.11%",
-      "change24h": "4.06%",
+      "change24h": "2.85%",
       "teleSent": false
     },
     {
@@ -30,37 +40,27 @@
       "diffema10": "0.08%",
       "bbd1h": "3.15%",
       "bbt1h": "-0.44%",
-      "change24h": "2.75%",
-      "teleSent": true
+      "change24h": "2.58%",
+      "teleSent": false
     },
     {
       "symbol": "CAP-USDT-SWAP",
       "type": "LONG",
       "Hbb": "4.15%",
-      "diffema10": "-0.19%",
+      "diffema10": "-0.23%",
       "bbd1h": "-0.14%",
       "bbt1h": "-4.12%",
-      "change24h": "-0.44%",
-      "teleSent": true
-    },
-    {
-      "symbol": "BOME-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "5.39%",
-      "diffema10": "-0.35%",
-      "bbd1h": "-0.07%",
-      "bbt1h": "-5.18%",
-      "change24h": "-4.72%",
-      "teleSent": true
+      "change24h": "-0.57%",
+      "teleSent": false
     },
     {
       "symbol": "CORE-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.67%",
-      "diffema10": "1.08%",
+      "diffema10": "1.03%",
       "bbd1h": "3.85%",
       "bbt1h": "0.18%",
-      "change24h": "3.07%",
+      "change24h": "2.19%",
       "teleSent": false
     }
   ]
