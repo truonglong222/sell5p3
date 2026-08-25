@@ -1,16 +1,25 @@
 {
-  "lastScanAt": "2026-08-25T18:06:34.084Z",
+  "lastScanAt": "2026-08-25T18:11:36.014Z",
   "totalScanned": 168,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "PIPPIN-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.80%",
-      "diffema10": "-0.25%",
+      "diffema10": "-0.40%",
       "bbt1h": "0.61%",
-      "change24h": "2.38%",
-      "teleSent": true
+      "change24h": "1.91%",
+      "teleSent": false
+    },
+    {
+      "symbol": "BARD-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "6.13%",
+      "diffema10": "0.59%",
+      "bbd1h": "-0.86%",
+      "change24h": "-3.84%",
+      "teleSent": false
     }
   ]
 }
