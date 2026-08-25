@@ -128,7 +128,7 @@ async function getCandles(symbol, bar, limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
-    if (!res.data || res.data.code !== '0' || res.data.data.length < 35) return null;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 50) return null;
     return res.data.data; // Dữ liệu trả về từ nến mới nhất [0] -> nến cũ nhất [limit - 1]
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến ${bar} (${symbol}):`, error.message);
@@ -157,44 +157,35 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // BƯỚC 2: Lấy nến 4H để tính diffema10
-      const candles4h = await getCandles(symbol, '4H', 100);
-      if (!candles4h) {
-        await sleep(80);
-        continue;
-      }
-
-      // Đảo ngược mảng giá đóng cửa để có thứ tự thời gian cũ -> mới
-      const closes4h = candles4h.map(c => parseFloat(c[4])).reverse();
-      const ema4hArray = calculateEMAArray(closes4h, 20);
-
-      if (ema4hArray.length < 11) {
-        await sleep(80);
-        continue;
-      }
-
-      // EMA nến hiện tại (cuối mảng) và EMA cách đó 10 nến
-      const ema0 = ema4hArray[ema4hArray.length - 1];
-      const ema10 = ema4hArray[ema4hArray.length - 11];
-      const diffema10 = ema10 > 0 ? ((ema0 - ema10) / ema10) * 100 : 0;
-
-      // Điều kiện: diffema10 nằm trong khoảng -2% đến +2%
-      if (diffema10 < -2 || diffema10 > 2) {
-        await sleep(80);
-        continue;
-      }
-
-      // BƯỚC 3: Lấy nến 1H để tính BB và các chỉ số liên quan
-      const candles1h = await getCandles(symbol, '1H', 50);
+      // BƯỚC 2: Lấy nến 1H (limit 100 nến để tính EMA20 và BB)
+      const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h) {
         await sleep(80);
         continue;
       }
 
-      // Nến 1h vừa đóng (index 1) hoặc nến hiện tại (index 0)
-      // Lấy chuỗi 20 nến từ nến vừa đóng [1..20] theo thứ tự cũ -> mới
-      const closedCandle1h = candles1h[1] || candles1h[0];
-      const currentPrice1h = parseFloat(closedCandle1h[4]); // Giá close của nến vừa đóng
+      // Lấy toàn bộ các nến ĐÃ ĐÓNG (bỏ nến [0] đang chạy) theo thứ tự thời gian cũ -> mới
+      // closes1hClosed: index 0 là nến cũ nhất, index cuối là nến vừa đóng (nến index 1 trong API)
+      const closedCandles = candles1h.slice(1);
+      const closes1hClosed = closedCandles.map(c => parseFloat(c[4])).reverse();
+
+      // Tính mảng EMA20 cho khung 1H
+      const ema1hArray = calculateEMAArray(closes1hClosed, 20);
+
+      // Cần tối thiểu 25 giá trị EMA để so sánh nến vừa đóng và nến cách 24 cây
+      if (ema1hArray.length < 25) {
+        await sleep(80);
+        continue;
+      }
+
+      // ema0: EMA20 nến 1h vừa đóng, ema24: EMA20 cách đó 24 nến
+      const ema0 = ema1hArray[ema1hArray.length - 1];
+      const ema24 = ema1hArray[ema1hArray.length - 25];
+      const diffema24 = ema24 > 0 ? ((ema0 - ema24) / ema24) * 100 : 0;
+
+      // BƯỚC 3: Tính Bollinger Bands 20 nến gần nhất (từ nến vừa đóng)
+      const closedCandle1h = candles1h[1];
+      const currentPrice1h = parseFloat(closedCandle1h[4]); // Giá close nến 1h vừa đóng
 
       const closes1hForBB = candles1h.slice(1, 21).map(c => parseFloat(c[4])).reverse();
       const bb1h = calculateBollingerBands(closes1hForBB, 20);
@@ -215,11 +206,12 @@ async function main() {
         continue;
       }
 
-      // BƯỚC 4: Kiểm tra điều kiện Long / Short
-      // Long: -2% < bbd1h < 0.5%
-      const isLong = bbd1h > -2 && bbd1h < 0.5;
-      // Short: -0.5% < bbt1h < 2%
-      const isShort = bbt1h > -0.5 && bbt1h < 2;
+      // BƯỚC 4: Kiểm tra điều kiện Long / Short theo thiết lập mới
+      // Long: 1% < diffema24 < 3% VÀ -3% < bbd1h < -0.5%
+      const isLong = diffema24 > 1 && diffema24 < 3 && bbd1h > -3 && bbd1h < -0.5;
+
+      // Short: -3% < diffema24 < -1% VÀ 0.5% < bbt1h < 3%
+      const isShort = diffema24 > -3 && diffema24 < -1 && bbt1h > 0.5 && bbt1h < 3;
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
@@ -234,7 +226,7 @@ async function main() {
           symbol,
           type,
           Hbb: Hbb.toFixed(2) + '%',
-          diffema10: diffema10.toFixed(2) + '%',
+          diffema24: diffema24.toFixed(2) + '%',
           bbd1h: bbd1h.toFixed(2) + '%',
           bbt1h: bbt1h.toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
@@ -243,13 +235,19 @@ async function main() {
 
         if (!isCooldown) {
           const icon = isLong ? '🟢' : '🔴';
-          // Thứ tự: Hbb -> diffema10 -> bbd1h -> bbt1h -> % biến động 24h -> Link OKX
-          const message = `${icon} <b>TÍN HIỆU ${type}: ${coinName}</b>\n` +
+          
+          // Tạo nội dung tin nhắn Telegram phân loại theo Long/Short
+          let message = `${icon} <b>TÍN HIỆU ${type}: ${coinName}</b>\n` +
             `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
-            `• <b>bbd1h:</b> ${bbd1h.toFixed(2)}%\n` +
-            `• <b>bbt1h:</b> ${bbt1h.toFixed(2)}%\n` +
-            `• <b>Biến động 24h:</b> ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
+            `• <b>diffema24:</b> ${diffema24.toFixed(2)}%\n`;
+
+          if (isLong) {
+            message += `• <b>bbd1h:</b> ${bbd1h.toFixed(2)}%\n`;
+          } else {
+            message += `• <b>bbt1h:</b> ${bbt1h.toFixed(2)}%\n`;
+          }
+
+          message += `• <b>Biến động 24h:</b> ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
             `• <a href="${link}">Link OKX</a>`;
 
           console.log(`🚀 [${type}] Gửi Telegram cho ${symbol}...`);
