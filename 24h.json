@@ -1,6 +1,67 @@
 {
-  "lastScanAt": "2026-08-26T08:55:32.208Z",
-  "totalScanned": 0,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-26T09:02:07.258Z",
+  "totalScanned": 154,
+  "matchedCount": 6,
+  "matchedList": [
+    {
+      "symbol": "ONE-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2 (Giảm mạnh trên Band Dưới)",
+      "Hbb": "3.22%",
+      "diffema10": "-1.23%",
+      "bbMetric": "-1.56%",
+      "change24h": "-0.94%",
+      "teleSent": true
+    },
+    {
+      "symbol": "ARX-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2 (Giảm mạnh trên Band Dưới)",
+      "Hbb": "3.43%",
+      "diffema10": "0.20%",
+      "bbMetric": "-2.51%",
+      "change24h": "-2.85%",
+      "teleSent": true
+    },
+    {
+      "symbol": "WCT-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2 (Chạm/Lệch Band Trên)",
+      "Hbb": "4.68%",
+      "diffema10": "-1.01%",
+      "bbMetric": "1.37%",
+      "change24h": "1.82%",
+      "teleSent": true
+    },
+    {
+      "symbol": "DYDX-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2 (Chạm/Lệch Band Trên)",
+      "Hbb": "3.37%",
+      "diffema10": "-0.86%",
+      "bbMetric": "0.63%",
+      "change24h": "2.72%",
+      "teleSent": true
+    },
+    {
+      "symbol": "SIGN-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1 (Tăng mạnh dưới Band Trên)",
+      "Hbb": "4.29%",
+      "diffema10": "1.71%",
+      "bbMetric": "4.16%",
+      "change24h": "2.65%",
+      "teleSent": true
+    },
+    {
+      "symbol": "HUMA-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2 (Chạm/Lệch Band Trên)",
+      "Hbb": "4.79%",
+      "diffema10": "0.56%",
+      "bbMetric": "0.65%",
+      "change24h": "3.93%",
+      "teleSent": true
+    }
+  ]
 }
