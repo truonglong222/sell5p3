@@ -1,52 +1,16 @@
 {
-  "lastScanAt": "2026-08-26T20:26:35.206Z",
-  "totalScanned": 155,
-  "matchedCount": 5,
+  "lastScanAt": "2026-08-26T20:31:43.396Z",
+  "totalScanned": 157,
+  "matchedCount": 1,
   "matchedList": [
     {
-      "symbol": "FLOKI-USDT-SWAP",
-      "type": "SHORT",
+      "symbol": "JUP-USDT-SWAP",
+      "type": "LONG",
       "Hbb": "3.91%",
-      "diffema10": "-1.86%",
-      "bbt15m": "0.89%",
-      "change24h": "-1.28%",
-      "teleSent": false
-    },
-    {
-      "symbol": "PUMP-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "5.86%",
-      "diffema10": "-0.08%",
-      "bbd15m": "-0.80%",
-      "change24h": "2.96%",
+      "diffema10": "0.06%",
+      "bbd15m": "-1.37%",
+      "change24h": "0.00%",
       "teleSent": true
-    },
-    {
-      "symbol": "MAGIC-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "4.16%",
-      "diffema10": "0.11%",
-      "bbd15m": "-0.53%",
-      "change24h": "-0.22%",
-      "teleSent": true
-    },
-    {
-      "symbol": "APR-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "6.55%",
-      "diffema10": "-0.67%",
-      "bbt15m": "1.55%",
-      "change24h": "-1.25%",
-      "teleSent": false
-    },
-    {
-      "symbol": "PIPPIN-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "4.90%",
-      "diffema10": "-0.55%",
-      "bbt15m": "0.68%",
-      "change24h": "1.52%",
-      "teleSent": false
     }
   ]
 }
