@@ -1,15 +1,42 @@
 {
-  "lastScanAt": "2026-08-26T21:16:47.884Z",
-  "totalScanned": 167,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-26T21:21:39.693Z",
+  "totalScanned": 166,
+  "matchedCount": 4,
   "matchedList": [
+    {
+      "symbol": "UNI-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.32%",
+      "diffema10": "-0.52%",
+      "bbt15m": "0.82%",
+      "change24h": "3.30%",
+      "teleSent": true
+    },
     {
       "symbol": "FLOKI-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "7.26%",
-      "diffema10": "-1.25%",
+      "diffema10": "-1.26%",
       "bbt15m": "0.79%",
-      "change24h": "2.61%",
+      "change24h": "2.85%",
+      "teleSent": false
+    },
+    {
+      "symbol": "TURBO-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.45%",
+      "diffema10": "-1.59%",
+      "bbt15m": "0.63%",
+      "change24h": "1.10%",
+      "teleSent": true
+    },
+    {
+      "symbol": "ZAMA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.44%",
+      "diffema10": "-1.62%",
+      "bbt15m": "0.54%",
+      "change24h": "2.26%",
       "teleSent": false
     }
   ]
