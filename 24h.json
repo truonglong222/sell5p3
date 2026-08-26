@@ -1,24 +1,42 @@
 {
-  "lastScanAt": "2026-08-26T23:31:47.483Z",
-  "totalScanned": 157,
-  "matchedCount": 5,
+  "lastScanAt": "2026-08-26T23:36:15.830Z",
+  "totalScanned": 156,
+  "matchedCount": 7,
   "matchedList": [
+    {
+      "symbol": "EDGE-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.15%",
+      "diffema10": "-1.96%",
+      "bbt15m": "2.35%",
+      "change24h": "-0.93%",
+      "teleSent": true
+    },
+    {
+      "symbol": "ATH-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.98%",
+      "diffema10": "-0.28%",
+      "bbt15m": "0.63%",
+      "change24h": "3.98%",
+      "teleSent": false
+    },
     {
       "symbol": "SPK-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.97%",
-      "diffema10": "0.82%",
+      "diffema10": "0.75%",
       "bbt15m": "0.66%",
-      "change24h": "3.71%",
+      "change24h": "3.16%",
       "teleSent": false
     },
     {
       "symbol": "ENA-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "9.65%",
-      "diffema10": "-1.49%",
+      "diffema10": "-1.55%",
       "bbt15m": "0.92%",
-      "change24h": "2.24%",
+      "change24h": "1.75%",
       "teleSent": false
     },
     {
@@ -27,25 +45,25 @@
       "Hbb": "4.97%",
       "diffema10": "-1.49%",
       "bbt15m": "0.58%",
-      "change24h": "0.51%",
+      "change24h": "0.68%",
       "teleSent": false
     },
     {
       "symbol": "POPCAT-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "7.39%",
-      "diffema10": "-1.74%",
+      "diffema10": "-1.77%",
       "bbt15m": "0.86%",
-      "change24h": "1.26%",
+      "change24h": "1.38%",
       "teleSent": false
     },
     {
       "symbol": "STRK-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.72%",
-      "diffema10": "-1.24%",
-      "bbt15m": "1.36%",
-      "change24h": "1.40%",
+      "diffema10": "-1.20%",
+      "bbt15m": "1.90%",
+      "change24h": "1.82%",
       "teleSent": false
     }
   ]
