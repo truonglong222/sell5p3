@@ -1,25 +1,52 @@
 {
-  "lastScanAt": "2026-08-26T13:06:36.318Z",
-  "totalScanned": 150,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-26T13:11:23.991Z",
+  "totalScanned": 147,
+  "matchedCount": 5,
   "matchedList": [
     {
       "symbol": "PUMP-USDT-SWAP",
       "type": "LONG",
       "Hbb": "3.67%",
-      "diffema10": "1.80%",
+      "diffema10": "1.79%",
       "bbd15m": "-1.02%",
-      "change24h": "-1.54%",
+      "change24h": "0.28%",
       "teleSent": false
+    },
+    {
+      "symbol": "KITE-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "5.89%",
+      "diffema10": "1.31%",
+      "bbd15m": "-0.70%",
+      "change24h": "-0.16%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ONT-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.08%",
+      "diffema10": "-0.11%",
+      "bbt15m": "2.05%",
+      "change24h": "-2.85%",
+      "teleSent": true
+    },
+    {
+      "symbol": "VIRTUAL-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.17%",
+      "diffema10": "-0.46%",
+      "bbd15m": "-0.64%",
+      "change24h": "-3.25%",
+      "teleSent": true
     },
     {
       "symbol": "IOTA-USDT-SWAP",
       "type": "LONG",
       "Hbb": "3.22%",
-      "diffema10": "-1.25%",
-      "bbd15m": "-0.56%",
-      "change24h": "-4.12%",
-      "teleSent": true
+      "diffema10": "-1.30%",
+      "bbd15m": "-1.05%",
+      "change24h": "-4.33%",
+      "teleSent": false
     }
   ]
 }
