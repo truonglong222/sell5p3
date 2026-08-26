@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-26T00:36:07.444Z",
-  "totalScanned": 148,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-26T00:41:16.973Z",
+  "totalScanned": 146,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "ZIL-USDT-SWAP",
@@ -11,6 +11,15 @@
       "bbd1h": "-0.82%",
       "change24h": "-2.07%",
       "teleSent": false
+    },
+    {
+      "symbol": "XRP-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "6.24%",
+      "diffema10": "1.68%",
+      "bbd1h": "-0.57%",
+      "change24h": "-4.79%",
+      "teleSent": true
     }
   ]
 }
