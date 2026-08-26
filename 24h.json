@@ -1,24 +1,51 @@
 {
-  "lastScanAt": "2026-08-26T18:31:55.813Z",
-  "totalScanned": 144,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-26T18:36:17.814Z",
+  "totalScanned": 146,
+  "matchedCount": 5,
   "matchedList": [
+    {
+      "symbol": "MEME-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.84%",
+      "diffema10": "-0.11%",
+      "bbt15m": "0.77%",
+      "change24h": "1.59%",
+      "teleSent": true
+    },
+    {
+      "symbol": "KITE-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.80%",
+      "diffema10": "0.50%",
+      "bbt15m": "0.59%",
+      "change24h": "3.12%",
+      "teleSent": true
+    },
+    {
+      "symbol": "APR-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.02%",
+      "diffema10": "-1.66%",
+      "bbt15m": "1.11%",
+      "change24h": "-2.30%",
+      "teleSent": true
+    },
     {
       "symbol": "SPX-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.90%",
-      "diffema10": "1.47%",
+      "diffema10": "1.44%",
       "bbt15m": "0.62%",
-      "change24h": "0.76%",
+      "change24h": "1.66%",
       "teleSent": false
     },
     {
       "symbol": "WCT-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.67%",
-      "diffema10": "-0.31%",
+      "diffema10": "-0.35%",
       "bbt15m": "1.79%",
-      "change24h": "3.40%",
+      "change24h": "2.73%",
       "teleSent": false
     }
   ]
