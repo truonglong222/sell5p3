@@ -1,6 +1,25 @@
 {
-  "lastScanAt": "2026-08-26T13:02:01.522Z",
-  "totalScanned": 155,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-26T13:06:36.318Z",
+  "totalScanned": 150,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "PUMP-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.67%",
+      "diffema10": "1.80%",
+      "bbd15m": "-1.02%",
+      "change24h": "-1.54%",
+      "teleSent": false
+    },
+    {
+      "symbol": "IOTA-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.22%",
+      "diffema10": "-1.25%",
+      "bbd15m": "-0.56%",
+      "change24h": "-4.12%",
+      "teleSent": true
+    }
+  ]
 }
