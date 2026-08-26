@@ -1,24 +1,33 @@
 {
-  "lastScanAt": "2026-08-26T12:16:41.572Z",
-  "totalScanned": 155,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-26T12:21:25.790Z",
+  "totalScanned": 161,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "W-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.49%",
+      "diffema10": "0.98%",
+      "bbt15m": "1.44%",
+      "change24h": "3.48%",
+      "teleSent": false
+    },
     {
       "symbol": "KITE-USDT-SWAP",
       "type": "LONG",
       "Hbb": "3.46%",
-      "diffema10": "1.66%",
-      "bbd15m": "-0.70%",
-      "change24h": "1.81%",
-      "teleSent": true
+      "diffema10": "1.60%",
+      "bbd15m": "-1.38%",
+      "change24h": "1.13%",
+      "teleSent": false
     },
     {
       "symbol": "BEAT-USDT-SWAP",
       "type": "LONG",
       "Hbb": "6.04%",
-      "diffema10": "0.48%",
+      "diffema10": "0.51%",
       "bbd15m": "-0.95%",
-      "change24h": "-3.74%",
+      "change24h": "-3.80%",
       "teleSent": false
     }
   ]
