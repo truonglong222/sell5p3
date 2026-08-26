@@ -1,42 +1,60 @@
 {
-  "lastScanAt": "2026-08-26T21:21:39.693Z",
-  "totalScanned": 166,
-  "matchedCount": 4,
+  "lastScanAt": "2026-08-26T21:26:32.241Z",
+  "totalScanned": 165,
+  "matchedCount": 6,
   "matchedList": [
     {
       "symbol": "UNI-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.32%",
-      "diffema10": "-0.52%",
-      "bbt15m": "0.82%",
-      "change24h": "3.30%",
-      "teleSent": true
+      "diffema10": "-0.49%",
+      "bbt15m": "1.10%",
+      "change24h": "3.46%",
+      "teleSent": false
     },
     {
       "symbol": "FLOKI-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "7.26%",
-      "diffema10": "-1.26%",
+      "diffema10": "-1.30%",
       "bbt15m": "0.79%",
-      "change24h": "2.85%",
+      "change24h": "2.07%",
       "teleSent": false
     },
     {
       "symbol": "TURBO-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.45%",
-      "diffema10": "-1.59%",
+      "diffema10": "-1.57%",
       "bbt15m": "0.63%",
-      "change24h": "1.10%",
+      "change24h": "0.70%",
+      "teleSent": false
+    },
+    {
+      "symbol": "MON-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.05%",
+      "diffema10": "-1.20%",
+      "bbt15m": "1.29%",
+      "change24h": "-1.02%",
       "teleSent": true
+    },
+    {
+      "symbol": "ZORA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "6.07%",
+      "diffema10": "-0.82%",
+      "bbt15m": "0.56%",
+      "change24h": "1.73%",
+      "teleSent": false
     },
     {
       "symbol": "ZAMA-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "5.44%",
-      "diffema10": "-1.62%",
-      "bbt15m": "0.54%",
-      "change24h": "2.26%",
+      "diffema10": "-1.75%",
+      "bbt15m": "0.59%",
+      "change24h": "1.25%",
       "teleSent": false
     }
   ]
