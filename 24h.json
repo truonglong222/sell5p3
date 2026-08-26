@@ -1,43 +1,97 @@
 {
-  "lastScanAt": "2026-08-26T23:46:42.114Z",
-  "totalScanned": 156,
-  "matchedCount": 4,
+  "lastScanAt": "2026-08-26T23:51:19.888Z",
+  "totalScanned": 150,
+  "matchedCount": 10,
   "matchedList": [
     {
       "symbol": "EDGE-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "7.22%",
-      "diffema10": "-1.86%",
-      "bbt15m": "1.86%",
-      "change24h": "0.65%",
+      "diffema10": "-1.91%",
+      "bbt15m": "2.05%",
+      "change24h": "0.16%",
+      "teleSent": false
+    },
+    {
+      "symbol": "XLM-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.93%",
+      "diffema10": "-1.34%",
+      "bbt15m": "0.55%",
+      "change24h": "1.59%",
+      "teleSent": true
+    },
+    {
+      "symbol": "TURBO-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.37%",
+      "diffema10": "-0.90%",
+      "bbt15m": "0.61%",
+      "change24h": "3.42%",
+      "teleSent": false
+    },
+    {
+      "symbol": "SPK-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.15%",
+      "diffema10": "0.77%",
+      "bbt15m": "0.72%",
+      "change24h": "3.66%",
       "teleSent": false
     },
     {
       "symbol": "GRT-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "5.73%",
-      "diffema10": "-1.43%",
-      "bbt15m": "0.60%",
-      "change24h": "1.71%",
+      "diffema10": "-1.42%",
+      "bbt15m": "0.82%",
+      "change24h": "1.99%",
       "teleSent": false
     },
     {
       "symbol": "STRK-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "5.55%",
-      "diffema10": "-1.23%",
-      "bbt15m": "0.77%",
-      "change24h": "1.99%",
+      "diffema10": "-1.22%",
+      "bbt15m": "0.89%",
+      "change24h": "2.30%",
+      "teleSent": false
+    },
+    {
+      "symbol": "DATA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.09%",
+      "diffema10": "-0.20%",
+      "bbt15m": "0.65%",
+      "change24h": "1.13%",
+      "teleSent": true
+    },
+    {
+      "symbol": "DOT-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.63%",
+      "diffema10": "-0.72%",
+      "bbt15m": "0.97%",
+      "change24h": "2.22%",
+      "teleSent": true
+    },
+    {
+      "symbol": "JTO-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.09%",
+      "diffema10": "-0.53%",
+      "bbt15m": "0.50%",
+      "change24h": "3.82%",
       "teleSent": false
     },
     {
       "symbol": "AZTEC-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.09%",
-      "diffema10": "-1.10%",
+      "diffema10": "-1.09%",
       "bbt15m": "1.45%",
-      "change24h": "-1.59%",
-      "teleSent": true
+      "change24h": "-1.98%",
+      "teleSent": false
     }
   ]
 }
