@@ -1,24 +1,60 @@
 {
-  "lastScanAt": "2026-08-26T13:51:51.399Z",
-  "totalScanned": 166,
-  "matchedCount": 3,
+  "lastScanAt": "2026-08-26T13:56:40.383Z",
+  "totalScanned": 170,
+  "matchedCount": 10,
   "matchedList": [
+    {
+      "symbol": "TRIA-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "5.22%",
+      "diffema10": "-1.71%",
+      "bbd15m": "-0.82%",
+      "change24h": "-3.84%",
+      "teleSent": true
+    },
     {
       "symbol": "ONT-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.61%",
-      "diffema10": "-0.15%",
-      "bbt15m": "1.09%",
-      "change24h": "0.68%",
+      "diffema10": "-0.00%",
+      "bbt15m": "2.66%",
+      "change24h": "2.08%",
       "teleSent": false
+    },
+    {
+      "symbol": "GALA-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.22%",
+      "diffema10": "-1.97%",
+      "bbd15m": "-0.60%",
+      "change24h": "-3.90%",
+      "teleSent": true
+    },
+    {
+      "symbol": "SNXX-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.49%",
+      "diffema10": "-1.50%",
+      "bbt15m": "0.87%",
+      "change24h": "-4.81%",
+      "teleSent": false
+    },
+    {
+      "symbol": "USELESS-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "4.77%",
+      "diffema10": "1.46%",
+      "bbd15m": "-0.58%",
+      "change24h": "2.47%",
+      "teleSent": true
     },
     {
       "symbol": "POL-USDT-SWAP",
       "type": "LONG",
       "Hbb": "4.80%",
-      "diffema10": "-1.10%",
-      "bbd15m": "-0.87%",
-      "change24h": "-3.51%",
+      "diffema10": "-1.12%",
+      "bbd15m": "-1.13%",
+      "change24h": "-4.49%",
       "teleSent": false
     },
     {
@@ -27,8 +63,35 @@
       "Hbb": "3.93%",
       "diffema10": "1.84%",
       "bbt15m": "0.86%",
-      "change24h": "3.89%",
+      "change24h": "4.42%",
+      "teleSent": false
+    },
+    {
+      "symbol": "BEAT-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "9.82%",
+      "diffema10": "-0.03%",
+      "bbd15m": "-1.44%",
+      "change24h": "-4.62%",
+      "teleSent": false
+    },
+    {
+      "symbol": "CAP-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.37%",
+      "diffema10": "1.02%",
+      "bbt15m": "0.54%",
+      "change24h": "4.30%",
       "teleSent": true
+    },
+    {
+      "symbol": "EIGEN-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.87%",
+      "diffema10": "-1.14%",
+      "bbd15m": "-0.54%",
+      "change24h": "-1.83%",
+      "teleSent": false
     }
   ]
 }
