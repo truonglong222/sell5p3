@@ -125,7 +125,7 @@ async function getCandles(symbol, bar, limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
-    if (!res.data || res.data.code !== '0' || res.data.data.length < 35) return null;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 45) return null;
     return res.data.data;
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến ${bar} (${symbol}):`, error.message);
@@ -142,6 +142,7 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
+    // BƯỚC 1: Lọc Market Vol > 5M và biến động 24h
     const targetCoins = await getFilteredMarkets();
     console.log(`🔍 Số coin thỏa mãn điều kiện Vol > 5M và 24h (-5% -> +5%): ${targetCoins.length}`);
 
@@ -153,7 +154,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy nến 4H tính diffema10
+      // BƯỚC 2: Kiểm tra khung 4H (diffema10)
       const candles4h = await getCandles(symbol, '4H', 100);
       if (!candles4h) {
         await sleep(80);
@@ -168,19 +169,45 @@ async function main() {
         continue;
       }
 
-      const ema0 = ema4hArray[ema4hArray.length - 1];
-      const ema10 = ema4hArray[ema4hArray.length - 11];
-      const diffema10 = ema10 > 0 ? ((ema0 - ema10) / ema10) * 100 : 0;
+      const ema4h0 = ema4hArray[ema4hArray.length - 1];
+      const ema4h10 = ema4hArray[ema4hArray.length - 11];
+      const diffema10 = ema4h10 > 0 ? ((ema4h0 - ema4h10) / ema4h10) * 100 : 0;
 
-      // Lọc nhanh: diffema10 phải nằm trong khoảng (-2%, 0%) cho Short hoặc (0%, 2%) cho Long
-      if ((diffema10 <= -2 || diffema10 >= 0) && (diffema10 <= 0 || diffema10 >= 2)) {
+      // Phân loại tiềm năng khung 4H: Long (0 < diffema10 < 2) hoặc Short (-2 < diffema10 < 0)
+      const is4hLong = diffema10 > 0 && diffema10 < 2;
+      const is4hShort = diffema10 > -2 && diffema10 < 0;
+
+      if (!is4hLong && !is4hShort) {
         await sleep(80);
         continue;
       }
 
-      // Lấy nến 1H để tính BB và các chỉ số liên quan
-      const candles1h = await getCandles(symbol, '1H', 50);
+      // BƯỚC 3: Lấy dữ liệu 1H tính diffema1h và Bollinger Bands
+      const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h) {
+        await sleep(80);
+        continue;
+      }
+
+      // Tính EMA20 trên chuỗi 1H
+      const closes1h = candles1h.map(c => parseFloat(c[4])).reverse();
+      const ema1hArray = calculateEMAArray(closes1h, 20);
+
+      if (ema1hArray.length < 21) {
+        await sleep(80);
+        continue;
+      }
+
+      // EMA20 nến hiện tại và EMA20 cách 20 nến
+      const ema1h0 = ema1hArray[ema1hArray.length - 1];
+      const ema1h20 = ema1hArray[ema1hArray.length - 21];
+      const diffema1h = ema1h20 > 0 ? ((ema1h0 - ema1h20) / ema1h20) * 100 : 0;
+
+      // Lọc tiếp theo điều kiện diffema1h
+      const passDiffema1hLong = is4hLong && (diffema1h > 0 && diffema1h < 3);
+      const passDiffema1hShort = is4hShort && (diffema1h > -3 && diffema1h < 0);
+
+      if (!passDiffema1hLong && !passDiffema1hShort) {
         await sleep(80);
         continue;
       }
@@ -194,28 +221,27 @@ async function main() {
         continue;
       }
 
-      // Lấy giá High (index 2) và Low (index 3) của nến 1H hiện tại [0]
+      // Lấy giá High / Low của nến 1H hiện tại [0]
       const currentCandle1h = candles1h[0];
       const high1hCurrent = parseFloat(currentCandle1h[2]);
       const low1hCurrent = parseFloat(currentCandle1h[3]);
 
-      // Tính Hbb, bbd1h (theo Low), bbt1h (theo High)
+      // Tính Hbb, bbd1h, bbt1h
       const Hbb = ((bb1h.upper - bb1h.lower) / bb1h.lower) * 100;
       const bbd1h = ((low1hCurrent - bb1h.lower) / bb1h.lower) * 100;
       const bbt1h = ((high1hCurrent - bb1h.upper) / bb1h.upper) * 100;
 
-      // Điều kiện Hbb > 3%
       if (Hbb <= 3) {
         await sleep(80);
         continue;
       }
 
-      // ĐIỀU KIỆN
-      // Long: 0% < diffema10 < 2% VÀ -3% < bbd1h < -0.5%
-      const isLong = (diffema10 > 0 && diffema10 < 2) && (bbd1h > -3 && bbd1h < -0.5);
+      // BƯỚC 4: Điều kiện cuối cùng
+      // Long: passDiffema1hLong VÀ -3% < bbd1h < -0.5%
+      const isLong = passDiffema1hLong && (bbd1h > -3 && bbd1h < -0.5);
 
-      // Short: -2% < diffema10 < 0% VÀ 0.5% < bbt1h < 3%
-      const isShort = (diffema10 > -2 && diffema10 < 0) && (bbt1h > 0.5 && bbt1h < 3);
+      // Short: passDiffema1hShort VÀ 0.5% < bbt1h < 3%
+      const isShort = passDiffema1hShort && (bbt1h > 0.5 && bbt1h < 3);
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
@@ -231,6 +257,7 @@ async function main() {
           type,
           Hbb: Hbb.toFixed(2) + '%',
           diffema10: diffema10.toFixed(2) + '%',
+          diffema1h: diffema1h.toFixed(2) + '%',
           bbd1h: isLong ? bbd1h.toFixed(2) + '%' : undefined,
           bbt1h: isShort ? bbt1h.toFixed(2) + '%' : undefined,
           change24h: coin.change24h.toFixed(2) + '%',
@@ -245,7 +272,8 @@ async function main() {
 
           const message = `${icon} <b>TÍN HIỆU ${type}: ${coinName}</b>\n` +
             `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
+            `• <b>diffema10 (4H):</b> ${diffema10.toFixed(2)}%\n` +
+            `• <b>diffema1h:</b> ${diffema1h.toFixed(2)}%\n` +
             bbField +
             `• <b>Biến động 24h:</b> ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
             `• <a href="${link}">Link OKX</a>`;
