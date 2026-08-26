@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-26T02:26:19.108Z",
-  "totalScanned": 137,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-26T02:31:42.952Z",
+  "totalScanned": 135,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "RESOLV-USDT-SWAP",
@@ -10,7 +10,17 @@
       "diffema10": "1.01%",
       "diffema1h": "-0.11%",
       "bbt1h": "1.05%",
-      "change24h": "1.10%",
+      "change24h": "1.15%",
+      "teleSent": false
+    },
+    {
+      "symbol": "SLX-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "6.06%",
+      "diffema10": "1.67%",
+      "diffema1h": "1.94%",
+      "bbd1h": "-0.89%",
+      "change24h": "-3.83%",
       "teleSent": false
     }
   ]
