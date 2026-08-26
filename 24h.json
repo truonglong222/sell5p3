@@ -1,33 +1,33 @@
 {
-  "lastScanAt": "2026-08-26T14:02:17.387Z",
+  "lastScanAt": "2026-08-26T14:06:23.846Z",
   "totalScanned": 165,
   "matchedCount": 3,
   "matchedList": [
     {
-      "symbol": "S-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "4.45%",
-      "diffema10": "0.35%",
-      "bbt15m": "2.36%",
-      "change24h": "4.29%",
-      "teleSent": true
+      "symbol": "POL-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "5.41%",
+      "diffema10": "-1.52%",
+      "bbd15m": "-0.60%",
+      "change24h": "-4.88%",
+      "teleSent": false
     },
     {
       "symbol": "BASED-USDT-SWAP",
       "type": "LONG",
       "Hbb": "3.29%",
-      "diffema10": "0.95%",
+      "diffema10": "0.99%",
       "bbd15m": "-0.65%",
-      "change24h": "1.31%",
-      "teleSent": true
+      "change24h": "1.28%",
+      "teleSent": false
     },
     {
       "symbol": "CAP-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "3.21%",
-      "diffema10": "0.91%",
-      "bbt15m": "0.96%",
-      "change24h": "4.52%",
+      "diffema10": "0.89%",
+      "bbt15m": "1.39%",
+      "change24h": "4.91%",
       "teleSent": false
     }
   ]
