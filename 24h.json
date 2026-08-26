@@ -1,15 +1,24 @@
 {
-  "lastScanAt": "2026-08-26T20:36:25.724Z",
-  "totalScanned": 156,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-26T20:41:39.335Z",
+  "totalScanned": 163,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "JUP-USDT-SWAP",
       "type": "LONG",
       "Hbb": "3.91%",
-      "diffema10": "-0.01%",
+      "diffema10": "0.05%",
       "bbd15m": "-2.22%",
-      "change24h": "-1.09%",
+      "change24h": "0.00%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ZAMA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.81%",
+      "diffema10": "-1.86%",
+      "bbt15m": "0.53%",
+      "change24h": "-2.64%",
       "teleSent": false
     }
   ]
