@@ -154,7 +154,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // BƯỚC 2: Kiểm tra khung 4H (diffema10)
+      // BƯỚC 2: Kiểm tra khung 4H (diffema10: -2% < diffema10 < 2%)
       const candles4h = await getCandles(symbol, '4H', 100);
       if (!candles4h) {
         await sleep(80);
@@ -173,11 +173,8 @@ async function main() {
       const ema4h10 = ema4hArray[ema4hArray.length - 11];
       const diffema10 = ema4h10 > 0 ? ((ema4h0 - ema4h10) / ema4h10) * 100 : 0;
 
-      // Phân loại tiềm năng khung 4H: Long (0 < diffema10 < 2) hoặc Short (-2 < diffema10 < 0)
-      const is4hLong = diffema10 > 0 && diffema10 < 2;
-      const is4hShort = diffema10 > -2 && diffema10 < 0;
-
-      if (!is4hLong && !is4hShort) {
+      // Chọn tất cả các coin có -2% < diffema10 < 2% (không chia long/short ở bước này)
+      if (diffema10 <= -2 || diffema10 >= 2) {
         await sleep(80);
         continue;
       }
@@ -203,11 +200,11 @@ async function main() {
       const ema1h20 = ema1hArray[ema1hArray.length - 21];
       const diffema1h = ema1h20 > 0 ? ((ema1h0 - ema1h20) / ema1h20) * 100 : 0;
 
-      // Lọc tiếp theo điều kiện diffema1h
-      const passDiffema1hLong = is4hLong && (diffema1h > 0 && diffema1h < 3);
-      const passDiffema1hShort = is4hShort && (diffema1h > -3 && diffema1h < 0);
+      // Lọc nhanh: diffema1h phải thuộc (0%, 3%) cho Long hoặc (-3%, 0%) cho Short
+      const isDiffema1hLong = diffema1h > 0 && diffema1h < 3;
+      const isDiffema1hShort = diffema1h > -3 && diffema1h < 0;
 
-      if (!passDiffema1hLong && !passDiffema1hShort) {
+      if (!isDiffema1hLong && !isDiffema1hShort) {
         await sleep(80);
         continue;
       }
@@ -226,7 +223,7 @@ async function main() {
       const high1hCurrent = parseFloat(currentCandle1h[2]);
       const low1hCurrent = parseFloat(currentCandle1h[3]);
 
-      // Tính Hbb, bbd1h, bbt1h
+      // Tính Hbb, bbd1h (theo Low), bbt1h (theo High)
       const Hbb = ((bb1h.upper - bb1h.lower) / bb1h.lower) * 100;
       const bbd1h = ((low1hCurrent - bb1h.lower) / bb1h.lower) * 100;
       const bbt1h = ((high1hCurrent - bb1h.upper) / bb1h.upper) * 100;
@@ -236,12 +233,12 @@ async function main() {
         continue;
       }
 
-      // BƯỚC 4: Điều kiện cuối cùng
-      // Long: passDiffema1hLong VÀ -3% < bbd1h < -0.5%
-      const isLong = passDiffema1hLong && (bbd1h > -3 && bbd1h < -0.5);
+      // BƯỚC 4: Phân loại và kiểm tra điều kiện Long / Short
+      // Long: 0% < diffema1h < 3% VÀ -3% < bbd1h < -0.5%
+      const isLong = isDiffema1hLong && (bbd1h > -3 && bbd1h < -0.5);
 
-      // Short: passDiffema1hShort VÀ 0.5% < bbt1h < 3%
-      const isShort = passDiffema1hShort && (bbt1h > 0.5 && bbt1h < 3);
+      // Short: -3% < diffema1h < 0% VÀ 0.5% < bbt1h < 3%
+      const isShort = isDiffema1hShort && (bbt1h > 0.5 && bbt1h < 3);
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
