@@ -1,16 +1,26 @@
 {
-  "lastScanAt": "2026-08-26T03:26:16.235Z",
-  "totalScanned": 135,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-26T03:31:30.711Z",
+  "totalScanned": 130,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "PLUME-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.96%",
+      "diffema10": "-0.43%",
+      "diffema1h": "-2.49%",
+      "bbt1h": "0.92%",
+      "change24h": "-2.32%",
+      "teleSent": true
+    },
     {
       "symbol": "MERL-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.38%",
       "diffema10": "-1.08%",
-      "diffema1h": "-1.75%",
+      "diffema1h": "-1.77%",
       "bbt1h": "1.39%",
-      "change24h": "0.46%",
+      "change24h": "-0.20%",
       "teleSent": false
     }
   ]
