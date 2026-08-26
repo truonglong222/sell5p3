@@ -1,16 +1,26 @@
 {
-  "lastScanAt": "2026-08-26T04:31:44.519Z",
-  "totalScanned": 143,
-  "matchedCount": 3,
+  "lastScanAt": "2026-08-26T04:36:17.196Z",
+  "totalScanned": 133,
+  "matchedCount": 4,
   "matchedList": [
+    {
+      "symbol": "KITE-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.08%",
+      "diffema10": "1.99%",
+      "diffema1h": "-1.79%",
+      "bbt1h": "0.81%",
+      "change24h": "-0.13%",
+      "teleSent": true
+    },
     {
       "symbol": "PLUME-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.21%",
-      "diffema10": "-0.35%",
-      "diffema1h": "-2.11%",
+      "diffema10": "-0.37%",
+      "diffema1h": "-2.12%",
       "bbt1h": "1.11%",
-      "change24h": "-0.39%",
+      "change24h": "-1.54%",
       "teleSent": false
     },
     {
@@ -20,17 +30,17 @@
       "diffema10": "-1.05%",
       "diffema1h": "-1.37%",
       "bbt1h": "0.84%",
-      "change24h": "1.39%",
+      "change24h": "1.08%",
       "teleSent": false
     },
     {
       "symbol": "CORE-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "5.14%",
-      "diffema10": "-0.02%",
-      "diffema1h": "-1.16%",
-      "bbt1h": "0.71%",
-      "change24h": "1.14%",
+      "diffema10": "-0.07%",
+      "diffema1h": "-1.21%",
+      "bbt1h": "0.98%",
+      "change24h": "0.86%",
       "teleSent": false
     }
   ]
