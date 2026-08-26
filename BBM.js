@@ -173,13 +173,13 @@ async function main() {
       const ema4h10 = ema4hArray[ema4hArray.length - 11];
       const diffema10 = ema4h10 > 0 ? ((ema4h0 - ema4h10) / ema4h10) * 100 : 0;
 
-      // Chọn tất cả các coin có -2% < diffema10 < 2% (không chia long/short ở bước này)
+      // Điều kiện 4H: -2% < diffema10 < 2%
       if (diffema10 <= -2 || diffema10 >= 2) {
         await sleep(80);
         continue;
       }
 
-      // BƯỚC 3: Lấy dữ liệu 1H tính diffema1h và Bollinger Bands
+      // BƯỚC 3: Lấy dữ liệu 1H tính diffema20 và Bollinger Bands
       const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h) {
         await sleep(80);
@@ -198,13 +198,12 @@ async function main() {
       // EMA20 nến hiện tại và EMA20 cách 20 nến
       const ema1h0 = ema1hArray[ema1hArray.length - 1];
       const ema1h20 = ema1hArray[ema1hArray.length - 21];
-      const diffema1h = ema1h20 > 0 ? ((ema1h0 - ema1h20) / ema1h20) * 100 : 0;
+      const diffema20 = ema1h20 > 0 ? ((ema1h0 - ema1h20) / ema1h20) * 100 : 0;
 
-      // Lọc nhanh: diffema1h phải thuộc (0%, 3%) cho Long hoặc (-3%, 0%) cho Short
-      const isDiffema1hLong = diffema1h > 0 && diffema1h < 3;
-      const isDiffema1hShort = diffema1h > -3 && diffema1h < 0;
+      // Điều kiện lọc chung: -1% < diffema20 < 1% cho cả Long và Short
+      const isDiffemaValid = diffema20 > -1 && diffema20 < 1;
 
-      if (!isDiffema1hLong && !isDiffema1hShort) {
+      if (!isDiffemaValid) {
         await sleep(80);
         continue;
       }
@@ -234,11 +233,11 @@ async function main() {
       }
 
       // BƯỚC 4: Phân loại và kiểm tra điều kiện Long / Short
-      // Long: 0% < diffema1h < 3% VÀ -3% < bbd1h < -0.5%
-      const isLong = isDiffema1hLong && (bbd1h > -3 && bbd1h < -0.5);
+      // Long: -1% < diffema20 < 1% VÀ -3% < bbd1h < -0.5%
+      const isLong = isDiffemaValid && (bbd1h > -3 && bbd1h < -0.5);
 
-      // Short: -3% < diffema1h < 0% VÀ 0.5% < bbt1h < 3%
-      const isShort = isDiffema1hShort && (bbt1h > 0.5 && bbt1h < 3);
+      // Short: -1% < diffema20 < 1% VÀ 0.5% < bbt1h < 3%
+      const isShort = isDiffemaValid && (bbt1h > 0.5 && bbt1h < 3);
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
@@ -254,7 +253,7 @@ async function main() {
           type,
           Hbb: Hbb.toFixed(2) + '%',
           diffema10: diffema10.toFixed(2) + '%',
-          diffema1h: diffema1h.toFixed(2) + '%',
+          diffema20: diffema20.toFixed(2) + '%',
           bbd1h: isLong ? bbd1h.toFixed(2) + '%' : undefined,
           bbt1h: isShort ? bbt1h.toFixed(2) + '%' : undefined,
           change24h: coin.change24h.toFixed(2) + '%',
@@ -270,7 +269,7 @@ async function main() {
           const message = `${icon} <b>TÍN HIỆU ${type}: ${coinName}</b>\n` +
             `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
             `• <b>diffema10 (4H):</b> ${diffema10.toFixed(2)}%\n` +
-            `• <b>diffema1h:</b> ${diffema1h.toFixed(2)}%\n` +
+            `• <b>diffema20 (1H):</b> ${diffema20.toFixed(2)}%\n` +
             bbField +
             `• <b>Biến động 24h:</b> ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
             `• <a href="${link}">Link OKX</a>`;
