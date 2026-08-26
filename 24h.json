@@ -1,34 +1,25 @@
 {
-  "lastScanAt": "2026-08-26T11:26:37.591Z",
+  "lastScanAt": "2026-08-26T11:31:42.383Z",
   "totalScanned": 156,
-  "matchedCount": 3,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "NEIRO-USDT-SWAP",
+      "symbol": "AIXBT-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "3.18%",
-      "diffema10": "1.16%",
-      "bbt15m": "1.20%",
-      "change24h": "2.04%",
-      "teleSent": false
+      "Hbb": "3.29%",
+      "diffema10": "0.40%",
+      "bbt15m": "0.76%",
+      "change24h": "1.13%",
+      "teleSent": true
     },
     {
-      "symbol": "OL-USDT-SWAP",
+      "symbol": "BEAT-USDT-SWAP",
       "type": "LONG",
-      "Hbb": "3.26%",
-      "diffema10": "-0.23%",
-      "bbd15m": "-1.02%",
-      "change24h": "-0.48%",
-      "teleSent": false
-    },
-    {
-      "symbol": "AEON-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "10.09%",
-      "diffema10": "1.64%",
-      "bbd15m": "-2.16%",
-      "change24h": "-1.86%",
-      "teleSent": false
+      "Hbb": "3.32%",
+      "diffema10": "0.89%",
+      "bbd15m": "-0.95%",
+      "change24h": "-2.70%",
+      "teleSent": true
     }
   ]
 }
