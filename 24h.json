@@ -1,34 +1,16 @@
 {
-  "lastScanAt": "2026-08-26T19:11:38.995Z",
+  "lastScanAt": "2026-08-26T19:16:43.074Z",
   "totalScanned": 149,
-  "matchedCount": 3,
+  "matchedCount": 1,
   "matchedList": [
     {
-      "symbol": "SPK-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "3.17%",
-      "diffema10": "-0.71%",
-      "bbt15m": "1.13%",
-      "change24h": "-0.05%",
+      "symbol": "STX-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "5.02%",
+      "diffema10": "0.52%",
+      "bbd15m": "-1.32%",
+      "change24h": "0.30%",
       "teleSent": true
-    },
-    {
-      "symbol": "APR-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "4.18%",
-      "diffema10": "-1.35%",
-      "bbt15m": "0.52%",
-      "change24h": "-3.95%",
-      "teleSent": false
-    },
-    {
-      "symbol": "ZORA-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "4.36%",
-      "diffema10": "-1.92%",
-      "bbt15m": "0.57%",
-      "change24h": "-3.10%",
-      "teleSent": false
     }
   ]
 }
