@@ -1,6 +1,40 @@
 {
-  "lastScanAt": "2026-08-27T08:01:59.651Z",
-  "totalScanned": 164,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-27T08:06:15.923Z",
+  "totalScanned": 165,
+  "matchedCount": 3,
+  "matchedList": [
+    {
+      "symbol": "BRETT-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.21%",
+      "x": "0.59",
+      "diffema20": "-1.70%",
+      "bandDiff": "2.30%",
+      "change24h": "0.02%",
+      "teleSent": false
+    },
+    {
+      "symbol": "MON-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "4.05%",
+      "x": "0.26",
+      "diffema20": "-0.69%",
+      "bandDiff": "1.07%",
+      "change24h": "3.14%",
+      "teleSent": false
+    },
+    {
+      "symbol": "STX-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.31%",
+      "x": "0.45",
+      "diffema20": "-1.89%",
+      "bandDiff": "1.31%",
+      "change24h": "-4.65%",
+      "teleSent": false
+    }
+  ]
 }
