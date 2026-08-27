@@ -1,18 +1,40 @@
 {
-  "lastScanAt": "2026-08-27T04:51:26.204Z",
+  "lastScanAt": "2026-08-27T04:56:18.508Z",
   "totalScanned": 162,
-  "matchedCount": 3,
+  "matchedCount": 5,
   "matchedList": [
+    {
+      "symbol": "YGG-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "3.25%",
+      "x": "0.27",
+      "diffema10": "1.00%",
+      "bandDiff": "0.50%",
+      "change24h": "3.48%",
+      "teleSent": true
+    },
+    {
+      "symbol": "JUP-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm B1",
+      "Hbb": "4.02%",
+      "x": "0.00",
+      "diffema10": "-0.10%",
+      "bandDiff": "-0.61%",
+      "change24h": "1.13%",
+      "teleSent": false
+    },
     {
       "symbol": "MON-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm B1",
       "Hbb": "3.11%",
       "x": "-0.20",
-      "diffema10": "0.17%",
-      "bandDiff": "-0.68%",
-      "change24h": "-1.29%",
-      "teleSent": true
+      "diffema10": "0.19%",
+      "bandDiff": "-0.86%",
+      "change24h": "-0.86%",
+      "teleSent": false
     },
     {
       "symbol": "LA-USDT-SWAP",
@@ -20,10 +42,10 @@
       "group": "Nhóm B2",
       "Hbb": "3.77%",
       "x": "0.07",
-      "diffema10": "1.24%",
+      "diffema10": "1.27%",
       "bandDiff": "0.92%",
-      "change24h": "4.92%",
-      "teleSent": true
+      "change24h": "4.98%",
+      "teleSent": false
     },
     {
       "symbol": "AZTEC-USDT-SWAP",
@@ -31,9 +53,9 @@
       "group": "Nhóm B1",
       "Hbb": "4.75%",
       "x": "-0.23",
-      "diffema10": "0.35%",
+      "diffema10": "0.36%",
       "bandDiff": "-1.34%",
-      "change24h": "-2.87%",
+      "change24h": "-2.80%",
       "teleSent": false
     }
   ]
