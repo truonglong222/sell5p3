@@ -243,10 +243,10 @@ async function main() {
       const isLockedIn8h = currentTime - (sentLog[symbol] || 0) < COOLDOWN_TIME;
 
       // Bước 4: Xét điều kiện Nhóm A1, A2 (Dùng để khóa danh sách trong 8h)
-      // A1 (LONG): x > 0.4, l0 < Upper BB, và 0 < diffema10 < 3%
-      const isA1 = x > 0.4 && l0 < bb15mAtCandle2.upper && (diffema10 > 0 && diffema10 < 3);
-      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -3% < diffema10 < 0
-      const isA2 = x < -0.4 && h0 > bb15mAtCandle2.lower && (diffema10 > -3 && diffema10 < 0);
+      // A1 (LONG): x > 0.4, l0 < Upper BB, và 0 < diffema10 < 1.5%
+      const isA1 = x > 0.4 && l0 < bb15mAtCandle2.upper && (diffema10 > 0 && diffema10 < 1.5);
+      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -1.5% < diffema10 < 0
+      const isA2 = x < -0.4 && h0 > bb15mAtCandle2.lower && (diffema10 > -1.5 && diffema10 < 0);
 
       if (isA1 || isA2) {
         const aGroupName = isA1 ? 'Nhóm A1' : 'Nhóm A2';
@@ -277,12 +277,12 @@ async function main() {
       let bType = null;
       let bGroupName = '';
 
-      // Long: x > -0.3, -3% < bbd15m < -0.5% và 0% < diffema10 < 3%
-      if (x > -0.3 && bbd15m > -3 && bbd15m < -0.5 && (diffema10 > 0 && diffema10 < 3)) {
+      // Long: x > -0.3, -3% < bbd15m < -0.5% và 0% < diffema10 < 1.5%
+      if (x > -0.3 && bbd15m > -3 && bbd15m < -0.5 && (diffema10 > 0 && diffema10 < 1.5)) {
         bType = 'LONG';
         bGroupName = 'Nhóm B1';
-      // Short: x < 0.3, 0.5% < bbt15m < 3% và -3% < diffema10 < 0%
-      } else if (x < 0.3 && bbt15m > 0.5 && bbt15m < 3 && (diffema10 > -3 && diffema10 < 0)) {
+      // Short: x < 0.3, 0.5% < bbt15m < 3% và -1.5% < diffema10 < 0%
+      } else if (x < 0.3 && bbt15m > 0.5 && bbt15m < 3 && (diffema10 > -1.5 && diffema10 < 0)) {
         bType = 'SHORT';
         bGroupName = 'Nhóm B2';
       }
