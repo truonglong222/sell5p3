@@ -1,29 +1,29 @@
 {
-  "lastScanAt": "2026-08-27T06:41:39.640Z",
-  "totalScanned": 162,
+  "lastScanAt": "2026-08-27T06:46:28.006Z",
+  "totalScanned": 166,
   "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "MUBARAK-USDT-SWAP",
-      "type": "LONG",
-      "group": "Nhóm A1",
-      "Hbb": "3.64%",
-      "x": "0.42",
-      "diffema10": "-0.97%",
-      "bandDiff": "3.43%",
-      "change24h": "-0.73%",
+      "symbol": "ACT-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "3.05%",
+      "x": "-0.73",
+      "diffema10": "1.93%",
+      "bandDiff": "-1.92%",
+      "change24h": "1.97%",
       "teleSent": false
     },
     {
-      "symbol": "CRV-USDT-SWAP",
+      "symbol": "AI-USDT-SWAP",
       "type": "SHORT",
       "group": "Nhóm B2",
-      "Hbb": "5.49%",
-      "x": "-0.08",
-      "diffema10": "1.19%",
-      "bandDiff": "0.63%",
-      "change24h": "2.85%",
-      "teleSent": false
+      "Hbb": "3.80%",
+      "x": "0.20",
+      "diffema10": "0.76%",
+      "bandDiff": "0.68%",
+      "change24h": "2.03%",
+      "teleSent": true
     }
   ]
 }
