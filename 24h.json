@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-27T06:06:43.471Z",
+  "lastScanAt": "2026-08-27T06:11:41.846Z",
   "totalScanned": 168,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "MON-USDT-SWAP",
@@ -10,8 +10,19 @@
       "Hbb": "5.28%",
       "x": "0.40",
       "diffema10": "0.36%",
-      "bandDiff": "2.12%",
-      "change24h": "0.51%",
+      "bandDiff": "1.93%",
+      "change24h": "-1.28%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ZRO-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.42%",
+      "x": "0.51",
+      "diffema10": "0.29%",
+      "bandDiff": "1.14%",
+      "change24h": "-3.34%",
       "teleSent": false
     }
   ]
