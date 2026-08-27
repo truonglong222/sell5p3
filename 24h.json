@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-27T12:41:16.606Z",
-  "totalScanned": 169,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-27T12:46:16.268Z",
+  "totalScanned": 168,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "ME-USDT-SWAP",
@@ -9,9 +9,9 @@
       "group": "Nhóm A2",
       "Hbb": "3.49%",
       "x": "-0.41",
-      "diffema10": "-0.70%",
+      "diffema10": "-0.65%",
       "bandDiff": "-2.62%",
-      "change24h": "-2.07%",
+      "change24h": "-1.87%",
       "teleSent": false
     },
     {
@@ -22,7 +22,18 @@
       "x": "0.25",
       "diffema10": "-0.10%",
       "bandDiff": "-0.60%",
-      "change24h": "0.67%",
+      "change24h": "0.82%",
+      "teleSent": false
+    },
+    {
+      "symbol": "KAT-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.18%",
+      "x": "0.41",
+      "diffema10": "0.95%",
+      "bandDiff": "2.08%",
+      "change24h": "2.36%",
       "teleSent": false
     }
   ]
