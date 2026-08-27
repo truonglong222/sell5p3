@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-27T01:02:25.735Z",
-  "totalScanned": 158,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-27T01:06:30.418Z",
+  "totalScanned": 159,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "SPACE-USDT-SWAP",
@@ -11,8 +11,19 @@
       "x": "0.31",
       "diffema10": "0.83%",
       "bandDiff": "0.56%",
-      "change24h": "2.92%",
-      "teleSent": true
+      "change24h": "2.41%",
+      "teleSent": false
+    },
+    {
+      "symbol": "STX-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm B1",
+      "Hbb": "3.18%",
+      "x": "-0.32",
+      "diffema10": "-0.34%",
+      "bandDiff": "-1.53%",
+      "change24h": "-2.80%",
+      "teleSent": false
     }
   ]
 }
