@@ -195,33 +195,41 @@ async function main() {
 
       // Bước 3: Lấy nến 15m & tính các chỉ số kỹ thuật
       const raw15m = await getCandles15m(symbol);
-      if (!raw15m) {
+      if (!raw15m || raw15m.length < 25) {
         await sleep(80);
         continue;
       }
 
-      // Cấu trúc nến OKX: [ts, open, high, low, close, vol, volCcy, volCcyQuote, confirm]
-      // raw15m[0]: nến 15m HIỆN TẠI đang chạy
-      const currentCandle15m = raw15m[0];
-      const h0 = parseFloat(currentCandle15m[2]); // High nến hiện tại
-      const l0 = parseFloat(currentCandle15m[3]); // Low nến hiện tại
+      // Nến 0 (đang chạy), Nến 1 (vừa đóng), Nến 2 (đóng trước đó)
+      const c0 = raw15m[0];
+      const c1 = raw15m[1];
+      const c2 = raw15m[2];
 
-      // raw15m[1]: nến 15m VỪA ĐÓNG CỬA
-      const closedCandle15m = raw15m[1];
-      const o15m = parseFloat(closedCandle15m[1]);
-      const c15m = parseFloat(closedCandle15m[4]);
-      const change15m = ((c15m - o15m) / o15m) * 100;
+      const h0 = parseFloat(c0[2]); // High nến 0
+      const l0 = parseFloat(c0[3]); // Low nến 0
 
-      // Tính Bollinger Bands 15m tại thời điểm nến vừa đóng (index 1 -> 20)
-      const closes15mClosedAsc = raw15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bb15m = calculateBollingerBands(closes15mClosedAsc, 20, 2);
+      // Tính biến động từng nến: ((Close - Open) / Open) * 100
+      const change0 = ((parseFloat(c0[4]) - parseFloat(c0[1])) / parseFloat(c0[1])) * 100;
+      const change1 = ((parseFloat(c1[4]) - parseFloat(c1[1])) / parseFloat(c1[1])) * 100;
+      const change2 = ((parseFloat(c2[4]) - parseFloat(c2[1])) / parseFloat(c2[1])) * 100;
 
-      if (!bb15m) {
+      // Tìm biến động có độ lớn (biên độ) lớn nhất trong 3 nến 0, 1, 2
+      const changes = [change0, change1, change2];
+      const maxChangeSigned = changes.reduce((prev, curr) =>
+        Math.abs(curr) > Math.abs(prev) ? curr : prev
+      );
+
+      // Tính Bollinger Bands 15m của nến số 2 (lấy 20 nến tính từ nến số 2 trở về quá khứ: index 2 -> 21)
+      const closes15mAtCandle2Asc = raw15m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
+      const bb15mAtCandle2 = calculateBollingerBands(closes15mAtCandle2Asc, 20, 2);
+
+      if (!bb15mAtCandle2) {
         await sleep(80);
         continue;
       }
 
-      const Hbb = ((bb15m.upper - bb15m.lower) / bb15m.lower) * 100;
+      // Hbb tính theo nến số 2
+      const Hbb = ((bb15mAtCandle2.upper - bb15mAtCandle2.lower) / bb15mAtCandle2.lower) * 100;
 
       // Điều kiện Hbb > 3%
       if (Hbb <= 3) {
@@ -229,19 +237,19 @@ async function main() {
         continue;
       }
 
-      // Tính x = biến động nến 15m vừa đóng / Hbb
-      const x = change15m / Hbb;
+      // Tính x = biến động nến lớn nhất trong 3 nến / Hbb của nến số 2
+      const x = maxChangeSigned / Hbb;
 
-      // Tính bbd15m bằng Low hiện tại và bbt15m bằng High hiện tại
-      const bbd15m = ((l0 - bb15m.lower) / bb15m.lower) * 100;
-      const bbt15m = ((h0 - bb15m.upper) / bb15m.upper) * 100;
+      // Tính bbd15m bằng Low hiện tại và bbt15m bằng High hiện tại so với BB nến số 2
+      const bbd15m = ((l0 - bb15mAtCandle2.lower) / bb15mAtCandle2.lower) * 100;
+      const bbt15m = ((h0 - bb15mAtCandle2.upper) / bb15mAtCandle2.upper) * 100;
 
       // Kiểm tra trạng thái bị khóa trong 8h qua từ sent_ema.json
       const isLockedIn8h = currentTime - (sentLog[symbol] || 0) < COOLDOWN_TIME;
 
-      // Bước 4: Xét điều kiện Nhóm A1, A2
-      const isA1 = x > 0.4 && l0 < bb15m.upper;
-      const isA2 = x < -0.4 && h0 > bb15m.lower;
+      // Bước 4: Xét điều kiện Nhóm A1, A2 (Dùng để khóa danh sách trong 8h)
+      const isA1 = x > 0.4 && l0 < bb15mAtCandle2.upper;
+      const isA2 = x < -0.4 && h0 > bb15mAtCandle2.lower;
 
       if (isA1 || isA2) {
         const aGroupName = isA1 ? 'Nhóm A1' : 'Nhóm A2';
@@ -268,14 +276,16 @@ async function main() {
         continue;
       }
 
-      // Bước 5: Xét điều kiện Nhóm B1, B2 (So sánh High/Low hiện tại với Band)
+      // Bước 5: Xét điều kiện Nhóm B1, B2 với điều kiện X mới
       let bType = null;
       let bGroupName = '';
 
-      if (bbd15m > -3 && bbd15m < -0.5) {
+      // Long: x > -0.3 và -3% < bbd15m < -0.5%
+      if (x > -0.3 && bbd15m > -3 && bbd15m < -0.5) {
         bType = 'LONG';
         bGroupName = 'Nhóm B1';
-      } else if (bbt15m > 0.5 && bbt15m < 3) {
+      // Short: x < 0.3 và 0.5% < bbt15m < 3%
+      } else if (x < 0.3 && bbt15m > 0.5 && bbt15m < 3) {
         bType = 'SHORT';
         bGroupName = 'Nhóm B2';
       }
@@ -302,8 +312,8 @@ async function main() {
             : `• <b>bbt15m (High):</b> ${bbt15m.toFixed(2)}%\n`;
 
           const message = `${icon} <b>TÍN HIỆU ${bType} (${bGroupName}): ${coinName}</b>\n` +
-            `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>x:</b> ${x.toFixed(2)}\n` +
+            `• <b>Hbb (Nến 2):</b> ${Hbb.toFixed(2)}%\n` +
+            `• <b>x (Max 3 nến):</b> ${x.toFixed(2)}\n` +
             `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
             bandLine +
             `• <b>Biến động 24h:</b> ${coin.change24h > 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
