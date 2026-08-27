@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-27T21:11:09.876Z",
+  "lastScanAt": "2026-08-27T21:16:07.398Z",
   "totalScanned": 154,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "MEME-USDT-SWAP",
@@ -9,9 +9,20 @@
       "group": "Nhóm A1",
       "Hbb": "4.32%",
       "x": "0.69",
-      "diffema10": "1.71%",
-      "bandDiff": "3.89%",
-      "change24h": "3.36%",
+      "diffema10": "1.67%",
+      "bandDiff": "3.70%",
+      "change24h": "3.02%",
+      "teleSent": false
+    },
+    {
+      "symbol": "RVN-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "4.38%",
+      "x": "0.51",
+      "diffema10": "1.78%",
+      "bandDiff": "3.87%",
+      "change24h": "2.53%",
       "teleSent": false
     }
   ]
