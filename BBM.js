@@ -59,7 +59,7 @@ function saveScanResults(results) {
 // ------------------- HÀM TÍNH TOÁN KỸ THUẬT -------------------
 
 // Tính mảng EMA (prices theo thứ tự thời gian từ cũ đến mới)
-function calculateEMA(prices, period = 20) {
+function calculateEMA(prices, period = 10) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
   const emaArray = [];
@@ -120,12 +120,12 @@ async function getFilteredMarkets() {
   }
 }
 
-// 2. Lấy nến 1H (Yêu cầu tối thiểu 45 nến để tính EMA20 và lùi 20 nến)
+// 2. Lấy nến 1H (Yêu cầu tối thiểu 30 nến để tính EMA10 và lùi 10 nến)
 async function getCandles1h(symbol) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
     const res = await axios.get(url, { timeout: 5000 });
-    if (!res.data || res.data.code !== '0' || res.data.data.length < 45) return null;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 30) return null;
     return res.data.data;
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến 1H (${symbol}):`, error.message);
@@ -167,7 +167,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Bước 2: Kiểm tra nến 1H & tính diffema20
+      // Bước 2: Kiểm tra nến 1H & tính diffema10
       const raw1h = await getCandles1h(symbol);
       if (!raw1h) {
         await sleep(80);
@@ -176,17 +176,17 @@ async function main() {
 
       // Sắp xếp giá đóng cửa từ quá khứ đến hiện tại
       const closes1hAsc = raw1h.map((c) => parseFloat(c[4])).reverse();
-      const ema1hList = calculateEMA(closes1hAsc, 20);
+      const ema1hList = calculateEMA(closes1hAsc, 10);
 
-      // Cần tối thiểu 21 phần tử EMA để so sánh giữa hiện tại và 20 nến trước
-      if (ema1hList.length < 21) {
+      // Cần tối thiểu 11 phần tử EMA để so sánh giữa hiện tại và 10 nến trước
+      if (ema1hList.length < 11) {
         await sleep(80);
         continue;
       }
 
       const emaCurrent = ema1hList[ema1hList.length - 1];
-      const ema20Ago = ema1hList[ema1hList.length - 21];
-      const diffema20 = ((emaCurrent - ema20Ago) / ema20Ago) * 100;
+      const ema10Ago = ema1hList[ema1hList.length - 11];
+      const diffema10 = ((emaCurrent - ema10Ago) / ema10Ago) * 100;
 
       // Bước 3: Lấy nến 15m & tính các chỉ số kỹ thuật
       const raw15m = await getCandles15m(symbol);
@@ -243,10 +243,10 @@ async function main() {
       const isLockedIn8h = currentTime - (sentLog[symbol] || 0) < COOLDOWN_TIME;
 
       // Bước 4: Xét điều kiện Nhóm A1, A2 (Dùng để khóa danh sách trong 8h)
-      // A1 (LONG): x > 0.4, l0 < Upper BB, và 0 < diffema20 < 3%
-      const isA1 = x > 0.4 && l0 < bb15mAtCandle2.upper && (diffema20 > 0 && diffema20 < 3);
-      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -3% < diffema20 < 0
-      const isA2 = x < -0.4 && h0 > bb15mAtCandle2.lower && (diffema20 > -3 && diffema20 < 0);
+      // A1 (LONG): x > 0.4, l0 < Upper BB, và 0 < diffema10 < 3%
+      const isA1 = x > 0.4 && l0 < bb15mAtCandle2.upper && (diffema10 > 0 && diffema10 < 3);
+      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -3% < diffema10 < 0
+      const isA2 = x < -0.4 && h0 > bb15mAtCandle2.lower && (diffema10 > -3 && diffema10 < 0);
 
       if (isA1 || isA2) {
         const aGroupName = isA1 ? 'Nhóm A1' : 'Nhóm A2';
@@ -258,7 +258,7 @@ async function main() {
           group: aGroupName,
           Hbb: Hbb.toFixed(2) + '%',
           x: x.toFixed(2),
-          diffema20: diffema20.toFixed(2) + '%',
+          diffema10: diffema10.toFixed(2) + '%',
           bandDiff: (isA1 ? bbd15m : bbt15m).toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
           teleSent: false
@@ -273,16 +273,16 @@ async function main() {
         continue;
       }
 
-      // Bước 5: Xét điều kiện Nhóm B1, B2 kèm diffema20 tương ứng
+      // Bước 5: Xét điều kiện Nhóm B1, B2 kèm diffema10 tương ứng
       let bType = null;
       let bGroupName = '';
 
-      // Long: x > -0.3, -3% < bbd15m < -0.5% và 0% < diffema20 < 3%
-      if (x > -0.3 && bbd15m > -3 && bbd15m < -0.5 && (diffema20 > 0 && diffema20 < 3)) {
+      // Long: x > -0.3, -3% < bbd15m < -0.5% và 0% < diffema10 < 3%
+      if (x > -0.3 && bbd15m > -3 && bbd15m < -0.5 && (diffema10 > 0 && diffema10 < 3)) {
         bType = 'LONG';
         bGroupName = 'Nhóm B1';
-      // Short: x < 0.3, 0.5% < bbt15m < 3% và -3% < diffema20 < 0%
-      } else if (x < 0.3 && bbt15m > 0.5 && bbt15m < 3 && (diffema20 > -3 && diffema20 < 0)) {
+      // Short: x < 0.3, 0.5% < bbt15m < 3% và -3% < diffema10 < 0%
+      } else if (x < 0.3 && bbt15m > 0.5 && bbt15m < 3 && (diffema10 > -3 && diffema10 < 0)) {
         bType = 'SHORT';
         bGroupName = 'Nhóm B2';
       }
@@ -294,7 +294,7 @@ async function main() {
           group: bGroupName,
           Hbb: Hbb.toFixed(2) + '%',
           x: x.toFixed(2),
-          diffema20: diffema20.toFixed(2) + '%',
+          diffema10: diffema10.toFixed(2) + '%',
           bandDiff: (bType === 'LONG' ? bbd15m : bbt15m).toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
           teleSent: !isLockedIn8h
@@ -311,7 +311,7 @@ async function main() {
           const message = `${icon} <b>TÍN HIỆU ${bType} (${bGroupName}): ${coinName}</b>\n` +
             `• <b>Hbb (Nến 2):</b> ${Hbb.toFixed(2)}%\n` +
             `• <b>x (Max 3 nến):</b> ${x.toFixed(2)}\n` +
-            `• <b>diffema20:</b> ${diffema20.toFixed(2)}%\n` +
+            `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
             bandLine +
             `• <b>Biến động 24h:</b> ${coin.change24h > 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
             `• <a href="${link}">Link OKX</a>`;
