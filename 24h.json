@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-27T05:06:14.848Z",
-  "totalScanned": 160,
-  "matchedCount": 3,
+  "lastScanAt": "2026-08-27T05:11:32.732Z",
+  "totalScanned": 163,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "YGG-USDT-SWAP",
@@ -9,9 +9,9 @@
       "group": "Nhóm B2",
       "Hbb": "3.25%",
       "x": "0.27",
-      "diffema10": "1.28%",
+      "diffema10": "1.30%",
       "bandDiff": "0.50%",
-      "change24h": "3.94%",
+      "change24h": "4.26%",
       "teleSent": false
     },
     {
@@ -19,11 +19,22 @@
       "type": "LONG",
       "group": "Nhóm B1",
       "Hbb": "3.47%",
-      "x": "-0.12",
-      "diffema10": "1.95%",
-      "bandDiff": "-0.62%",
-      "change24h": "2.21%",
-      "teleSent": true
+      "x": "-0.11",
+      "diffema10": "1.98%",
+      "bandDiff": "-0.67%",
+      "change24h": "2.67%",
+      "teleSent": false
+    },
+    {
+      "symbol": "MUBARAK-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.02%",
+      "x": "0.64",
+      "diffema10": "-1.32%",
+      "bandDiff": "1.15%",
+      "change24h": "-2.97%",
+      "teleSent": false
     },
     {
       "symbol": "AZTEC-USDT-SWAP",
@@ -31,9 +42,9 @@
       "group": "Nhóm B1",
       "Hbb": "4.75%",
       "x": "-0.23",
-      "diffema10": "0.30%",
+      "diffema10": "0.33%",
       "bandDiff": "-1.41%",
-      "change24h": "-2.81%",
+      "change24h": "-2.40%",
       "teleSent": false
     }
   ]
