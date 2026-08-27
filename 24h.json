@@ -1,18 +1,29 @@
 {
-  "lastScanAt": "2026-08-27T13:01:49.751Z",
-  "totalScanned": 170,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-27T13:06:00.235Z",
+  "totalScanned": 168,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "RVN-USDT-SWAP",
+      "symbol": "PNUT-USDT-SWAP",
       "type": "SHORT",
       "group": "Nhóm B2",
-      "Hbb": "3.13%",
-      "x": "0.24",
-      "diffema10": "-0.00%",
-      "bandDiff": "-0.92%",
-      "change24h": "0.92%",
+      "Hbb": "4.41%",
+      "x": "0.25",
+      "diffema10": "-0.17%",
+      "bandDiff": "-0.98%",
+      "change24h": "0.06%",
       "teleSent": false
+    },
+    {
+      "symbol": "CORE-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm B1",
+      "Hbb": "4.97%",
+      "x": "-0.24",
+      "diffema10": "0.69%",
+      "bandDiff": "0.75%",
+      "change24h": "-0.46%",
+      "teleSent": true
     }
   ]
 }
