@@ -188,12 +188,6 @@ async function main() {
       const ema20Ago = ema1hList[ema1hList.length - 21];
       const diffema20 = ((emaCurrent - ema20Ago) / ema20Ago) * 100;
 
-      // Điều kiện diffema20 trong khoảng [-2%, +2%]
-      if (diffema20 < -2 || diffema20 > 2) {
-        await sleep(80);
-        continue;
-      }
-
       // Bước 3: Lấy nến 15m & tính các chỉ số kỹ thuật
       const raw15m = await getCandles15m(symbol);
       if (!raw15m || raw15m.length < 25) {
@@ -249,8 +243,10 @@ async function main() {
       const isLockedIn8h = currentTime - (sentLog[symbol] || 0) < COOLDOWN_TIME;
 
       // Bước 4: Xét điều kiện Nhóm A1, A2 (Dùng để khóa danh sách trong 8h)
-      const isA1 = x > 0.4 && l0 < bb15mAtCandle2.upper;
-      const isA2 = x < -0.4 && h0 > bb15mAtCandle2.lower;
+      // A1 (LONG): x > 0.4, l0 < Upper BB, và 0 < diffema20 < 3%
+      const isA1 = x > 0.4 && l0 < bb15mAtCandle2.upper && (diffema20 > 0 && diffema20 < 3);
+      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -3% < diffema20 < 0
+      const isA2 = x < -0.4 && h0 > bb15mAtCandle2.lower && (diffema20 > -3 && diffema20 < 0);
 
       if (isA1 || isA2) {
         const aGroupName = isA1 ? 'Nhóm A1' : 'Nhóm A2';
@@ -277,16 +273,16 @@ async function main() {
         continue;
       }
 
-      // Bước 5: Xét điều kiện Nhóm B1, B2 với điều kiện X mới
+      // Bước 5: Xét điều kiện Nhóm B1, B2 kèm diffema20 tương ứng
       let bType = null;
       let bGroupName = '';
 
-      // Long: x > -0.3 và -3% < bbd15m < -0.5%
-      if (x > -0.3 && bbd15m > -3 && bbd15m < -0.5) {
+      // Long: x > -0.3, -3% < bbd15m < -0.5% và 0% < diffema20 < 3%
+      if (x > -0.3 && bbd15m > -3 && bbd15m < -0.5 && (diffema20 > 0 && diffema20 < 3)) {
         bType = 'LONG';
         bGroupName = 'Nhóm B1';
-      // Short: x < 0.3 và 0.5% < bbt15m < 3%
-      } else if (x < 0.3 && bbt15m > 0.5 && bbt15m < 3) {
+      // Short: x < 0.3, 0.5% < bbt15m < 3% và -3% < diffema20 < 0%
+      } else if (x < 0.3 && bbt15m > 0.5 && bbt15m < 3 && (diffema20 > -3 && diffema20 < 0)) {
         bType = 'SHORT';
         bGroupName = 'Nhóm B2';
       }
