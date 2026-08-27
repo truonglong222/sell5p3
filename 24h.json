@@ -1,8 +1,19 @@
 {
-  "lastScanAt": "2026-08-27T20:41:02.010Z",
-  "totalScanned": 146,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-27T20:46:05.376Z",
+  "totalScanned": 144,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "ZORA-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "6.02%",
+      "x": "0.42",
+      "diffema10": "1.44%",
+      "bandDiff": "2.86%",
+      "change24h": "0.95%",
+      "teleSent": false
+    },
     {
       "symbol": "RVN-USDT-SWAP",
       "type": "LONG",
@@ -11,7 +22,7 @@
       "x": "0.46",
       "diffema10": "1.82%",
       "bandDiff": "2.78%",
-      "change24h": "3.64%",
+      "change24h": "3.85%",
       "teleSent": false
     }
   ]
