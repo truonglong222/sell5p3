@@ -120,12 +120,12 @@ async function getFilteredMarkets() {
   }
 }
 
-// 2. Lấy nến 1H
+// 2. Lấy nến 1H (Yêu cầu tối thiểu 45 nến để tính EMA20 và lùi 20 nến)
 async function getCandles1h(symbol) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
     const res = await axios.get(url, { timeout: 5000 });
-    if (!res.data || res.data.code !== '0' || res.data.data.length < 35) return null;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 45) return null;
     return res.data.data;
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến 1H (${symbol}):`, error.message);
@@ -167,7 +167,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Bước 2: Kiểm tra nến 1H & tính diffema10
+      // Bước 2: Kiểm tra nến 1H & tính diffema20
       const raw1h = await getCandles1h(symbol);
       if (!raw1h) {
         await sleep(80);
@@ -178,17 +178,18 @@ async function main() {
       const closes1hAsc = raw1h.map((c) => parseFloat(c[4])).reverse();
       const ema1hList = calculateEMA(closes1hAsc, 20);
 
-      if (ema1hList.length < 11) {
+      // Cần tối thiểu 21 phần tử EMA để so sánh giữa hiện tại và 20 nến trước
+      if (ema1hList.length < 21) {
         await sleep(80);
         continue;
       }
 
       const emaCurrent = ema1hList[ema1hList.length - 1];
-      const ema10Ago = ema1hList[ema1hList.length - 11];
-      const diffema10 = ((emaCurrent - ema10Ago) / ema10Ago) * 100;
+      const ema20Ago = ema1hList[ema1hList.length - 21];
+      const diffema20 = ((emaCurrent - ema20Ago) / ema20Ago) * 100;
 
-      // Điều kiện diffema10 trong khoảng [-2%, +2%]
-      if (diffema10 < -2 || diffema10 > 2) {
+      // Điều kiện diffema20 trong khoảng [-2%, +2%]
+      if (diffema20 < -2 || diffema20 > 2) {
         await sleep(80);
         continue;
       }
@@ -261,7 +262,7 @@ async function main() {
           group: aGroupName,
           Hbb: Hbb.toFixed(2) + '%',
           x: x.toFixed(2),
-          diffema10: diffema10.toFixed(2) + '%',
+          diffema20: diffema20.toFixed(2) + '%',
           bandDiff: (isA1 ? bbd15m : bbt15m).toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
           teleSent: false
@@ -297,7 +298,7 @@ async function main() {
           group: bGroupName,
           Hbb: Hbb.toFixed(2) + '%',
           x: x.toFixed(2),
-          diffema10: diffema10.toFixed(2) + '%',
+          diffema20: diffema20.toFixed(2) + '%',
           bandDiff: (bType === 'LONG' ? bbd15m : bbt15m).toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
           teleSent: !isLockedIn8h
@@ -314,7 +315,7 @@ async function main() {
           const message = `${icon} <b>TÍN HIỆU ${bType} (${bGroupName}): ${coinName}</b>\n` +
             `• <b>Hbb (Nến 2):</b> ${Hbb.toFixed(2)}%\n` +
             `• <b>x (Max 3 nến):</b> ${x.toFixed(2)}\n` +
-            `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
+            `• <b>diffema20:</b> ${diffema20.toFixed(2)}%\n` +
             bandLine +
             `• <b>Biến động 24h:</b> ${coin.change24h > 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
             `• <a href="${link}">Link OKX</a>`;
