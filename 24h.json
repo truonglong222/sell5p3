@@ -1,18 +1,40 @@
 {
-  "lastScanAt": "2026-08-27T02:46:45.547Z",
+  "lastScanAt": "2026-08-27T02:51:41.955Z",
   "totalScanned": 162,
-  "matchedCount": 1,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "ESP-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm B1",
+      "Hbb": "5.13%",
+      "x": "-0.25",
+      "diffema10": "-0.75%",
+      "bandDiff": "-0.74%",
+      "change24h": "-4.43%",
+      "teleSent": true
+    },
+    {
+      "symbol": "APR-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "5.45%",
+      "x": "0.08",
+      "diffema10": "1.01%",
+      "bandDiff": "0.67%",
+      "change24h": "0.00%",
+      "teleSent": false
+    },
     {
       "symbol": "ZAMA-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm B1",
       "Hbb": "3.48%",
       "x": "-0.32",
-      "diffema10": "-0.25%",
+      "diffema10": "-0.23%",
       "bandDiff": "-0.74%",
-      "change24h": "-0.47%",
-      "teleSent": true
+      "change24h": "-0.30%",
+      "teleSent": false
     }
   ]
 }
