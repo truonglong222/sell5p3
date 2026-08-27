@@ -1,83 +1,39 @@
 {
-  "lastScanAt": "2026-08-27T08:11:44.435Z",
-  "totalScanned": 166,
-  "matchedCount": 7,
+  "lastScanAt": "2026-08-27T08:16:39.433Z",
+  "totalScanned": 169,
+  "matchedCount": 3,
   "matchedList": [
-    {
-      "symbol": "EDGE-USDT-SWAP",
-      "type": "SHORT",
-      "group": "Nhóm B2",
-      "Hbb": "3.24%",
-      "x": "0.16",
-      "diffema20": "-0.72%",
-      "bandDiff": "0.87%",
-      "change24h": "4.63%",
-      "teleSent": true
-    },
-    {
-      "symbol": "BRETT-USDT-SWAP",
-      "type": "LONG",
-      "group": "Nhóm A1",
-      "Hbb": "3.21%",
-      "x": "0.70",
-      "diffema20": "-1.67%",
-      "bandDiff": "2.30%",
-      "change24h": "0.07%",
-      "teleSent": false
-    },
-    {
-      "symbol": "JUP-USDT-SWAP",
-      "type": "LONG",
-      "group": "Nhóm A1",
-      "Hbb": "4.19%",
-      "x": "0.44",
-      "diffema20": "-0.17%",
-      "bandDiff": "2.00%",
-      "change24h": "1.10%",
-      "teleSent": false
-    },
-    {
-      "symbol": "MON-USDT-SWAP",
-      "type": "SHORT",
-      "group": "Nhóm B2",
-      "Hbb": "4.05%",
-      "x": "0.26",
-      "diffema20": "-0.69%",
-      "bandDiff": "1.10%",
-      "change24h": "2.62%",
-      "teleSent": false
-    },
-    {
-      "symbol": "USELESS-USDT-SWAP",
-      "type": "LONG",
-      "group": "Nhóm A1",
-      "Hbb": "4.50%",
-      "x": "0.41",
-      "diffema20": "1.46%",
-      "bandDiff": "2.27%",
-      "change24h": "2.17%",
-      "teleSent": false
-    },
     {
       "symbol": "ARX-USDT-SWAP",
       "type": "SHORT",
       "group": "Nhóm B2",
-      "Hbb": "9.03%",
+      "Hbb": "9.57%",
       "x": "0.13",
-      "diffema20": "-0.28%",
-      "bandDiff": "1.46%",
-      "change24h": "3.64%",
+      "diffema20": "-0.27%",
+      "bandDiff": "1.00%",
+      "change24h": "4.04%",
       "teleSent": false
     },
     {
       "symbol": "STX-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
-      "Hbb": "3.31%",
-      "x": "0.66",
-      "diffema20": "-1.82%",
-      "bandDiff": "1.31%",
-      "change24h": "-4.88%",
+      "Hbb": "3.20%",
+      "x": "0.56",
+      "diffema20": "-1.88%",
+      "bandDiff": "2.95%",
+      "change24h": "-4.97%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ZRO-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "6.40%",
+      "x": "0.27",
+      "diffema20": "-1.14%",
+      "bandDiff": "2.53%",
+      "change24h": "2.89%",
       "teleSent": false
     }
   ]
