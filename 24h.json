@@ -1,19 +1,8 @@
 {
-  "lastScanAt": "2026-08-27T11:31:31.534Z",
-  "totalScanned": 167,
+  "lastScanAt": "2026-08-27T11:36:05.552Z",
+  "totalScanned": 166,
   "matchedCount": 6,
   "matchedList": [
-    {
-      "symbol": "TRIA-USDT-SWAP",
-      "type": "SHORT",
-      "group": "Nhóm A2",
-      "Hbb": "4.24%",
-      "x": "-0.50",
-      "diffema10": "-0.01%",
-      "bandDiff": "-1.74%",
-      "change24h": "-2.52%",
-      "teleSent": false
-    },
     {
       "symbol": "ME-USDT-SWAP",
       "type": "SHORT",
@@ -22,7 +11,7 @@
       "x": "-0.40",
       "diffema10": "-0.56%",
       "bandDiff": "-2.43%",
-      "change24h": "-1.90%",
+      "change24h": "-1.98%",
       "teleSent": false
     },
     {
@@ -30,10 +19,10 @@
       "type": "LONG",
       "group": "Nhóm B1",
       "Hbb": "5.35%",
-      "x": "-0.20",
-      "diffema10": "0.19%",
+      "x": "-0.10",
+      "diffema10": "0.28%",
       "bandDiff": "0.17%",
-      "change24h": "-3.28%",
+      "change24h": "-2.76%",
       "teleSent": false
     },
     {
@@ -42,9 +31,20 @@
       "group": "Nhóm B2",
       "Hbb": "4.30%",
       "x": "-0.12",
-      "diffema10": "-0.18%",
+      "diffema10": "-0.16%",
       "bandDiff": "-0.74%",
-      "change24h": "-0.81%",
+      "change24h": "-0.74%",
+      "teleSent": false
+    },
+    {
+      "symbol": "BILL-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm B1",
+      "Hbb": "3.17%",
+      "x": "-0.22",
+      "diffema10": "0.06%",
+      "bandDiff": "0.95%",
+      "change24h": "0.15%",
       "teleSent": false
     },
     {
@@ -52,10 +52,10 @@
       "type": "SHORT",
       "group": "Nhóm B2",
       "Hbb": "6.57%",
-      "x": "0.03",
-      "diffema10": "-0.36%",
+      "x": "0.05",
+      "diffema10": "-0.27%",
       "bandDiff": "-0.79%",
-      "change24h": "-0.57%",
+      "change24h": "-0.93%",
       "teleSent": false
     },
     {
@@ -64,7 +64,7 @@
       "group": "Nhóm B2",
       "Hbb": "5.86%",
       "x": "0.18",
-      "diffema10": "-0.16%",
+      "diffema10": "-0.11%",
       "bandDiff": "-0.88%",
       "change24h": "-0.48%",
       "teleSent": false
