@@ -1,17 +1,39 @@
 {
-  "lastScanAt": "2026-08-27T08:06:15.923Z",
-  "totalScanned": 165,
-  "matchedCount": 3,
+  "lastScanAt": "2026-08-27T08:11:44.435Z",
+  "totalScanned": 166,
+  "matchedCount": 7,
   "matchedList": [
+    {
+      "symbol": "EDGE-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "3.24%",
+      "x": "0.16",
+      "diffema20": "-0.72%",
+      "bandDiff": "0.87%",
+      "change24h": "4.63%",
+      "teleSent": true
+    },
     {
       "symbol": "BRETT-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "3.21%",
-      "x": "0.59",
-      "diffema20": "-1.70%",
+      "x": "0.70",
+      "diffema20": "-1.67%",
       "bandDiff": "2.30%",
-      "change24h": "0.02%",
+      "change24h": "0.07%",
+      "teleSent": false
+    },
+    {
+      "symbol": "JUP-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "4.19%",
+      "x": "0.44",
+      "diffema20": "-0.17%",
+      "bandDiff": "2.00%",
+      "change24h": "1.10%",
       "teleSent": false
     },
     {
@@ -21,8 +43,30 @@
       "Hbb": "4.05%",
       "x": "0.26",
       "diffema20": "-0.69%",
-      "bandDiff": "1.07%",
-      "change24h": "3.14%",
+      "bandDiff": "1.10%",
+      "change24h": "2.62%",
+      "teleSent": false
+    },
+    {
+      "symbol": "USELESS-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "4.50%",
+      "x": "0.41",
+      "diffema20": "1.46%",
+      "bandDiff": "2.27%",
+      "change24h": "2.17%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ARX-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "9.03%",
+      "x": "0.13",
+      "diffema20": "-0.28%",
+      "bandDiff": "1.46%",
+      "change24h": "3.64%",
       "teleSent": false
     },
     {
@@ -30,10 +74,10 @@
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "3.31%",
-      "x": "0.45",
-      "diffema20": "-1.89%",
+      "x": "0.66",
+      "diffema20": "-1.82%",
       "bandDiff": "1.31%",
-      "change24h": "-4.65%",
+      "change24h": "-4.88%",
       "teleSent": false
     }
   ]
