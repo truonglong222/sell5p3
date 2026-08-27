@@ -1,17 +1,39 @@
 {
-  "lastScanAt": "2026-08-27T04:46:46.343Z",
-  "totalScanned": 159,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-27T04:51:26.204Z",
+  "totalScanned": 162,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "MON-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm B1",
+      "Hbb": "3.11%",
+      "x": "-0.20",
+      "diffema10": "0.17%",
+      "bandDiff": "-0.68%",
+      "change24h": "-1.29%",
+      "teleSent": true
+    },
+    {
+      "symbol": "LA-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "3.77%",
+      "x": "0.07",
+      "diffema10": "1.24%",
+      "bandDiff": "0.92%",
+      "change24h": "4.92%",
+      "teleSent": true
+    },
     {
       "symbol": "AZTEC-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm B1",
       "Hbb": "4.75%",
       "x": "-0.23",
-      "diffema10": "0.37%",
+      "diffema10": "0.35%",
       "bandDiff": "-1.34%",
-      "change24h": "-2.93%",
+      "change24h": "-2.87%",
       "teleSent": false
     }
   ]
