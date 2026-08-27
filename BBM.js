@@ -176,7 +176,6 @@ async function main() {
       const diffema10 = ((emaCurrent - ema10Ago) / ema10Ago) * 100;
 
       // Bước 3: Tính các chỉ số kỹ thuật trên khung 1H
-      // Nến 0 (đang chạy), Nến 1 (vừa đóng), Nến 2 (đóng trước đó)
       const c0 = raw1h[0];
       const c1 = raw1h[1];
       const c2 = raw1h[2];
@@ -224,10 +223,10 @@ async function main() {
       const isLockedIn8h = currentTime - (sentLog[symbol] || 0) < COOLDOWN_TIME;
 
       // Bước 4: Xét điều kiện Nhóm A1, A2 (Dùng để khóa danh sách trong 8h)
-      // A1 (LONG): x > 0.4, l0 < Upper BB, và 0 < diffema10 < 1.5%
-      const isA1 = x > 0.4 && l0 < bb1hAtCandle2.upper && (diffema10 > 0 && diffema10 < 1.5);
-      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -1.5% < diffema10 < 0
-      const isA2 = x < -0.4 && h0 > bb1hAtCandle2.lower && (diffema10 > -1.5 && diffema10 < 0);
+      // A1 (LONG): x > 0.4, l0 < Upper BB, và 1% < diffema10 < 3%
+      const isA1 = x > 0.4 && l0 < bb1hAtCandle2.upper && (diffema10 > 1 && diffema10 < 3);
+      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -3% < diffema10 < -1%
+      const isA2 = x < -0.4 && h0 > bb1hAtCandle2.lower && (diffema10 > -3 && diffema10 < -1);
 
       if (isA1 || isA2) {
         const aGroupName = isA1 ? 'Nhóm A1' : 'Nhóm A2';
@@ -258,12 +257,12 @@ async function main() {
       let bType = null;
       let bGroupName = '';
 
-      // Long: x > -0.3, -1% <= bbd1h <= 1% và 0% < diffema10 < 1.5%
-      if (x > -0.3 && bbd1h >= -1 && bbd1h <= 1 && (diffema10 > 0 && diffema10 < 1.5)) {
+      // Long: x > -0.3, -1% <= bbd1h <= 1% và 1% < diffema10 < 3%
+      if (x > -0.3 && bbd1h >= -1 && bbd1h <= 1 && (diffema10 > 1 && diffema10 < 3)) {
         bType = 'LONG';
         bGroupName = 'Nhóm B1';
-      // Short: x < 0.3, -1% <= bbt1h <= 1% và -1.5% < diffema10 < 0%
-      } else if (x < 0.3 && bbt1h >= -1 && bbt1h <= 1 && (diffema10 > -1.5 && diffema10 < 0)) {
+      // Short: x < 0.3, -1% <= bbt1h <= 1% và -3% < diffema10 < -1%
+      } else if (x < 0.3 && bbt1h >= -1 && bbt1h <= 1 && (diffema10 > -3 && diffema10 < -1)) {
         bType = 'SHORT';
         bGroupName = 'Nhóm B2';
       }
@@ -312,7 +311,7 @@ async function main() {
         }
       }
 
-      await sleep(80); // Rate limit tránh bị OKX chặn IP
+      await sleep(80);
     }
 
     if (hasLogUpdated) saveSentLog(sentLog);
