@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-27T00:31:42.446Z",
-  "totalScanned": 155,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-27T00:36:36.528Z",
+  "totalScanned": 157,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "MEME-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "4.94%",
+      "x": "-0.06",
+      "diffema10": "0.68%",
+      "bandDiff": "0.95%",
+      "change24h": "4.88%",
+      "teleSent": true
+    },
     {
       "symbol": "BLEND-USDT-SWAP",
       "type": "SHORT",
       "group": "Nhóm B2",
       "Hbb": "6.54%",
       "x": "0.05",
-      "diffema10": "0.69%",
+      "diffema10": "0.67%",
       "bandDiff": "1.59%",
-      "change24h": "3.02%",
+      "change24h": "2.41%",
       "teleSent": false
     }
   ]
