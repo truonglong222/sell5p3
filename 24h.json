@@ -1,17 +1,39 @@
 {
-  "lastScanAt": "2026-08-27T20:51:10.651Z",
-  "totalScanned": 146,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-27T20:55:55.941Z",
+  "totalScanned": 149,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "LAB-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.65%",
+      "x": "0.43",
+      "diffema10": "1.25%",
+      "bandDiff": "2.58%",
+      "change24h": "2.74%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ZORA-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "6.02%",
+      "x": "0.40",
+      "diffema10": "1.41%",
+      "bandDiff": "2.86%",
+      "change24h": "1.30%",
+      "teleSent": false
+    },
     {
       "symbol": "RVN-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "4.49%",
-      "x": "0.46",
-      "diffema10": "1.82%",
+      "x": "0.45",
+      "diffema10": "1.81%",
       "bandDiff": "2.78%",
-      "change24h": "4.62%",
+      "change24h": "4.46%",
       "teleSent": false
     }
   ]
