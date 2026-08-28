@@ -1,17 +1,39 @@
 {
-  "lastScanAt": "2026-08-28T16:20:54.332Z",
-  "totalScanned": 84,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-28T16:25:35.543Z",
+  "totalScanned": 49,
+  "matchedCount": 3,
   "matchedList": [
     {
-      "symbol": "PNUT-USDT-SWAP",
+      "symbol": "RE-USDT-SWAP",
       "type": "SHORT",
       "group": "Nhóm A2",
-      "Hbb": "4.84%",
-      "x": "-0.40",
-      "diffema10": "-1.17%",
-      "bandDiff": "-3.72%",
-      "change24h": "-4.74%",
+      "Hbb": "3.92%",
+      "x": "-0.76",
+      "diffema10": "-1.50%",
+      "bandDiff": "-3.69%",
+      "change24h": "-4.80%",
+      "teleSent": true
+    },
+    {
+      "symbol": "SPACE-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "3.03%",
+      "x": "-0.91",
+      "diffema10": "-1.19%",
+      "bandDiff": "-2.60%",
+      "change24h": "-4.63%",
+      "teleSent": true
+    },
+    {
+      "symbol": "SAHARA-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "4.93%",
+      "x": "-0.50",
+      "diffema10": "-1.03%",
+      "bandDiff": "-3.80%",
+      "change24h": "-4.12%",
       "teleSent": true
     }
   ]
