@@ -1,6 +1,29 @@
 {
-  "lastScanAt": "2026-08-28T19:41:08.303Z",
-  "totalScanned": 124,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-28T19:46:05.348Z",
+  "totalScanned": 112,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "KAITO-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "4.00%",
+      "x": "-0.66",
+      "diffema10": "-1.68%",
+      "bandDiff": "-3.82%",
+      "change24h": "-1.88%",
+      "teleSent": false
+    },
+    {
+      "symbol": "BARD-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "3.98%",
+      "x": "-0.55",
+      "diffema10": "-1.03%",
+      "bandDiff": "-3.82%",
+      "change24h": "-3.92%",
+      "teleSent": true
+    }
+  ]
 }
