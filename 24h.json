@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-28T00:16:12.433Z",
-  "totalScanned": 166,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-28T00:21:08.069Z",
+  "totalScanned": 167,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "ARKM-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.90%",
+      "x": "0.40",
+      "diffema10": "1.97%",
+      "bandDiff": "3.81%",
+      "change24h": "1.07%",
+      "teleSent": false
+    },
     {
       "symbol": "ACT-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "3.94%",
       "x": "0.77",
-      "diffema10": "1.57%",
+      "diffema10": "1.70%",
       "bandDiff": "3.24%",
-      "change24h": "2.48%",
+      "change24h": "1.89%",
       "teleSent": false
     },
     {
@@ -20,9 +31,9 @@
       "group": "Nhóm A1",
       "Hbb": "3.55%",
       "x": "0.50",
-      "diffema10": "1.24%",
+      "diffema10": "1.28%",
       "bandDiff": "1.79%",
-      "change24h": "0.10%",
+      "change24h": "-0.10%",
       "teleSent": false
     }
   ]
