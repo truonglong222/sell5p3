@@ -12,13 +12,45 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 8 TIẾNG (Dùng chung để chặn cảnh báo và loại trừ A1/A2)
+// Cấu hình Cooldown: 8 TIẾNG (Dùng chung để chặn cảnh báo lặp lại)
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
 const MIN_VOL_CCY24H = 5_000_000; // Lọc Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// ------------------- QUẢN LÝ LỊCH SỬ COOLDOWN / A1-A2 LOG -------------------
+// ------------------- GỬI TIN NHẮN TELEGRAM -------------------
+async function sendTelegramAlert({ symbol, type, group, Hbb, x, diffema10, bandLabel, bandValue, change24h }) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.warn('⚠️ Chưa cấu hình BOT_TOKEN hoặc CHAT_ID');
+    return;
+  }
+
+  const coinName = symbol.replace('-USDT-SWAP', '');
+  const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+  const icon = type === 'LONG' ? '🟢' : '🔴';
+
+  const message = `${icon} <b>TÍN HIỆU ${type} (${group}): ${coinName}</b>\n` +
+    `• <b>Hbb (Nến 2):</b> ${Hbb.toFixed(2)}%\n` +
+    `• <b>x (Max 3 nến):</b> ${x.toFixed(2)}\n` +
+    `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
+    `• <b>${bandLabel}:</b> ${bandValue.toFixed(2)}%\n` +
+    `• <b>Biến động 24h:</b> ${change24h > 0 ? '+' : ''}${change24h.toFixed(2)}%\n` +
+    `• <a href="${link}">Link OKX</a>`;
+
+  try {
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true
+    });
+    console.log(`🚀 [${type} - ${group}] Đã gửi Telegram cho ${symbol}`);
+  } catch (err) {
+    console.error(`Lỗi gửi Telegram (${symbol}):`, err.message);
+  }
+}
+
+// ------------------- QUẢN LÝ LỊCH SỬ COOLDOWN -------------------
 function loadSentLog() {
   try {
     if (fs.existsSync(DB_FILE)) {
@@ -58,7 +90,6 @@ function saveScanResults(results) {
 
 // ------------------- HÀM TÍNH TOÁN KỸ THUẬT -------------------
 
-// Tính mảng EMA (prices theo thứ tự thời gian từ cũ đến mới)
 function calculateEMA(prices, period = 10) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
@@ -76,7 +107,6 @@ function calculateEMA(prices, period = 10) {
   return emaArray;
 }
 
-// Tính Bollinger Bands (prices từ cũ đến mới, tối thiểu `period` nến)
 function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
@@ -92,7 +122,6 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
 
 // ------------------- LẤY DỮ LIỆU TỪ OKX API -------------------
 
-// 1. Lọc Volume > 5M và Biến động 24h từ -5% đến +5%
 async function getFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
@@ -120,7 +149,6 @@ async function getFilteredMarkets() {
   }
 }
 
-// 2. Lấy nến 1H (Lấy 60 nến đáp ứng cả EMA10 lùi 10 nến và Bollinger Bands nến số 2)
 async function getCandles1h(symbol) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
@@ -142,7 +170,6 @@ async function main() {
     const currentTime = Date.now();
     let hasLogUpdated = false;
 
-    // Bước 1: Lọc Market sơ bộ (Vol > 5M, Biến động 24h [-5%, +5%])
     const targetCoins = await getFilteredMarkets();
     console.log(`📊 Số coin thỏa Vol > 5M và Biến động 24h [-5%, +5%]: ${targetCoins.length}`);
 
@@ -154,18 +181,15 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Bước 2: Lấy dữ liệu nến 1H
       const raw1h = await getCandles1h(symbol);
       if (!raw1h || raw1h.length < 30) {
         await sleep(80);
         continue;
       }
 
-      // Sắp xếp giá đóng cửa từ quá khứ đến hiện tại để tính EMA10
       const closes1hAsc = raw1h.map((c) => parseFloat(c[4])).reverse();
       const ema1hList = calculateEMA(closes1hAsc, 10);
 
-      // Cần tối thiểu 11 phần tử EMA để so sánh giữa hiện tại và 10 nến trước
       if (ema1hList.length < 11) {
         await sleep(80);
         continue;
@@ -175,26 +199,22 @@ async function main() {
       const ema10Ago = ema1hList[ema1hList.length - 11];
       const diffema10 = ((emaCurrent - ema10Ago) / ema10Ago) * 100;
 
-      // Bước 3: Tính các chỉ số kỹ thuật trên khung 1H
       const c0 = raw1h[0];
       const c1 = raw1h[1];
       const c2 = raw1h[2];
 
-      const h0 = parseFloat(c0[2]); // High nến 0
-      const l0 = parseFloat(c0[3]); // Low nến 0
+      const h0 = parseFloat(c0[2]);
+      const l0 = parseFloat(c0[3]);
 
-      // Tính biến động từng nến 1H: ((Close - Open) / Open) * 100
       const change0 = ((parseFloat(c0[4]) - parseFloat(c0[1])) / parseFloat(c0[1])) * 100;
       const change1 = ((parseFloat(c1[4]) - parseFloat(c1[1])) / parseFloat(c1[1])) * 100;
       const change2 = ((parseFloat(c2[4]) - parseFloat(c2[1])) / parseFloat(c2[1])) * 100;
 
-      // Tìm biến động có độ lớn (biên độ) lớn nhất trong 3 nến 0, 1, 2
       const changes = [change0, change1, change2];
       const maxChangeSigned = changes.reduce((prev, curr) =>
         Math.abs(curr) > Math.abs(prev) ? curr : prev
       );
 
-      // Tính Bollinger Bands 1H của nến số 2 (lấy 20 nến tính từ nến số 2 trở về quá khứ: index 2 -> 21)
       const closes1hAtCandle2Asc = raw1h.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb1hAtCandle2 = calculateBollingerBands(closes1hAtCandle2Asc, 20, 2);
 
@@ -203,34 +223,28 @@ async function main() {
         continue;
       }
 
-      // Hbb tính theo nến số 2
       const Hbb = ((bb1hAtCandle2.upper - bb1hAtCandle2.lower) / bb1hAtCandle2.lower) * 100;
 
-      // Điều kiện Hbb > 3%
       if (Hbb <= 3) {
         await sleep(80);
         continue;
       }
 
-      // Tính x = biến động nến lớn nhất trong 3 nến / Hbb của nến số 2
       const x = maxChangeSigned / Hbb;
-
-      // Tính bbd1h bằng Low hiện tại và bbt1h bằng High hiện tại so với BB 1H nến số 2
       const bbd1h = ((l0 - bb1hAtCandle2.lower) / bb1hAtCandle2.lower) * 100;
       const bbt1h = ((h0 - bb1hAtCandle2.upper) / bb1hAtCandle2.upper) * 100;
 
-      // Kiểm tra trạng thái bị khóa trong 8h qua từ sent_ema.json
       const isLockedIn8h = currentTime - (sentLog[symbol] || 0) < COOLDOWN_TIME;
 
-      // Bước 4: Xét điều kiện Nhóm A1, A2 (Dùng để khóa danh sách trong 8h)
-      // A1 (LONG): x > 0.4, l0 < Upper BB, và 1% < diffema10 < 3%
+      // Bước 4: Xét điều kiện Nhóm A1, A2
       const isA1 = x > 0.4 && l0 < bb1hAtCandle2.upper && (diffema10 > 1 && diffema10 < 3);
-      // A2 (SHORT): x < -0.4, h0 > Lower BB, và -3% < diffema10 < -1%
       const isA2 = x < -0.4 && h0 > bb1hAtCandle2.lower && (diffema10 > -3 && diffema10 < -1);
 
       if (isA1 || isA2) {
         const aGroupName = isA1 ? 'Nhóm A1' : 'Nhóm A2';
         const aType = isA1 ? 'LONG' : 'SHORT';
+        const bandValue = isA1 ? bbd1h : bbt1h;
+        const bandLabel = isA1 ? 'bbd1h (Low)' : 'bbt1h (High)';
 
         scanResults.matched.push({
           symbol,
@@ -239,35 +253,50 @@ async function main() {
           Hbb: Hbb.toFixed(2) + '%',
           x: x.toFixed(2),
           diffema10: diffema10.toFixed(2) + '%',
-          bandDiff: (isA1 ? bbd1h : bbt1h).toFixed(2) + '%',
+          bandDiff: bandValue.toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
-          teleSent: false
+          teleSent: !isLockedIn8h
         });
 
-        // Lưu vào sent_ema.json để khóa 8 tiếng (không gửi Telegram)
-        sentLog[symbol] = currentTime;
-        hasLogUpdated = true;
+        if (!isLockedIn8h) {
+          await sendTelegramAlert({
+            symbol,
+            type: aType,
+            group: aGroupName,
+            Hbb,
+            x,
+            diffema10,
+            bandLabel,
+            bandValue,
+            change24h: coin.change24h
+          });
 
-        console.log(`🔒 [${aGroupName}] ${symbol} đã được lưu vào sent_ema.json (Khóa 8h, Không gửi Tele)`);
+          sentLog[symbol] = currentTime;
+          hasLogUpdated = true;
+        } else {
+          console.log(`⏳ [${aGroupName}] ${symbol} thỏa điều kiện A nhưng đang trong cooldown 8h.`);
+        }
+
         await sleep(80);
         continue;
       }
 
-      // Bước 5: Xét điều kiện Nhóm B1, B2 (-1% <= bbd1h, bbt1h <= +1%)
+      // Bước 5: Xét điều kiện Nhóm B1, B2
       let bType = null;
       let bGroupName = '';
 
-      // Long: x > -0.3, -1% <= bbd1h <= 1% và 1% < diffema10 < 3%
       if (x > -0.3 && bbd1h >= -1 && bbd1h <= 1 && (diffema10 > 1 && diffema10 < 3)) {
         bType = 'LONG';
         bGroupName = 'Nhóm B1';
-      // Short: x < 0.3, -1% <= bbt1h <= 1% và -3% < diffema10 < -1%
       } else if (x < 0.3 && bbt1h >= -1 && bbt1h <= 1 && (diffema10 > -3 && diffema10 < -1)) {
         bType = 'SHORT';
         bGroupName = 'Nhóm B2';
       }
 
       if (bType) {
+        const bandValue = bType === 'LONG' ? bbd1h : bbt1h;
+        const bandLabel = bType === 'LONG' ? 'bbd1h (Low)' : 'bbt1h (High)';
+
         scanResults.matched.push({
           symbol,
           type: bType,
@@ -275,34 +304,23 @@ async function main() {
           Hbb: Hbb.toFixed(2) + '%',
           x: x.toFixed(2),
           diffema10: diffema10.toFixed(2) + '%',
-          bandDiff: (bType === 'LONG' ? bbd1h : bbt1h).toFixed(2) + '%',
+          bandDiff: bandValue.toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
           teleSent: !isLockedIn8h
         });
 
         if (!isLockedIn8h) {
-          const coinName = symbol.replace('-USDT-SWAP', '');
-          const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-          const icon = bType === 'LONG' ? '🟢' : '🔴';
-          const bandLine = bType === 'LONG'
-            ? `• <b>bbd1h (Low):</b> ${bbd1h.toFixed(2)}%\n`
-            : `• <b>bbt1h (High):</b> ${bbt1h.toFixed(2)}%\n`;
-
-          const message = `${icon} <b>TÍN HIỆU ${bType} (${bGroupName}): ${coinName}</b>\n` +
-            `• <b>Hbb (Nến 2):</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>x (Max 3 nến):</b> ${x.toFixed(2)}\n` +
-            `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
-            bandLine +
-            `• <b>Biến động 24h:</b> ${coin.change24h > 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
-            `• <a href="${link}">Link OKX</a>`;
-
-          console.log(`🚀 [${bType} - ${bGroupName}] Gửi Telegram cho ${symbol}...`);
-          await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: 'HTML',
-            disable_web_page_preview: true
-          }).catch((err) => console.error('Lỗi gửi Telegram:', err.message));
+          await sendTelegramAlert({
+            symbol,
+            type: bType,
+            group: bGroupName,
+            Hbb,
+            x,
+            diffema10,
+            bandLabel,
+            bandValue,
+            change24h: coin.change24h
+          });
 
           sentLog[symbol] = currentTime;
           hasLogUpdated = true;
