@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-28T05:16:21.140Z",
+  "lastScanAt": "2026-08-28T05:21:17.719Z",
   "totalScanned": 172,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "TRIA-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "3.64%",
+      "x": "-0.56",
+      "diffema10": "-1.14%",
+      "bandDiff": "-1.95%",
+      "change24h": "-1.04%",
+      "teleSent": false
+    },
     {
       "symbol": "LAB-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "5.65%",
       "x": "0.47",
-      "diffema10": "1.37%",
+      "diffema10": "1.41%",
       "bandDiff": "3.75%",
-      "change24h": "2.65%",
+      "change24h": "3.36%",
       "teleSent": false
     }
   ]
