@@ -1,6 +1,29 @@
 {
-  "lastScanAt": "2026-08-28T22:05:51.678Z",
-  "totalScanned": 103,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-28T22:10:54.470Z",
+  "totalScanned": 111,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "MUBARAK-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "5.17%",
+      "x": "0.48",
+      "diffema10": "1.02%",
+      "bandDiff": "4.18%",
+      "change24h": "2.82%",
+      "teleSent": false
+    },
+    {
+      "symbol": "PEOPLE-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "4.37%",
+      "x": "0.55",
+      "diffema10": "1.73%",
+      "bandDiff": "3.85%",
+      "change24h": "2.71%",
+      "teleSent": true
+    }
+  ]
 }
