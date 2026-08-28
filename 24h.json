@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-28T18:20:54.002Z",
-  "totalScanned": 116,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-28T18:25:49.022Z",
+  "totalScanned": 111,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "TRUMP-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "12.60%",
+      "x": "-0.44",
+      "diffema10": "-1.20%",
+      "bandDiff": "-5.68%",
+      "change24h": "-0.47%",
+      "teleSent": true
+    },
     {
       "symbol": "MINA-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "4.68%",
       "x": "0.47",
-      "diffema10": "1.24%",
-      "bandDiff": "4.31%",
-      "change24h": "-2.51%",
+      "diffema10": "1.17%",
+      "bandDiff": "3.99%",
+      "change24h": "-2.89%",
       "teleSent": false
     }
   ]
