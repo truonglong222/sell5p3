@@ -1,28 +1,28 @@
 {
-  "lastScanAt": "2026-08-29T16:21:15.497Z",
-  "totalScanned": 160,
+  "lastScanAt": "2026-08-29T16:26:05.452Z",
+  "totalScanned": 156,
   "matchedCount": 2,
   "matchedList": [
-    {
-      "symbol": "ACH-USDT-SWAP",
-      "type": "LONG",
-      "group": "Nhóm A1",
-      "Hbb": "6.55%",
-      "x": "0.42",
-      "diffema10": "2.13%",
-      "bandDiff": "4.58%",
-      "change24h": "4.20%",
-      "teleSent": false
-    },
     {
       "symbol": "NES-USDT-SWAP",
       "type": "SHORT",
       "group": "Nhóm A2",
       "Hbb": "5.46%",
       "x": "-0.46",
-      "diffema10": "-2.34%",
+      "diffema10": "-2.35%",
       "bandDiff": "-4.60%",
-      "change24h": "-0.34%",
+      "change24h": "1.48%",
+      "teleSent": false
+    },
+    {
+      "symbol": "SPX-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "3.43%",
+      "x": "-0.70",
+      "diffema10": "-1.27%",
+      "bandDiff": "-2.39%",
+      "change24h": "-3.76%",
       "teleSent": false
     }
   ]
