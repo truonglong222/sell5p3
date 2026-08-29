@@ -1,6 +1,29 @@
 {
-  "lastScanAt": "2026-08-29T15:21:17.207Z",
-  "totalScanned": 159,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-29T15:26:05.160Z",
+  "totalScanned": 160,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "ACH-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "5.90%",
+      "x": "0.47",
+      "diffema10": "2.27%",
+      "bandDiff": "5.84%",
+      "change24h": "1.98%",
+      "teleSent": false
+    },
+    {
+      "symbol": "BICO-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "6.48%",
+      "x": "-0.46",
+      "diffema10": "-1.03%",
+      "bandDiff": "-2.90%",
+      "change24h": "-4.43%",
+      "teleSent": false
+    }
+  ]
 }
