@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-29T16:31:30.239Z",
-  "totalScanned": 163,
-  "matchedCount": 3,
+  "lastScanAt": "2026-08-29T16:36:07.697Z",
+  "totalScanned": 165,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "ACH-USDT-SWAP",
@@ -9,9 +9,20 @@
       "group": "Nhóm A1",
       "Hbb": "6.55%",
       "x": "0.42",
-      "diffema10": "2.17%",
+      "diffema10": "2.15%",
       "bandDiff": "4.52%",
-      "change24h": "4.24%",
+      "change24h": "3.77%",
+      "teleSent": false
+    },
+    {
+      "symbol": "ALLO-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "7.46%",
+      "x": "0.53",
+      "diffema10": "2.78%",
+      "bandDiff": "6.89%",
+      "change24h": "2.79%",
       "teleSent": false
     },
     {
@@ -22,7 +33,7 @@
       "x": "-0.46",
       "diffema10": "-2.34%",
       "bandDiff": "-4.60%",
-      "change24h": "1.39%",
+      "change24h": "2.19%",
       "teleSent": false
     },
     {
@@ -31,9 +42,9 @@
       "group": "Nhóm A2",
       "Hbb": "3.43%",
       "x": "-0.70",
-      "diffema10": "-1.24%",
+      "diffema10": "-1.20%",
       "bandDiff": "-2.39%",
-      "change24h": "-4.69%",
+      "change24h": "-4.81%",
       "teleSent": false
     }
   ]
