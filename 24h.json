@@ -1,29 +1,18 @@
 {
-  "lastScanAt": "2026-08-29T18:56:09.129Z",
-  "totalScanned": 160,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-29T19:01:43.631Z",
+  "totalScanned": 165,
+  "matchedCount": 1,
   "matchedList": [
     {
-      "symbol": "MON-USDT-SWAP",
-      "type": "SHORT",
-      "group": "Nhóm A2",
-      "Hbb": "3.75%",
-      "x": "-0.42",
-      "diffema10": "-1.24%",
-      "bandDiff": "-2.96%",
-      "change24h": "0.95%",
+      "symbol": "FARTCOIN-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.98%",
+      "x": "0.41",
+      "diffema10": "1.21%",
+      "bandDiff": "3.68%",
+      "change24h": "1.81%",
       "teleSent": false
-    },
-    {
-      "symbol": "ARX-USDT-SWAP",
-      "type": "SHORT",
-      "group": "Nhóm B2",
-      "Hbb": "5.74%",
-      "x": "-0.16",
-      "diffema10": "-1.91%",
-      "bandDiff": "-0.32%",
-      "change24h": "0.91%",
-      "teleSent": true
     }
   ]
 }
