@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-29T04:41:04.713Z",
-  "totalScanned": 163,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-29T04:46:10.763Z",
+  "totalScanned": 164,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "BSB-USDT-SWAP",
@@ -9,9 +9,20 @@
       "group": "Nhóm A1",
       "Hbb": "6.38%",
       "x": "0.60",
-      "diffema10": "2.63%",
+      "diffema10": "2.61%",
       "bandDiff": "5.91%",
-      "change24h": "2.47%",
+      "change24h": "1.83%",
+      "teleSent": false
+    },
+    {
+      "symbol": "GRVT-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "8.44%",
+      "x": "0.46",
+      "diffema10": "2.36%",
+      "bandDiff": "8.39%",
+      "change24h": "4.46%",
       "teleSent": false
     }
   ]
