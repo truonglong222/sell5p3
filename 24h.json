@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-29T22:31:18.520Z",
-  "totalScanned": 159,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-29T22:35:58.038Z",
+  "totalScanned": 160,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "IOTA-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "4.81%",
+      "x": "0.47",
+      "diffema10": "1.09%",
+      "bandDiff": "3.72%",
+      "change24h": "2.19%",
+      "teleSent": false
+    },
     {
       "symbol": "HUMA-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "12.26%",
       "x": "0.63",
-      "diffema10": "2.85%",
+      "diffema10": "2.95%",
       "bandDiff": "11.01%",
-      "change24h": "-0.09%",
+      "change24h": "1.34%",
       "teleSent": false
     }
   ]
