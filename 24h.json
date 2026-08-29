@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-29T06:56:03.208Z",
-  "totalScanned": 161,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-29T07:01:39.886Z",
+  "totalScanned": 162,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "BARD-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.79%",
+      "x": "0.40",
+      "diffema10": "1.03%",
+      "bandDiff": "3.14%",
+      "change24h": "0.67%",
+      "teleSent": false
+    },
     {
       "symbol": "BIGTIME-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
-      "Hbb": "4.52%",
-      "x": "0.52",
-      "diffema10": "1.92%",
-      "bandDiff": "4.14%",
-      "change24h": "3.17%",
+      "Hbb": "5.22%",
+      "x": "0.45",
+      "diffema10": "2.12%",
+      "bandDiff": "4.84%",
+      "change24h": "2.84%",
       "teleSent": false
     }
   ]
