@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-29T14:21:11.237Z",
-  "totalScanned": 167,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-29T14:26:10.780Z",
+  "totalScanned": 173,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "BICO-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "6.43%",
+      "x": "-0.47",
+      "diffema10": "-1.38%",
+      "bandDiff": "-4.39%",
+      "change24h": "-4.96%",
+      "teleSent": false
+    },
     {
       "symbol": "NES-USDT-SWAP",
       "type": "SHORT",
       "group": "Nhóm A2",
       "Hbb": "5.58%",
       "x": "-0.45",
-      "diffema10": "-1.41%",
+      "diffema10": "-1.38%",
       "bandDiff": "-3.14%",
-      "change24h": "-2.07%",
+      "change24h": "-1.74%",
       "teleSent": false
     }
   ]
