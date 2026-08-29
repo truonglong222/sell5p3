@@ -120,7 +120,7 @@ async function getFilteredMarkets() {
   }
 }
 
-// 2. Lấy nến 1H (Lấy 60 nến)
+// 2. Lấy nến 1H (Lấy 60 nến đáp ứng cả EMA10 lùi 10 nến và Bollinger Bands nến số 2)
 async function getCandles1h(symbol) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=60`;
@@ -142,6 +142,7 @@ async function main() {
     const currentTime = Date.now();
     let hasLogUpdated = false;
 
+    // Bước 1: Lọc Market sơ bộ (Vol > 5M, Biến động 24h [-5%, +5%])
     const targetCoins = await getFilteredMarkets();
     console.log(`📊 Số coin thỏa Vol > 5M và Biến động 24h [-5%, +5%]: ${targetCoins.length}`);
 
@@ -153,6 +154,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
+      // Bước 2: Lấy dữ liệu nến 1H
       const raw1h = await getCandles1h(symbol);
       if (!raw1h || raw1h.length < 30) {
         await sleep(80);
@@ -163,6 +165,7 @@ async function main() {
       const closes1hAsc = raw1h.map((c) => parseFloat(c[4])).reverse();
       const ema1hList = calculateEMA(closes1hAsc, 10);
 
+      // Cần tối thiểu 11 phần tử EMA để so sánh giữa hiện tại và 10 nến trước
       if (ema1hList.length < 11) {
         await sleep(80);
         continue;
@@ -172,27 +175,26 @@ async function main() {
       const ema10Ago = ema1hList[ema1hList.length - 11];
       const diffema10 = ((emaCurrent - ema10Ago) / ema10Ago) * 100;
 
-      // Nến hiện tại và các nến trước đó
+      // Bước 3: Tính các chỉ số kỹ thuật trên khung 1H
       const c0 = raw1h[0];
       const c1 = raw1h[1];
       const c2 = raw1h[2];
-      const c3 = raw1h[3];
 
       const h0 = parseFloat(c0[2]); // High nến 0
       const l0 = parseFloat(c0[3]); // Low nến 0
 
-      // Tính biến động 3 nến 1, 2, 3 (không xét nến 0)
+      // Tính biến động từng nến 1H: ((Close - Open) / Open) * 100
+      const change0 = ((parseFloat(c0[4]) - parseFloat(c0[1])) / parseFloat(c0[1])) * 100;
       const change1 = ((parseFloat(c1[4]) - parseFloat(c1[1])) / parseFloat(c1[1])) * 100;
       const change2 = ((parseFloat(c2[4]) - parseFloat(c2[1])) / parseFloat(c2[1])) * 100;
-      const change3 = ((parseFloat(c3[4]) - parseFloat(c3[1])) / parseFloat(c3[1])) * 100;
 
-      // Tìm biến động có biên độ tuyệt đối lớn nhất trong 3 nến 1, 2, 3
-      const changes = [change1, change2, change3];
+      // Tìm biến động có độ lớn (biên độ) lớn nhất trong 3 nến 0, 1, 2
+      const changes = [change0, change1, change2];
       const maxChangeSigned = changes.reduce((prev, curr) =>
         Math.abs(curr) > Math.abs(prev) ? curr : prev
       );
 
-      // Tính Bollinger Bands 1H của nến số 2 (index 2 -> 21)
+      // Tính Bollinger Bands 1H của nến số 2 (lấy 20 nến tính từ nến số 2 trở về quá khứ: index 2 -> 21)
       const closes1hAtCandle2Asc = raw1h.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb1hAtCandle2 = calculateBollingerBands(closes1hAtCandle2Asc, 20, 2);
 
@@ -204,21 +206,23 @@ async function main() {
       // Hbb tính theo nến số 2
       const Hbb = ((bb1hAtCandle2.upper - bb1hAtCandle2.lower) / bb1hAtCandle2.lower) * 100;
 
+      // Điều kiện Hbb > 3%
       if (Hbb <= 3) {
         await sleep(80);
         continue;
       }
 
-      // x = biến động nến lớn nhất trong 3 nến (1, 2, 3) / Hbb của nến số 2
+      // Tính x = biến động nến lớn nhất trong 3 nến / Hbb của nến số 2
       const x = maxChangeSigned / Hbb;
 
-      // Tính bbd1h (Low hiện tại) và bbt1h (High hiện tại) so với BB 1H nến số 2
+      // Tính bbd1h bằng Low hiện tại và bbt1h bằng High hiện tại so với BB 1H nến số 2
       const bbd1h = ((l0 - bb1hAtCandle2.lower) / bb1hAtCandle2.lower) * 100;
       const bbt1h = ((h0 - bb1hAtCandle2.upper) / bb1hAtCandle2.upper) * 100;
 
+      // Kiểm tra trạng thái bị khóa trong 8h qua từ sent_ema.json
       const isLockedIn8h = currentTime - (sentLog[symbol] || 0) < COOLDOWN_TIME;
 
-      // Xét điều kiện Nhóm A1, A2
+      // Bước 4: Xét điều kiện Nhóm A1, A2 (Dùng để khóa danh sách trong 8h)
       const isA1 = x > 0.4 && l0 < bb1hAtCandle2.upper && (diffema10 > 1 && diffema10 < 3);
       const isA2 = x < -0.4 && h0 > bb1hAtCandle2.lower && (diffema10 > -3 && diffema10 < -1);
 
@@ -246,7 +250,7 @@ async function main() {
         continue;
       }
 
-      // Xét điều kiện Nhóm B1, B2
+      // Bước 5: Xét điều kiện Nhóm B1, B2 theo ngưỡng mới
       let bType = null;
       let bGroupName = '';
 
@@ -283,7 +287,7 @@ async function main() {
 
           const message = `${icon} <b>TÍN HIỆU ${bType} (${bGroupName}): ${coinName}</b>\n` +
             `• <b>Hbb (Nến 2):</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>x (Max 3 nến 1-3):</b> ${x.toFixed(2)}\n` +
+            `• <b>x (Max 3 nến):</b> ${x.toFixed(2)}\n` +
             `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
             bandLine +
             `• <b>Biến động 24h:</b> ${coin.change24h > 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
