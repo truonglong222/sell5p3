@@ -1,8 +1,19 @@
 {
-  "lastScanAt": "2026-08-29T07:36:06.842Z",
+  "lastScanAt": "2026-08-29T07:41:06.026Z",
   "totalScanned": 169,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "BARD-USDT-SWAP",
+      "type": "LONG",
+      "group": "Nhóm A1",
+      "Hbb": "3.79%",
+      "x": "0.40",
+      "diffema10": "1.04%",
+      "bandDiff": "2.80%",
+      "change24h": "0.84%",
+      "teleSent": false
+    },
     {
       "symbol": "BIGTIME-USDT-SWAP",
       "type": "LONG",
@@ -11,7 +22,7 @@
       "x": "0.45",
       "diffema10": "2.08%",
       "bandDiff": "4.52%",
-      "change24h": "3.12%",
+      "change24h": "2.70%",
       "teleSent": false
     }
   ]
