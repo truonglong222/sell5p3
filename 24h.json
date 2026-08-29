@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-29T14:46:16.890Z",
-  "totalScanned": 164,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-29T14:51:14.142Z",
+  "totalScanned": 166,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "BICO-USDT-SWAP",
@@ -9,9 +9,9 @@
       "group": "Nhóm A2",
       "Hbb": "6.43%",
       "x": "-0.47",
-      "diffema10": "-1.14%",
+      "diffema10": "-1.15%",
       "bandDiff": "-3.27%",
-      "change24h": "-4.45%",
+      "change24h": "-4.86%",
       "teleSent": false
     },
     {
@@ -20,10 +20,21 @@
       "group": "Nhóm A2",
       "Hbb": "5.58%",
       "x": "-0.45",
-      "diffema10": "-1.43%",
+      "diffema10": "-1.47%",
       "bandDiff": "-3.06%",
-      "change24h": "-2.31%",
+      "change24h": "-2.95%",
       "teleSent": false
+    },
+    {
+      "symbol": "PENGU-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm B2",
+      "Hbb": "4.32%",
+      "x": "0.08",
+      "diffema10": "-1.13%",
+      "bandDiff": "0.04%",
+      "change24h": "-1.86%",
+      "teleSent": true
     }
   ]
 }
