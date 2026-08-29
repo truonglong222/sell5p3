@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-29T12:41:15.829Z",
+  "lastScanAt": "2026-08-29T12:46:13.751Z",
   "totalScanned": 168,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "ACH-USDT-SWAP",
@@ -9,9 +9,20 @@
       "group": "Nhóm A1",
       "Hbb": "3.10%",
       "x": "0.68",
-      "diffema10": "1.00%",
+      "diffema10": "1.05%",
       "bandDiff": "3.09%",
-      "change24h": "1.91%",
+      "change24h": "1.97%",
+      "teleSent": false
+    },
+    {
+      "symbol": "NES-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "5.01%",
+      "x": "-0.50",
+      "diffema10": "-1.00%",
+      "bandDiff": "-3.88%",
+      "change24h": "-4.83%",
       "teleSent": false
     }
   ]
