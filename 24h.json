@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-08-29T19:01:43.631Z",
-  "totalScanned": 165,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-29T19:05:56.277Z",
+  "totalScanned": 163,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "LAYER-USDT-SWAP",
+      "type": "SHORT",
+      "group": "Nhóm A2",
+      "Hbb": "3.85%",
+      "x": "-0.49",
+      "diffema10": "-1.26%",
+      "bandDiff": "-3.71%",
+      "change24h": "-3.69%",
+      "teleSent": false
+    },
     {
       "symbol": "FARTCOIN-USDT-SWAP",
       "type": "LONG",
       "group": "Nhóm A1",
       "Hbb": "3.98%",
       "x": "0.41",
-      "diffema10": "1.21%",
+      "diffema10": "1.20%",
       "bandDiff": "3.68%",
-      "change24h": "1.81%",
+      "change24h": "1.50%",
       "teleSent": false
     }
   ]
