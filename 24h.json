@@ -1,26 +1,46 @@
 {
-  "lastScanAt": "2026-08-30T15:41:16.357Z",
-  "totalScanned": 163,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-30T15:46:19.192Z",
+  "totalScanned": 164,
+  "matchedCount": 4,
   "matchedList": [
     {
-      "symbol": "MINA-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "3.39%",
-      "diffbbm20": "1.16%",
-      "bbd15m": "0.47%",
-      "bbt15m": "-2.82%",
-      "change24h": "1.54%",
+      "symbol": "JUP-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.95%",
+      "diffbbm20": "-1.10%",
+      "bbd15m": "3.61%",
+      "bbt15m": "-0.32%",
+      "change24h": "0.78%",
       "teleSent": false
     },
     {
-      "symbol": "BSB-USDT-SWAP",
+      "symbol": "APR-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.05%",
+      "diffbbm20": "-1.65%",
+      "bbd15m": "2.65%",
+      "bbt15m": "-0.39%",
+      "change24h": "0.11%",
+      "teleSent": true
+    },
+    {
+      "symbol": "WCT-USDT-SWAP",
       "type": "LONG",
-      "Hbb": "3.34%",
-      "diffbbm20": "1.08%",
-      "bbd15m": "0.28%",
-      "bbt15m": "-2.97%",
-      "change24h": "0.43%",
+      "Hbb": "3.59%",
+      "diffbbm20": "1.54%",
+      "bbd15m": "0.01%",
+      "bbt15m": "-3.45%",
+      "change24h": "1.86%",
+      "teleSent": true
+    },
+    {
+      "symbol": "MINA-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.03%",
+      "diffbbm20": "1.16%",
+      "bbd15m": "0.31%",
+      "bbt15m": "-2.64%",
+      "change24h": "1.06%",
       "teleSent": false
     }
   ]
