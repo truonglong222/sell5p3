@@ -14,7 +14,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 4 TIẾNG
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
-const MIN_VOL_CCY24H = 10_000_000; // Đã đổi: Volume 24h > 10 triệu USDT
+const MIN_VOL_CCY24H = 5_000_000; // Đã đổi: Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -145,9 +145,9 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // BƯỚC 1: Lọc Volume > 10M và biến động 24h từ -5% đến +5%
+    // BƯỚC 1: Lọc Volume > 5M và biến động 24h từ -5% đến +5%
     const targetCoins = await getFilteredMarkets();
-    console.log(`🔍 Số coin thỏa mãn điều kiện Vol > 10M và 24h (-5% -> +5%): ${targetCoins.length}`);
+    console.log(`🔍 Số coin thỏa mãn điều kiện Vol > 5M và 24h (-5% -> +5%): ${targetCoins.length}`);
 
     const scanResults = {
       totalScanned: targetCoins.length,
@@ -157,7 +157,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // BƯỚC 2: Lấy nến 1H (thay cho 4H) và nến 15m (thay cho 1H)
+      // BƯỚC 2: Lấy nến 1H và nến 15m
       const [candles1h, candles15m] = await Promise.all([
         getCandles(symbol, '1H', 100),
         getCandles(symbol, '15m', 100)
