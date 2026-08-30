@@ -1,16 +1,26 @@
 {
-  "lastScanAt": "2026-08-30T12:11:12.040Z",
-  "totalScanned": 147,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-30T12:16:15.661Z",
+  "totalScanned": 154,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "BICO-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "3.74%",
-      "diffbbm20": "2.47%",
-      "bbd15m": "0.35%",
-      "bbt15m": "-3.26%",
-      "change24h": "3.81%",
+      "symbol": "LAYER-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.45%",
+      "diffbbm20": "-2.55%",
+      "bbd15m": "3.04%",
+      "bbt15m": "-0.40%",
+      "change24h": "-0.06%",
+      "teleSent": true
+    },
+    {
+      "symbol": "0G-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.13%",
+      "diffbbm20": "-1.28%",
+      "bbd15m": "3.74%",
+      "bbt15m": "-0.37%",
+      "change24h": "3.61%",
       "teleSent": true
     }
   ]
