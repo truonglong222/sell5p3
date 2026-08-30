@@ -9,12 +9,12 @@ const OKX_BASE_URL = 'https://www.okx.com';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_FILE = path.join(__dirname, 'sent_ema.json');
+const DB_FILE = path.join(__dirname, 'sent_alerts.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 4 TIẾNG
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
-const MIN_VOL_CCY24H = 5_000_000; // Đã đổi: Volume 24h > 5 triệu USDT
+const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -62,23 +62,6 @@ function saveScanResults(results) {
 
 // ------------------- HÀM TÍNH TOÁN KỸ THUẬT -------------------
 
-function calculateEMAArray(prices, period = 20) {
-  if (prices.length < period) return [];
-  const k = 2 / (period + 1);
-  const emaArray = [];
-  
-  let sum = 0;
-  for (let i = 0; i < period; i++) sum += prices[i];
-  let currentEma = sum / period;
-  emaArray.push(currentEma);
-
-  for (let i = period; i < prices.length; i++) {
-    currentEma = prices[i] * k + currentEma * (1 - k);
-    emaArray.push(currentEma);
-  }
-  return emaArray;
-}
-
 function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
@@ -90,6 +73,13 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
     upper: mean + stdDevMultiplier * stdDev,
     lower: mean - stdDevMultiplier * stdDev
   };
+}
+
+// Tính SMA (trục giữa Bollinger Bands) cho một mảng giá
+function calculateSMA(prices, period = 20) {
+  if (prices.length < period) return null;
+  const sum = prices.slice(0, period).reduce((a, b) => a + b, 0);
+  return sum / period;
 }
 
 // ------------------- LỌC THỊ TRƯỜNG -------------------
@@ -163,25 +153,27 @@ async function main() {
         getCandles(symbol, '15m', 100)
       ]);
 
-      if (!candles1h || !candles15m) {
+      if (!candles1h || !candles15m || candles1h.length < 45) {
         await sleep(80);
         continue;
       }
 
-      // Tính diffema10 trên khung 1H (bỏ nến [0] đang chạy)
-      const closedCandles1h = candles1h.slice(1);
-      const closes1hClosed = closedCandles1h.map(c => parseFloat(c[4])).reverse();
-      const ema1hArray = calculateEMAArray(closes1hClosed, 20);
+      // Nến OKX trả về từ mới nhất -> cũ nhất: candles[0] là nến đang chạy
+      // candles1h.slice(1, 21): 20 nến tính từ nến vừa đóng (nến 1)
+      const closes1hRecent = candles1h.slice(1, 21).map(c => parseFloat(c[4]));
+      // candles1h.slice(21, 41): 20 nến tính từ nến 20 nến trước đó (nến 20)
+      const closes1h20Ago = candles1h.slice(21, 41).map(c => parseFloat(c[4]));
 
-      if (ema1hArray.length < 10) {
+      const bbmNow = calculateSMA(closes1hRecent, 20);
+      const bbm20Ago = calculateSMA(closes1h20Ago, 20);
+
+      if (!bbmNow || !bbm20Ago || bbm20Ago === 0) {
         await sleep(80);
         continue;
       }
 
-      // ema1: EMA20 tại nến 1H vừa đóng, ema10: EMA20 tại nến 1H cách 9 nến trước
-      const ema1 = ema1hArray[ema1hArray.length - 1];
-      const ema10 = ema1hArray[ema1hArray.length - 10];
-      const diffema10 = ema10 > 0 ? ((ema1 - ema10) / ema10) * 100 : 0;
+      // diffbbm20: Chênh lệch % giữa BB Mid nến vừa đóng và BB Mid nến số 20 trước đó
+      const diffbbm20 = ((bbmNow - bbm20Ago) / bbm20Ago) * 100;
 
       // BƯỚC 3: Tính Bollinger Bands khung 15m
       const closedCandle15m = candles15m[1];
@@ -206,9 +198,9 @@ async function main() {
         continue;
       }
 
-      // BƯỚC 4: Kiểm tra điều kiện Long / Short
-      const isLong = diffema10 > 1 && diffema10 < 3 && bbd15m > -3 && bbd15m < -0.5;
-      const isShort = diffema10 > -3 && diffema10 < -1 && bbt15m > 0.5 && bbt15m < 3;
+      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm20
+      const isLong = diffbbm20 > 1 && diffbbm20 < 3 && bbd15m > -3 && bbd15m < -0.5;
+      const isShort = diffbbm20 > -3 && diffbbm20 < -1 && bbt15m > 0.5 && bbt15m < 3;
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
@@ -223,7 +215,7 @@ async function main() {
           symbol,
           type,
           Hbb: Hbb.toFixed(2) + '%',
-          diffema10: diffema10.toFixed(2) + '%',
+          diffbbm20: diffbbm20.toFixed(2) + '%',
           bbd15m: bbd15m.toFixed(2) + '%',
           bbt15m: bbt15m.toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
@@ -235,7 +227,7 @@ async function main() {
           
           let message = `${icon} <b>TÍN HIỆU ${type}: ${coinName}</b>\n` +
             `• <b>Hbb (15m):</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>diffema10 (1H):</b> ${diffema10.toFixed(2)}%\n`;
+            `• <b>diffbbm20 (1H):</b> ${diffbbm20.toFixed(2)}%\n`;
 
           if (isLong) {
             message += `• <b>bbd15m:</b> ${bbd15m.toFixed(2)}%\n`;
