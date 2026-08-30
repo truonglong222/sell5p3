@@ -1,17 +1,27 @@
 {
-  "lastScanAt": "2026-08-30T14:56:01.062Z",
+  "lastScanAt": "2026-08-30T15:01:44.623Z",
   "totalScanned": 163,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "MON-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "7.27%",
-      "diffbbm20": "-1.50%",
-      "bbd15m": "6.97%",
-      "bbt15m": "-0.28%",
-      "change24h": "1.83%",
-      "teleSent": false
+      "symbol": "MINA-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.10%",
+      "diffbbm20": "1.16%",
+      "bbd15m": "-0.31%",
+      "bbt15m": "-3.31%",
+      "change24h": "1.06%",
+      "teleSent": true
+    },
+    {
+      "symbol": "BSB-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.02%",
+      "diffbbm20": "1.08%",
+      "bbd15m": "0.48%",
+      "bbt15m": "-2.47%",
+      "change24h": "0.23%",
+      "teleSent": true
     }
   ]
 }
