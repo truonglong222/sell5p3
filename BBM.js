@@ -9,7 +9,7 @@ const OKX_BASE_URL = 'https://www.okx.com';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_FILE = path.join(__dirname, 'sent_alerts.json');
+const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 4 TIẾNG
@@ -198,7 +198,7 @@ async function main() {
         continue;
       }
 
-      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm20 (Đã cập nhật theo yêu cầu mới)
+      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm20
       const isLong = diffbbm20 > 1 && diffbbm20 < 3 && bbd15m > -2 && bbd15m < 0.5;
       const isShort = diffbbm20 > -3 && diffbbm20 < -1 && bbt15m > -0.5 && bbt15m < 2;
 
