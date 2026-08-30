@@ -1,6 +1,27 @@
 {
-  "lastScanAt": "2026-08-30T10:55:59.336Z",
-  "totalScanned": 156,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-30T11:01:31.554Z",
+  "totalScanned": 152,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "LAYER-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.06%",
+      "diffbbm20": "-2.56%",
+      "bbd15m": "2.72%",
+      "bbt15m": "-0.33%",
+      "change24h": "-0.70%",
+      "teleSent": true
+    },
+    {
+      "symbol": "AEON-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.25%",
+      "diffbbm20": "-2.68%",
+      "bbd15m": "3.43%",
+      "bbt15m": "0.18%",
+      "change24h": "2.33%",
+      "teleSent": true
+    }
+  ]
 }
