@@ -1,16 +1,26 @@
 {
-  "lastScanAt": "2026-08-30T09:55:56.488Z",
-  "totalScanned": 152,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-30T10:01:35.992Z",
+  "totalScanned": 154,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "SUSHI-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.37%",
+      "diffbbm20": "2.12%",
+      "bbd15m": "0.23%",
+      "bbt15m": "-3.03%",
+      "change24h": "2.73%",
+      "teleSent": true
+    },
     {
       "symbol": "GRVT-USDT-SWAP",
       "type": "LONG",
-      "Hbb": "4.38%",
-      "diffbbm20": "2.00%",
-      "bbd15m": "0.25%",
-      "bbt15m": "-3.96%",
-      "change24h": "-4.64%",
+      "Hbb": "3.99%",
+      "diffbbm20": "1.39%",
+      "bbd15m": "0.01%",
+      "bbt15m": "-3.82%",
+      "change24h": "-4.69%",
       "teleSent": true
     }
   ]
