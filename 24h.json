@@ -1,26 +1,36 @@
 {
-  "lastScanAt": "2026-08-30T19:56:08.827Z",
-  "totalScanned": 160,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-30T20:01:39.584Z",
+  "totalScanned": 162,
+  "matchedCount": 3,
   "matchedList": [
     {
-      "symbol": "TIA-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "4.15%",
-      "diffbbm20": "-0.09%",
-      "bbd1h": "3.96%",
-      "bbt1h": "-0.18%",
-      "change24h": "0.68%",
-      "teleSent": false
+      "symbol": "OL-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.32%",
+      "diffbbm20": "0.97%",
+      "bbd1h": "-0.48%",
+      "bbt1h": "-3.67%",
+      "change24h": "-1.25%",
+      "teleSent": true
+    },
+    {
+      "symbol": "FLOW-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.06%",
+      "diffbbm20": "0.61%",
+      "bbd1h": "0.19%",
+      "bbt1h": "-2.78%",
+      "change24h": "-0.77%",
+      "teleSent": true
     },
     {
       "symbol": "AZTEC-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "4.07%",
-      "diffbbm20": "-1.17%",
-      "bbd1h": "5.25%",
-      "bbt1h": "1.13%",
-      "change24h": "1.56%",
+      "Hbb": "4.50%",
+      "diffbbm20": "-1.07%",
+      "bbd1h": "4.38%",
+      "bbt1h": "-0.11%",
+      "change24h": "1.33%",
       "teleSent": false
     }
   ]
