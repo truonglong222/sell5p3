@@ -194,9 +194,9 @@ async function main() {
         continue;
       }
 
-      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm10
-      const isLong = diffbbm10 > 1 && diffbbm10 < 2 && bbd1h > -2 && bbd1h < 0.5;
-      const isShort = diffbbm10 > -2 && diffbbm10 < -1 && bbt1h > -0.5 && bbt1h < 2;
+      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm10 đã cập nhật
+      const isLong = diffbbm10 > 0.5 && bbd1h > -2 && bbd1h < 0.5;
+      const isShort = diffbbm10 < -0.5 && bbt1h > -0.5 && bbt1h < 2;
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
