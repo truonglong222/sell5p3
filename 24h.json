@@ -1,17 +1,27 @@
 {
-  "lastScanAt": "2026-08-31T16:55:55.671Z",
-  "totalScanned": 151,
-  "matchedCount": 1,
+  "lastScanAt": "2026-08-31T17:01:42.083Z",
+  "totalScanned": 145,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "MUBARAK-USDT-SWAP",
+      "symbol": "GRAM-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "7.01%",
-      "diffbbm10": "-0.85%",
-      "bbd1h": "6.53%",
-      "bbt1h": "-0.44%",
-      "change24h": "-0.31%",
-      "teleSent": false
+      "Hbb": "4.42%",
+      "diffbbm10": "-1.02%",
+      "bbd1h": "6.17%",
+      "bbt1h": "1.68%",
+      "change24h": "1.60%",
+      "teleSent": true
+    },
+    {
+      "symbol": "MINA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.34%",
+      "diffbbm10": "-1.51%",
+      "bbd1h": "5.33%",
+      "bbt1h": "-0.01%",
+      "change24h": "0.17%",
+      "teleSent": true
     }
   ]
 }
