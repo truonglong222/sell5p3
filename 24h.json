@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-08-31T11:01:44.434Z",
-  "totalScanned": 163,
-  "matchedCount": 2,
+  "lastScanAt": "2026-08-31T11:06:01.833Z",
+  "totalScanned": 166,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "F-USDT-SWAP",
@@ -10,8 +10,8 @@
       "diffbbm10": "-0.84%",
       "bbd1h": "6.54%",
       "bbt1h": "0.36%",
-      "change24h": "0.55%",
-      "teleSent": true
+      "change24h": "0.31%",
+      "teleSent": false
     },
     {
       "symbol": "BAND-USDT-SWAP",
@@ -20,7 +20,17 @@
       "diffbbm10": "-0.60%",
       "bbd1h": "6.66%",
       "bbt1h": "-0.31%",
-      "change24h": "3.35%",
+      "change24h": "3.75%",
+      "teleSent": false
+    },
+    {
+      "symbol": "CHIP-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "10.01%",
+      "diffbbm10": "-0.65%",
+      "bbd1h": "10.62%",
+      "bbt1h": "0.55%",
+      "change24h": "3.14%",
       "teleSent": true
     }
   ]
