@@ -1,6 +1,37 @@
 {
-  "lastScanAt": "2026-08-31T14:56:10.455Z",
-  "totalScanned": 158,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-08-31T15:01:50.704Z",
+  "totalScanned": 163,
+  "matchedCount": 3,
+  "matchedList": [
+    {
+      "symbol": "NEIRO-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "6.33%",
+      "diffbbm10": "-1.61%",
+      "bbd1h": "6.12%",
+      "bbt1h": "-0.19%",
+      "change24h": "-0.23%",
+      "teleSent": true
+    },
+    {
+      "symbol": "BONK-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "11.78%",
+      "diffbbm10": "-1.23%",
+      "bbd1h": "12.31%",
+      "bbt1h": "0.48%",
+      "change24h": "2.36%",
+      "teleSent": true
+    },
+    {
+      "symbol": "BICO-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "10.05%",
+      "diffbbm10": "-2.06%",
+      "bbd1h": "10.74%",
+      "bbt1h": "0.62%",
+      "change24h": "1.34%",
+      "teleSent": true
+    }
+  ]
 }
