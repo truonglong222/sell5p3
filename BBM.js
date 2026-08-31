@@ -147,30 +147,29 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // BƯỚC 2: Lấy dữ liệu nến 1H
+      // BƯỚC 2: Lấy dữ liệu nến 1H (cần tối thiểu 35 nến để tính SMA 20 từ nến thứ 10)
       const candles1h = await getCandles(symbol, '1H', 100);
 
-      if (!candles1h || candles1h.length < 45) {
+      if (!candles1h || candles1h.length < 35) {
         await sleep(80);
         continue;
       }
 
-      // Nến OKX trả về từ mới nhất -> cũ nhất: candles[0] là nến đang chạy
-      // candles1h.slice(1, 21): 20 nến tính từ nến vừa đóng (nến 1)
+      // candles1h.slice(1, 21): 20 nến tính từ nến vừa đóng (nến index 1)
       const closes1hRecent = candles1h.slice(1, 21).map(c => parseFloat(c[4]));
-      // candles1h.slice(21, 41): 20 nến tính từ nến 20 nến trước đó (nến 20)
-      const closes1h20Ago = candles1h.slice(21, 41).map(c => parseFloat(c[4]));
+      // candles1h.slice(11, 31): 20 nến tính từ nến 10 nến trước đó (nến index 11)
+      const closes1h10Ago = candles1h.slice(11, 31).map(c => parseFloat(c[4]));
 
       const bbmNow = calculateSMA(closes1hRecent, 20);
-      const bbm20Ago = calculateSMA(closes1h20Ago, 20);
+      const bbm10Ago = calculateSMA(closes1h10Ago, 20);
 
-      if (!bbmNow || !bbm20Ago || bbm20Ago === 0) {
+      if (!bbmNow || !bbm10Ago || bbm10Ago === 0) {
         await sleep(80);
         continue;
       }
 
-      // diffbbm20: Chênh lệch % giữa BB Mid nến vừa đóng và BB Mid nến số 20 trước đó
-      const diffbbm20 = ((bbmNow - bbm20Ago) / bbm20Ago) * 100;
+      // diffbbm10: Chênh lệch % giữa BB Mid nến vừa đóng và BB Mid nến số 10 trước đó
+      const diffbbm10 = ((bbmNow - bbm10Ago) / bbm10Ago) * 100;
 
       // BƯỚC 3: Tính Bollinger Bands khung 1H
       const closedCandle1h = candles1h[1];
@@ -195,9 +194,9 @@ async function main() {
         continue;
       }
 
-      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm20 mới
-      const isLong = diffbbm20 > 1 && diffbbm20 < 2 && bbd1h > -2 && bbd1h < 0.5;
-      const isShort = diffbbm20 > -2 && diffbbm20 < -1 && bbt1h > -0.5 && bbt1h < 2;
+      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm10
+      const isLong = diffbbm10 > 1 && diffbbm10 < 2 && bbd1h > -2 && bbd1h < 0.5;
+      const isShort = diffbbm10 > -2 && diffbbm10 < -1 && bbt1h > -0.5 && bbt1h < 2;
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
@@ -212,7 +211,7 @@ async function main() {
           symbol,
           type,
           Hbb: Hbb.toFixed(2) + '%',
-          diffbbm20: diffbbm20.toFixed(2) + '%',
+          diffbbm10: diffbbm10.toFixed(2) + '%',
           bbd1h: bbd1h.toFixed(2) + '%',
           bbt1h: bbt1h.toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
@@ -224,7 +223,7 @@ async function main() {
           
           let message = `${icon} <b>TÍN HIỆU ${type}: ${coinName}</b>\n` +
             `• <b>Hbb (1H):</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>diffbbm20 (1H):</b> ${diffbbm20.toFixed(2)}%\n`;
+            `• <b>diffbbm10 (1H):</b> ${diffbbm10.toFixed(2)}%\n`;
 
           if (isLong) {
             message += `• <b>bbd1h:</b> ${bbd1h.toFixed(2)}%\n`;
