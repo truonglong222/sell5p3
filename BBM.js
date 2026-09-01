@@ -14,7 +14,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 8 TIẾNG
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
-const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 5 triệu USDT
+const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -80,28 +80,25 @@ function calculateEMA(prices, period = 20) {
   if (prices.length < period) return null;
   const k = 2 / (period + 1);
   
-  // Tính SMA làm giá trị khởi tạo ban đầu
   let ema = prices.slice(0, period).reduce((a, b) => a + b, 0) / period;
   
-  // Áp dụng công thức EMA tuần tự
   for (let i = period; i < prices.length; i++) {
     ema = prices[i] * k + ema * (1 - k);
   }
   return ema;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOLUME > 10M) -------------------
 
-async function getFilteredMarkets() {
+async function getVolumeFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
-    if (!res.data || res.data.code !== '0') return { step1Count: 0, step2Count: 0, coins: [] };
+    if (!res.data || res.data.code !== '0') return [];
 
     const tickers = res.data.data.filter(item => item.instId.endsWith('-USDT-SWAP'));
 
-    // Bước 1: Lọc Volume > 5M
-    const step1Coins = tickers
+    return tickers
       .map(item => {
         const last = parseFloat(item.last || 0);
         const open24h = parseFloat(item.open24h || 0);
@@ -114,18 +111,9 @@ async function getFilteredMarkets() {
         };
       })
       .filter(c => c.volCcy24h > MIN_VOL_CCY24H);
-
-    // Bước 2: Lọc biến động 24h từ -3% đến +3%
-    const step2Coins = step1Coins.filter(c => c.change24h >= -3 && c.change24h <= 3);
-
-    return {
-      step1Count: step1Coins.length,
-      step2Count: step2Coins.length,
-      coins: step2Coins
-    };
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return { step1Count: 0, step2Count: 0, coins: [] };
+    return [];
   }
 }
 
@@ -153,12 +141,9 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // Lọc Tickers
-    const marketFilter = await getFilteredMarkets();
-    const targetCoins = marketFilter.coins;
-
-    console.log(`📊 [Bước 1] Thỏa điều kiện Vol > 5M USDT: ${marketFilter.step1Count} coin`);
-    console.log(`📊 [Bước 2] Thỏa điều kiện biến động 24h (-3% đến +3%): ${marketFilter.step2Count} coin`);
+    // 1. Lọc Volume > 10M USDT
+    const targetCoins = await getVolumeFilteredMarkets();
+    console.log(`📊 [Bước 1] Thỏa điều kiện Vol > 10M USDT: ${targetCoins.length} coin`);
 
     const scanResults = {
       totalScanned: targetCoins.length,
@@ -174,18 +159,17 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy dữ liệu nến 1H (tối thiểu 60 nến để tính EMA chính xác)
+      // Lấy dữ liệu nến 1H
       const candles1h = await getCandles(symbol, '1H', 100);
-
       if (!candles1h || candles1h.length < 60) {
         await sleep(80);
         continue;
       }
       validCandlesCount++;
 
-      // ================= BƯỚC A: TÍNH BOLLINGER BANDS & LỌC Hbb TRƯỚC =================
+      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS & LỌC Hbb > 6% =================
       const closes1hRecent = candles1h.slice(1, 21).map(c => parseFloat(c[4]));
-      const closes1hForBB = closes1hRecent.slice().reverse(); // Đảo về thứ tự cũ -> mới
+      const closes1hForBB = closes1hRecent.slice().reverse();
       const bb1h = calculateBollingerBands(closes1hForBB, 20);
 
       if (!bb1h || bb1h.lower <= 0 || bb1h.upper <= 0) {
@@ -196,15 +180,14 @@ async function main() {
       // Độ rộng dải Hbb
       const Hbb = ((bb1h.upper - bb1h.lower) / bb1h.lower) * 100;
 
-      // Điều kiện lọc Hbb > 3% trước
-      if (Hbb <= 3) {
+      // Điều kiện lọc Hbb > 6%
+      if (Hbb <= 6) {
         await sleep(80);
         continue;
       }
       validHbbCount++;
 
-      // ================= BƯỚC B: TÍNH EMA VÀ LỌC diffema =================
-      // Chuỗi giá đóng cửa tính đến từng nến (đảo về thứ tự cũ -> mới để tính EMA)
+      // ================= BƯỚC 3: TÍNH EMA VÀ LỌC diffema [-1%, +1%] =================
       const series1 = candles1h.slice(1).map(c => parseFloat(c[4])).reverse();
       const series8 = candles1h.slice(8).map(c => parseFloat(c[4])).reverse();
       const series15 = candles1h.slice(15).map(c => parseFloat(c[4])).reverse();
@@ -218,7 +201,6 @@ async function main() {
         continue;
       }
 
-      // Tính diffema giữa Max và Min của 3 giá trị EMA
       const maxEma = Math.max(ema1, ema8, ema15);
       const minEma = Math.min(ema1, ema8, ema15);
 
@@ -229,14 +211,14 @@ async function main() {
 
       const diffema = ((maxEma - minEma) / minEma) * 100;
 
-      // Điều kiện diffema trong khoảng [-0.5%, +0.5%]
-      if (diffema < -0.5 || diffema > 0.5) {
+      // Điều kiện diffema trong khoảng [-1%, +1%]
+      if (diffema < -1 || diffema > 1) {
         await sleep(80);
         continue;
       }
       validDiffEmaCount++;
 
-      // ================= BƯỚC C: KIỂM TRA ĐIỀU KIỆN TÍN HIỆU LONG / SHORT =================
+      // ================= BƯỚC 4: XÉT ĐIỀU KIỆN TÍN HIỆU LONG / SHORT =================
       const closedCandle1h = candles1h[1];
       const currentPrice1h = parseFloat(closedCandle1h[4]);
 
@@ -307,10 +289,10 @@ async function main() {
     saveScanResults(scanResults);
 
     console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
-    console.log(`🔹 [Bước 3] Lấy nến 1H thành công: ${validCandlesCount}/${targetCoins.length} coin`);
-    console.log(`🔹 [Bước 4] Thỏa Hbb > 3%: ${validHbbCount} coin`);
-    console.log(`🔹 [Bước 5] Thỏa diffema (-0.5% -> +0.5%): ${validDiffEmaCount} coin`);
-    console.log(`🔹 [Bước 6] Tín hiệu khớp: ${scanResults.matched.length} (Long: ${longCount}, Short: ${shortCount})`);
+    console.log(`🔹 [Bước 1] Nến 1H tải thành công: ${validCandlesCount}/${targetCoins.length} coin`);
+    console.log(`🔹 [Bước 2] Thỏa Hbb > 6%: ${validHbbCount} coin`);
+    console.log(`🔹 [Bước 3] Thỏa diffema (-1% -> +1%): ${validDiffEmaCount} coin`);
+    console.log(`🔹 [Bước 4] Tín hiệu khớp: ${scanResults.matched.length} (Long: ${longCount}, Short: ${shortCount})`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
