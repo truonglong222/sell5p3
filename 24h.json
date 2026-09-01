@@ -1,6 +1,27 @@
 {
-  "lastScanAt": "2026-09-01T02:56:03.896Z",
-  "totalScanned": 146,
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-09-01T03:01:40.939Z",
+  "totalScanned": 153,
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "GRASS-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.71%",
+      "diffbbm10": "-1.06%",
+      "bbd1h": "3.49%",
+      "bbt1h": "-0.21%",
+      "change24h": "-1.04%",
+      "teleSent": true
+    },
+    {
+      "symbol": "OPN-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.44%",
+      "diffbbm10": "1.03%",
+      "bbd1h": "0.20%",
+      "bbt1h": "-3.13%",
+      "change24h": "2.35%",
+      "teleSent": true
+    }
+  ]
 }
