@@ -1,46 +1,36 @@
 {
-  "lastScanAt": "2026-09-01T11:55:55.477Z",
-  "totalScanned": 118,
-  "matchedCount": 4,
+  "lastScanAt": "2026-09-01T12:01:31.080Z",
+  "totalScanned": 121,
+  "matchedCount": 3,
   "matchedList": [
     {
-      "symbol": "ZETA-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "3.27%",
-      "diffema": "0.42%",
-      "bbd1h": "0.37%",
-      "bbt1h": "-2.80%",
-      "change24h": "-2.28%",
-      "teleSent": false
+      "symbol": "GALA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.41%",
+      "diffema": "0.47%",
+      "bbd1h": "3.09%",
+      "bbt1h": "-0.31%",
+      "change24h": "2.21%",
+      "teleSent": true
     },
     {
-      "symbol": "WCT-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "3.24%",
-      "diffema": "0.46%",
-      "bbd1h": "0.10%",
-      "bbt1h": "-3.04%",
-      "change24h": "-1.09%",
-      "teleSent": false
+      "symbol": "DYDX-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.44%",
+      "diffema": "0.48%",
+      "bbd1h": "3.89%",
+      "bbt1h": "0.44%",
+      "change24h": "2.90%",
+      "teleSent": true
     },
     {
       "symbol": "AEVO-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "3.82%",
-      "diffema": "0.45%",
-      "bbd1h": "3.55%",
-      "bbt1h": "-0.26%",
-      "change24h": "1.86%",
-      "teleSent": false
-    },
-    {
-      "symbol": "SHELL-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "5.28%",
-      "diffema": "0.38%",
-      "bbd1h": "-0.13%",
-      "bbt1h": "-5.15%",
-      "change24h": "-2.74%",
+      "Hbb": "4.33%",
+      "diffema": "0.28%",
+      "bbd1h": "5.00%",
+      "bbt1h": "0.64%",
+      "change24h": "1.81%",
       "teleSent": false
     }
   ]
