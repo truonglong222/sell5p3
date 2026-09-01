@@ -87,7 +87,7 @@ async function getFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
-    if (!res.data || res.data.code !== '0') return { step1: 0, step2: 0, coins: [] };
+    if (!res.data || res.data.code !== '0') return { step1Count: 0, step2Count: 0, coins: [] };
 
     const tickers = res.data.data.filter(item => item.instId.endsWith('-USDT-SWAP'));
 
@@ -158,13 +158,14 @@ async function main() {
 
     let validCandlesCount = 0;
     let validDiffBbmCount = 0;
+    let validHbbCount = 0;
     let longCount = 0;
     let shortCount = 0;
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy dữ liệu nến 15m (cần tối thiểu 35 nến để tính SMA 20 từ nến index 15)
+      // Lấy dữ liệu nến 15m (tối thiểu 35 nến để tính BBM index 15)
       const candles15m = await getCandles(symbol, '15m', 100);
 
       if (!candles15m || candles15m.length < 35) {
@@ -173,11 +174,9 @@ async function main() {
       }
       validCandlesCount++;
 
-      // BBM Nến 1: index 1 -> 20
+      // BBM Nến 1, 8, 15
       const closes1 = candles15m.slice(1, 21).map(c => parseFloat(c[4]));
-      // BBM Nến 8: index 8 -> 27
       const closes8 = candles15m.slice(8, 28).map(c => parseFloat(c[4]));
-      // BBM Nến 15: index 15 -> 34
       const closes15 = candles15m.slice(15, 35).map(c => parseFloat(c[4]));
 
       const bbm1 = calculateSMA(closes1, 20);
@@ -189,7 +188,7 @@ async function main() {
         continue;
       }
 
-      // Tính diffbbm: Chênh lệch % giữa Max và Min của 3 BBM
+      // Tính diffbbm giữa Max và Min của 3 BBM
       const maxBbm = Math.max(bbm1, bbm8, bbm15);
       const minBbm = Math.min(bbm1, bbm8, bbm15);
 
@@ -200,8 +199,8 @@ async function main() {
 
       const diffbbm = ((maxBbm - minBbm) / minBbm) * 100;
 
-      // Điều kiện lọc diffbbm: Trong khoảng (-0.5% -> 0.5%)
-      if (diffbbm > 0.5) {
+      // Điều kiện lọc diffbbm trong khoảng [-0.5%, +0.5%]
+      if (diffbbm < -0.5 || diffbbm > 0.5) {
         await sleep(80);
         continue;
       }
@@ -219,13 +218,21 @@ async function main() {
         continue;
       }
 
-      // Tính bbd15m và bbt15m
+      // Tính độ rộng dải Hbb, bbd15m và bbt15m
+      const Hbb = ((bb15m.upper - bb15m.lower) / bb15m.lower) * 100;
       const bbd15m = ((currentPrice15m - bb15m.lower) / bb15m.lower) * 100;
       const bbt15m = ((currentPrice15m - bb15m.upper) / bb15m.upper) * 100;
 
-      // Điều kiện tín hiệu
-      const isLong = diffbbm <= 0.5 && bbd15m > -1 && bbd15m < 0.5;
-      const isShort = diffbbm <= 0.5 && bbt15m > -0.5 && bbt15m < 1;
+      // Điều kiện Hbb > 3%
+      if (Hbb <= 3) {
+        await sleep(80);
+        continue;
+      }
+      validHbbCount++;
+
+      // Kiểm tra điều kiện Long / Short
+      const isLong = bbd15m > -1 && bbd15m < 0.5;
+      const isShort = bbt15m > -0.5 && bbt15m < 1;
 
       if (isLong) longCount++;
       if (isShort) shortCount++;
@@ -242,6 +249,7 @@ async function main() {
         scanResults.matched.push({
           symbol,
           type,
+          Hbb: Hbb.toFixed(2) + '%',
           diffbbm: diffbbm.toFixed(2) + '%',
           bbd15m: bbd15m.toFixed(2) + '%',
           bbt15m: bbt15m.toFixed(2) + '%',
@@ -253,6 +261,7 @@ async function main() {
           const icon = isLong ? '🟢' : '🔴';
           
           let message = `${icon} <b>TÍN HIỆU ${type} (15M): ${coinName}</b>\n` +
+            `• <b>Hbb (15M):</b> ${Hbb.toFixed(2)}%\n` +
             `• <b>diffbbm (15M):</b> ${diffbbm.toFixed(2)}%\n`;
 
           if (isLong) {
@@ -287,8 +296,9 @@ async function main() {
 
     console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
     console.log(`🔹 [Bước 3] Lấy nến 15m thành công: ${validCandlesCount}/${targetCoins.length} coin`);
-    console.log(`🔹 [Bước 4] Thỏa diffbbm <= 0.5%: ${validDiffBbmCount} coin`);
-    console.log(`🔹 [Bước 5] Tín hiệu khớp: ${scanResults.matched.length} (Long: ${longCount}, Short: ${shortCount})`);
+    console.log(`🔹 [Bước 4] Thỏa diffbbm (-0.5% -> +0.5%): ${validDiffBbmCount} coin`);
+    console.log(`🔹 [Bước 5] Thỏa Hbb > 3%: ${validHbbCount} coin`);
+    console.log(`🔹 [Bước 6] Tín hiệu khớp: ${scanResults.matched.length} (Long: ${longCount}, Short: ${shortCount})`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
