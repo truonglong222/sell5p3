@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 4 TIẾNG
-const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
+// Cấu hình Cooldown: 2 TIẾNG
+const COOLDOWN_TIME = 2 * 60 * 60 * 1000;
 const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -75,7 +75,6 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// Tính SMA (trục giữa Bollinger Bands) cho một mảng giá
 function calculateSMA(prices, period = 20) {
   if (prices.length < period) return null;
   const sum = prices.slice(0, period).reduce((a, b) => a + b, 0);
@@ -88,11 +87,12 @@ async function getFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
-    if (!res.data || res.data.code !== '0') return [];
+    if (!res.data || res.data.code !== '0') return { step1: 0, step2: 0, coins: [] };
 
-    const tickers = res.data.data;
-    return tickers
-      .filter(item => item.instId.endsWith('-USDT-SWAP'))
+    const tickers = res.data.data.filter(item => item.instId.endsWith('-USDT-SWAP'));
+
+    // Bước 1: Lọc Volume > 5M
+    const step1Coins = tickers
       .map(item => {
         const last = parseFloat(item.last || 0);
         const open24h = parseFloat(item.open24h || 0);
@@ -104,16 +104,25 @@ async function getFilteredMarkets() {
           volCcy24h: parseFloat(item.volCcy24h || 0)
         };
       })
-      .filter(c => c.volCcy24h > MIN_VOL_CCY24H && c.change24h >= -5 && c.change24h <= 5);
+      .filter(c => c.volCcy24h > MIN_VOL_CCY24H);
+
+    // Bước 2: Lọc biến động 24h từ -3% đến +3%
+    const step2Coins = step1Coins.filter(c => c.change24h >= -3 && c.change24h <= 3);
+
+    return {
+      step1Count: step1Coins.length,
+      step2Count: step2Coins.length,
+      coins: step2Coins
+    };
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return [];
+    return { step1Count: 0, step2Count: 0, coins: [] };
   }
 }
 
 // ------------------- LẤY DỮ LIỆU NẾN -------------------
 
-async function getCandles(symbol, bar, limit = 100) {
+async function getCandles(symbol, bar = '15m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
@@ -135,68 +144,91 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // BƯỚC 1: Lọc Volume > 5M và biến động 24h từ -5% đến +5%
-    const targetCoins = await getFilteredMarkets();
-    console.log(`🔍 Số coin thỏa mãn điều kiện Vol > 5M và 24h (-5% -> +5%): ${targetCoins.length}`);
+    // Lọc Tickers
+    const marketFilter = await getFilteredMarkets();
+    const targetCoins = marketFilter.coins;
+
+    console.log(`📊 [Bước 1] Thỏa điều kiện Vol > 5M USDT: ${marketFilter.step1Count} coin`);
+    console.log(`📊 [Bước 2] Thỏa điều kiện biến động 24h (-3% đến +3%): ${marketFilter.step2Count} coin`);
 
     const scanResults = {
       totalScanned: targetCoins.length,
       matched: []
     };
 
+    let validCandlesCount = 0;
+    let validDiffBbmCount = 0;
+    let longCount = 0;
+    let shortCount = 0;
+
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // BƯỚC 2: Lấy dữ liệu nến 1H (cần tối thiểu 35 nến để tính SMA 20 từ nến thứ 10)
-      const candles1h = await getCandles(symbol, '1H', 100);
+      // Lấy dữ liệu nến 15m (cần tối thiểu 35 nến để tính SMA 20 từ nến index 15)
+      const candles15m = await getCandles(symbol, '15m', 100);
 
-      if (!candles1h || candles1h.length < 35) {
+      if (!candles15m || candles15m.length < 35) {
+        await sleep(80);
+        continue;
+      }
+      validCandlesCount++;
+
+      // BBM Nến 1: index 1 -> 20
+      const closes1 = candles15m.slice(1, 21).map(c => parseFloat(c[4]));
+      // BBM Nến 8: index 8 -> 27
+      const closes8 = candles15m.slice(8, 28).map(c => parseFloat(c[4]));
+      // BBM Nến 15: index 15 -> 34
+      const closes15 = candles15m.slice(15, 35).map(c => parseFloat(c[4]));
+
+      const bbm1 = calculateSMA(closes1, 20);
+      const bbm8 = calculateSMA(closes8, 20);
+      const bbm15 = calculateSMA(closes15, 20);
+
+      if (!bbm1 || !bbm8 || !bbm15) {
         await sleep(80);
         continue;
       }
 
-      // candles1h.slice(1, 21): 20 nến tính từ nến vừa đóng (nến index 1)
-      const closes1hRecent = candles1h.slice(1, 21).map(c => parseFloat(c[4]));
-      // candles1h.slice(11, 31): 20 nến tính từ nến 10 nến trước đó (nến index 11)
-      const closes1h10Ago = candles1h.slice(11, 31).map(c => parseFloat(c[4]));
+      // Tính diffbbm: Chênh lệch % giữa Max và Min của 3 BBM
+      const maxBbm = Math.max(bbm1, bbm8, bbm15);
+      const minBbm = Math.min(bbm1, bbm8, bbm15);
 
-      const bbmNow = calculateSMA(closes1hRecent, 20);
-      const bbm10Ago = calculateSMA(closes1h10Ago, 20);
-
-      if (!bbmNow || !bbm10Ago || bbm10Ago === 0) {
+      if (minBbm <= 0) {
         await sleep(80);
         continue;
       }
 
-      // diffbbm10: Chênh lệch % giữa BB Mid nến vừa đóng và BB Mid nến số 10 trước đó
-      const diffbbm10 = ((bbmNow - bbm10Ago) / bbm10Ago) * 100;
+      const diffbbm = ((maxBbm - minBbm) / minBbm) * 100;
 
-      // BƯỚC 3: Tính Bollinger Bands khung 1H
-      const closedCandle1h = candles1h[1];
-      const currentPrice1h = parseFloat(closedCandle1h[4]);
+      // Điều kiện lọc diffbbm: Trong khoảng (-0.5% -> 0.5%)
+      if (diffbbm > 0.5) {
+        await sleep(80);
+        continue;
+      }
+      validDiffBbmCount++;
 
-      const closes1hForBB = closes1hRecent.slice().reverse();
-      const bb1h = calculateBollingerBands(closes1hForBB, 20);
+      // Tính Bollinger Bands 15m tại nến vừa đóng (nến index 1)
+      const closedCandle15m = candles15m[1];
+      const currentPrice15m = parseFloat(closedCandle15m[4]);
 
-      if (!bb1h || bb1h.lower <= 0 || bb1h.upper <= 0) {
+      const closes15mForBB = closes1.slice().reverse();
+      const bb15m = calculateBollingerBands(closes15mForBB, 20);
+
+      if (!bb15m || bb15m.lower <= 0 || bb15m.upper <= 0) {
         await sleep(80);
         continue;
       }
 
-      // Tính Hbb, bbd1h, bbt1h
-      const Hbb = ((bb1h.upper - bb1h.lower) / bb1h.lower) * 100;
-      const bbd1h = ((currentPrice1h - bb1h.lower) / bb1h.lower) * 100;
-      const bbt1h = ((currentPrice1h - bb1h.upper) / bb1h.upper) * 100;
+      // Tính bbd15m và bbt15m
+      const bbd15m = ((currentPrice15m - bb15m.lower) / bb15m.lower) * 100;
+      const bbt15m = ((currentPrice15m - bb15m.upper) / bb15m.upper) * 100;
 
-      // Điều kiện Hbb > 3%
-      if (Hbb <= 3) {
-        await sleep(80);
-        continue;
-      }
+      // Điều kiện tín hiệu
+      const isLong = diffbbm <= 0.5 && bbd15m > -1 && bbd15m < 0.5;
+      const isShort = diffbbm <= 0.5 && bbt15m > -0.5 && bbt15m < 1;
 
-      // BƯỚC 4: Kiểm tra điều kiện Long / Short với diffbbm10 đã cập nhật
-      const isLong = diffbbm10 > 0.5 && bbd1h > -2 && bbd1h < 0.5;
-      const isShort = diffbbm10 < -0.5 && bbt1h > -0.5 && bbt1h < 2;
+      if (isLong) longCount++;
+      if (isShort) shortCount++;
 
       if (isLong || isShort) {
         const type = isLong ? 'LONG' : 'SHORT';
@@ -210,10 +242,9 @@ async function main() {
         scanResults.matched.push({
           symbol,
           type,
-          Hbb: Hbb.toFixed(2) + '%',
-          diffbbm10: diffbbm10.toFixed(2) + '%',
-          bbd1h: bbd1h.toFixed(2) + '%',
-          bbt1h: bbt1h.toFixed(2) + '%',
+          diffbbm: diffbbm.toFixed(2) + '%',
+          bbd15m: bbd15m.toFixed(2) + '%',
+          bbt15m: bbt15m.toFixed(2) + '%',
           change24h: coin.change24h.toFixed(2) + '%',
           teleSent: !isCooldown
         });
@@ -221,14 +252,13 @@ async function main() {
         if (!isCooldown) {
           const icon = isLong ? '🟢' : '🔴';
           
-          let message = `${icon} <b>TÍN HIỆU ${type}: ${coinName}</b>\n` +
-            `• <b>Hbb (1H):</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>diffbbm10 (1H):</b> ${diffbbm10.toFixed(2)}%\n`;
+          let message = `${icon} <b>TÍN HIỆU ${type} (15M): ${coinName}</b>\n` +
+            `• <b>diffbbm (15M):</b> ${diffbbm.toFixed(2)}%\n`;
 
           if (isLong) {
-            message += `• <b>bbd1h:</b> ${bbd1h.toFixed(2)}%\n`;
+            message += `• <b>bbd15m:</b> ${bbd15m.toFixed(2)}%\n`;
           } else {
-            message += `• <b>bbt1h:</b> ${bbt1h.toFixed(2)}%\n`;
+            message += `• <b>bbt15m:</b> ${bbt15m.toFixed(2)}%\n`;
           }
 
           message += `• <b>Biến động 24h:</b> ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
@@ -255,10 +285,16 @@ async function main() {
 
     saveScanResults(scanResults);
 
+    console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
+    console.log(`🔹 [Bước 3] Lấy nến 15m thành công: ${validCandlesCount}/${targetCoins.length} coin`);
+    console.log(`🔹 [Bước 4] Thỏa diffbbm <= 0.5%: ${validDiffBbmCount} coin`);
+    console.log(`🔹 [Bước 5] Tín hiệu khớp: ${scanResults.matched.length} (Long: ${longCount}, Short: ${shortCount})`);
+
     console.log('\n================== KẾT QUẢ QUÉT ==================');
-    console.log(`Số tín hiệu thỏa mãn: ${scanResults.matched.length}`);
     if (scanResults.matched.length > 0) {
       console.table(scanResults.matched);
+    } else {
+      console.log('Không có coin nào thỏa mãn điều kiện.');
     }
     console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
     console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
