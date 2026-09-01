@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-01T13:01:39.445Z",
+  "lastScanAt": "2026-09-01T13:06:04.503Z",
   "totalScanned": 132,
-  "matchedCount": 4,
+  "matchedCount": 5,
   "matchedList": [
     {
       "symbol": "ACH-USDT-SWAP",
@@ -10,8 +10,8 @@
       "diffema": "0.44%",
       "bbd1h": "3.35%",
       "bbt1h": "0.17%",
-      "change24h": "2.61%",
-      "teleSent": true
+      "change24h": "2.69%",
+      "teleSent": false
     },
     {
       "symbol": "TURBO-USDT-SWAP",
@@ -20,7 +20,17 @@
       "diffema": "0.36%",
       "bbd1h": "0.29%",
       "bbt1h": "-2.67%",
-      "change24h": "-0.16%",
+      "change24h": "-0.33%",
+      "teleSent": false
+    },
+    {
+      "symbol": "BEAT-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.63%",
+      "diffema": "0.50%",
+      "bbd1h": "3.15%",
+      "bbt1h": "-0.46%",
+      "change24h": "2.68%",
       "teleSent": true
     },
     {
@@ -30,7 +40,7 @@
       "diffema": "0.44%",
       "bbd1h": "0.33%",
       "bbt1h": "-2.79%",
-      "change24h": "-1.40%",
+      "change24h": "-1.45%",
       "teleSent": false
     },
     {
@@ -40,7 +50,7 @@
       "diffema": "0.35%",
       "bbd1h": "5.24%",
       "bbt1h": "0.47%",
-      "change24h": "2.66%",
+      "change24h": "2.99%",
       "teleSent": false
     }
   ]
