@@ -1,57 +1,67 @@
 {
-  "lastScanAt": "2026-09-01T04:55:56.089Z",
+  "lastScanAt": "2026-09-01T05:03:05.407Z",
   "totalScanned": 116,
-  "matchedCount": 5,
+  "matchedCount": 6,
   "matchedList": [
     {
       "symbol": "YGG-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "3.29%",
-      "diffbbm": "0.25%",
-      "bbd1h": "3.49%",
-      "bbt1h": "0.20%",
+      "Hbb": "3.59%",
+      "diffbbm": "0.28%",
+      "bbd1h": "3.38%",
+      "bbt1h": "-0.21%",
       "change24h": "1.77%",
       "teleSent": false
     },
     {
       "symbol": "ZIL-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "3.15%",
-      "diffbbm": "0.18%",
-      "bbd1h": "2.82%",
-      "bbt1h": "-0.32%",
-      "change24h": "1.69%",
+      "Hbb": "3.04%",
+      "diffbbm": "0.22%",
+      "bbd1h": "3.20%",
+      "bbt1h": "0.16%",
+      "change24h": "1.77%",
       "teleSent": false
     },
     {
       "symbol": "MOODENG-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "3.38%",
-      "diffbbm": "0.42%",
-      "bbd1h": "4.39%",
-      "bbt1h": "0.98%",
-      "change24h": "2.26%",
+      "Hbb": "3.62%",
+      "diffbbm": "0.30%",
+      "bbd1h": "3.22%",
+      "bbt1h": "-0.38%",
+      "change24h": "2.49%",
       "teleSent": false
     },
     {
-      "symbol": "LINEA-USDT-SWAP",
+      "symbol": "MEW-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.64%",
-      "diffbbm": "0.49%",
-      "bbd1h": "5.83%",
-      "bbt1h": "0.17%",
-      "change24h": "2.58%",
-      "teleSent": false
+      "Hbb": "3.12%",
+      "diffbbm": "0.25%",
+      "bbd1h": "2.69%",
+      "bbt1h": "-0.42%",
+      "change24h": "2.32%",
+      "teleSent": true
     },
     {
-      "symbol": "BREV-USDT-SWAP",
+      "symbol": "SEI-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "4.33%",
-      "diffbbm": "0.35%",
-      "bbd1h": "4.08%",
-      "bbt1h": "-0.24%",
-      "change24h": "0.13%",
-      "teleSent": false
+      "Hbb": "3.58%",
+      "diffbbm": "0.47%",
+      "bbd1h": "3.13%",
+      "bbt1h": "-0.43%",
+      "change24h": "2.18%",
+      "teleSent": true
+    },
+    {
+      "symbol": "OPG-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.46%",
+      "diffbbm": "0.46%",
+      "bbd1h": "5.09%",
+      "bbt1h": "-0.35%",
+      "change24h": "0.69%",
+      "teleSent": true
     }
   ]
 }
