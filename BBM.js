@@ -167,7 +167,7 @@ async function main() {
       }
       validCandlesCount++;
 
-      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS & LỌC Hbb > 6% =================
+      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS & LỌC Hbb > 5% =================
       const closes1hRecent = candles1h.slice(1, 21).map(c => parseFloat(c[4]));
       const closes1hForBB = closes1hRecent.slice().reverse();
       const bb1h = calculateBollingerBands(closes1hForBB, 20);
@@ -180,8 +180,8 @@ async function main() {
       // Độ rộng dải Hbb
       const Hbb = ((bb1h.upper - bb1h.lower) / bb1h.lower) * 100;
 
-      // Điều kiện lọc Hbb > 6%
-      if (Hbb <= 6) {
+      // Điều kiện lọc Hbb > 5%
+      if (Hbb <= 5) {
         await sleep(80);
         continue;
       }
