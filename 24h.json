@@ -1,27 +1,67 @@
 {
-  "lastScanAt": "2026-09-02T07:56:02.821Z",
+  "lastScanAt": "2026-09-02T08:01:45.463Z",
   "totalScanned": 164,
-  "matchedCount": 2,
+  "matchedCount": 6,
   "matchedList": [
+    {
+      "symbol": "PLUME-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.83%",
+      "diffema": "0.78%",
+      "bbd1h": "5.81%",
+      "bbt1h": "-0.02%",
+      "change24h": "-0.59%",
+      "teleSent": true
+    },
     {
       "symbol": "ALGO-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.04%",
-      "diffema": "0.78%",
-      "bbd1h": "4.75%",
-      "bbt1h": "-0.28%",
-      "change24h": "1.69%",
+      "Hbb": "5.02%",
+      "diffema": "1.00%",
+      "bbd1h": "4.59%",
+      "bbt1h": "-0.41%",
+      "change24h": "1.79%",
       "teleSent": false
     },
     {
-      "symbol": "ETHFI-USDT-SWAP",
+      "symbol": "MUBARAK-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "8.34%",
-      "diffema": "0.52%",
-      "bbd1h": "9.09%",
-      "bbt1h": "0.69%",
-      "change24h": "4.95%",
-      "teleSent": false
+      "Hbb": "6.89%",
+      "diffema": "0.77%",
+      "bbd1h": "7.54%",
+      "bbt1h": "0.61%",
+      "change24h": "3.67%",
+      "teleSent": true
+    },
+    {
+      "symbol": "ONE-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.41%",
+      "diffema": "0.97%",
+      "bbd1h": "5.81%",
+      "bbt1h": "0.38%",
+      "change24h": "2.28%",
+      "teleSent": true
+    },
+    {
+      "symbol": "MERL-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "6.62%",
+      "diffema": "0.94%",
+      "bbd1h": "7.63%",
+      "bbt1h": "0.95%",
+      "change24h": "2.35%",
+      "teleSent": true
+    },
+    {
+      "symbol": "SOPH-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.49%",
+      "diffema": "0.41%",
+      "bbd1h": "6.25%",
+      "bbt1h": "0.72%",
+      "change24h": "-0.44%",
+      "teleSent": true
     }
   ]
 }
