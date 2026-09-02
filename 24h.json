@@ -1,6 +1,27 @@
 {
-  "lastScanAt": "2026-09-02T06:56:01.213Z",
+  "lastScanAt": "2026-09-02T07:01:39.891Z",
   "totalScanned": 165,
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "ALGO-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.04%",
+      "diffema": "0.78%",
+      "bbd1h": "4.75%",
+      "bbt1h": "-0.28%",
+      "change24h": "0.89%",
+      "teleSent": true
+    },
+    {
+      "symbol": "ETHFI-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "8.34%",
+      "diffema": "0.52%",
+      "bbd1h": "9.09%",
+      "bbt1h": "0.69%",
+      "change24h": "4.69%",
+      "teleSent": true
+    }
+  ]
 }

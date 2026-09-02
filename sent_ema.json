@@ -9,7 +9,8 @@
     "longAlert": 1788310857586
   },
   "ETHFI-USDT-SWAP": {
-    "longAlert": 1788314455794
+    "longAlert": 1788314455794,
+    "shortAlert": 1788332463158
   },
   "WIF-USDT-SWAP": {
     "longAlert": 1788314455794
@@ -25,5 +26,8 @@
   },
   "EDEN-USDT-SWAP": {
     "longAlert": 1788325260883
+  },
+  "ALGO-USDT-SWAP": {
+    "shortAlert": 1788332463158
   }
 }
