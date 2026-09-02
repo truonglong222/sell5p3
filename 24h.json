@@ -1,6 +1,37 @@
 {
-  "lastScanAt": "2026-09-02T00:55:59.825Z",
+  "lastScanAt": "2026-09-02T01:01:45.597Z",
   "totalScanned": 164,
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 3,
+  "matchedList": [
+    {
+      "symbol": "RLS-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "5.20%",
+      "diffema": "0.99%",
+      "bbd1h": "0.43%",
+      "bbt1h": "-4.53%",
+      "change24h": "-2.86%",
+      "teleSent": true
+    },
+    {
+      "symbol": "DATA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.40%",
+      "diffema": "0.29%",
+      "bbd1h": "5.84%",
+      "bbt1h": "0.42%",
+      "change24h": "2.60%",
+      "teleSent": true
+    },
+    {
+      "symbol": "XPL-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "6.64%",
+      "diffema": "0.61%",
+      "bbd1h": "-0.05%",
+      "bbt1h": "-6.27%",
+      "change24h": "-3.89%",
+      "teleSent": true
+    }
+  ]
 }
