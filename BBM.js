@@ -166,10 +166,13 @@ async function main() {
       const closesBB = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bbCurrent = calculateBollingerBands(closesBB, 20);
 
-      if (!bbCurrent || !bbCurrent.upper || bbCurrent.upper <= 0) {
+      if (!bbCurrent || !bbCurrent.upper || bbCurrent.lower <= 0) {
         await sleep(80);
         continue;
       }
+
+      // Độ rộng dải Bollinger Bands (%)
+      const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
 
       // ================= BƯỚC 3: TÍNH EMA20 VÀ diffema20 =================
       const closedCandles = candles1h.slice(1).reverse();
@@ -220,6 +223,7 @@ async function main() {
         scanResults.matched.push({
           symbol,
           type: 'SHORT',
+          Hbb: Hbb.toFixed(2) + '%',
           bbt1h: bbt1h.toFixed(2) + '%',
           diffema20: diffema20.toFixed(2) + '%',
           link,
@@ -229,6 +233,7 @@ async function main() {
         if (!isCooldown) {
           const message =
             `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
+            `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
             `• <b>bbt1h:</b> +${bbt1h.toFixed(2)}%\n` +
             `• <b>diffema:</b> ${diffema20.toFixed(2)}%\n` +
             `• <a href="${link}">Link OKX</a>`;
