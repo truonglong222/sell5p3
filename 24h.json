@@ -1,17 +1,28 @@
 {
-  "lastScanAt": "2026-09-03T14:21:18.523Z",
-  "totalScanned": 164,
-  "matchedCount": 1,
+  "lastScanAt": "2026-09-03T14:26:09.929Z",
+  "totalScanned": 165,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "WIF-USDT-SWAP",
+      "type": "SHORT",
+      "testedPrice": 0.2021,
+      "Hbb": "3.48%",
+      "diffhbb": "0.66%",
+      "bbd1h": "1.78%",
+      "bbt1h": "-0.46%",
+      "change24h": "2.23%",
+      "teleSent": true
+    },
     {
       "symbol": "ACT-USDT-SWAP",
       "type": "SHORT",
-      "testedPrice": 0.010334,
+      "testedPrice": 0.010368,
       "Hbb": "3.51%",
       "diffhbb": "-0.85%",
       "bbd1h": "3.08%",
-      "bbt1h": "0.39%",
-      "change24h": "1.55%",
+      "bbt1h": "0.72%",
+      "change24h": "1.87%",
       "teleSent": false
     }
   ]
