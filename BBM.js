@@ -154,11 +154,11 @@ async function main() {
       validCandlesCount++;
 
       // ================= BƯỚC 2: TÍNH BOLLINGER BANDS & LỌC Hbb > 3% VÀ -1% < diffhbb < 1% =================
-      // Nến hiện tại vừa đóng (index 1)
+      // 20 nến đã đóng hoàn tất gần nhất (index 1 đến 20)
       const closesCurrentBB = candles1h.slice(1, 21).map(c => parseFloat(c[4])).reverse();
       const bbCurrent = calculateBollingerBands(closesCurrentBB, 20);
 
-      // Nến lùi về trước 15 nến (index 16)
+      // 20 nến lùi về trước 15 nến (index 16 đến 35)
       const closes15BarsAgoBB = candles1h.slice(16, 36).map(c => parseFloat(c[4])).reverse();
       const bb15BarsAgo = calculateBollingerBands(closes15BarsAgoBB, 20);
 
@@ -186,12 +186,14 @@ async function main() {
       }
       validHbbCount++;
 
-      // ================= BƯỚC 3: XÉT ĐIỀU KIỆN TÍN HIỆU LONG / SHORT =================
-      const closedCandle1h = candles1h[1];
-      const currentPrice1h = parseFloat(closedCandle1h[4]);
+      // ================= BƯỚC 3: XÉT ĐIỀU KIỆN TÍN HIỆU LONG / SHORT (HIGH / LOW NẾN 0) =================
+      const currentCandle0 = candles1h[0];
+      const high0 = parseFloat(currentCandle0[2]); // Giá cao nhất nến 0
+      const low0 = parseFloat(currentCandle0[3]);  // Giá thấp nhất nến 0
 
-      const bbd1h = ((currentPrice1h - bbCurrent.lower) / bbCurrent.lower) * 100;
-      const bbt1h = ((currentPrice1h - bbCurrent.upper) / bbCurrent.upper) * 100;
+      // Tính bbd1h theo giá Low và bbt1h theo giá High
+      const bbd1h = ((low0 - bbCurrent.lower) / bbCurrent.lower) * 100;
+      const bbt1h = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
 
       const isLong = bbd1h > -1 && bbd1h < 0.5;
       const isShort = bbt1h > -0.5 && bbt1h < 1;
@@ -211,6 +213,7 @@ async function main() {
         scanResults.matched.push({
           symbol,
           type,
+          testedPrice: isLong ? low0 : high0,
           Hbb: Hbb.toFixed(2) + '%',
           diffhbb: diffhbb.toFixed(2) + '%',
           bbd1h: bbd1h.toFixed(2) + '%',
@@ -223,13 +226,14 @@ async function main() {
           const icon = isLong ? '🟢' : '🔴';
           
           let message = `${icon} <b>TÍN HIỆU ${type} (1H): ${coinName}</b>\n` +
+            `• <b>Giá nến 0:</b> ${isLong ? `Low = ${low0}` : `High = ${high0}`}\n` +
             `• <b>Hbb (1H):</b> ${Hbb.toFixed(2)}%\n` +
             `• <b>diffhbb (15 nến):</b> ${diffhbb.toFixed(2)}%\n`;
 
           if (isLong) {
-            message += `• <b>bbd1h:</b> ${bbd1h.toFixed(2)}%\n`;
+            message += `• <b>bbd1h (Low vs Lower):</b> ${bbd1h.toFixed(2)}%\n`;
           } else {
-            message += `• <b>bbt1h:</b> ${bbt1h.toFixed(2)}%\n`;
+            message += `• <b>bbt1h (High vs Upper):</b> ${bbt1h.toFixed(2)}%\n`;
           }
 
           message += `• <b>Biến động 24h:</b> ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n` +
