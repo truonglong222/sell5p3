@@ -159,7 +159,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy dữ liệu nến 1H
+      // Lấy dữ liệu nến 1H (limit 100 nến đủ cho nến hiện tại và nến lùi 20 cây tính EMA20)
       const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h || candles1h.length < 60) {
         await sleep(80);
@@ -188,28 +188,21 @@ async function main() {
       validHbbCount++;
 
       // ================= BƯỚC 3: TÍNH EMA VÀ LỌC diffema [-1%, +1%] =================
-      const series1 = candles1h.slice(1).map(c => parseFloat(c[4])).reverse();
-      const series8 = candles1h.slice(8).map(c => parseFloat(c[4])).reverse();
-      const series15 = candles1h.slice(15).map(c => parseFloat(c[4])).reverse();
+      // Chuỗi giá tính EMA nến vừa đóng (index 1)
+      const seriesCurrent = candles1h.slice(1).map(c => parseFloat(c[4])).reverse();
+      // Chuỗi giá tính EMA lùi về trước đó 20 nến (index 21)
+      const series20BarsAgo = candles1h.slice(21).map(c => parseFloat(c[4])).reverse();
 
-      const ema1 = calculateEMA(series1, 20);
-      const ema8 = calculateEMA(series8, 20);
-      const ema15 = calculateEMA(series15, 20);
+      const currentEma = calculateEMA(seriesCurrent, 20);
+      const prevEma20 = calculateEMA(series20BarsAgo, 20);
 
-      if (!ema1 || !ema8 || !ema15) {
+      if (!currentEma || !prevEma20 || prevEma20 <= 0) {
         await sleep(80);
         continue;
       }
 
-      const maxEma = Math.max(ema1, ema8, ema15);
-      const minEma = Math.min(ema1, ema8, ema15);
-
-      if (minEma <= 0) {
-        await sleep(80);
-        continue;
-      }
-
-      const diffema = ((maxEma - minEma) / minEma) * 100;
+      // % chênh lệch giữa EMA(20) hiện tại và EMA(20) cách 20 nến
+      const diffema = ((currentEma - prevEma20) / prevEma20) * 100;
 
       // Điều kiện diffema trong khoảng [-1%, +1%]
       if (diffema < -1 || diffema > 1) {
@@ -290,7 +283,7 @@ async function main() {
 
     console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
     console.log(`🔹 [Bước 1] Nến 1H tải thành công: ${validCandlesCount}/${targetCoins.length} coin`);
-    console.log(`🔹 [Bước 2] Thỏa Hbb > 6%: ${validHbbCount} coin`);
+    console.log(`🔹 [Bước 2] Thỏa Hbb > 5%: ${validHbbCount} coin`);
     console.log(`🔹 [Bước 3] Thỏa diffema (-1% -> +1%): ${validDiffEmaCount} coin`);
     console.log(`🔹 [Bước 4] Tín hiệu khớp: ${scanResults.matched.length} (Long: ${longCount}, Short: ${shortCount})`);
 
