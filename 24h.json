@@ -1,15 +1,25 @@
 {
-  "lastScanAt": "2026-09-03T15:16:25.223Z",
-  "totalScanned": 168,
-  "matchedCount": 1,
+  "lastScanAt": "2026-09-03T15:26:09.677Z",
+  "totalScanned": 167,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "AEON-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.06%",
+      "bbt1h": "0.44%",
+      "diffema20": "-4.10%",
+      "link": "https://www.okx.com/trade-swap/aeon-usdt-swap",
+      "teleSent": true
+    },
     {
       "symbol": "BILL-USDT-SWAP",
       "type": "SHORT",
-      "bbt1h": "0.15%",
+      "Hbb": "4.07%",
+      "bbt1h": "1.64%",
       "diffema20": "-3.67%",
       "link": "https://www.okx.com/trade-swap/bill-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
