@@ -1,57 +1,67 @@
 {
-  "lastScanAt": "2026-09-03T05:56:07.788Z",
+  "lastScanAt": "2026-09-03T06:01:45.901Z",
   "totalScanned": 169,
-  "matchedCount": 5,
+  "matchedCount": 6,
   "matchedList": [
     {
       "symbol": "WLD-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.92%",
-      "diffema": "0.15%",
-      "bbd1h": "5.84%",
-      "bbt1h": "-0.07%",
-      "change24h": "2.27%",
+      "Hbb": "6.64%",
+      "diffema": "0.52%",
+      "bbd1h": "6.65%",
+      "bbt1h": "0.01%",
+      "change24h": "2.13%",
       "teleSent": false
     },
     {
-      "symbol": "GRT-USDT-SWAP",
+      "symbol": "MEGA-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.06%",
+      "Hbb": "5.10%",
+      "diffema": "-0.73%",
+      "bbd1h": "5.76%",
+      "bbt1h": "0.62%",
+      "change24h": "1.28%",
+      "teleSent": true
+    },
+    {
+      "symbol": "SIGN-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.16%",
+      "diffema": "-0.76%",
+      "bbd1h": "5.25%",
+      "bbt1h": "0.08%",
+      "change24h": "0.54%",
+      "teleSent": true
+    },
+    {
+      "symbol": "RVN-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "7.26%",
       "diffema": "0.30%",
-      "bbd1h": "5.19%",
-      "bbt1h": "0.13%",
-      "change24h": "0.79%",
-      "teleSent": false
-    },
-    {
-      "symbol": "HBAR-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "5.27%",
-      "diffema": "0.81%",
-      "bbd1h": "5.40%",
-      "bbt1h": "0.12%",
-      "change24h": "2.54%",
-      "teleSent": false
-    },
-    {
-      "symbol": "DOT-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb": "5.60%",
-      "diffema": "-0.26%",
-      "bbd1h": "5.28%",
-      "bbt1h": "-0.30%",
-      "change24h": "0.47%",
-      "teleSent": false
+      "bbd1h": "8.19%",
+      "bbt1h": "0.87%",
+      "change24h": "3.39%",
+      "teleSent": true
     },
     {
       "symbol": "XPL-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.56%",
-      "diffema": "0.44%",
-      "bbd1h": "6.32%",
-      "bbt1h": "0.72%",
-      "change24h": "2.19%",
+      "Hbb": "6.04%",
+      "diffema": "0.70%",
+      "bbd1h": "5.65%",
+      "bbt1h": "-0.37%",
+      "change24h": "2.16%",
       "teleSent": false
+    },
+    {
+      "symbol": "PEOPLE-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.38%",
+      "diffema": "0.81%",
+      "bbd1h": "5.34%",
+      "bbt1h": "-0.04%",
+      "change24h": "2.54%",
+      "teleSent": true
     }
   ]
 }
