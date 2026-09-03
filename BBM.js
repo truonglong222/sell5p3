@@ -159,7 +159,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy dữ liệu nến 1H (limit 100 nến đủ cho nến hiện tại và nến lùi 20 cây tính EMA20)
+      // Lấy dữ liệu nến 1H
       const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h || candles1h.length < 60) {
         await sleep(80);
@@ -167,42 +167,55 @@ async function main() {
       }
       validCandlesCount++;
 
-      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS & LỌC Hbb > 5% =================
-      const closes1hRecent = candles1h.slice(1, 21).map(c => parseFloat(c[4]));
-      const closes1hForBB = closes1hRecent.slice().reverse();
-      const bb1h = calculateBollingerBands(closes1hForBB, 20);
+      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS & LỌC Hbb > 3% VÀ -1% < diffhbb < 1% =================
+      // Nến hiện tại vừa đóng (index 1)
+      const closesCurrentBB = candles1h.slice(1, 21).map(c => parseFloat(c[4])).reverse();
+      const bbCurrent = calculateBollingerBands(closesCurrentBB, 20);
 
-      if (!bb1h || bb1h.lower <= 0 || bb1h.upper <= 0) {
+      // Nến lùi về trước 15 nến (index 16)
+      const closes15BarsAgoBB = candles1h.slice(16, 36).map(c => parseFloat(c[4])).reverse();
+      const bb15BarsAgo = calculateBollingerBands(closes15BarsAgoBB, 20);
+
+      if (!bbCurrent || bbCurrent.lower <= 0 || !bb15BarsAgo || bb15BarsAgo.lower <= 0) {
         await sleep(80);
         continue;
       }
 
-      // Độ rộng dải Hbb
-      const Hbb = ((bb1h.upper - bb1h.lower) / bb1h.lower) * 100;
+      // Độ rộng dải Bollinger Bands
+      const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
+      const Hbb15 = ((bb15BarsAgo.upper - bb15BarsAgo.lower) / bb15BarsAgo.lower) * 100;
 
-      // Điều kiện lọc Hbb > 5%
-      if (Hbb <= 5) {
+      if (Hbb15 <= 0) {
+        await sleep(80);
+        continue;
+      }
+
+      // % chênh lệch Hbb hiện tại so với Hbb cách 15 nến
+      const diffhbb = ((Hbb - Hbb15) / Hbb15) * 100;
+
+      // Điều kiện lọc Hbb > 3% và -1% < diffhbb < 1%
+      if (Hbb <= 3 || diffhbb <= -1 || diffhbb >= 1) {
         await sleep(80);
         continue;
       }
       validHbbCount++;
 
-      // ================= BƯỚC 3: TÍNH EMA VÀ LỌC diffema [-1%, +1%] =================
-      // Chuỗi giá tính EMA nến vừa đóng (index 1)
+      // ================= BƯỚC 3: TÍNH EMA VÀ LỌC diffema [-1%, +1%] CÁCH 15 NẾN =================
+      // Chuỗi giá tính EMA nến hiện tại (index 1)
       const seriesCurrent = candles1h.slice(1).map(c => parseFloat(c[4])).reverse();
-      // Chuỗi giá tính EMA lùi về trước đó 20 nến (index 21)
-      const series20BarsAgo = candles1h.slice(21).map(c => parseFloat(c[4])).reverse();
+      // Chuỗi giá tính EMA lùi về 15 nến (index 16)
+      const series15BarsAgo = candles1h.slice(16).map(c => parseFloat(c[4])).reverse();
 
       const currentEma = calculateEMA(seriesCurrent, 20);
-      const prevEma20 = calculateEMA(series20BarsAgo, 20);
+      const prevEma15 = calculateEMA(series15BarsAgo, 20);
 
-      if (!currentEma || !prevEma20 || prevEma20 <= 0) {
+      if (!currentEma || !prevEma15 || prevEma15 <= 0) {
         await sleep(80);
         continue;
       }
 
-      // % chênh lệch giữa EMA(20) hiện tại và EMA(20) cách 20 nến
-      const diffema = ((currentEma - prevEma20) / prevEma20) * 100;
+      // % chênh lệch giữa EMA hiện tại và EMA cách 15 nến
+      const diffema = ((currentEma - prevEma15) / prevEma15) * 100;
 
       // Điều kiện diffema trong khoảng [-1%, +1%]
       if (diffema < -1 || diffema > 1) {
@@ -215,8 +228,8 @@ async function main() {
       const closedCandle1h = candles1h[1];
       const currentPrice1h = parseFloat(closedCandle1h[4]);
 
-      const bbd1h = ((currentPrice1h - bb1h.lower) / bb1h.lower) * 100;
-      const bbt1h = ((currentPrice1h - bb1h.upper) / bb1h.upper) * 100;
+      const bbd1h = ((currentPrice1h - bbCurrent.lower) / bbCurrent.lower) * 100;
+      const bbt1h = ((currentPrice1h - bbCurrent.upper) / bbCurrent.upper) * 100;
 
       const isLong = bbd1h > -1 && bbd1h < 0.5;
       const isShort = bbt1h > -0.5 && bbt1h < 1;
@@ -237,6 +250,7 @@ async function main() {
           symbol,
           type,
           Hbb: Hbb.toFixed(2) + '%',
+          diffhbb: diffhbb.toFixed(2) + '%',
           diffema: diffema.toFixed(2) + '%',
           bbd1h: bbd1h.toFixed(2) + '%',
           bbt1h: bbt1h.toFixed(2) + '%',
@@ -249,7 +263,8 @@ async function main() {
           
           let message = `${icon} <b>TÍN HIỆU ${type} (1H): ${coinName}</b>\n` +
             `• <b>Hbb (1H):</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>diffema (1H):</b> ${diffema.toFixed(2)}%\n`;
+            `• <b>diffhbb (15 nến):</b> ${diffhbb.toFixed(2)}%\n` +
+            `• <b>diffema (15 nến):</b> ${diffema.toFixed(2)}%\n`;
 
           if (isLong) {
             message += `• <b>bbd1h:</b> ${bbd1h.toFixed(2)}%\n`;
@@ -283,7 +298,7 @@ async function main() {
 
     console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
     console.log(`🔹 [Bước 1] Nến 1H tải thành công: ${validCandlesCount}/${targetCoins.length} coin`);
-    console.log(`🔹 [Bước 2] Thỏa Hbb > 5%: ${validHbbCount} coin`);
+    console.log(`🔹 [Bước 2] Thỏa Hbb > 3% & diffhbb (-1% -> +1%): ${validHbbCount} coin`);
     console.log(`🔹 [Bước 3] Thỏa diffema (-1% -> +1%): ${validDiffEmaCount} coin`);
     console.log(`🔹 [Bước 4] Tín hiệu khớp: ${scanResults.matched.length} (Long: ${longCount}, Short: ${shortCount})`);
 
