@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-03T07:36:05.383Z",
-  "totalScanned": 169,
-  "matchedCount": 3,
+  "lastScanAt": "2026-09-03T07:41:15.108Z",
+  "totalScanned": 170,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "UB-USDT-SWAP",
@@ -10,8 +10,18 @@
       "diffema": "0.65%",
       "bbd1h": "5.53%",
       "bbt1h": "-0.32%",
-      "change24h": "4.32%",
+      "change24h": "4.60%",
       "teleSent": false
+    },
+    {
+      "symbol": "LDO-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.60%",
+      "diffema": "0.45%",
+      "bbd1h": "5.46%",
+      "bbt1h": "-0.14%",
+      "change24h": "0.95%",
+      "teleSent": true
     },
     {
       "symbol": "SIGN-USDT-SWAP",
@@ -20,7 +30,7 @@
       "diffema": "-0.24%",
       "bbd1h": "6.09%",
       "bbt1h": "0.29%",
-      "change24h": "3.20%",
+      "change24h": "2.08%",
       "teleSent": false
     },
     {
@@ -30,7 +40,7 @@
       "diffema": "0.69%",
       "bbd1h": "7.40%",
       "bbt1h": "-0.45%",
-      "change24h": "3.00%",
+      "change24h": "2.90%",
       "teleSent": false
     }
   ]
