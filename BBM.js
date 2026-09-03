@@ -14,7 +14,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown: 8 TIẾNG
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
-const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
+const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 10 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
