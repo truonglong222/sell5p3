@@ -1,6 +1,51 @@
 {
-  "lastScanAt": "2026-09-03T14:51:07.050Z",
+  "lastScanAt": "2026-09-03T14:56:02.171Z",
   "totalScanned": 166,
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 4,
+  "matchedList": [
+    {
+      "symbol": "BICO-USDT-SWAP",
+      "type": "SHORT",
+      "high0": 0.02191,
+      "ema1": "0.0212",
+      "ema20": "0.0217",
+      "diffema20": "-2.09%",
+      "bbt1h": "1.81%",
+      "change24h": "1.58%",
+      "teleSent": true
+    },
+    {
+      "symbol": "SUSHI-USDT-SWAP",
+      "type": "SHORT",
+      "high0": 0.1979,
+      "ema1": "0.1948",
+      "ema20": "0.1981",
+      "diffema20": "-1.64%",
+      "bbt1h": "0.78%",
+      "change24h": "1.28%",
+      "teleSent": true
+    },
+    {
+      "symbol": "BABY-USDT-SWAP",
+      "type": "SHORT",
+      "high0": 0.011416,
+      "ema1": "0.0112",
+      "ema20": "0.0113",
+      "diffema20": "-1.18%",
+      "bbt1h": "0.89%",
+      "change24h": "1.98%",
+      "teleSent": true
+    },
+    {
+      "symbol": "CC-USDT-SWAP",
+      "type": "SHORT",
+      "high0": 0.11218,
+      "ema1": "0.1101",
+      "ema20": "0.1120",
+      "diffema20": "-1.66%",
+      "bbt1h": "0.33%",
+      "change24h": "1.80%",
+      "teleSent": true
+    }
+  ]
 }
