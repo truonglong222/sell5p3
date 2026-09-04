@@ -72,7 +72,6 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// Tính mảng EMA theo thứ tự thời gian cũ -> mới
 function calculateEMAArray(prices, period = 20) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
@@ -93,9 +92,9 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOLUME > 10M) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 10M & BIẾN ĐỘNG 24H: -6% ĐẾN -3%) -------------------
 
-async function getVolumeFilteredMarkets() {
+async function getFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
@@ -104,11 +103,23 @@ async function getVolumeFilteredMarkets() {
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
 
     return tickers
-      .map((item) => ({
-        instId: item.instId,
-        volCcy24h: parseFloat(item.volCcy24h || 0)
-      }))
-      .filter((c) => c.volCcy24h > MIN_VOL_CCY24H);
+      .map((item) => {
+        const last = parseFloat(item.last || 0);
+        const open24h = parseFloat(item.open24h || 0);
+        const change24h = open24h > 0 ? ((last - open24h) / open24h) * 100 : 0;
+
+        return {
+          instId: item.instId,
+          volCcy24h: parseFloat(item.volCcy24h || 0),
+          change24h
+        };
+      })
+      .filter((c) => {
+        // Lọc Volume > 10M USDT và Biến động 24h trong khoảng từ -6% đến -3%
+        const isVolValid = c.volCcy24h > MIN_VOL_CCY24H;
+        const isChangeValid = c.change24h >= -6 && c.change24h <= -3;
+        return isVolValid && isChangeValid;
+      });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
     return [];
@@ -139,9 +150,9 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // 1. Lọc Volume > 10M USDT
-    const targetCoins = await getVolumeFilteredMarkets();
-    console.log(`📊 [Bước 1] Thỏa điều kiện Vol > 10M USDT: ${targetCoins.length} coin`);
+    // 1. Lọc Volume > 10M USDT & Biến động 24h từ -6% đến -3%
+    const targetCoins = await getFilteredMarkets();
+    console.log(`📊 [Bước 1] Thỏa điều kiện Vol > 10M và Chg 24h (-6% đến -3%): ${targetCoins.length} coin`);
 
     const scanResults = {
       totalScanned: targetCoins.length,
@@ -162,7 +173,7 @@ async function main() {
       }
       validCandlesCount++;
 
-      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS (20 nến đóng: 1 đến 20) =================
+      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS =================
       const closesBB = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bbCurrent = calculateBollingerBands(closesBB, 20);
 
@@ -171,7 +182,6 @@ async function main() {
         continue;
       }
 
-      // Độ rộng dải Bollinger Bands (%)
       const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
 
       // ================= BƯỚC 3: TÍNH EMA20 VÀ diffema20 =================
@@ -192,7 +202,6 @@ async function main() {
         continue;
       }
 
-      // diffema20: % chênh lệch giữa EMA nến 1 và EMA nến 20
       const diffema20 = ((ema1 - ema20) / ema20) * 100;
 
       // Điều kiện lọc EMA: -6% < diffema20 < -3%
@@ -203,9 +212,8 @@ async function main() {
 
       // ================= BƯỚC 4: TÍNH bbt1h VÀ XÉT ĐIỀU KIỆN SHORT =================
       const currentCandle0 = candles1h[0];
-      const high0 = parseFloat(currentCandle0[2]); // High nến 0
+      const high0 = parseFloat(currentCandle0[2]);
 
-      // % chênh lệch High nến 0 so với Upper Band
       const bbt1h = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
 
       // Điều kiện Short: 0% < bbt1h < 3%
@@ -223,6 +231,7 @@ async function main() {
         scanResults.matched.push({
           symbol,
           type: 'SHORT',
+          change24h: coin.change24h.toFixed(2) + '%',
           Hbb: Hbb.toFixed(2) + '%',
           bbt1h: bbt1h.toFixed(2) + '%',
           diffema20: diffema20.toFixed(2) + '%',
@@ -233,6 +242,7 @@ async function main() {
         if (!isCooldown) {
           const message =
             `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
+            `• <b>Chg 24h:</b> ${coin.change24h.toFixed(2)}%\n` +
             `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
             `• <b>bbt1h:</b> +${bbt1h.toFixed(2)}%\n` +
             `• <b>diffema:</b> ${diffema20.toFixed(2)}%\n` +
@@ -261,8 +271,9 @@ async function main() {
     saveScanResults(scanResults);
 
     console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
-    console.log(`🔹 [Bước 1] Nến 1H tải thành công: ${validCandlesCount}/${targetCoins.length} coin`);
-    console.log(`🔹 [Bước 2] Tín hiệu Short khớp: ${scanResults.matched.length}`);
+    console.log(`🔹 [Bước 1] Tickers thỏa Vol & Chg 24h: ${targetCoins.length} coin`);
+    console.log(`🔹 [Bước 2] Nến 1H tải thành công: ${validCandlesCount}/${targetCoins.length} coin`);
+    console.log(`🔹 [Bước 3] Tín hiệu Short khớp: ${scanResults.matched.length}`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
