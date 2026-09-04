@@ -1,15 +1,24 @@
 {
-  "lastScanAt": "2026-09-04T15:06:06.294Z",
+  "lastScanAt": "2026-09-04T15:11:10.549Z",
   "totalScanned": 172,
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "UB-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "5.16%",
-      "bbt1h": "0.64%",
+      "bbt1h": "0.65%",
       "diffema20": "-0.17%",
       "link": "https://www.okx.com/trade-swap/ub-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "PARTI-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.14%",
+      "bbt1h": "0.49%",
+      "diffema20": "-0.31%",
+      "link": "https://www.okx.com/trade-swap/parti-usdt-swap",
       "teleSent": false
     },
     {
