@@ -72,7 +72,6 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// Tính mảng EMA theo thứ tự thời gian cũ -> mới
 function calculateEMAArray(prices, period = 20) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
@@ -99,19 +98,20 @@ async function getVolumeFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
-    if (!res.data || res.data.code !== '0') return [];
+    if (!res.data || res.data.code !== '0') return { allSwapsCount: 0, filteredCoins: [] };
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
-
-    return tickers
+    const filteredCoins = tickers
       .map((item) => ({
         instId: item.instId,
         volCcy24h: parseFloat(item.volCcy24h || 0)
       }))
       .filter((c) => c.volCcy24h > MIN_VOL_CCY24H);
+
+    return { allSwapsCount: tickers.length, filteredCoins };
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return [];
+    return { allSwapsCount: 0, filteredCoins: [] };
   }
 }
 
@@ -140,29 +140,33 @@ async function main() {
     let hasNewAlert = false;
 
     // 1. Lọc Volume > 10M USDT
-    const targetCoins = await getVolumeFilteredMarkets();
-    console.log(`📊 [Bước 1] Thỏa điều kiện Vol > 10M USDT: ${targetCoins.length} coin`);
+    const { allSwapsCount, filteredCoins: targetCoins } = await getVolumeFilteredMarkets();
+    console.log(`📊 [Lọc 1 - Volume] Tổng USDT Swap: ${allSwapsCount} | Đạt Vol > 10M USDT: ${targetCoins.length} coin`);
 
     const scanResults = {
       totalScanned: targetCoins.length,
       matched: []
     };
 
-    let validCandlesCount = 0;
-    let shortCount = 0;
+    // Các biến đếm từng bước lọc
+    let countValidCandles = 0;
+    let countValidBB = 0;
+    let countValidEMA = 0;
+    let countMatchedDiffEma = 0;
+    let countMatchedShort = 0;
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy dữ liệu nến 1H
+      // 2. Lấy dữ liệu nến 1H
       const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h || candles1h.length < 60) {
         await sleep(80);
         continue;
       }
-      validCandlesCount++;
+      countValidCandles++;
 
-      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS (20 nến đóng: 1 đến 20) =================
+      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS (20 nến: 1 đến 20) =================
       const closesBB = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bbCurrent = calculateBollingerBands(closesBB, 20);
 
@@ -170,8 +174,8 @@ async function main() {
         await sleep(80);
         continue;
       }
+      countValidBB++;
 
-      // Độ rộng dải Bollinger Bands (%)
       const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
 
       // ================= BƯỚC 3: TÍNH EMA20 VÀ diffema20 =================
@@ -191,6 +195,7 @@ async function main() {
         await sleep(80);
         continue;
       }
+      countValidEMA++;
 
       // diffema20: % chênh lệch giữa EMA nến 1 và EMA nến 20
       const diffema20 = ((ema1 - ema20) / ema20) * 100;
@@ -200,19 +205,18 @@ async function main() {
         await sleep(80);
         continue;
       }
+      countMatchedDiffEma++;
 
       // ================= BƯỚC 4: TÍNH bbt1h VÀ XÉT ĐIỀU KIỆN SHORT =================
       const currentCandle0 = candles1h[0];
       const high0 = parseFloat(currentCandle0[2]); // High nến 0
-
-      // % chênh lệch High nến 0 so với Upper Band
       const bbt1h = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
 
       // Điều kiện Short: 0% < bbt1h < 3%
       const isShort = bbt1h > 0 && bbt1h < 3;
 
       if (isShort) {
-        shortCount++;
+        countMatchedShort++;
         const coinName = symbol.replace('-USDT-SWAP', '');
         const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
@@ -260,9 +264,13 @@ async function main() {
 
     saveScanResults(scanResults);
 
-    console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
-    console.log(`🔹 [Bước 1] Nến 1H tải thành công: ${validCandlesCount}/${targetCoins.length} coin`);
-    console.log(`🔹 [Bước 2] Tín hiệu Short khớp: ${scanResults.matched.length}`);
+    console.log('\n================== THỐNG KÊ CHI TIẾT TỪNG BỘ LỌC ==================');
+    console.log(`1️⃣  Thị trường: Tổng Swap = ${allSwapsCount} | Qua lọc Vol > 10M = ${targetCoins.length}`);
+    console.log(`2️⃣  Dữ liệu nến 1H: Đủ nến tải về = ${countValidCandles}/${targetCoins.length}`);
+    console.log(`3️⃣  Bollinger Bands: Tính toán thành công = ${countValidBB}`);
+    console.log(`4️⃣  EMA20: Tính toán thành công = ${countValidEMA}`);
+    console.log(`5️⃣  Lọc Trend: -6% < diffema20 < -2% = ${countMatchedDiffEma} coin`);
+    console.log(`6️⃣  Lọc Entry: 0% < bbt1h < 3% (Khớp Short) = ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
