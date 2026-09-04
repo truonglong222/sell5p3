@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-04T13:16:20.718Z",
+  "lastScanAt": "2026-09-04T13:21:16.368Z",
   "totalScanned": 174,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "H-USDT-SWAP",
@@ -11,6 +11,15 @@
       "diffema20": "-0.12%",
       "link": "https://www.okx.com/trade-swap/h-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "PARTI-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.58%",
+      "bbt1h": "0.43%",
+      "diffema20": "-0.69%",
+      "link": "https://www.okx.com/trade-swap/parti-usdt-swap",
+      "teleSent": true
     }
   ]
 }
