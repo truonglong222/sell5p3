@@ -195,8 +195,8 @@ async function main() {
       // diffema20: % chênh lệch giữa EMA nến 1 và EMA nến 20
       const diffema20 = ((ema1 - ema20) / ema20) * 100;
 
-      // Điều kiện lọc EMA: -6% < diffema20 < -2%
-      if (diffema20 <= -6 || diffema20 >= -2) {
+      // Điều kiện lọc EMA: -6% < diffema20 < -3%
+      if (diffema20 <= -6 || diffema20 >= -3) {
         await sleep(80);
         continue;
       }
