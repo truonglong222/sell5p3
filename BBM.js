@@ -12,9 +12,11 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 8 TIẾNG
+// Cấu hình Cooldown & Tối ưu luồng
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
-const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
+const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10M USDT
+const CONCURRENCY_LIMIT = 8;        // Quét song song 8 coin cùng lúc (an toàn rate limit OKX)
+const BATCH_DELAY = 120;            // Nghỉ 120ms giữa mỗi đợt quét
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -72,16 +74,13 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// Tính mảng EMA theo thứ tự thời gian cũ -> mới
 function calculateEMAArray(prices, period = 20) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
   const emaArray = [];
 
   let initialSma = 0;
-  for (let i = 0; i < period; i++) {
-    initialSma += prices[i];
-  }
+  for (let i = 0; i < period; i++) initialSma += prices[i];
   let prevEma = initialSma / period;
   emaArray.push(prevEma);
 
@@ -93,17 +92,16 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOLUME > 10M) -------------------
+// ------------------- API CALLS -------------------
 
 async function getVolumeFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
-    const res = await axios.get(url, { timeout: 10000 });
+    const res = await axios.get(url, { timeout: 8000 });
     if (!res.data || res.data.code !== '0') return [];
 
-    const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
-
-    return tickers
+    return res.data.data
+      .filter((item) => item.instId.endsWith('-USDT-SWAP'))
       .map((item) => ({
         instId: item.instId,
         volCcy24h: parseFloat(item.volCcy24h || 0)
@@ -115,163 +113,147 @@ async function getVolumeFilteredMarkets() {
   }
 }
 
-// ------------------- LẤY DỮ LIỆU NẾN -------------------
-
 async function getCandles(symbol, bar = '1H', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
-    const res = await axios.get(url, { timeout: 6000 });
+    const res = await axios.get(url, { timeout: 4000 }); // Rút timeout xuống 4s để tránh bị treo
     if (!res.data || res.data.code !== '0' || res.data.data.length < 50) return null;
     return res.data.data;
-  } catch (error) {
-    console.error(`Lỗi lấy dữ liệu nến ${bar} (${symbol}):`, error.message);
+  } catch {
     return null;
   }
+}
+
+// ------------------- PHÂN TÍCH TỪNG COIN -------------------
+
+async function analyzeCoin(coin, sentLog, currentTime) {
+  const symbol = coin.instId;
+  const candles1h = await getCandles(symbol, '1H', 100);
+  if (!candles1h || candles1h.length < 60) return null;
+
+  // 1. Bollinger Bands
+  const closesBB = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+  const bbCurrent = calculateBollingerBands(closesBB, 20);
+  if (!bbCurrent || !bbCurrent.upper || bbCurrent.lower <= 0) return null;
+
+  const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
+
+  // 2. EMA20 & diffema20
+  const closedCandles = candles1h.slice(1).reverse();
+  const closedPrices = closedCandles.map((c) => parseFloat(c[4]));
+  const emaSeries = calculateEMAArray(closedPrices, 20);
+  if (emaSeries.length < 20) return null;
+
+  const ema1 = emaSeries[emaSeries.length - 1];
+  const ema20 = emaSeries[emaSeries.length - 20];
+  if (!ema20 || ema20 <= 0) return null;
+
+  const diffema20 = ((ema1 - ema20) / ema20) * 100;
+
+  // Điều kiện lọc EMA: -6% < diffema20 < -3%
+  if (diffema20 <= -6 || diffema20 >= -3) return null;
+
+  // 3. Điều kiện bbt1h: 0% < bbt1h < 3%
+  const high0 = parseFloat(candles1h[0][2]);
+  const bbt1h = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
+
+  if (bbt1h <= 0 || bbt1h >= 3) return null;
+
+  const coinName = symbol.replace('-USDT-SWAP', '');
+  const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+  const lastSentTime = sentLog[symbol]?.shortAlert;
+  const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
+
+  const matchData = {
+    symbol,
+    type: 'SHORT',
+    Hbb: Hbb.toFixed(2) + '%',
+    bbt1h: bbt1h.toFixed(2) + '%',
+    diffema20: diffema20.toFixed(2) + '%',
+    link,
+    teleSent: !isCooldown
+  };
+
+  // Gửi Telegram nếu hết cooldown
+  if (!isCooldown) {
+    const message =
+      `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
+      `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
+      `• <b>bbt1h:</b> +${bbt1h.toFixed(2)}%\n` +
+      `• <b>diffema:</b> ${diffema20.toFixed(2)}%\n` +
+      `• <a href="${link}">Link OKX</a>`;
+
+    try {
+      await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      });
+      matchData.justSent = true;
+    } catch (err) {
+      console.error(`Lỗi gửi Telegram cho ${symbol}:`, err.message);
+    }
+  }
+
+  return matchData;
 }
 
 // ------------------- TIẾN TRÌNH CHÍNH -------------------
 
 async function main() {
-  try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX ---');
+  const startTime = Date.now();
+  console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX ---');
 
+  try {
     const sentLog = loadSentLog();
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // 1. Lọc Volume > 10M USDT
+    // Lọc volume
     const targetCoins = await getVolumeFilteredMarkets();
-    console.log(`📊 [Bước 1] Thỏa điều kiện Vol > 10M USDT: ${targetCoins.length} coin`);
+    console.log(`📊 Khối lượng > 10M USDT: ${targetCoins.length} coin. Đang quét song song...`);
 
-    const scanResults = {
-      totalScanned: targetCoins.length,
-      matched: []
-    };
+    const matchedList = [];
 
-    let validCandlesCount = 0;
-    let shortCount = 0;
+    // Chạy song song theo Batch (mỗi đợt 8 coin)
+    for (let i = 0; i < targetCoins.length; i += CONCURRENCY_LIMIT) {
+      const batch = targetCoins.slice(i, i + CONCURRENCY_LIMIT);
+      const results = await Promise.all(batch.map((coin) => analyzeCoin(coin, sentLog, currentTime)));
 
-    for (const coin of targetCoins) {
-      const symbol = coin.instId;
-
-      // Lấy dữ liệu nến 1H
-      const candles1h = await getCandles(symbol, '1H', 100);
-      if (!candles1h || candles1h.length < 60) {
-        await sleep(80);
-        continue;
-      }
-      validCandlesCount++;
-
-      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS (20 nến đóng: 1 đến 20) =================
-      const closesBB = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bbCurrent = calculateBollingerBands(closesBB, 20);
-
-      if (!bbCurrent || !bbCurrent.upper || bbCurrent.lower <= 0) {
-        await sleep(80);
-        continue;
-      }
-
-      // Độ rộng dải Bollinger Bands (%)
-      const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
-
-      // ================= BƯỚC 3: TÍNH EMA20 VÀ diffema20 =================
-      const closedCandles = candles1h.slice(1).reverse();
-      const closedPrices = closedCandles.map((c) => parseFloat(c[4]));
-
-      const emaSeries = calculateEMAArray(closedPrices, 20);
-      if (emaSeries.length < 20) {
-        await sleep(80);
-        continue;
-      }
-
-      const ema1 = emaSeries[emaSeries.length - 1];
-      const ema20 = emaSeries[emaSeries.length - 20];
-
-      if (!ema20 || ema20 <= 0) {
-        await sleep(80);
-        continue;
-      }
-
-      // diffema20: % chênh lệch giữa EMA nến 1 và EMA nến 20
-      const diffema20 = ((ema1 - ema20) / ema20) * 100;
-
-      // Điều kiện lọc EMA: -6% < diffema20 < -2%
-      if (diffema20 <= -6 || diffema20 >= -2) {
-        await sleep(80);
-        continue;
-      }
-
-      // ================= BƯỚC 4: TÍNH bbt1h VÀ XÉT ĐIỀU KIỆN SHORT =================
-      const currentCandle0 = candles1h[0];
-      const high0 = parseFloat(currentCandle0[2]); // High nến 0
-
-      // % chênh lệch High nến 0 so với Upper Band
-      const bbt1h = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
-
-      // Điều kiện Short: 0% < bbt1h < 3%
-      const isShort = bbt1h > 0 && bbt1h < 3;
-
-      if (isShort) {
-        shortCount++;
-        const coinName = symbol.replace('-USDT-SWAP', '');
-        const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-
-        if (!sentLog[symbol]) sentLog[symbol] = {};
-        const lastSentTime = sentLog[symbol].shortAlert;
-        const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
-
-        scanResults.matched.push({
-          symbol,
-          type: 'SHORT',
-          Hbb: Hbb.toFixed(2) + '%',
-          bbt1h: bbt1h.toFixed(2) + '%',
-          diffema20: diffema20.toFixed(2) + '%',
-          link,
-          teleSent: !isCooldown
-        });
-
-        if (!isCooldown) {
-          const message =
-            `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
-            `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>bbt1h:</b> +${bbt1h.toFixed(2)}%\n` +
-            `• <b>diffema:</b> ${diffema20.toFixed(2)}%\n` +
-            `• <a href="${link}">Link OKX</a>`;
-
-          console.log(`🚀 [SHORT] Gửi Telegram cho ${symbol}...`);
-          await axios
-            .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-              chat_id: TELEGRAM_CHAT_ID,
-              text: message,
-              parse_mode: 'HTML',
-              disable_web_page_preview: true
-            })
-            .catch((err) => console.error('Lỗi gửi Telegram:', err.message));
-
-          sentLog[symbol].shortAlert = currentTime;
-          hasNewAlert = true;
+      for (const res of results) {
+        if (res) {
+          matchedList.push(res);
+          if (res.justSent) {
+            if (!sentLog[res.symbol]) sentLog[res.symbol] = {};
+            sentLog[res.symbol].shortAlert = currentTime;
+            hasNewAlert = true;
+          }
         }
       }
 
-      await sleep(80);
+      await sleep(BATCH_DELAY);
     }
 
     if (hasNewAlert) saveSentLog(sentLog);
 
-    saveScanResults(scanResults);
+    saveScanResults({
+      totalScanned: targetCoins.length,
+      matched: matchedList
+    });
 
-    console.log('\n================== TIẾN TRÌNH LỌC CHI TIẾT ==================');
-    console.log(`🔹 [Bước 1] Nến 1H tải thành công: ${validCandlesCount}/${targetCoins.length} coin`);
-    console.log(`🔹 [Bước 2] Tín hiệu Short khớp: ${scanResults.matched.length}`);
-
+    const totalSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log('\n================== KẾT QUẢ QUÉT ==================');
-    if (scanResults.matched.length > 0) {
-      console.table(scanResults.matched);
+    console.log(`⏱ Thời gian hoàn thành: ${totalSeconds}s`);
+    console.log(`🔹 Tín hiệu Short khớp: ${matchedList.length}`);
+
+    if (matchedList.length > 0) {
+      console.table(matchedList);
     } else {
       console.log('Không có coin nào thỏa mãn điều kiện Short.');
     }
     console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
-    console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
+    console.log('--- HOÀN THÀNH ---\n');
   } catch (err) {
     console.error('Lỗi hệ thống trong main():', err.message);
   }
