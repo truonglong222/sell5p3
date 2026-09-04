@@ -15,7 +15,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 // Cấu hình Cooldown: 8 TIẾNG
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
 const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
-const MIN_HBB = 3; // Điều kiện: Hbb > 3%
+const MIN_HBB = 4; // Điều kiện mới: Hbb > 4%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -181,7 +181,7 @@ async function main() {
       // Độ rộng dải Bollinger Bands (%)
       const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
 
-      // Điều kiện lọc Hbb: Hbb > 3%
+      // Điều kiện lọc Hbb: Hbb > 4%
       if (Hbb <= MIN_HBB) {
         await sleep(80);
         continue;
@@ -210,8 +210,8 @@ async function main() {
       // diffema20: % chênh lệch giữa EMA nến 1 và EMA nến 20
       const diffema20 = ((ema1 - ema20) / ema20) * 100;
 
-      // Điều kiện lọc EMA: -6% < diffema20 < -2%
-      if (diffema20 <= -6 || diffema20 >= -2) {
+      // Điều kiện lọc EMA: -4% < diffema20 < 0%
+      if (diffema20 <= -4 || diffema20 >= 0) {
         await sleep(80);
         continue;
       }
@@ -278,9 +278,9 @@ async function main() {
     console.log(`1️⃣  Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
     console.log(`2️⃣  Dữ liệu nến 1H: Đủ nến tải về = ${countValidCandles}/${targetCoins.length}`);
     console.log(`3️⃣  Bollinger Bands: Tính toán thành công = ${countValidBB}`);
-    console.log(`4️⃣  Lọc Biên độ BB: Hbb > 3% = ${countMatchedHbb} coin`);
+    console.log(`4️⃣  Lọc Biên độ BB: Hbb > 4% = ${countMatchedHbb} coin`);
     console.log(`5️⃣  EMA20: Tính toán thành công = ${countValidEMA}`);
-    console.log(`6️⃣  Lọc Trend: -6% < diffema20 < -2% = ${countMatchedDiffEma} coin`);
+    console.log(`6️⃣  Lọc Trend: -4% < diffema20 < 0% = ${countMatchedDiffEma} coin`);
     console.log(`7️⃣  Lọc Entry: 0% < bbt1h < 3% (Khớp Short) = ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
