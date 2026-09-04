@@ -15,6 +15,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 // Cấu hình Cooldown: 8 TIẾNG
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
 const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
+const MIN_HBB = 3; // Điều kiện: Hbb > 3%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -151,6 +152,7 @@ async function main() {
     // Các biến đếm từng bước lọc
     let countValidCandles = 0;
     let countValidBB = 0;
+    let countMatchedHbb = 0;
     let countValidEMA = 0;
     let countMatchedDiffEma = 0;
     let countMatchedShort = 0;
@@ -176,7 +178,15 @@ async function main() {
       }
       countValidBB++;
 
+      // Độ rộng dải Bollinger Bands (%)
       const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
+
+      // Điều kiện lọc Hbb: Hbb > 3%
+      if (Hbb <= MIN_HBB) {
+        await sleep(80);
+        continue;
+      }
+      countMatchedHbb++;
 
       // ================= BƯỚC 3: TÍNH EMA20 VÀ diffema20 =================
       const closedCandles = candles1h.slice(1).reverse();
@@ -265,12 +275,13 @@ async function main() {
     saveScanResults(scanResults);
 
     console.log('\n================== THỐNG KÊ CHI TIẾT TỪNG BỘ LỌC ==================');
-    console.log(`1️⃣  Thị trường: Tổng Swap = ${allSwapsCount} | Qua lọc Vol > 10M = ${targetCoins.length}`);
+    console.log(`1️⃣  Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
     console.log(`2️⃣  Dữ liệu nến 1H: Đủ nến tải về = ${countValidCandles}/${targetCoins.length}`);
     console.log(`3️⃣  Bollinger Bands: Tính toán thành công = ${countValidBB}`);
-    console.log(`4️⃣  EMA20: Tính toán thành công = ${countValidEMA}`);
-    console.log(`5️⃣  Lọc Trend: -6% < diffema20 < -2% = ${countMatchedDiffEma} coin`);
-    console.log(`6️⃣  Lọc Entry: 0% < bbt1h < 3% (Khớp Short) = ${countMatchedShort} coin`);
+    console.log(`4️⃣  Lọc Biên độ BB: Hbb > 3% = ${countMatchedHbb} coin`);
+    console.log(`5️⃣  EMA20: Tính toán thành công = ${countValidEMA}`);
+    console.log(`6️⃣  Lọc Trend: -6% < diffema20 < -2% = ${countMatchedDiffEma} coin`);
+    console.log(`7️⃣  Lọc Entry: 0% < bbt1h < 3% (Khớp Short) = ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
