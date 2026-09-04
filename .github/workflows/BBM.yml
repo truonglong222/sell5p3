@@ -17,29 +17,38 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      # Bước 2: Cài đặt môi trường Node.js (đã bỏ cache npm)
+      # Bước 2: Cài đặt môi trường Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Bước 3: Cài đặt dependencies (dùng npm install trực tiếp, không cần lock file)
-      - name: Install dependencies
-        run: npm install
+      # Bước 3: Cache thư mục node_modules theo nội dung file package.json
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
 
-      # Bước 4: Chạy file BBM.js với các biến môi trường
+      # Bước 4: Tải dependencies (chỉ chạy khi chưa có cache, tắt toàn bộ tiến trình kiểm tra không cần thiết)
+      - name: Install dependencies
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: npm install --omit=dev --no-audit --no-fund --prefer-offline
+
+      # Bước 5: Chạy script BBM.js
       - name: Run BBM.js script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: node BBM.js
 
-      # Bước 5: Lưu lại lịch sử dữ liệu (lưu cả 24h.json và sent_ema.json)
+      # Bước 6: Lưu và đẩy file trạng thái cập nhật lên GitHub
       - name: Commit and push updated state files
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add 24h.json sent_ema.json
-          git status
-          git diff-index --quiet HEAD || git commit -m "chore: update scanner state files [skip ci]"
-          git push
+          git diff-index --quiet HEAD || (git commit -m "chore: update scanner state files [skip ci]" && git push)
