@@ -222,8 +222,8 @@ async function main() {
       const high0 = parseFloat(currentCandle0[2]); // High nến 0
       const bbt1h = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
 
-      // Điều kiện Short: 0% < bbt1h < 3%
-      const isShort = bbt1h > 0 && bbt1h < 3;
+      // Điều kiện Short: 1% < bbt1h < 3%
+      const isShort = bbt1h > 1 && bbt1h < 3;
 
       if (isShort) {
         countMatchedShort++;
@@ -281,7 +281,7 @@ async function main() {
     console.log(`4️⃣  Lọc Biên độ BB: Hbb > 4% = ${countMatchedHbb} coin`);
     console.log(`5️⃣  EMA20: Tính toán thành công = ${countValidEMA}`);
     console.log(`6️⃣  Lọc Trend: -4% < diffema20 < 0% = ${countMatchedDiffEma} coin`);
-    console.log(`7️⃣  Lọc Entry: 0% < bbt1h < 3% (Khớp Short) = ${countMatchedShort} coin`);
+    console.log(`7️⃣  Lọc Entry: 1% < bbt1h < 3% (Khớp Short) = ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
