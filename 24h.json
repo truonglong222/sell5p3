@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-05T06:36:03.062Z",
+  "lastScanAt": "2026-09-05T06:41:03.956Z",
   "totalScanned": 168,
-  "matchedCount": 8,
+  "matchedCount": 9,
   "matchedList": [
     {
       "symbol": "APT-USDT-SWAP",
@@ -11,6 +11,15 @@
       "diffema20": "-1.77%",
       "link": "https://www.okx.com/trade-swap/apt-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "SUI-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.74%",
+      "bbt1h": "1.16%",
+      "diffema20": "-1.55%",
+      "link": "https://www.okx.com/trade-swap/sui-usdt-swap",
+      "teleSent": true
     },
     {
       "symbol": "YGG-USDT-SWAP",
@@ -43,7 +52,7 @@
       "symbol": "RSR-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.38%",
-      "bbt1h": "1.02%",
+      "bbt1h": "1.24%",
       "diffema20": "-1.12%",
       "link": "https://www.okx.com/trade-swap/rsr-usdt-swap",
       "teleSent": false
