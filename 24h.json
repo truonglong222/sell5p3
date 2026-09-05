@@ -1,14 +1,24 @@
 {
-  "lastScanAt": "2026-09-05T09:01:30.329Z",
-  "totalScanned": 164,
-  "matchedCount": 1,
+  "lastScanAt": "2026-09-05T09:05:57.253Z",
+  "totalScanned": 163,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "SLX-USDT-SWAP",
+      "type": "LONG",
+      "diffhbb": "2.20%",
+      "diffema15": "1.77%",
+      "bbml": "-0.39%",
+      "bbms": "-0.73%",
+      "link": "https://www.okx.com/trade-swap/slx-usdt-swap",
+      "teleSent": false
+    },
     {
       "symbol": "ENJ-USDT-SWAP",
       "type": "LONG",
       "diffhbb": "8.28%",
       "diffema15": "4.42%",
-      "bbml": "0.26%",
+      "bbml": "0.33%",
       "bbms": "-0.25%",
       "link": "https://www.okx.com/trade-swap/enj-usdt-swap",
       "teleSent": false
