@@ -1,16 +1,26 @@
 {
-  "lastScanAt": "2026-09-05T13:21:07.190Z",
+  "lastScanAt": "2026-09-05T13:25:51.666Z",
   "totalScanned": 149,
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "ZK-USDT-SWAP",
       "type": "LONG",
       "diffhbb": "10.51%",
       "diffema15": "5.13%",
-      "bbml": "-0.45%",
-      "bbms": "-0.83%",
+      "bbml": "0.07%",
+      "bbms": "-0.87%",
       "link": "https://www.okx.com/trade-swap/zk-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "UB-USDT-SWAP",
+      "type": "LONG",
+      "diffhbb": "8.68%",
+      "diffema15": "6.26%",
+      "bbml": "-0.11%",
+      "bbms": "-2.06%",
+      "link": "https://www.okx.com/trade-swap/ub-usdt-swap",
       "teleSent": false
     },
     {
@@ -18,7 +28,7 @@
       "type": "LONG",
       "diffhbb": "4.03%",
       "diffema15": "2.55%",
-      "bbml": "-0.09%",
+      "bbml": "0.02%",
       "bbms": "-0.40%",
       "link": "https://www.okx.com/trade-swap/esp-usdt-swap",
       "teleSent": false
