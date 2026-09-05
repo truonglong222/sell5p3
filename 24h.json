@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-05T06:05:55.059Z",
+  "lastScanAt": "2026-09-05T06:11:14.055Z",
   "totalScanned": 165,
-  "matchedCount": 2,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "APT-USDT-SWAP",
@@ -16,9 +16,27 @@
       "symbol": "BRETT-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.05%",
-      "bbt1h": "1.06%",
+      "bbt1h": "1.17%",
       "diffema20": "-1.22%",
       "link": "https://www.okx.com/trade-swap/brett-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "GRT-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.59%",
+      "bbt1h": "1.16%",
+      "diffema20": "-0.65%",
+      "link": "https://www.okx.com/trade-swap/grt-usdt-swap",
+      "teleSent": true
+    },
+    {
+      "symbol": "BABY-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.87%",
+      "bbt1h": "1.18%",
+      "diffema20": "-0.13%",
+      "link": "https://www.okx.com/trade-swap/baby-usdt-swap",
       "teleSent": true
     }
   ]
