@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-05T07:11:03.882Z",
+  "lastScanAt": "2026-09-05T07:16:10.208Z",
   "totalScanned": 167,
-  "matchedCount": 5,
+  "matchedCount": 6,
   "matchedList": [
     {
       "symbol": "APT-USDT-SWAP",
@@ -19,7 +19,7 @@
       "bbt1h": "1.28%",
       "diffema20": "-3.51%",
       "link": "https://www.okx.com/trade-swap/re-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "RSR-USDT-SWAP",
@@ -34,7 +34,7 @@
       "symbol": "GRT-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "5.36%",
-      "bbt1h": "1.01%",
+      "bbt1h": "1.06%",
       "diffema20": "-0.45%",
       "link": "https://www.okx.com/trade-swap/grt-usdt-swap",
       "teleSent": false
@@ -46,6 +46,15 @@
       "bbt1h": "1.16%",
       "diffema20": "-1.37%",
       "link": "https://www.okx.com/trade-swap/shib-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "CHIP-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "12.48%",
+      "bbt1h": "2.03%",
+      "diffema20": "-0.49%",
+      "link": "https://www.okx.com/trade-swap/chip-usdt-swap",
       "teleSent": false
     }
   ]
