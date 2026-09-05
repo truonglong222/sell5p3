@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-05T14:10:59.098Z",
+  "lastScanAt": "2026-09-05T14:16:08.541Z",
   "totalScanned": 147,
-  "matchedCount": 3,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "ZK-USDT-SWAP",
@@ -9,9 +9,19 @@
       "diffhbb": "10.09%",
       "diffema15": "5.05%",
       "bbml": "0.64%",
-      "bbms": "0.11%",
+      "bbms": "0.01%",
       "link": "https://www.okx.com/trade-swap/zk-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "TURBO-USDT-SWAP",
+      "type": "LONG",
+      "diffhbb": "5.18%",
+      "diffema15": "3.64%",
+      "bbml": "-0.43%",
+      "bbms": "-0.75%",
+      "link": "https://www.okx.com/trade-swap/turbo-usdt-swap",
+      "teleSent": true
     },
     {
       "symbol": "ESP-USDT-SWAP",
