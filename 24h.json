@@ -1,13 +1,22 @@
 {
-  "lastScanAt": "2026-09-05T02:35:58.067Z",
+  "lastScanAt": "2026-09-05T02:42:09.709Z",
   "totalScanned": 167,
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "GALA-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.02%",
+      "bbt1h": "1.26%",
+      "diffema20": "-0.73%",
+      "link": "https://www.okx.com/trade-swap/gala-usdt-swap",
+      "teleSent": true
+    },
     {
       "symbol": "DYDX-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.98%",
-      "bbt1h": "1.55%",
+      "bbt1h": "1.64%",
       "diffema20": "-0.35%",
       "link": "https://www.okx.com/trade-swap/dydx-usdt-swap",
       "teleSent": false
