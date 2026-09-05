@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-05T07:01:43.179Z",
+  "lastScanAt": "2026-09-05T07:05:58.229Z",
   "totalScanned": 167,
-  "matchedCount": 3,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "APT-USDT-SWAP",
@@ -22,13 +22,22 @@
       "teleSent": false
     },
     {
+      "symbol": "GRT-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "5.36%",
+      "bbt1h": "1.01%",
+      "diffema20": "-0.45%",
+      "link": "https://www.okx.com/trade-swap/grt-usdt-swap",
+      "teleSent": false
+    },
+    {
       "symbol": "SHIB-USDT-SWAP",
       "type": "SHORT",
       "Hbb": "4.30%",
-      "bbt1h": "1.07%",
+      "bbt1h": "1.16%",
       "diffema20": "-1.37%",
       "link": "https://www.okx.com/trade-swap/shib-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
