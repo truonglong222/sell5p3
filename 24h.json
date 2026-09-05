@@ -1,8 +1,18 @@
 {
-  "lastScanAt": "2026-09-05T07:25:57.932Z",
+  "lastScanAt": "2026-09-05T07:31:31.218Z",
   "totalScanned": 167,
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "ACU-USDT-SWAP",
+      "type": "LONG",
+      "diffhbb": "6.71%",
+      "diffema15": "7.69%",
+      "bbml": "-0.45%",
+      "bbms": "-4.33%",
+      "link": "https://www.okx.com/trade-swap/acu-usdt-swap",
+      "teleSent": true
+    },
     {
       "symbol": "RLS-USDT-SWAP",
       "type": "SHORT",
@@ -11,7 +21,7 @@
       "bbml": "0.56%",
       "bbms": "0.04%",
       "link": "https://www.okx.com/trade-swap/rls-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "ENJ-USDT-SWAP",
@@ -21,7 +31,7 @@
       "bbml": "0.88%",
       "bbms": "0.34%",
       "link": "https://www.okx.com/trade-swap/enj-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
