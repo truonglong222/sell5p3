@@ -1,16 +1,16 @@
 {
-  "lastScanAt": "2026-09-05T04:51:47.832Z",
+  "lastScanAt": "2026-09-05T04:56:11.422Z",
   "totalScanned": 167,
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
-      "symbol": "GALA-USDT-SWAP",
+      "symbol": "DOS-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "5.78%",
-      "bbt1h": "2.62%",
-      "diffema20": "-0.11%",
-      "link": "https://www.okx.com/trade-swap/gala-usdt-swap",
-      "teleSent": false
+      "Hbb": "4.01%",
+      "bbt1h": "1.16%",
+      "diffema20": "-0.28%",
+      "link": "https://www.okx.com/trade-swap/dos-usdt-swap",
+      "teleSent": true
     },
     {
       "symbol": "ONDO-USDT-SWAP",
@@ -19,6 +19,15 @@
       "bbt1h": "1.40%",
       "diffema20": "-0.42%",
       "link": "https://www.okx.com/trade-swap/ondo-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "STRK-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "12.80%",
+      "bbt1h": "2.22%",
+      "diffema20": "-1.93%",
+      "link": "https://www.okx.com/trade-swap/strk-usdt-swap",
       "teleSent": false
     }
   ]
