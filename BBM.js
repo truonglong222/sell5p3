@@ -15,7 +15,8 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 // Cấu hình Cooldown: 8 TIẾNG
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
 const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
-const MIN_DIFF_HBB = 2; // Điều kiện diffhbb > 2%
+const MIN_DIFF_HBB = 2; // Điều kiện diffhbb tối thiểu 2%
+const MAX_DIFF_HBB = 10; // Điều kiện diffhbb tối đa 10%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -105,8 +106,7 @@ async function getVolumeFilteredMarkets() {
     if (!res.data || res.data.code !== '0') return { allSwapsCount: 0, filteredCoins: [] };
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
-    
-    // Chỉ giữ raw data cần thiết, CHƯA tính toán phần trăm biến động
+
     const filteredCoins = tickers
       .filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H)
       .map((item) => ({
@@ -163,32 +163,34 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Cần tối thiểu 40 nến đóng (nến 20 cần 20 nến trước đó: 20 + 19 = nến 39)
+      // Cần tối thiểu 70 nến đóng (nến 50 cần 20 nến trước đó: 50 + 19 = nến 69)
       const candles1h = await getCandles(symbol, '1H', 100);
-      if (!candles1h || candles1h.length < 45) {
+      if (!candles1h || candles1h.length < 75) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
-      // ================= BƯỚC 2: TÍNH TOÁN DIFFHBB (NẾN 1 VÀ NẾN 20) =================
+      // ================= BƯỚC 2: TÍNH TOÁN DIFFHBB (NẾN 1 VÀ NẾN 50) =================
+      // BB nến 1: dùng 20 nến đóng gần nhất (từ index 1 đến 20)
       const closesBB1 = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb1 = calculateBollingerBands(closesBB1, 20);
 
-      const closesBB20 = candles1h.slice(20, 40).map((c) => parseFloat(c[4])).reverse();
-      const bb20 = calculateBollingerBands(closesBB20, 20);
+      // BB nến 50: dùng 20 nến đóng tính từ nến 50 (từ index 50 đến 69)
+      const closesBB50 = candles1h.slice(50, 70).map((c) => parseFloat(c[4])).reverse();
+      const bb50 = calculateBollingerBands(closesBB50, 20);
 
-      if (!bb1 || !bb20 || bb1.lower <= 0 || bb20.lower <= 0) {
+      if (!bb1 || !bb50 || bb1.lower <= 0 || bb50.lower <= 0) {
         await sleep(80);
         continue;
       }
 
       const hbb1 = ((bb1.upper - bb1.lower) / bb1.lower) * 100;
-      const hbb20 = ((bb20.upper - bb20.lower) / bb20.lower) * 100;
-      const diffhbb = hbb1 - hbb20;
+      const hbb50 = ((bb50.upper - bb50.lower) / bb50.lower) * 100;
+      const diffhbb = hbb1 - hbb50;
 
-      // Lọc điều kiện: diffhbb > 2%
-      if (diffhbb <= MIN_DIFF_HBB) {
+      // Lọc điều kiện: diffhbb nằm trong khoảng [2%, 10%]
+      if (diffhbb < MIN_DIFF_HBB || diffhbb > MAX_DIFF_HBB) {
         await sleep(80);
         continue;
       }
@@ -225,13 +227,13 @@ async function main() {
       // bbt: % chênh lệch giữa giá cao nhất nến 0 và dải trên BB nến 1
       const bbt = ((high0 - bb1.upper) / bb1.upper) * 100;
 
-      // LONG: bbd trong khoảng [-3%, -1%] và diffema15 > 1%
-      const isLong = diffema15 > 1 && bbd >= -3 && bbd <= -1;
+      // LONG: bbd trong khoảng [-3%, -1%] và diffema15 trong khoảng [-1%, 3%]
+      const isLong = diffema15 >= -1 && diffema15 <= 3 && bbd >= -3 && bbd <= -1;
 
-      // SHORT: bbt trong khoảng [1%, 3%] và diffema15 < -1%
-      const isShort = diffema15 < -1 && bbt >= 1 && bbt <= 3;
+      // SHORT: bbt trong khoảng [1%, 3%] và diffema15 trong khoảng [-3%, 1%]
+      const isShort = diffema15 >= -3 && diffema15 <= 1 && bbt >= 1 && bbt <= 3;
 
-      // Nếu không thoả Long hoặc Short thì bỏ qua, không tính toán gì thêm
+      // Nếu không thoả Long hoặc Short thì bỏ qua
       if (!isLong && !isShort) {
         await sleep(80);
         continue;
@@ -305,7 +307,7 @@ async function main() {
     console.log('\n================== THỐNG KÊ CHI TIẾT ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
     console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Lọc diffhbb > 2%: Đạt = ${countMatchedDiffHbb} coin`);
+    console.log(`3️⃣ Lọc diffhbb trong [2%, 10%]: Đạt = ${countMatchedDiffHbb} coin`);
     console.log(`4️⃣ Tín hiệu LONG khớp: ${countMatchedLong} coin`);
     console.log(`5️⃣ Tín hiệu SHORT khớp: ${countMatchedShort} coin`);
 
