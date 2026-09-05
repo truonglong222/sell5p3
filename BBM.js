@@ -172,11 +172,9 @@ async function main() {
       countValidCandles++;
 
       // ================= BƯỚC 2: TÍNH TOÁN DIFFHBB (NẾN 1 VÀ NẾN 50) =================
-      // BB nến 1: dùng 20 nến đóng gần nhất (từ index 1 đến 20)
       const closesBB1 = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb1 = calculateBollingerBands(closesBB1, 20);
 
-      // BB nến 50: dùng 20 nến đóng tính từ nến 50 (từ index 50 đến 69)
       const closesBB50 = candles1h.slice(50, 70).map((c) => parseFloat(c[4])).reverse();
       const bb50 = calculateBollingerBands(closesBB50, 20);
 
@@ -227,11 +225,11 @@ async function main() {
       // bbt: % chênh lệch giữa giá cao nhất nến 0 và dải trên BB nến 1
       const bbt = ((high0 - bb1.upper) / bb1.upper) * 100;
 
-      // LONG: bbd trong khoảng [-3%, -1%] và diffema15 trong khoảng [-1%, 3%]
-      const isLong = diffema15 >= -1 && diffema15 <= 3 && bbd >= -3 && bbd <= -1;
+      // LONG: bbd trong khoảng [-3%, -1%] và diffema15 trong khoảng [-1%, 5%]
+      const isLong = diffema15 >= -1 && diffema15 <= 5 && bbd >= -3 && bbd <= -1;
 
-      // SHORT: bbt trong khoảng [1%, 3%] và diffema15 trong khoảng [-3%, 1%]
-      const isShort = diffema15 >= -3 && diffema15 <= 1 && bbt >= 1 && bbt <= 3;
+      // SHORT: bbt trong khoảng [1%, 3%] và diffema15 trong khoảng [-5%, 1%]
+      const isShort = diffema15 >= -5 && diffema15 <= 1 && bbt >= 1 && bbt <= 3;
 
       // Nếu không thoả Long hoặc Short thì bỏ qua
       if (!isLong && !isShort) {
