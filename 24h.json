@@ -1,27 +1,27 @@
 {
-  "lastScanAt": "2026-09-05T13:41:05.892Z",
-  "totalScanned": 149,
-  "matchedCount": 3,
+  "lastScanAt": "2026-09-05T13:46:03.070Z",
+  "totalScanned": 150,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "ZK-USDT-SWAP",
       "type": "LONG",
       "diffhbb": "10.51%",
       "diffema15": "5.13%",
-      "bbml": "0.07%",
+      "bbml": "0.20%",
       "bbms": "-0.87%",
       "link": "https://www.okx.com/trade-swap/zk-usdt-swap",
       "teleSent": false
     },
     {
-      "symbol": "UB-USDT-SWAP",
+      "symbol": "RIVER-USDT-SWAP",
       "type": "LONG",
-      "diffhbb": "8.68%",
-      "diffema15": "6.26%",
-      "bbml": "0.70%",
-      "bbms": "-2.06%",
-      "link": "https://www.okx.com/trade-swap/ub-usdt-swap",
-      "teleSent": false
+      "diffhbb": "3.79%",
+      "diffema15": "3.92%",
+      "bbml": "-0.43%",
+      "bbms": "-2.02%",
+      "link": "https://www.okx.com/trade-swap/river-usdt-swap",
+      "teleSent": true
     },
     {
       "symbol": "ESP-USDT-SWAP",
@@ -29,9 +29,19 @@
       "diffhbb": "4.03%",
       "diffema15": "2.55%",
       "bbml": "0.02%",
-      "bbms": "-0.63%",
+      "bbms": "-0.68%",
       "link": "https://www.okx.com/trade-swap/esp-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "DYDX-USDT-SWAP",
+      "type": "LONG",
+      "diffhbb": "4.08%",
+      "diffema15": "2.73%",
+      "bbml": "-0.37%",
+      "bbms": "-1.48%",
+      "link": "https://www.okx.com/trade-swap/dydx-usdt-swap",
+      "teleSent": true
     }
   ]
 }
