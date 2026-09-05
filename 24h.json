@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-05T07:05:58.229Z",
+  "lastScanAt": "2026-09-05T07:11:03.882Z",
   "totalScanned": 167,
-  "matchedCount": 4,
+  "matchedCount": 5,
   "matchedList": [
     {
       "symbol": "APT-USDT-SWAP",
@@ -11,6 +11,15 @@
       "diffema20": "-1.35%",
       "link": "https://www.okx.com/trade-swap/apt-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "RE-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.27%",
+      "bbt1h": "1.28%",
+      "diffema20": "-3.51%",
+      "link": "https://www.okx.com/trade-swap/re-usdt-swap",
+      "teleSent": true
     },
     {
       "symbol": "RSR-USDT-SWAP",
