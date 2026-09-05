@@ -15,7 +15,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 // Cấu hình Cooldown: 8 TIẾNG
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
 const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
-const MIN_HBB = 4; // Điều kiện mới: Hbb > 4%
+const MIN_DIFF_HBB = 2; // Điều kiện diffhbb > 2%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -35,6 +35,9 @@ function saveSentLog(logData) {
     const cleanedLog = {};
     for (const [coin, timeData] of Object.entries(logData)) {
       const temp = {};
+      if (timeData.longAlert && now - timeData.longAlert < COOLDOWN_TIME) {
+        temp.longAlert = timeData.longAlert;
+      }
       if (timeData.shortAlert && now - timeData.shortAlert < COOLDOWN_TIME) {
         temp.shortAlert = timeData.shortAlert;
       }
@@ -149,122 +152,134 @@ async function main() {
       matched: []
     };
 
-    // Các biến đếm từng bước lọc
     let countValidCandles = 0;
-    let countValidBB = 0;
-    let countMatchedHbb = 0;
-    let countValidEMA = 0;
-    let countMatchedDiffEma = 0;
+    let countMatchedDiffHbb = 0;
+    let countMatchedLong = 0;
     let countMatchedShort = 0;
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // 2. Lấy dữ liệu nến 1H
+      // Cần tối thiểu 35 nến đã đóng (nến 15 cần 20 nến trước đó: 15 + 19 = nến 34)
       const candles1h = await getCandles(symbol, '1H', 100);
-      if (!candles1h || candles1h.length < 60) {
+      if (!candles1h || candles1h.length < 40) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
-      // ================= BƯỚC 2: TÍNH BOLLINGER BANDS (20 nến: 1 đến 20) =================
-      const closesBB = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bbCurrent = calculateBollingerBands(closesBB, 20);
+      // ================= BƯỚC 2: TÍNH TOÁN DIFFHBB (NẾN 1 VÀ NẾN 15) =================
+      // BB nến 1: dùng 20 nến đóng gần nhất (từ index 1 đến 20)
+      const closesBB1 = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const bb1 = calculateBollingerBands(closesBB1, 20);
 
-      if (!bbCurrent || !bbCurrent.upper || bbCurrent.lower <= 0) {
+      // BB nến 15: dùng 20 nến đóng tính từ nến 15 (từ index 15 đến 34)
+      const closesBB15 = candles1h.slice(15, 35).map((c) => parseFloat(c[4])).reverse();
+      const bb15 = calculateBollingerBands(closesBB15, 20);
+
+      if (!bb1 || !bb15 || bb1.lower <= 0 || bb15.lower <= 0) {
         await sleep(80);
         continue;
       }
-      countValidBB++;
 
-      // Độ rộng dải Bollinger Bands (%)
-      const Hbb = ((bbCurrent.upper - bbCurrent.lower) / bbCurrent.lower) * 100;
+      const hbb1 = ((bb1.upper - bb1.lower) / bb1.lower) * 100;
+      const hbb15 = ((bb15.upper - bb15.lower) / bb15.lower) * 100;
+      const diffhbb = hbb1 - hbb15;
 
-      // Điều kiện lọc Hbb: Hbb > 4%
-      if (Hbb <= MIN_HBB) {
+      // Lọc điều kiện: diffhbb > 2%
+      if (diffhbb <= MIN_DIFF_HBB) {
         await sleep(80);
         continue;
       }
-      countMatchedHbb++;
+      countMatchedDiffHbb++;
 
-      // ================= BƯỚC 3: TÍNH EMA20 VÀ diffema20 =================
+      // ================= BƯỚC 3: TÍNH DIFFEMA15 =================
       const closedCandles = candles1h.slice(1).reverse();
       const closedPrices = closedCandles.map((c) => parseFloat(c[4]));
 
       const emaSeries = calculateEMAArray(closedPrices, 20);
-      if (emaSeries.length < 20) {
+      if (emaSeries.length < 15) {
         await sleep(80);
         continue;
       }
 
+      // Phần tử cuối là EMA của nến 1, lùi 14 vị trí là EMA của nến 15
       const ema1 = emaSeries[emaSeries.length - 1];
-      const ema20 = emaSeries[emaSeries.length - 20];
+      const ema15 = emaSeries[emaSeries.length - 15];
 
-      if (!ema20 || ema20 <= 0) {
+      if (!ema15 || ema15 <= 0) {
         await sleep(80);
         continue;
       }
-      countValidEMA++;
 
-      // diffema20: % chênh lệch giữa EMA nến 1 và EMA nến 20
-      const diffema20 = ((ema1 - ema20) / ema20) * 100;
+      const diffema15 = ((ema1 - ema15) / ema15) * 100;
 
-      // Điều kiện lọc EMA: -4% < diffema20 < 0%
-      if (diffema20 <= -4 || diffema20 >= 0) {
+      // ================= BƯỚC 4: TÍNH BBML, BBMS VÀ XÉT ĐIỀU KIỆN =================
+      const candle0 = candles1h[0];
+      const high0 = parseFloat(candle0[2]);
+      const low0 = parseFloat(candle0[3]);
+      const mid1 = bb1.middle;
+
+      // Chênh lệch % so với Mid BB nến 1
+      const bbml = ((mid1 - low0) / mid1) * 100;
+      const bbms = ((mid1 - high0) / mid1) * 100;
+
+      const isLong = diffema15 > 1 && bbml > -0.5 && bbml < 1;
+      const isShort = diffema15 < -1 && bbms > -1 && bbms < 0.5;
+
+      if (!isLong && !isShort) {
         await sleep(80);
         continue;
       }
-      countMatchedDiffEma++;
 
-      // ================= BƯỚC 4: TÍNH bbt1h VÀ XÉT ĐIỀU KIỆN SHORT =================
-      const currentCandle0 = candles1h[0];
-      const high0 = parseFloat(currentCandle0[2]); // High nến 0
-      const bbt1h = ((high0 - bbCurrent.upper) / bbCurrent.upper) * 100;
+      const signalType = isLong ? 'LONG' : 'SHORT';
+      if (isLong) countMatchedLong++;
+      if (isShort) countMatchedShort++;
 
-      // Điều kiện Short: 1% < bbt1h < 3%
-      const isShort = bbt1h > 1 && bbt1h < 3;
+      const coinName = symbol.replace('-USDT-SWAP', '');
+      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      if (isShort) {
-        countMatchedShort++;
-        const coinName = symbol.replace('-USDT-SWAP', '');
-        const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+      if (!sentLog[symbol]) sentLog[symbol] = {};
+      const alertKey = isLong ? 'longAlert' : 'shortAlert';
+      const lastSentTime = sentLog[symbol][alertKey];
+      const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
 
-        if (!sentLog[symbol]) sentLog[symbol] = {};
-        const lastSentTime = sentLog[symbol].shortAlert;
-        const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
+      scanResults.matched.push({
+        symbol,
+        type: signalType,
+        diffhbb: diffhbb.toFixed(2) + '%',
+        diffema15: diffema15.toFixed(2) + '%',
+        bbml: bbml.toFixed(2) + '%',
+        bbms: bbms.toFixed(2) + '%',
+        link,
+        teleSent: !isCooldown
+      });
 
-        scanResults.matched.push({
-          symbol,
-          type: 'SHORT',
-          Hbb: Hbb.toFixed(2) + '%',
-          bbt1h: bbt1h.toFixed(2) + '%',
-          diffema20: diffema20.toFixed(2) + '%',
-          link,
-          teleSent: !isCooldown
-        });
+      if (!isCooldown) {
+        const icon = isLong ? '🟢' : '🔴';
+        const entryDetail = isLong
+          ? `• <b>bbml:</b> ${bbml.toFixed(2)}%`
+          : `• <b>bbms:</b> ${bbms.toFixed(2)}%`;
 
-        if (!isCooldown) {
-          const message =
-            `🔴 <b>TÍN HIỆU SHORT: ${coinName}</b>\n` +
-            `• <b>Hbb:</b> ${Hbb.toFixed(2)}%\n` +
-            `• <b>bbt1h:</b> +${bbt1h.toFixed(2)}%\n` +
-            `• <b>diffema:</b> ${diffema20.toFixed(2)}%\n` +
-            `• <a href="${link}">Link OKX</a>`;
+        const message =
+          `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
+          `• <b>diffhbb:</b> +${diffhbb.toFixed(2)}%\n` +
+          `• <b>diffema15:</b> ${diffema15.toFixed(2)}%\n` +
+          `${entryDetail}\n` +
+          `• <a href="${link}">Link OKX</a>`;
 
-          console.log(`🚀 [SHORT] Gửi Telegram cho ${symbol}...`);
-          await axios
-            .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-              chat_id: TELEGRAM_CHAT_ID,
-              text: message,
-              parse_mode: 'HTML',
-              disable_web_page_preview: true
-            })
-            .catch((err) => console.error('Lỗi gửi Telegram:', err.message));
+        console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
+        await axios
+          .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'HTML',
+            disable_web_page_preview: true
+          })
+          .catch((err) => console.error('Lỗi gửi Telegram:', err.message));
 
-          sentLog[symbol].shortAlert = currentTime;
-          hasNewAlert = true;
-        }
+        sentLog[symbol][alertKey] = currentTime;
+        hasNewAlert = true;
       }
 
       await sleep(80);
@@ -274,20 +289,18 @@ async function main() {
 
     saveScanResults(scanResults);
 
-    console.log('\n================== THỐNG KÊ CHI TIẾT TỪNG BỘ LỌC ==================');
-    console.log(`1️⃣  Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
-    console.log(`2️⃣  Dữ liệu nến 1H: Đủ nến tải về = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣  Bollinger Bands: Tính toán thành công = ${countValidBB}`);
-    console.log(`4️⃣  Lọc Biên độ BB: Hbb > 4% = ${countMatchedHbb} coin`);
-    console.log(`5️⃣  EMA20: Tính toán thành công = ${countValidEMA}`);
-    console.log(`6️⃣  Lọc Trend: -4% < diffema20 < 0% = ${countMatchedDiffEma} coin`);
-    console.log(`7️⃣  Lọc Entry: 1% < bbt1h < 3% (Khớp Short) = ${countMatchedShort} coin`);
+    console.log('\n================== THỐNG KÊ CHI TIẾT ==================');
+    console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
+    console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
+    console.log(`3️⃣ Lọc diffhbb > 2%: Đạt = ${countMatchedDiffHbb} coin`);
+    console.log(`4️⃣ Tín hiệu LONG khớp: ${countMatchedLong} coin`);
+    console.log(`5️⃣ Tín hiệu SHORT khớp: ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
       console.table(scanResults.matched);
     } else {
-      console.log('Không có coin nào thỏa mãn điều kiện Short.');
+      console.log('Không có coin nào thỏa mãn điều kiện.');
     }
     console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
     console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
