@@ -157,13 +157,15 @@ async function main() {
 
     let countValidCandles = 0;
     let countMatchedDiffHbb = 0;
+    let countMatchedDiffEmaLong = 0;
+    let countMatchedDiffEmaShort = 0;
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Cần tối thiểu 70 nến đóng (nến 50 cần 20 nến trước đó: 50 + 19 = nến 69)
+      // Cần tối thiểu 70 nến đóng
       const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h || candles1h.length < 75) {
         await sleep(80);
@@ -214,6 +216,12 @@ async function main() {
 
       const diffema15 = ((ema1 - ema15) / ema15) * 100;
 
+      const isEmaValidLong = diffema15 >= -1 && diffema15 <= 5;
+      const isEmaValidShort = diffema15 >= -5 && diffema15 <= 1;
+
+      if (isEmaValidLong) countMatchedDiffEmaLong++;
+      if (isEmaValidShort) countMatchedDiffEmaShort++;
+
       // ================= BƯỚC 4: TÍNH BBD, BBT VÀ XÉT ĐIỀU KIỆN =================
       const candle0 = candles1h[0];
       const high0 = parseFloat(candle0[2]);
@@ -225,13 +233,12 @@ async function main() {
       // bbt: % chênh lệch giữa giá cao nhất nến 0 và dải trên BB nến 1
       const bbt = ((high0 - bb1.upper) / bb1.upper) * 100;
 
-      // LONG: bbd trong khoảng [-3%, -1%] và diffema15 trong khoảng [-1%, 5%]
-      const isLong = diffema15 >= -1 && diffema15 <= 5 && bbd >= -3 && bbd <= -1;
+      // LONG: bbd trong khoảng [-3%, 0%] và diffema15 trong khoảng [-1%, 5%]
+      const isLong = isEmaValidLong && bbd >= -3 && bbd <= 0;
 
-      // SHORT: bbt trong khoảng [1%, 3%] và diffema15 trong khoảng [-5%, 1%]
-      const isShort = diffema15 >= -5 && diffema15 <= 1 && bbt >= 1 && bbt <= 3;
+      // SHORT: bbt trong khoảng [0%, 3%] và diffema15 trong khoảng [-5%, 1%]
+      const isShort = isEmaValidShort && bbt >= 0 && bbt <= 3;
 
-      // Nếu không thoả Long hoặc Short thì bỏ qua
       if (!isLong && !isShort) {
         await sleep(80);
         continue;
@@ -306,8 +313,10 @@ async function main() {
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
     console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
     console.log(`3️⃣ Lọc diffhbb trong [2%, 10%]: Đạt = ${countMatchedDiffHbb} coin`);
-    console.log(`4️⃣ Tín hiệu LONG khớp: ${countMatchedLong} coin`);
-    console.log(`5️⃣ Tín hiệu SHORT khớp: ${countMatchedShort} coin`);
+    console.log(`4️⃣ Lọc diffema15 Long [-1%, 5%]: Đạt = ${countMatchedDiffEmaLong} coin`);
+    console.log(`   Lọc diffema15 Short [-5%, 1%]: Đạt = ${countMatchedDiffEmaShort} coin`);
+    console.log(`5️⃣ Tín hiệu LONG khớp (bbd [-3%, 0%]): ${countMatchedLong} coin`);
+    console.log(`6️⃣ Tín hiệu SHORT khớp (bbt [0%, 3%]): ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
