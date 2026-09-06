@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-06T11:46:11.051Z",
+  "lastScanAt": "2026-09-06T11:51:08.221Z",
   "totalScanned": 154,
   "passedEmaCount": 11,
   "passedEmaList": [
@@ -59,6 +59,17 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "SUSHI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+21.21%",
+      "diffema30": "-3.25%",
+      "bbd": "5.17%",
+      "bbt": "0.18%",
+      "link": "https://www.okx.com/trade-swap/sushi-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
