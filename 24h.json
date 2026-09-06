@@ -1,56 +1,61 @@
 {
-  "lastScanAt": "2026-09-06T07:56:00.159Z",
+  "lastScanAt": "2026-09-06T08:01:26.084Z",
   "totalScanned": 151,
-  "passedEmaCount": 10,
+  "passedEmaCount": 11,
   "passedEmaList": [
     {
       "symbol": "JUP-USDT-SWAP",
-      "diffema30": "5.73%",
+      "diffema30": "5.99%",
       "validFor": "LONG"
     },
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema30": "3.47%",
+      "diffema30": "3.95%",
       "validFor": "LONG"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "diffema30": "-5.51%",
+      "diffema30": "-5.70%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ESP-USDT-SWAP",
-      "diffema30": "3.53%",
+      "diffema30": "3.24%",
       "validFor": "LONG"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-5.38%",
+      "diffema30": "-5.63%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ICX-USDT-SWAP",
-      "diffema30": "5.86%",
+      "diffema30": "5.64%",
       "validFor": "LONG"
     },
     {
       "symbol": "SUSHI-USDT-SWAP",
-      "diffema30": "-4.97%",
+      "diffema30": "-5.14%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ZAMA-USDT-SWAP",
-      "diffema30": "3.14%",
+      "diffema30": "3.69%",
       "validFor": "LONG"
     },
     {
       "symbol": "JTO-USDT-SWAP",
-      "diffema30": "3.74%",
+      "diffema30": "3.89%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "BOME-USDT-SWAP",
+      "diffema30": "5.83%",
       "validFor": "LONG"
     },
     {
       "symbol": "WOO-USDT-SWAP",
-      "diffema30": "3.58%",
+      "diffema30": "3.70%",
       "validFor": "LONG"
     }
   ],
@@ -59,10 +64,10 @@
     {
       "symbol": "ESP-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+1.55%",
-      "diffema30": "3.53%",
-      "bbd": "-0.08%",
-      "bbt": "-1.88%",
+      "change24h": "+0.90%",
+      "diffema30": "3.24%",
+      "bbd": "-0.20%",
+      "bbt": "-2.56%",
       "link": "https://www.okx.com/trade-swap/esp-usdt-swap",
       "teleSent": false
     }
