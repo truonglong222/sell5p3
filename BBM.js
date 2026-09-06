@@ -126,7 +126,7 @@ async function getVolumeFilteredMarkets() {
 
 // ------------------- LẤY DỮ LIỆU NẾN -------------------
 
-async function getCandles(symbol, bar = '1H', limit = 100) {
+async function getCandles(symbol, bar = '15m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
@@ -142,7 +142,7 @@ async function getCandles(symbol, bar = '1H', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (KHUNG 15M) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -168,19 +168,19 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Cần tối thiểu 70 nến đóng
-      const candles1h = await getCandles(symbol, '1H', 100);
-      if (!candles1h || candles1h.length < 75) {
+      // Cần tối thiểu 70 nến đóng (khung 15m)
+      const candles15m = await getCandles(symbol, '15m', 100);
+      if (!candles15m || candles15m.length < 75) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
       // ================= BƯỚC 2: TÍNH TOÁN DIFFHBB (NẾN 1 VÀ NẾN 50) =================
-      const closesBB1 = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const closesBB1 = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb1 = calculateBollingerBands(closesBB1, 20);
 
-      const closesBB50 = candles1h.slice(50, 70).map((c) => parseFloat(c[4])).reverse();
+      const closesBB50 = candles15m.slice(50, 70).map((c) => parseFloat(c[4])).reverse();
       const bb50 = calculateBollingerBands(closesBB50, 20);
 
       if (!bb1 || !bb50 || bb1.lower <= 0 || bb50.lower <= 0) {
@@ -200,7 +200,7 @@ async function main() {
       countMatchedDiffHbb++;
 
       // ================= BƯỚC 3: TÍNH DIFFEMA15 =================
-      const closedCandles = candles1h.slice(1).reverse();
+      const closedCandles = candles15m.slice(1).reverse();
       const closedPrices = closedCandles.map((c) => parseFloat(c[4]));
 
       const emaSeries = calculateEMAArray(closedPrices, 20);
@@ -225,7 +225,7 @@ async function main() {
       if (isEmaValidLong) countMatchedDiffEmaLong++;
       if (isEmaValidShort) countMatchedDiffEmaShort++;
 
-      // Đẩy vào danh sách thoả mãn bước diffema15
+      // Đẩy vào danh sách thoả mãn bước diffema15 (lưu vào file JSON, không log)
       if (isEmaValidLong || isEmaValidShort) {
         scanResults.passedEma.push({
           symbol,
@@ -236,7 +236,7 @@ async function main() {
       }
 
       // ================= BƯỚC 4: TÍNH BBD, BBT VÀ XÉT ĐIỀU KIỆN =================
-      const candle0 = candles1h[0];
+      const candle0 = candles15m[0];
       const high0 = parseFloat(candle0[2]);
       const low0 = parseFloat(candle0[3]);
 
@@ -294,14 +294,14 @@ async function main() {
           : `• <b>bbt:</b> ${bbt.toFixed(2)}% (so với Upper BB)`;
 
         const message =
-          `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
+          `${icon} <b>TÍN HIỆU ${signalType} (15m): ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
           `• <b>diffhbb:</b> +${diffhbb.toFixed(2)}%\n` +
           `• <b>diffema15:</b> ${diffema15.toFixed(2)}%\n` +
           `${entryDetail}\n` +
           `• <a href="${link}">Link OKX</a>`;
 
-        console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
+        console.log(`🚀 [${signalType} 15m] Gửi Telegram cho ${symbol}...`);
         await axios
           .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
@@ -322,9 +322,9 @@ async function main() {
 
     saveScanResults(scanResults);
 
-    console.log('\n================== THỐNG KÊ CHI TIẾT ==================');
+    console.log('\n================== THỐNG KÊ CHI TIẾT (15M) ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
-    console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
+    console.log(`2️⃣ Dữ liệu nến 15m: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
     console.log(`3️⃣ Lọc diffhbb trong [2%, 10%]: Đạt = ${countMatchedDiffHbb} coin`);
     console.log(`4️⃣ Lọc diffema15 Long [-1%, 5%]: Đạt = ${countMatchedDiffEmaLong} coin`);
     console.log(`   Lọc diffema15 Short [-5%, 1%]: Đạt = ${countMatchedDiffEmaShort} coin`);
