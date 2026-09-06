@@ -1,57 +1,39 @@
 {
-  "lastScanAt": "2026-09-06T16:11:10.382Z",
+  "lastScanAt": "2026-09-06T16:16:13.036Z",
   "totalScanned": 160,
-  "passedEmaCount": 6,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
-      "symbol": "ZK-USDT-SWAP",
-      "diffema30": "6.59%",
-      "diffema10": "0.99%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "JUP-USDT-SWAP",
-      "diffema30": "12.49%",
-      "diffema10": "0.86%",
+      "diffema30": "12.15%",
+      "diffema10": "0.66%",
       "validFor": "SHORT"
     },
     {
       "symbol": "IOST-USDT-SWAP",
-      "diffema30": "-4.22%",
-      "diffema10": "-0.96%",
+      "diffema30": "-4.23%",
+      "diffema10": "-0.83%",
       "validFor": "LONG"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "diffema30": "6.70%",
-      "diffema10": "0.93%",
+      "diffema30": "6.82%",
+      "diffema10": "0.76%",
       "validFor": "SHORT"
     },
     {
       "symbol": "NEAR-USDT-SWAP",
-      "diffema30": "5.85%",
-      "diffema10": "0.92%",
+      "diffema30": "5.66%",
+      "diffema10": "0.60%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ZAMA-USDT-SWAP",
-      "diffema30": "12.24%",
-      "diffema10": "0.73%",
+      "diffema30": "11.84%",
+      "diffema10": "0.09%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "ZK-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+14.38%",
-      "diffema30": "6.59%",
-      "diffema10": "0.99%",
-      "bbd": "4.06%",
-      "bbt": "0.96%",
-      "link": "https://www.okx.com/trade-swap/zk-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
