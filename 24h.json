@@ -1,45 +1,21 @@
 {
-  "lastScanAt": "2026-09-06T14:41:00.537Z",
+  "lastScanAt": "2026-09-06T14:46:09.888Z",
   "totalScanned": 159,
-  "passedEmaCount": 4,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "ZK-USDT-SWAP",
-      "diffema30": "5.80%",
-      "diffema10": "0.53%",
+      "diffema30": "5.78%",
+      "diffema10": "0.41%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "diffema30": "-4.71%",
-      "diffema10": "-0.86%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "APR-USDT-SWAP",
-      "diffema30": "5.20%",
-      "diffema10": "-0.23%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "BOME-USDT-SWAP",
-      "diffema30": "-4.10%",
-      "diffema10": "-0.79%",
+      "diffema30": "-4.53%",
+      "diffema10": "-0.68%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "BOME-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+6.33%",
-      "diffema30": "-4.10%",
-      "diffema10": "-0.79%",
-      "bbd": "-0.68%",
-      "bbt": "-1.44%",
-      "link": "https://www.okx.com/trade-swap/bome-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
