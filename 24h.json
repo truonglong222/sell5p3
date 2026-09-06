@@ -1,6 +1,6 @@
 {
-  "lastScanAt": "2026-09-06T09:46:10.438Z",
-  "totalScanned": 152,
+  "lastScanAt": "2026-09-06T09:51:07.288Z",
+  "totalScanned": 151,
   "passedEmaCount": 8,
   "passedEmaList": [
     {
@@ -44,6 +44,17 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "SPK-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+4.10%",
+      "diffema30": "3.51%",
+      "bbd": "-0.22%",
+      "bbt": "-6.59%",
+      "link": "https://www.okx.com/trade-swap/spk-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
