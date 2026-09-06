@@ -1,18 +1,18 @@
 {
-  "lastScanAt": "2026-09-06T13:40:58.650Z",
-  "totalScanned": 155,
+  "lastScanAt": "2026-09-06T13:46:02.858Z",
+  "totalScanned": 156,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-5.81%",
-      "diffema10": "-0.27%",
+      "diffema30": "-6.05%",
+      "diffema10": "-0.56%",
       "validFor": "LONG"
     },
     {
       "symbol": "BOME-USDT-SWAP",
-      "diffema30": "-5.67%",
-      "diffema10": "-0.68%",
+      "diffema30": "-5.29%",
+      "diffema10": "-0.73%",
       "validFor": "LONG"
     }
   ],
@@ -21,22 +21,22 @@
     {
       "symbol": "CASHCAT-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-9.87%",
-      "diffema30": "-5.81%",
-      "diffema10": "-0.27%",
-      "bbd": "-0.67%",
-      "bbt": "-3.94%",
+      "change24h": "-11.54%",
+      "diffema30": "-6.05%",
+      "diffema10": "-0.56%",
+      "bbd": "-0.02%",
+      "bbt": "-5.47%",
       "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "BOME-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.68%",
-      "diffema30": "-5.67%",
-      "diffema10": "-0.68%",
-      "bbd": "-0.25%",
-      "bbt": "-1.86%",
+      "change24h": "+6.27%",
+      "diffema30": "-5.29%",
+      "diffema10": "-0.73%",
+      "bbd": "0.31%",
+      "bbt": "-1.83%",
       "link": "https://www.okx.com/trade-swap/bome-usdt-swap",
       "teleSent": false
     }
