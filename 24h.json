@@ -1,72 +1,84 @@
 {
-  "lastScanAt": "2026-09-06T02:55:53.810Z",
+  "lastScanAt": "2026-09-06T03:01:34.481Z",
   "totalScanned": 149,
-  "passedEmaCount": 11,
+  "passedEmaCount": 13,
   "passedEmaList": [
     {
       "symbol": "APT-USDT-SWAP",
-      "diffhbb": "2.56%",
-      "diffema15": "2.29%",
+      "diffhbb": "2.73%",
+      "diffema15": "2.26%",
       "validFor": "LONG"
     },
     {
       "symbol": "PUMP-USDT-SWAP",
-      "diffhbb": "3.99%",
-      "diffema15": "-4.69%",
+      "diffhbb": "2.53%",
+      "diffema15": "-4.46%",
       "validFor": "SHORT"
     },
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffhbb": "8.67%",
-      "diffema15": "-1.19%",
+      "diffhbb": "6.86%",
+      "diffema15": "-2.24%",
       "validFor": "SHORT"
     },
     {
       "symbol": "UB-USDT-SWAP",
-      "diffhbb": "3.44%",
-      "diffema15": "-0.02%",
+      "diffhbb": "2.58%",
+      "diffema15": "-0.24%",
       "validFor": "BOTH"
     },
     {
-      "symbol": "STRK-USDT-SWAP",
-      "diffhbb": "5.78%",
-      "diffema15": "4.71%",
+      "symbol": "ASTER-USDT-SWAP",
+      "diffhbb": "8.05%",
+      "diffema15": "3.67%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "GRT-USDT-SWAP",
+      "diffhbb": "2.57%",
+      "diffema15": "3.85%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "FIL-USDT-SWAP",
+      "diffhbb": "3.74%",
+      "diffema15": "2.81%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "LINEA-USDT-SWAP",
+      "diffhbb": "2.28%",
+      "diffema15": "3.10%",
       "validFor": "LONG"
     },
     {
       "symbol": "EDEN-USDT-SWAP",
-      "diffhbb": "3.04%",
-      "diffema15": "-2.46%",
+      "diffhbb": "2.78%",
+      "diffema15": "-2.33%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CFX-USDT-SWAP",
-      "diffhbb": "2.42%",
-      "diffema15": "2.01%",
+      "diffhbb": "2.59%",
+      "diffema15": "2.11%",
       "validFor": "LONG"
     },
     {
       "symbol": "CRV-USDT-SWAP",
-      "diffhbb": "5.13%",
-      "diffema15": "3.81%",
+      "diffhbb": "5.37%",
+      "diffema15": "3.95%",
       "validFor": "LONG"
     },
     {
       "symbol": "TIA-USDT-SWAP",
-      "diffhbb": "3.91%",
-      "diffema15": "3.31%",
+      "diffhbb": "4.42%",
+      "diffema15": "3.40%",
       "validFor": "LONG"
     },
     {
       "symbol": "BOME-USDT-SWAP",
-      "diffhbb": "4.37%",
-      "diffema15": "3.97%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "OP-USDT-SWAP",
-      "diffhbb": "9.01%",
-      "diffema15": "4.96%",
+      "diffhbb": "6.97%",
+      "diffema15": "4.73%",
       "validFor": "LONG"
     }
   ],
