@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-06T15:51:09.799Z",
+  "lastScanAt": "2026-09-06T15:56:04.978Z",
   "totalScanned": 159,
   "passedEmaCount": 1,
   "passedEmaList": [
@@ -10,6 +10,18 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ZK-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+13.47%",
+      "diffema30": "6.33%",
+      "diffema10": "0.81%",
+      "bbd": "3.58%",
+      "bbt": "0.21%",
+      "link": "https://www.okx.com/trade-swap/zk-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
