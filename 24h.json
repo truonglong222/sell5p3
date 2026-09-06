@@ -1,8 +1,15 @@
 {
-  "lastScanAt": "2026-09-06T21:55:59.695Z",
+  "lastScanAt": "2026-09-06T22:01:41.464Z",
   "totalScanned": 162,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "DOOD-USDT-SWAP",
+      "diffema30": "11.23%",
+      "diffema10": "0.85%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
