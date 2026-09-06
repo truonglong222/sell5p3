@@ -1,75 +1,69 @@
 {
-  "lastScanAt": "2026-09-06T11:55:55.089Z",
+  "lastScanAt": "2026-09-06T12:01:34.397Z",
   "totalScanned": 154,
-  "passedEmaCount": 11,
+  "passedEmaCount": 12,
   "passedEmaList": [
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema30": "-3.89%",
+      "diffema30": "-3.29%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ZK-USDT-SWAP",
-      "diffema30": "5.31%",
+      "diffema30": "5.58%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "MON-USDT-SWAP",
+      "diffema30": "3.24%",
       "validFor": "LONG"
     },
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema30": "3.52%",
+      "diffema30": "3.25%",
       "validFor": "LONG"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "diffema30": "-5.85%",
+      "diffema30": "-5.72%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "diffema30": "5.54%",
+      "diffema30": "5.98%",
       "validFor": "LONG"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-4.33%",
+      "diffema30": "-4.41%",
       "validFor": "SHORT"
-    },
-    {
-      "symbol": "SUSHI-USDT-SWAP",
-      "diffema30": "-3.25%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "ARB-USDT-SWAP",
-      "diffema30": "3.28%",
-      "validFor": "LONG"
     },
     {
       "symbol": "MERL-USDT-SWAP",
-      "diffema30": "-3.32%",
+      "diffema30": "-3.23%",
       "validFor": "SHORT"
     },
     {
       "symbol": "DOT-USDT-SWAP",
-      "diffema30": "3.08%",
+      "diffema30": "3.34%",
       "validFor": "LONG"
     },
     {
       "symbol": "JTO-USDT-SWAP",
-      "diffema30": "4.62%",
+      "diffema30": "4.70%",
       "validFor": "LONG"
+    },
+    {
+      "symbol": "TIA-USDT-SWAP",
+      "diffema30": "3.05%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "BOME-USDT-SWAP",
+      "diffema30": "-3.40%",
+      "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "SUSHI-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+22.20%",
-      "diffema30": "-3.25%",
-      "bbd": "5.17%",
-      "bbt": "0.95%",
-      "link": "https://www.okx.com/trade-swap/sushi-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
