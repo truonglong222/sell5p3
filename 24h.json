@@ -1,33 +1,39 @@
 {
-  "lastScanAt": "2026-09-06T20:41:12.501Z",
+  "lastScanAt": "2026-09-06T20:46:12.208Z",
   "totalScanned": 162,
-  "passedEmaCount": 4,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
+      "symbol": "EDGE-USDT-SWAP",
+      "diffema30": "-4.13%",
+      "diffema10": "-0.88%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "BONK-USDT-SWAP",
-      "diffema30": "4.68%",
-      "diffema10": "-0.40%",
+      "diffema30": "4.51%",
+      "diffema10": "-0.53%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-4.71%",
-      "diffema10": "-0.13%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "ARX-USDT-SWAP",
-      "diffema30": "5.54%",
-      "diffema10": "-0.64%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "ICX-USDT-SWAP",
-      "diffema30": "-4.14%",
-      "diffema10": "-0.66%",
+      "diffema30": "-4.47%",
+      "diffema10": "-0.19%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "EDGE-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-0.73%",
+      "diffema30": "-4.13%",
+      "diffema10": "-0.88%",
+      "bbd": "0.10%",
+      "bbt": "-2.17%",
+      "link": "https://www.okx.com/trade-swap/edge-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
