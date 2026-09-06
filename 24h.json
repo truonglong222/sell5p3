@@ -1,55 +1,65 @@
 {
-  "lastScanAt": "2026-09-06T08:55:52.941Z",
+  "lastScanAt": "2026-09-06T09:01:34.167Z",
   "totalScanned": 151,
-  "passedEmaCount": 7,
+  "passedEmaCount": 9,
   "passedEmaList": [
     {
+      "symbol": "SPK-USDT-SWAP",
+      "diffema30": "5.49%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "RLS-USDT-SWAP",
-      "diffema30": "5.06%",
+      "diffema30": "5.36%",
       "validFor": "LONG"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "diffema30": "-5.86%",
+      "diffema30": "-5.92%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "ICX-USDT-SWAP",
-      "diffema30": "3.88%",
+      "symbol": "NEAR-USDT-SWAP",
+      "diffema30": "3.08%",
       "validFor": "LONG"
     },
     {
-      "symbol": "SUSHI-USDT-SWAP",
-      "diffema30": "-5.68%",
-      "validFor": "SHORT"
+      "symbol": "ICX-USDT-SWAP",
+      "diffema30": "3.40%",
+      "validFor": "LONG"
     },
     {
       "symbol": "ZAMA-USDT-SWAP",
-      "diffema30": "4.71%",
+      "diffema30": "4.94%",
       "validFor": "LONG"
     },
     {
       "symbol": "JTO-USDT-SWAP",
-      "diffema30": "4.08%",
+      "diffema30": "4.06%",
       "validFor": "LONG"
     },
     {
       "symbol": "BOME-USDT-SWAP",
-      "diffema30": "4.34%",
+      "diffema30": "3.95%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "WOO-USDT-SWAP",
+      "diffema30": "5.34%",
       "validFor": "LONG"
     }
   ],
   "matchedCount": 1,
   "matchedList": [
     {
-      "symbol": "ICX-USDT-SWAP",
+      "symbol": "SPK-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-3.70%",
-      "diffema30": "3.88%",
-      "bbd": "-0.69%",
-      "bbt": "-3.64%",
-      "link": "https://www.okx.com/trade-swap/icx-usdt-swap",
-      "teleSent": false
+      "change24h": "+10.79%",
+      "diffema30": "5.49%",
+      "bbd": "-0.54%",
+      "bbt": "-3.98%",
+      "link": "https://www.okx.com/trade-swap/spk-usdt-swap",
+      "teleSent": true
     }
   ]
 }
