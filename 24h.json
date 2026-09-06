@@ -1,6 +1,75 @@
 {
-  "lastScanAt": "2026-09-06T02:40:56.193Z",
+  "lastScanAt": "2026-09-06T02:46:08.520Z",
   "totalScanned": 149,
+  "passedEmaCount": 11,
+  "passedEmaList": [
+    {
+      "symbol": "APT-USDT-SWAP",
+      "diffhbb": "2.56%",
+      "diffema15": "2.29%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "PUMP-USDT-SWAP",
+      "diffhbb": "3.99%",
+      "diffema15": "-4.69%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "TRIA-USDT-SWAP",
+      "diffhbb": "8.67%",
+      "diffema15": "-1.19%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "UB-USDT-SWAP",
+      "diffhbb": "3.44%",
+      "diffema15": "-0.02%",
+      "validFor": "BOTH"
+    },
+    {
+      "symbol": "STRK-USDT-SWAP",
+      "diffhbb": "5.78%",
+      "diffema15": "4.71%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "EDEN-USDT-SWAP",
+      "diffhbb": "3.04%",
+      "diffema15": "-2.46%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "CFX-USDT-SWAP",
+      "diffhbb": "2.42%",
+      "diffema15": "2.01%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "CRV-USDT-SWAP",
+      "diffhbb": "5.13%",
+      "diffema15": "3.81%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "TIA-USDT-SWAP",
+      "diffhbb": "3.91%",
+      "diffema15": "3.31%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "BOME-USDT-SWAP",
+      "diffhbb": "4.37%",
+      "diffema15": "3.97%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "OP-USDT-SWAP",
+      "diffhbb": "9.01%",
+      "diffema15": "4.96%",
+      "validFor": "LONG"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
