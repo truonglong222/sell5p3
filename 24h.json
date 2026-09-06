@@ -1,33 +1,51 @@
 {
-  "lastScanAt": "2026-09-06T16:56:03.463Z",
+  "lastScanAt": "2026-09-06T17:01:31.803Z",
   "totalScanned": 161,
-  "passedEmaCount": 4,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "JUP-USDT-SWAP",
-      "diffema30": "11.42%",
-      "diffema10": "0.65%",
+      "diffema30": "10.95%",
+      "diffema10": "0.73%",
       "validFor": "SHORT"
     },
     {
       "symbol": "USELESS-USDT-SWAP",
-      "diffema30": "-7.53%",
-      "diffema10": "-0.84%",
+      "diffema30": "-6.32%",
+      "diffema10": "-0.58%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "RLS-USDT-SWAP",
+      "diffema30": "-4.13%",
+      "diffema10": "-0.68%",
       "validFor": "LONG"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "diffema30": "6.53%",
-      "diffema10": "0.62%",
+      "diffema30": "6.32%",
+      "diffema10": "0.56%",
       "validFor": "SHORT"
     },
     {
       "symbol": "NEAR-USDT-SWAP",
-      "diffema30": "5.29%",
-      "diffema10": "0.72%",
+      "diffema30": "4.93%",
+      "diffema10": "0.63%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RLS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+1.74%",
+      "diffema30": "-4.13%",
+      "diffema10": "-0.68%",
+      "bbd": "-0.37%",
+      "bbt": "-2.64%",
+      "link": "https://www.okx.com/trade-swap/rls-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
