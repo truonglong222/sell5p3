@@ -1,56 +1,27 @@
 {
-  "lastScanAt": "2026-09-06T19:26:03.962Z",
+  "lastScanAt": "2026-09-06T19:31:17.999Z",
   "totalScanned": 161,
-  "passedEmaCount": 4,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema30": "5.01%",
-      "diffema10": "0.34%",
+      "diffema30": "5.03%",
+      "diffema10": "0.22%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-4.28%",
-      "diffema10": "-0.81%",
+      "diffema30": "-4.84%",
+      "diffema10": "-0.82%",
       "validFor": "LONG"
     },
     {
-      "symbol": "SUSHI-USDT-SWAP",
-      "diffema30": "4.10%",
-      "diffema10": "0.98%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "LDO-USDT-SWAP",
-      "diffema30": "4.30%",
-      "diffema10": "0.27%",
+      "diffema30": "4.09%",
+      "diffema10": "0.15%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "CASHCAT-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-19.67%",
-      "diffema30": "-4.28%",
-      "diffema10": "-0.81%",
-      "bbd": "-1.57%",
-      "bbt": "-2.21%",
-      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "SUSHI-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-6.26%",
-      "diffema30": "4.10%",
-      "diffema10": "0.98%",
-      "bbd": "4.07%",
-      "bbt": "0.06%",
-      "link": "https://www.okx.com/trade-swap/sushi-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
