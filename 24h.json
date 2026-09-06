@@ -1,7 +1,7 @@
 {
-  "lastScanAt": "2026-09-06T11:21:10.659Z",
-  "totalScanned": 152,
-  "passedEmaCount": 10,
+  "lastScanAt": "2026-09-06T11:26:00.502Z",
+  "totalScanned": 153,
+  "passedEmaCount": 11,
   "passedEmaList": [
     {
       "symbol": "TRIA-USDT-SWAP",
@@ -16,6 +16,11 @@
     {
       "symbol": "RLS-USDT-SWAP",
       "diffema30": "4.09%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "MET-USDT-SWAP",
+      "diffema30": "5.91%",
       "validFor": "LONG"
     },
     {
