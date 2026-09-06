@@ -1,189 +1,59 @@
 {
-  "lastScanAt": "2026-09-06T04:35:53.707Z",
+  "lastScanAt": "2026-09-06T04:41:03.107Z",
   "totalScanned": 151,
-  "passedEmaCount": 28,
+  "passedEmaCount": 10,
   "passedEmaList": [
     {
       "symbol": "UNI-USDT-SWAP",
-      "diffhbb": "3.45%",
-      "diffema15": "1.61%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "NEIRO-USDT-SWAP",
-      "diffhbb": "2.01%",
-      "diffema15": "0.93%",
-      "validFor": "BOTH"
-    },
-    {
-      "symbol": "PUMP-USDT-SWAP",
-      "diffhbb": "4.86%",
-      "diffema15": "2.21%",
+      "diffema30": "3.72%",
       "validFor": "LONG"
     },
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffhbb": "2.78%",
-      "diffema15": "-4.63%",
+      "diffema30": "-4.22%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "YGG-USDT-SWAP",
-      "diffhbb": "2.04%",
-      "diffema15": "1.53%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "PNUT-USDT-SWAP",
-      "diffhbb": "3.80%",
-      "diffema15": "1.55%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "JUP-USDT-SWAP",
-      "diffhbb": "7.09%",
-      "diffema15": "3.03%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "PYTH-USDT-SWAP",
-      "diffhbb": "2.75%",
-      "diffema15": "0.39%",
-      "validFor": "BOTH"
+      "symbol": "MUBARAK-USDT-SWAP",
+      "diffema30": "-4.14%",
+      "validFor": "SHORT"
     },
     {
       "symbol": "SPK-USDT-SWAP",
-      "diffhbb": "8.75%",
-      "diffema15": "4.40%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "SAHARA-USDT-SWAP",
-      "diffhbb": "2.49%",
-      "diffema15": "0.14%",
-      "validFor": "BOTH"
-    },
-    {
-      "symbol": "MON-USDT-SWAP",
-      "diffhbb": "2.42%",
-      "diffema15": "1.41%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "ENA-USDT-SWAP",
-      "diffhbb": "7.87%",
-      "diffema15": "3.18%",
+      "diffema30": "5.44%",
       "validFor": "LONG"
     },
     {
       "symbol": "GRT-USDT-SWAP",
-      "diffhbb": "4.74%",
-      "diffema15": "3.07%",
+      "diffema30": "5.51%",
       "validFor": "LONG"
     },
     {
       "symbol": "FIL-USDT-SWAP",
-      "diffhbb": "5.04%",
-      "diffema15": "2.74%",
+      "diffema30": "3.21%",
       "validFor": "LONG"
-    },
-    {
-      "symbol": "CP-USDT-SWAP",
-      "diffhbb": "4.97%",
-      "diffema15": "-2.43%",
-      "validFor": "SHORT"
     },
     {
       "symbol": "ESP-USDT-SWAP",
-      "diffhbb": "2.55%",
-      "diffema15": "2.64%",
+      "diffema30": "3.09%",
       "validFor": "LONG"
     },
     {
-      "symbol": "S-USDT-SWAP",
-      "diffhbb": "3.92%",
-      "diffema15": "2.04%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "SUSHI-USDT-SWAP",
-      "diffhbb": "7.71%",
-      "diffema15": "-1.45%",
+      "symbol": "APR-USDT-SWAP",
+      "diffema30": "-4.22%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "STRK-USDT-SWAP",
-      "diffhbb": "4.81%",
-      "diffema15": "3.76%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "LINEA-USDT-SWAP",
-      "diffhbb": "2.11%",
-      "diffema15": "0.90%",
-      "validFor": "BOTH"
-    },
-    {
-      "symbol": "DYDX-USDT-SWAP",
-      "diffhbb": "2.27%",
-      "diffema15": "0.43%",
-      "validFor": "BOTH"
-    },
-    {
-      "symbol": "LDO-USDT-SWAP",
-      "diffhbb": "2.64%",
-      "diffema15": "-0.40%",
-      "validFor": "BOTH"
-    },
-    {
-      "symbol": "FARTCOIN-USDT-SWAP",
-      "diffhbb": "3.90%",
-      "diffema15": "2.32%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "IOTA-USDT-SWAP",
-      "diffhbb": "3.01%",
-      "diffema15": "1.75%",
+      "symbol": "POL-USDT-SWAP",
+      "diffema30": "3.25%",
       "validFor": "LONG"
     },
     {
       "symbol": "CRV-USDT-SWAP",
-      "diffhbb": "2.12%",
-      "diffema15": "0.88%",
-      "validFor": "BOTH"
-    },
-    {
-      "symbol": "JTO-USDT-SWAP",
-      "diffhbb": "4.32%",
-      "diffema15": "1.62%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "OP-USDT-SWAP",
-      "diffhbb": "4.13%",
-      "diffema15": "1.20%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "PEOPLE-USDT-SWAP",
-      "diffhbb": "3.80%",
-      "diffema15": "2.22%",
+      "diffema30": "3.40%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "DYDX-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+1.28%",
-      "diffhbb": "2.27%",
-      "diffema15": "0.43%",
-      "bbd": "-0.34%",
-      "bbt": "-3.74%",
-      "link": "https://www.okx.com/trade-swap/dydx-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
