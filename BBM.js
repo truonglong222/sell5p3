@@ -53,6 +53,8 @@ function saveScanResults(results) {
     const outputData = {
       lastScanAt: new Date().toISOString(),
       totalScanned: results.totalScanned,
+      passedEmaCount: results.passedEma.length,
+      passedEmaList: results.passedEma,
       matchedCount: results.matched.length,
       matchedList: results.matched
     };
@@ -152,6 +154,7 @@ async function main() {
 
     const scanResults = {
       totalScanned: targetCoins.length,
+      passedEma: [],
       matched: []
     };
 
@@ -221,6 +224,16 @@ async function main() {
 
       if (isEmaValidLong) countMatchedDiffEmaLong++;
       if (isEmaValidShort) countMatchedDiffEmaShort++;
+
+      // Đẩy vào danh sách thoả mãn bước diffema15
+      if (isEmaValidLong || isEmaValidShort) {
+        scanResults.passedEma.push({
+          symbol,
+          diffhbb: diffhbb.toFixed(2) + '%',
+          diffema15: diffema15.toFixed(2) + '%',
+          validFor: isEmaValidLong && isEmaValidShort ? 'BOTH' : isEmaValidLong ? 'LONG' : 'SHORT'
+        });
+      }
 
       // ================= BƯỚC 4: TÍNH BBD, BBT VÀ XÉT ĐIỀU KIỆN =================
       const candle0 = candles1h[0];
