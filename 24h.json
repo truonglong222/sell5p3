@@ -1,19 +1,31 @@
 {
-  "lastScanAt": "2026-09-06T19:56:04.320Z",
+  "lastScanAt": "2026-09-06T20:01:36.644Z",
   "totalScanned": 161,
-  "passedEmaCount": 2,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
+      "symbol": "RAY-USDT-SWAP",
+      "diffema30": "15.18%",
+      "diffema10": "0.44%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "LAYER-USDT-SWAP",
-      "diffema30": "11.20%",
-      "diffema10": "0.50%",
+      "diffema30": "10.59%",
+      "diffema10": "-0.12%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema30": "4.98%",
-      "diffema10": "0.11%",
+      "diffema30": "4.85%",
+      "diffema10": "-0.07%",
       "validFor": "SHORT"
+    },
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "diffema30": "-5.23%",
+      "diffema10": "-0.74%",
+      "validFor": "LONG"
     }
   ],
   "matchedCount": 0,
