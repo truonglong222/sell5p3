@@ -1,12 +1,24 @@
 {
-  "lastScanAt": "2026-09-06T22:11:06.464Z",
+  "lastScanAt": "2026-09-06T22:16:02.763Z",
   "totalScanned": 162,
-  "passedEmaCount": 1,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "DOOD-USDT-SWAP",
-      "diffema30": "11.23%",
-      "diffema10": "0.85%",
+      "diffema30": "11.31%",
+      "diffema10": "0.66%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "ZAMA-USDT-SWAP",
+      "diffema30": "-4.26%",
+      "diffema10": "-0.95%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "SIGN-USDT-SWAP",
+      "diffema30": "5.80%",
+      "diffema10": "0.81%",
       "validFor": "SHORT"
     }
   ],
