@@ -1,61 +1,71 @@
 {
-  "lastScanAt": "2026-09-06T11:26:00.502Z",
-  "totalScanned": 153,
-  "passedEmaCount": 11,
+  "lastScanAt": "2026-09-06T11:31:23.016Z",
+  "totalScanned": 154,
+  "passedEmaCount": 13,
   "passedEmaList": [
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema30": "-5.22%",
+      "diffema30": "-4.61%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ZK-USDT-SWAP",
-      "diffema30": "4.67%",
+      "diffema30": "4.97%",
       "validFor": "LONG"
     },
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema30": "4.09%",
+      "diffema30": "3.76%",
       "validFor": "LONG"
     },
     {
+      "symbol": "CP-USDT-SWAP",
+      "diffema30": "-5.97%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "MET-USDT-SWAP",
-      "diffema30": "5.91%",
+      "diffema30": "5.50%",
       "validFor": "LONG"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-4.68%",
+      "diffema30": "-4.51%",
       "validFor": "SHORT"
     },
     {
       "symbol": "NEAR-USDT-SWAP",
-      "diffema30": "5.63%",
+      "diffema30": "5.91%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "ICX-USDT-SWAP",
+      "diffema30": "3.05%",
       "validFor": "LONG"
     },
     {
       "symbol": "SUSHI-USDT-SWAP",
-      "diffema30": "-4.69%",
+      "diffema30": "-4.05%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ARB-USDT-SWAP",
-      "diffema30": "3.95%",
+      "diffema30": "3.69%",
       "validFor": "LONG"
     },
     {
       "symbol": "MERL-USDT-SWAP",
-      "diffema30": "-3.50%",
+      "diffema30": "-3.41%",
       "validFor": "SHORT"
     },
     {
       "symbol": "JTO-USDT-SWAP",
-      "diffema30": "4.42%",
+      "diffema30": "4.55%",
       "validFor": "LONG"
     },
     {
       "symbol": "WOO-USDT-SWAP",
-      "diffema30": "3.50%",
+      "diffema30": "3.19%",
       "validFor": "LONG"
     }
   ],
