@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-06T08:46:08.304Z",
+  "lastScanAt": "2026-09-06T08:50:58.487Z",
   "totalScanned": 151,
   "passedEmaCount": 7,
   "passedEmaList": [
@@ -39,6 +39,17 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ICX-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-3.34%",
+      "diffema30": "3.88%",
+      "bbd": "-0.69%",
+      "bbt": "-3.64%",
+      "link": "https://www.okx.com/trade-swap/icx-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
