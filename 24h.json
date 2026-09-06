@@ -1,39 +1,27 @@
 {
-  "lastScanAt": "2026-09-06T20:56:03.452Z",
+  "lastScanAt": "2026-09-06T21:01:37.616Z",
   "totalScanned": 161,
   "passedEmaCount": 3,
   "passedEmaList": [
     {
-      "symbol": "EDGE-USDT-SWAP",
-      "diffema30": "-4.13%",
-      "diffema10": "-0.88%",
-      "validFor": "LONG"
-    },
-    {
       "symbol": "BONK-USDT-SWAP",
-      "diffema30": "4.51%",
-      "diffema10": "-0.53%",
+      "diffema30": "4.14%",
+      "diffema10": "-0.71%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-4.47%",
-      "diffema10": "-0.19%",
+      "diffema30": "-4.18%",
+      "diffema10": "-0.25%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "PONS-USDT-SWAP",
+      "diffema30": "-8.92%",
+      "diffema10": "-0.55%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "EDGE-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-1.56%",
-      "diffema30": "-4.13%",
-      "diffema10": "-0.88%",
-      "bbd": "-0.96%",
-      "bbt": "-2.07%",
-      "link": "https://www.okx.com/trade-swap/edge-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
