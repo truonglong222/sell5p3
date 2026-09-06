@@ -1,75 +1,69 @@
 {
-  "lastScanAt": "2026-09-06T05:41:09.690Z",
+  "lastScanAt": "2026-09-06T05:46:02.239Z",
   "totalScanned": 152,
-  "passedEmaCount": 11,
+  "passedEmaCount": 12,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "diffema30": "3.07%",
+      "diffema30": "3.14%",
       "validFor": "LONG"
     },
     {
       "symbol": "JUP-USDT-SWAP",
-      "diffema30": "3.69%",
+      "diffema30": "3.83%",
       "validFor": "LONG"
     },
     {
       "symbol": "MUBARAK-USDT-SWAP",
-      "diffema30": "-3.62%",
+      "diffema30": "-3.21%",
       "validFor": "SHORT"
     },
     {
       "symbol": "SPK-USDT-SWAP",
-      "diffema30": "5.56%",
+      "diffema30": "5.65%",
       "validFor": "LONG"
     },
     {
       "symbol": "ENA-USDT-SWAP",
-      "diffema30": "5.56%",
+      "diffema30": "5.35%",
       "validFor": "LONG"
     },
     {
       "symbol": "GRT-USDT-SWAP",
-      "diffema30": "5.45%",
+      "diffema30": "5.76%",
       "validFor": "LONG"
     },
     {
       "symbol": "ESP-USDT-SWAP",
-      "diffema30": "3.68%",
+      "diffema30": "3.74%",
       "validFor": "LONG"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema30": "-5.29%",
+      "diffema30": "-4.73%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ICX-USDT-SWAP",
-      "diffema30": "3.98%",
+      "diffema30": "4.60%",
       "validFor": "LONG"
     },
     {
       "symbol": "SUSHI-USDT-SWAP",
-      "diffema30": "-3.13%",
+      "diffema30": "-3.39%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "STRK-USDT-SWAP",
+      "diffema30": "5.63%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "OP-USDT-SWAP",
-      "diffema30": "4.49%",
+      "diffema30": "3.97%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "CASHCAT-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+14.86%",
-      "diffema30": "-5.29%",
-      "bbd": "7.90%",
-      "bbt": "0.92%",
-      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
