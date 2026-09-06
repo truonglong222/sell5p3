@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-06T13:46:02.858Z",
+  "lastScanAt": "2026-09-06T13:50:59.802Z",
   "totalScanned": 156,
   "passedEmaCount": 2,
   "passedEmaList": [
@@ -16,27 +16,16 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "CASHCAT-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-11.54%",
-      "diffema30": "-6.05%",
-      "diffema10": "-0.56%",
-      "bbd": "-0.02%",
-      "bbt": "-5.47%",
-      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "BOME-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+6.27%",
+      "change24h": "+7.19%",
       "diffema30": "-5.29%",
       "diffema10": "-0.73%",
       "bbd": "0.31%",
-      "bbt": "-1.83%",
+      "bbt": "-1.26%",
       "link": "https://www.okx.com/trade-swap/bome-usdt-swap",
       "teleSent": false
     }
