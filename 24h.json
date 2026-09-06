@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-06T19:21:01.779Z",
+  "lastScanAt": "2026-09-06T19:26:03.962Z",
   "totalScanned": 161,
   "passedEmaCount": 4,
   "passedEmaList": [
@@ -28,6 +28,29 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-19.67%",
+      "diffema30": "-4.28%",
+      "diffema10": "-0.81%",
+      "bbd": "-1.57%",
+      "bbt": "-2.21%",
+      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "SUSHI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-6.26%",
+      "diffema30": "4.10%",
+      "diffema10": "0.98%",
+      "bbd": "4.07%",
+      "bbt": "0.06%",
+      "link": "https://www.okx.com/trade-swap/sushi-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
