@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-06T07:46:03.336Z",
+  "lastScanAt": "2026-09-06T07:51:04.310Z",
   "totalScanned": 151,
   "passedEmaCount": 10,
   "passedEmaList": [
@@ -54,6 +54,17 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ESP-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+1.28%",
+      "diffema30": "3.53%",
+      "bbd": "-0.08%",
+      "bbt": "-2.09%",
+      "link": "https://www.okx.com/trade-swap/esp-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
