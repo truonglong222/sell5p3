@@ -1,55 +1,49 @@
 {
-  "lastScanAt": "2026-09-07T20:41:13.867Z",
+  "lastScanAt": "2026-09-07T20:46:11.068Z",
   "totalScanned": 168,
-  "passedEmaCount": 8,
+  "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "PUMP-USDT-SWAP",
-      "diffema50": "7.57%",
-      "diffema20": "0.06%",
+      "diffema50": "7.49%",
+      "diffema20": "0.46%",
       "validFor": "SHORT"
     },
     {
       "symbol": "WLD-USDT-SWAP",
-      "diffema50": "6.39%",
-      "diffema20": "0.88%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "USELESS-USDT-SWAP",
-      "diffema50": "7.44%",
-      "diffema20": "-0.11%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "RLS-USDT-SWAP",
-      "diffema50": "-7.42%",
-      "diffema20": "-0.63%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "STX-USDT-SWAP",
-      "diffema50": "7.14%",
-      "diffema20": "0.90%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "YB-USDT-SWAP",
-      "diffema50": "5.31%",
+      "diffema50": "5.70%",
       "diffema20": "0.98%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "CAP-USDT-SWAP",
-      "diffema50": "6.15%",
-      "diffema20": "-0.63%",
+      "symbol": "USELESS-USDT-SWAP",
+      "diffema50": "7.58%",
+      "diffema20": "-0.18%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "CHIP-USDT-SWAP",
-      "diffema50": "-5.23%",
-      "diffema20": "-0.66%",
+      "symbol": "RLS-USDT-SWAP",
+      "diffema50": "-7.12%",
+      "diffema20": "-0.69%",
       "validFor": "LONG"
+    },
+    {
+      "symbol": "STX-USDT-SWAP",
+      "diffema50": "6.96%",
+      "diffema20": "0.65%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "SOPH-USDT-SWAP",
+      "diffema50": "7.90%",
+      "diffema20": "-0.28%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "CAP-USDT-SWAP",
+      "diffema50": "5.74%",
+      "diffema20": "-0.40%",
+      "validFor": "SHORT"
     }
   ],
   "matchedCount": 1,
@@ -57,13 +51,13 @@
     {
       "symbol": "CAP-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+8.67%",
-      "diffema50": "6.15%",
-      "diffema20": "-0.63%",
-      "bbd": "1.73%",
-      "bbt": "0.16%",
-      "hbb": "0.0010",
-      "hbbPercent": "2.16%",
+      "change24h": "+9.08%",
+      "diffema50": "5.74%",
+      "diffema20": "-0.40%",
+      "bbd": "2.00%",
+      "bbt": "-0.24%",
+      "hbb": "0.0011",
+      "hbbPercent": "2.31%",
       "link": "https://www.okx.com/trade-swap/cap-usdt-swap",
       "teleSent": false
     }
