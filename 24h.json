@@ -1,53 +1,66 @@
 {
-  "lastScanAt": "2026-09-07T19:55:57.681Z",
-  "totalScanned": 168,
+  "lastScanAt": "2026-09-07T20:01:42.644Z",
+  "totalScanned": 169,
   "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "PUMP-USDT-SWAP",
-      "diffema50": "7.25%",
-      "diffema20": "-0.65%",
+      "diffema50": "7.52%",
+      "diffema20": "-0.26%",
       "validFor": "SHORT"
     },
     {
       "symbol": "WLD-USDT-SWAP",
-      "diffema50": "8.12%",
-      "diffema20": "0.93%",
+      "diffema50": "7.57%",
+      "diffema20": "0.90%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "USELESS-USDT-SWAP",
+      "diffema50": "6.24%",
+      "diffema20": "0.02%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema50": "-9.26%",
-      "diffema20": "-0.47%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "ARB-USDT-SWAP",
-      "diffema50": "-5.12%",
-      "diffema20": "-0.31%",
+      "diffema50": "-8.66%",
+      "diffema20": "-0.54%",
       "validFor": "LONG"
     },
     {
       "symbol": "YB-USDT-SWAP",
-      "diffema50": "5.05%",
-      "diffema20": "0.60%",
+      "diffema50": "5.13%",
+      "diffema20": "0.74%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "PUMP-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+15.89%",
-      "diffema50": "7.25%",
-      "diffema20": "-0.65%",
-      "bbd": "5.77%",
-      "bbt": "1.55%",
-      "hbb": "0.0002",
-      "hbbPercent": "5.62%",
+      "change24h": "+15.64%",
+      "diffema50": "7.52%",
+      "diffema20": "-0.26%",
+      "bbd": "6.13%",
+      "bbt": "0.10%",
+      "hbb": "0.0003",
+      "hbbPercent": "6.30%",
       "link": "https://www.okx.com/trade-swap/pump-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "USELESS-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+5.76%",
+      "diffema50": "6.24%",
+      "diffema20": "0.02%",
+      "bbd": "7.28%",
+      "bbt": "1.06%",
+      "hbb": "0.0172",
+      "hbbPercent": "7.59%",
+      "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
+      "teleSent": true
     }
   ]
 }
