@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-07T01:46:08.545Z",
+  "lastScanAt": "2026-09-07T01:51:02.152Z",
   "totalScanned": 162,
   "passedEmaCount": 4,
   "passedEmaList": [
@@ -28,16 +28,38 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "EDGE-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-8.39%",
+      "diffema30": "-4.32%",
+      "diffema10": "-0.93%",
+      "bbd": "0.37%",
+      "bbt": "-2.21%",
+      "link": "https://www.okx.com/trade-swap/edge-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "RAY-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+34.70%",
+      "diffema30": "-5.41%",
+      "diffema10": "-0.53%",
+      "bbd": "-0.07%",
+      "bbt": "-5.39%",
+      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
+      "teleSent": true
+    },
     {
       "symbol": "APR-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-18.87%",
+      "change24h": "-18.99%",
       "diffema30": "-5.87%",
       "diffema10": "-0.90%",
-      "bbd": "0.23%",
-      "bbt": "-1.09%",
+      "bbd": "-0.33%",
+      "bbt": "-0.50%",
       "link": "https://www.okx.com/trade-swap/apr-usdt-swap",
       "teleSent": false
     }
