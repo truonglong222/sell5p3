@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-07T17:05:55.927Z",
+  "lastScanAt": "2026-09-07T17:11:14.608Z",
   "totalScanned": 169,
   "passedEmaCount": 2,
   "passedEmaList": [
@@ -16,6 +16,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ICP-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+13.17%",
+      "diffema50": "8.12%",
+      "diffema20": "0.03%",
+      "bbd": "2.99%",
+      "bbt": "0.66%",
+      "hbb": "0.1283",
+      "hbbPercent": "4.35%",
+      "link": "https://www.okx.com/trade-swap/icp-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
