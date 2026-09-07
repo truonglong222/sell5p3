@@ -251,11 +251,15 @@ async function main() {
         continue;
       }
 
-      // ================= BƯỚC 4: TÍNH BIẾN ĐỘNG 24H VÀ GỬI CẢNH BÁO =================
+      // ================= BƯỚC 4: TÍNH BIẾN ĐỘNG 24H, HBB VÀ GỬI CẢNH BÁO =================
       const open24h = parseFloat(coin.open24h || 0);
       const lastPrice = parseFloat(coin.last || 0);
       const change24hVal = open24h > 0 ? ((lastPrice - open24h) / open24h) * 100 : 0;
       const change24hStr = (change24hVal >= 0 ? '+' : '') + change24hVal.toFixed(2) + '%';
+
+      // Tính Hbb: Độ rộng dải Bollinger Bands tại nến 1
+      const hbb = bb1.upper - bb1.lower;
+      const hbbPercent = (hbb / bb1.middle) * 100;
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       if (isLong) countMatchedLong++;
@@ -277,6 +281,8 @@ async function main() {
         diffema10: diffema10.toFixed(2) + '%',
         bbd: bbd.toFixed(2) + '%',
         bbt: bbt.toFixed(2) + '%',
+        hbb: hbb.toFixed(4),
+        hbbPercent: hbbPercent.toFixed(2) + '%',
         link,
         teleSent: !isCooldown
       });
@@ -293,6 +299,7 @@ async function main() {
           `• <b>diffema30:</b> ${diffema30.toFixed(2)}%\n` +
           `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
           `${entryDetail}\n` +
+          `• <b>Hbb (Độ rộng BB):</b> ${hbb.toFixed(4)} (${hbbPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
 
         console.log(`🚀 [${signalType} 15m] Gửi Telegram cho ${symbol}...`);
