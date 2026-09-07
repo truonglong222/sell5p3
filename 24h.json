@@ -1,47 +1,27 @@
 {
-  "lastScanAt": "2026-09-07T10:56:05.812Z",
+  "lastScanAt": "2026-09-07T11:01:41.672Z",
   "totalScanned": 166,
-  "passedEmaCount": 4,
+  "passedEmaCount": 3,
   "passedEmaList": [
-    {
-      "symbol": "LAYER-USDT-SWAP",
-      "diffema50": "-5.05%",
-      "diffema20": "-0.98%",
-      "validFor": "LONG"
-    },
     {
       "symbol": "TRIA-USDT-SWAP",
       "diffema50": "-5.47%",
-      "diffema20": "-0.34%",
+      "diffema20": "-0.17%",
       "validFor": "LONG"
     },
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema50": "-7.86%",
-      "diffema20": "0.02%",
+      "diffema50": "-7.73%",
+      "diffema20": "0.04%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARX-USDT-SWAP",
-      "diffema50": "7.20%",
-      "diffema20": "0.19%",
+      "diffema50": "6.78%",
+      "diffema20": "-0.34%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "LAYER-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+2.16%",
-      "diffema50": "-5.05%",
-      "diffema20": "-0.98%",
-      "bbd": "-0.13%",
-      "bbt": "-1.89%",
-      "hbb": "0.0015",
-      "hbbPercent": "2.03%",
-      "link": "https://www.okx.com/trade-swap/layer-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
