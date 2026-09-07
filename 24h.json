@@ -1,15 +1,35 @@
 {
-  "lastScanAt": "2026-09-07T14:56:08.237Z",
+  "lastScanAt": "2026-09-07T15:01:48.178Z",
   "totalScanned": 167,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "DOOD-USDT-SWAP",
-      "diffema50": "17.45%",
-      "diffema20": "-0.23%",
+      "diffema50": "16.94%",
+      "diffema20": "-0.65%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "GRVT-USDT-SWAP",
+      "diffema50": "5.05%",
+      "diffema20": "-0.54%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "GRVT-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+5.87%",
+      "diffema50": "5.05%",
+      "diffema20": "-0.54%",
+      "bbd": "2.25%",
+      "bbt": "-0.07%",
+      "hbb": "0.0043",
+      "hbbPercent": "2.55%",
+      "link": "https://www.okx.com/trade-swap/grvt-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
