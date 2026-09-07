@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-07T23:01:41.619Z",
+  "lastScanAt": "2026-09-07T23:06:05.416Z",
   "totalScanned": 171,
   "passedEmaCount": 4,
   "passedEmaList": [
@@ -28,20 +28,33 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "ARX-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+0.84%",
+      "change24h": "+1.69%",
       "diffema50": "-5.02%",
       "diffema20": "-0.35%",
-      "bbd": "-0.19%",
-      "bbt": "-1.69%",
+      "bbd": "-0.26%",
+      "bbt": "-1.28%",
       "hbb": "0.0025",
       "hbbPercent": "1.72%",
       "link": "https://www.okx.com/trade-swap/arx-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "BEAT-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+6.17%",
+      "diffema50": "6.06%",
+      "diffema20": "0.65%",
+      "bbd": "1.69%",
+      "bbt": "-0.33%",
+      "hbb": "0.0032",
+      "hbbPercent": "2.47%",
+      "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
+      "teleSent": true
     }
   ]
 }
