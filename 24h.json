@@ -1,35 +1,21 @@
 {
-  "lastScanAt": "2026-09-07T23:26:05.933Z",
+  "lastScanAt": "2026-09-07T23:31:19.177Z",
   "totalScanned": 171,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "BEAT-USDT-SWAP",
-      "diffema50": "5.99%",
-      "diffema20": "0.69%",
+      "diffema50": "5.85%",
+      "diffema20": "0.74%",
       "validFor": "SHORT"
     },
     {
       "symbol": "PIEVERSE-USDT-SWAP",
-      "diffema50": "14.51%",
-      "diffema20": "0.40%",
+      "diffema50": "14.25%",
+      "diffema20": "0.25%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "BEAT-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+5.34%",
-      "diffema50": "5.99%",
-      "diffema20": "0.69%",
-      "bbd": "1.33%",
-      "bbt": "-0.43%",
-      "hbb": "0.0034",
-      "hbbPercent": "2.59%",
-      "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
