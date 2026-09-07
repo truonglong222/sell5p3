@@ -1,25 +1,37 @@
 {
-  "lastScanAt": "2026-09-07T19:41:13.478Z",
-  "totalScanned": 170,
-  "passedEmaCount": 3,
+  "lastScanAt": "2026-09-07T19:46:16.062Z",
+  "totalScanned": 169,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "PUMP-USDT-SWAP",
-      "diffema50": "7.06%",
-      "diffema20": "-0.95%",
+      "diffema50": "7.25%",
+      "diffema20": "-0.65%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "WLD-USDT-SWAP",
+      "diffema50": "8.12%",
+      "diffema20": "0.93%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema50": "-9.30%",
-      "diffema20": "-0.58%",
+      "diffema50": "-9.26%",
+      "diffema20": "-0.47%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARB-USDT-SWAP",
-      "diffema50": "-5.54%",
-      "diffema20": "-0.16%",
+      "diffema50": "-5.12%",
+      "diffema20": "-0.31%",
       "validFor": "LONG"
+    },
+    {
+      "symbol": "YB-USDT-SWAP",
+      "diffema50": "5.05%",
+      "diffema20": "0.60%",
+      "validFor": "SHORT"
     }
   ],
   "matchedCount": 1,
@@ -27,13 +39,13 @@
     {
       "symbol": "PUMP-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+16.08%",
-      "diffema50": "7.06%",
-      "diffema20": "-0.95%",
-      "bbd": "3.30%",
-      "bbt": "0.91%",
+      "change24h": "+15.39%",
+      "diffema50": "7.25%",
+      "diffema20": "-0.65%",
+      "bbd": "5.84%",
+      "bbt": "0.24%",
       "hbb": "0.0002",
-      "hbbPercent": "4.99%",
+      "hbbPercent": "5.62%",
       "link": "https://www.okx.com/trade-swap/pump-usdt-swap",
       "teleSent": false
     }
