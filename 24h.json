@@ -1,18 +1,30 @@
 {
-  "lastScanAt": "2026-09-07T17:11:14.608Z",
+  "lastScanAt": "2026-09-07T17:16:15.903Z",
   "totalScanned": 169,
-  "passedEmaCount": 2,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "PUMP-USDT-SWAP",
-      "diffema50": "8.18%",
-      "diffema20": "0.05%",
+      "diffema50": "8.03%",
+      "diffema20": "-0.48%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "ARB-USDT-SWAP",
+      "diffema50": "-9.35%",
+      "diffema20": "-0.83%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "ICP-USDT-SWAP",
-      "diffema50": "8.12%",
-      "diffema20": "0.03%",
+      "diffema50": "8.21%",
+      "diffema20": "0.50%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "SOPH-USDT-SWAP",
+      "diffema50": "17.14%",
+      "diffema20": "0.29%",
       "validFor": "SHORT"
     }
   ],
@@ -21,15 +33,15 @@
     {
       "symbol": "ICP-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+13.17%",
-      "diffema50": "8.12%",
-      "diffema20": "0.03%",
-      "bbd": "2.99%",
-      "bbt": "0.66%",
-      "hbb": "0.1283",
-      "hbbPercent": "4.35%",
+      "change24h": "+13.77%",
+      "diffema50": "8.21%",
+      "diffema20": "0.50%",
+      "bbd": "5.34%",
+      "bbt": "0.87%",
+      "hbb": "0.1400",
+      "hbbPercent": "4.73%",
       "link": "https://www.okx.com/trade-swap/icp-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
