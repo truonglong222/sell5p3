@@ -1,13 +1,19 @@
 {
-  "lastScanAt": "2026-09-07T16:01:39.610Z",
+  "lastScanAt": "2026-09-07T16:06:09.384Z",
   "totalScanned": 170,
-  "passedEmaCount": 2,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "JUP-USDT-SWAP",
       "diffema50": "-5.13%",
       "diffema20": "-0.86%",
       "validFor": "LONG"
+    },
+    {
+      "symbol": "ICP-USDT-SWAP",
+      "diffema50": "8.57%",
+      "diffema20": "-0.88%",
+      "validFor": "SHORT"
     },
     {
       "symbol": "CAP-USDT-SWAP",
@@ -21,11 +27,11 @@
     {
       "symbol": "JUP-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-6.79%",
+      "change24h": "-7.16%",
       "diffema50": "-5.13%",
       "diffema20": "-0.86%",
       "bbd": "-0.02%",
-      "bbt": "-4.91%",
+      "bbt": "-4.42%",
       "hbb": "0.0133",
       "hbbPercent": "5.22%",
       "link": "https://www.okx.com/trade-swap/jup-usdt-swap",
