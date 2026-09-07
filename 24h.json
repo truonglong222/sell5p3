@@ -1,65 +1,46 @@
 {
-  "lastScanAt": "2026-09-07T10:41:01.656Z",
+  "lastScanAt": "2026-09-07T10:46:09.124Z",
   "totalScanned": 167,
-  "passedEmaCount": 5,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "LAYER-USDT-SWAP",
-      "diffema50": "-5.10%",
-      "diffema20": "-0.95%",
+      "diffema50": "-5.05%",
+      "diffema20": "-0.98%",
       "validFor": "LONG"
     },
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-5.52%",
-      "diffema20": "-0.53%",
+      "diffema50": "-5.47%",
+      "diffema20": "-0.34%",
       "validFor": "LONG"
     },
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema50": "-8.08%",
-      "diffema20": "-0.21%",
+      "diffema50": "-7.86%",
+      "diffema20": "0.02%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARX-USDT-SWAP",
-      "diffema50": "7.42%",
-      "diffema20": "0.50%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "BARD-USDT-SWAP",
-      "diffema50": "5.27%",
-      "diffema20": "0.81%",
+      "diffema50": "7.20%",
+      "diffema20": "0.19%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "LAYER-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+2.87%",
-      "diffema50": "-5.10%",
-      "diffema20": "-0.95%",
-      "bbd": "-0.18%",
-      "bbt": "-1.04%",
-      "hbb": "0.0013",
-      "hbbPercent": "1.79%",
+      "change24h": "+2.30%",
+      "diffema50": "-5.05%",
+      "diffema20": "-0.98%",
+      "bbd": "-0.00%",
+      "bbt": "-1.93%",
+      "hbb": "0.0015",
+      "hbbPercent": "2.03%",
       "link": "https://www.okx.com/trade-swap/layer-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "BARD-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+5.13%",
-      "diffema50": "5.27%",
-      "diffema20": "0.81%",
-      "bbd": "3.52%",
-      "bbt": "-0.48%",
-      "hbb": "0.0061",
-      "hbbPercent": "4.54%",
-      "link": "https://www.okx.com/trade-swap/bard-usdt-swap",
       "teleSent": false
     }
   ]
