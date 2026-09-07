@@ -1,8 +1,15 @@
 {
-  "lastScanAt": "2026-09-07T08:41:13.253Z",
+  "lastScanAt": "2026-09-07T08:46:13.914Z",
   "totalScanned": 165,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "TIA-USDT-SWAP",
+      "diffema50": "7.36%",
+      "diffema20": "-0.83%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
