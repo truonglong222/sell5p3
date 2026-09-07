@@ -1,66 +1,59 @@
 {
-  "lastScanAt": "2026-09-07T20:11:13.000Z",
+  "lastScanAt": "2026-09-07T20:16:16.497Z",
   "totalScanned": 170,
-  "passedEmaCount": 5,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "PUMP-USDT-SWAP",
-      "diffema50": "7.52%",
-      "diffema20": "-0.26%",
+      "diffema50": "7.59%",
+      "diffema20": "-0.13%",
       "validFor": "SHORT"
     },
     {
       "symbol": "WLD-USDT-SWAP",
-      "diffema50": "7.57%",
-      "diffema20": "0.90%",
+      "diffema50": "7.09%",
+      "diffema20": "0.85%",
       "validFor": "SHORT"
     },
     {
       "symbol": "USELESS-USDT-SWAP",
-      "diffema50": "6.24%",
-      "diffema20": "0.02%",
+      "diffema50": "7.02%",
+      "diffema20": "-0.17%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema50": "-8.66%",
-      "diffema20": "-0.54%",
+      "diffema50": "-8.00%",
+      "diffema20": "-0.63%",
       "validFor": "LONG"
     },
     {
       "symbol": "YB-USDT-SWAP",
-      "diffema50": "5.13%",
-      "diffema20": "0.74%",
+      "diffema50": "5.25%",
+      "diffema20": "0.88%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "CAP-USDT-SWAP",
+      "diffema50": "7.01%",
+      "diffema20": "-0.86%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
-      "symbol": "PUMP-USDT-SWAP",
+      "symbol": "CAP-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+13.01%",
-      "diffema50": "7.52%",
-      "diffema20": "-0.26%",
-      "bbd": "3.85%",
-      "bbt": "0.10%",
-      "hbb": "0.0003",
-      "hbbPercent": "6.30%",
-      "link": "https://www.okx.com/trade-swap/pump-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "USELESS-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-0.50%",
-      "diffema50": "6.24%",
-      "diffema20": "0.02%",
-      "bbd": "1.60%",
-      "bbt": "1.06%",
-      "hbb": "0.0172",
-      "hbbPercent": "7.59%",
-      "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
-      "teleSent": false
+      "change24h": "+9.08%",
+      "diffema50": "7.01%",
+      "diffema20": "-0.86%",
+      "bbd": "2.25%",
+      "bbt": "0.56%",
+      "hbb": "0.0009",
+      "hbbPercent": "1.97%",
+      "link": "https://www.okx.com/trade-swap/cap-usdt-swap",
+      "teleSent": true
     }
   ]
 }
