@@ -1,6 +1,6 @@
 {
-  "lastScanAt": "2026-09-07T13:36:01.253Z",
-  "totalScanned": 169,
+  "lastScanAt": "2026-09-07T13:41:07.272Z",
+  "totalScanned": 170,
   "passedEmaCount": 5,
   "passedEmaList": [
     {
@@ -34,6 +34,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "TRIA-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-10.56%",
+      "diffema50": "-5.11%",
+      "diffema20": "0.95%",
+      "bbd": "0.37%",
+      "bbt": "-0.42%",
+      "hbb": "0.0001",
+      "hbbPercent": "2.05%",
+      "link": "https://www.okx.com/trade-swap/tria-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
