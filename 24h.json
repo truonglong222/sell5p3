@@ -1,33 +1,53 @@
 {
-  "lastScanAt": "2026-09-07T10:11:15.122Z",
+  "lastScanAt": "2026-09-07T10:16:15.931Z",
   "totalScanned": 167,
-  "passedEmaCount": 4,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
+      "symbol": "LAYER-USDT-SWAP",
+      "diffema50": "-5.22%",
+      "diffema20": "-1.00%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-5.57%",
-      "diffema20": "-0.75%",
+      "diffema50": "-5.58%",
+      "diffema20": "-0.61%",
       "validFor": "LONG"
     },
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema50": "-8.40%",
-      "diffema20": "-0.49%",
+      "diffema50": "-8.33%",
+      "diffema20": "-0.41%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARX-USDT-SWAP",
       "diffema50": "7.55%",
-      "diffema20": "0.71%",
+      "diffema20": "0.68%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BARD-USDT-SWAP",
-      "diffema50": "5.05%",
-      "diffema20": "0.50%",
+      "diffema50": "5.13%",
+      "diffema20": "0.52%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "LAYER-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+3.26%",
+      "diffema50": "-5.22%",
+      "diffema20": "-1.00%",
+      "bbd": "0.28%",
+      "bbt": "-1.33%",
+      "hbb": "0.0013",
+      "hbbPercent": "1.77%",
+      "link": "https://www.okx.com/trade-swap/layer-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
