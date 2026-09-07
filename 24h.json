@@ -1,31 +1,19 @@
 {
-  "lastScanAt": "2026-09-07T19:11:13.181Z",
-  "totalScanned": 171,
-  "passedEmaCount": 4,
+  "lastScanAt": "2026-09-07T19:16:17.910Z",
+  "totalScanned": 170,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema50": "-9.59%",
-      "diffema20": "-0.94%",
+      "diffema50": "-9.50%",
+      "diffema20": "-0.79%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARB-USDT-SWAP",
-      "diffema50": "-6.48%",
-      "diffema20": "-0.52%",
+      "diffema50": "-6.06%",
+      "diffema20": "-0.41%",
       "validFor": "LONG"
-    },
-    {
-      "symbol": "MINA-USDT-SWAP",
-      "diffema50": "5.64%",
-      "diffema20": "0.97%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "ICP-USDT-SWAP",
-      "diffema50": "5.24%",
-      "diffema20": "0.77%",
-      "validFor": "SHORT"
     }
   ],
   "matchedCount": 0,
