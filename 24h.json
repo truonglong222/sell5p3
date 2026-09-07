@@ -1,15 +1,29 @@
 {
-  "lastScanAt": "2026-09-07T08:55:54.428Z",
+  "lastScanAt": "2026-09-07T09:01:43.617Z",
   "totalScanned": 165,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "TIA-USDT-SWAP",
-      "diffema50": "7.36%",
-      "diffema20": "-0.83%",
+      "diffema50": "6.97%",
+      "diffema20": "-0.69%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "TIA-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+12.80%",
+      "diffema50": "6.97%",
+      "diffema20": "-0.69%",
+      "bbd": "1.72%",
+      "bbt": "-0.32%",
+      "hbb": "0.0105",
+      "hbbPercent": "2.44%",
+      "link": "https://www.okx.com/trade-swap/tia-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
