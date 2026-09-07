@@ -1,41 +1,21 @@
 {
-  "lastScanAt": "2026-09-07T12:11:08.645Z",
+  "lastScanAt": "2026-09-07T12:16:09.473Z",
   "totalScanned": 165,
-  "passedEmaCount": 3,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-5.57%",
-      "diffema20": "0.17%",
+      "diffema50": "-5.62%",
+      "diffema20": "0.33%",
       "validFor": "LONG"
     },
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema50": "-7.35%",
-      "diffema20": "0.07%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "SUSHI-USDT-SWAP",
-      "diffema50": "-5.02%",
-      "diffema20": "-0.67%",
+      "diffema50": "-7.34%",
+      "diffema20": "0.12%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "BONK-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-4.28%",
-      "diffema50": "-7.35%",
-      "diffema20": "0.07%",
-      "bbd": "0.15%",
-      "bbt": "-0.56%",
-      "hbb": "0.0000",
-      "hbbPercent": "1.45%",
-      "link": "https://www.okx.com/trade-swap/bonk-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
