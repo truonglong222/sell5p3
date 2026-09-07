@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-07T10:31:30.005Z",
+  "lastScanAt": "2026-09-07T10:36:09.402Z",
   "totalScanned": 167,
   "passedEmaCount": 5,
   "passedEmaList": [
@@ -34,20 +34,33 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "LAYER-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+3.07%",
+      "diffema50": "-5.10%",
+      "diffema20": "-0.95%",
+      "bbd": "0.09%",
+      "bbt": "-1.04%",
+      "hbb": "0.0013",
+      "hbbPercent": "1.79%",
+      "link": "https://www.okx.com/trade-swap/layer-usdt-swap",
+      "teleSent": false
+    },
     {
       "symbol": "BARD-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+5.69%",
+      "change24h": "+5.21%",
       "diffema50": "5.27%",
       "diffema20": "0.81%",
-      "bbd": "3.91%",
+      "bbd": "3.52%",
       "bbt": "-0.48%",
       "hbb": "0.0061",
       "hbbPercent": "4.54%",
       "link": "https://www.okx.com/trade-swap/bard-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
