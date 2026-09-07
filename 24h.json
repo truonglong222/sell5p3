@@ -1,53 +1,27 @@
 {
-  "lastScanAt": "2026-09-07T13:41:07.272Z",
+  "lastScanAt": "2026-09-07T13:46:15.581Z",
   "totalScanned": 170,
-  "passedEmaCount": 5,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "diffema50": "-6.13%",
-      "diffema20": "0.07%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "RAY-USDT-SWAP",
-      "diffema50": "-6.41%",
-      "diffema20": "-0.90%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-5.11%",
-      "diffema20": "0.95%",
+      "diffema50": "-5.84%",
+      "diffema20": "0.64%",
       "validFor": "LONG"
     },
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema50": "-6.02%",
-      "diffema20": "0.61%",
+      "diffema50": "-5.57%",
+      "diffema20": "0.68%",
       "validFor": "LONG"
     },
     {
       "symbol": "ICP-USDT-SWAP",
-      "diffema50": "8.75%",
-      "diffema20": "0.74%",
+      "diffema50": "8.78%",
+      "diffema20": "0.58%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "TRIA-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-10.56%",
-      "diffema50": "-5.11%",
-      "diffema20": "0.95%",
-      "bbd": "0.37%",
-      "bbt": "-0.42%",
-      "hbb": "0.0001",
-      "hbbPercent": "2.05%",
-      "link": "https://www.okx.com/trade-swap/tria-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
