@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-07T11:51:03.745Z",
+  "lastScanAt": "2026-09-07T11:56:05.673Z",
   "totalScanned": 167,
   "passedEmaCount": 3,
   "passedEmaList": [
@@ -22,6 +22,33 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "TRIA-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-8.84%",
+      "diffema50": "-5.46%",
+      "diffema20": "0.13%",
+      "bbd": "0.45%",
+      "bbt": "-0.56%",
+      "hbb": "0.0001",
+      "hbbPercent": "3.55%",
+      "link": "https://www.okx.com/trade-swap/tria-usdt-swap",
+      "teleSent": true
+    },
+    {
+      "symbol": "BONK-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-5.05%",
+      "diffema50": "-7.36%",
+      "diffema20": "0.16%",
+      "bbd": "-0.01%",
+      "bbt": "-0.55%",
+      "hbb": "0.0000",
+      "hbbPercent": "1.40%",
+      "link": "https://www.okx.com/trade-swap/bonk-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
