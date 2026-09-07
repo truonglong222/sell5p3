@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-07T22:36:07.344Z",
+  "lastScanAt": "2026-09-07T22:41:02.695Z",
   "totalScanned": 170,
   "passedEmaCount": 5,
   "passedEmaList": [
@@ -34,6 +34,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ARX-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+1.62%",
+      "diffema50": "-5.40%",
+      "diffema20": "-0.33%",
+      "bbd": "-0.36%",
+      "bbt": "-0.75%",
+      "hbb": "0.0023",
+      "hbbPercent": "1.57%",
+      "link": "https://www.okx.com/trade-swap/arx-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
