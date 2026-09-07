@@ -1,65 +1,25 @@
 {
-  "lastScanAt": "2026-09-07T02:11:03.255Z",
+  "lastScanAt": "2026-09-07T02:16:13.681Z",
   "totalScanned": 161,
-  "passedEmaCount": 4,
+  "passedEmaCount": 1,
   "passedEmaList": [
     {
-      "symbol": "EDGE-USDT-SWAP",
-      "diffema30": "-4.37%",
-      "diffema10": "-0.97%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "RAY-USDT-SWAP",
-      "diffema30": "-6.08%",
-      "diffema10": "-0.67%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "DOOD-USDT-SWAP",
-      "diffema30": "4.70%",
-      "diffema10": "-0.23%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "APR-USDT-SWAP",
-      "diffema30": "-5.62%",
-      "diffema10": "-0.88%",
+      "diffema30": "-5.38%",
+      "diffema10": "-0.85%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 3,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "EDGE-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-7.53%",
-      "diffema30": "-4.37%",
-      "diffema10": "-0.97%",
-      "bbd": "-0.68%",
-      "bbt": "-2.13%",
-      "link": "https://www.okx.com/trade-swap/edge-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "RAY-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+28.78%",
-      "diffema30": "-6.08%",
-      "diffema10": "-0.67%",
-      "bbd": "0.09%",
-      "bbt": "-4.05%",
-      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "APR-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-19.53%",
-      "diffema30": "-5.62%",
-      "diffema10": "-0.88%",
-      "bbd": "0.10%",
-      "bbt": "-1.11%",
+      "change24h": "-17.97%",
+      "diffema30": "-5.38%",
+      "diffema10": "-0.85%",
+      "bbd": "0.38%",
+      "bbt": "-1.18%",
       "link": "https://www.okx.com/trade-swap/apr-usdt-swap",
       "teleSent": false
     }
