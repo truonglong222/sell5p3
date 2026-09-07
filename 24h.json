@@ -1,21 +1,41 @@
 {
-  "lastScanAt": "2026-09-07T23:41:06.402Z",
+  "lastScanAt": "2026-09-07T23:46:14.387Z",
   "totalScanned": 171,
-  "passedEmaCount": 2,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
+      "symbol": "ICX-USDT-SWAP",
+      "diffema50": "-5.33%",
+      "diffema20": "-0.97%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "BEAT-USDT-SWAP",
-      "diffema50": "5.85%",
-      "diffema20": "0.74%",
+      "diffema50": "5.64%",
+      "diffema20": "0.78%",
       "validFor": "SHORT"
     },
     {
       "symbol": "PIEVERSE-USDT-SWAP",
-      "diffema50": "14.25%",
-      "diffema20": "0.25%",
+      "diffema50": "13.99%",
+      "diffema20": "0.23%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ICX-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-10.58%",
+      "diffema50": "-5.33%",
+      "diffema20": "-0.97%",
+      "bbd": "0.48%",
+      "bbt": "-1.75%",
+      "hbb": "0.0003",
+      "hbbPercent": "2.24%",
+      "link": "https://www.okx.com/trade-swap/icx-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
