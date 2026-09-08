@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-08T02:21:04.286Z",
+  "lastScanAt": "2026-09-08T02:25:59.392Z",
   "totalScanned": 170,
   "passedEmaCount": 4,
   "passedEmaList": [
@@ -28,6 +28,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "PIEVERSE-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+15.27%",
+      "diffema50": "5.74%",
+      "diffema20": "-0.38%",
+      "bbd": "2.35%",
+      "bbt": "0.38%",
+      "hbb": "0.0617",
+      "hbbPercent": "4.93%",
+      "link": "https://www.okx.com/trade-swap/pieverse-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
