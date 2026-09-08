@@ -1,8 +1,15 @@
 {
-  "lastScanAt": "2026-09-08T07:11:11.810Z",
+  "lastScanAt": "2026-09-08T07:16:09.210Z",
   "totalScanned": 173,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "AERO-USDT-SWAP",
+      "diffema50": "12.11%",
+      "diffema20": "0.97%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
