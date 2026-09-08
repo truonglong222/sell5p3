@@ -1,12 +1,18 @@
 {
-  "lastScanAt": "2026-09-08T13:26:08.105Z",
+  "lastScanAt": "2026-09-08T13:31:36.192Z",
   "totalScanned": 169,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
+      "symbol": "DOOD-USDT-SWAP",
+      "diffema50": "-8.88%",
+      "diffema20": "-0.96%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "KAITO-USDT-SWAP",
-      "diffema50": "5.17%",
-      "diffema20": "0.60%",
+      "diffema50": "5.14%",
+      "diffema20": "0.56%",
       "validFor": "SHORT"
     }
   ],
