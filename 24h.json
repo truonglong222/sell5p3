@@ -1,35 +1,33 @@
 {
-  "lastScanAt": "2026-09-08T00:55:58.017Z",
+  "lastScanAt": "2026-09-08T01:01:36.003Z",
   "totalScanned": 172,
-  "passedEmaCount": 2,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
+      "symbol": "IOST-USDT-SWAP",
+      "diffema50": "7.58%",
+      "diffema20": "-0.02%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "ZAMA-USDT-SWAP",
-      "diffema50": "-6.75%",
-      "diffema20": "-0.97%",
+      "diffema50": "-6.68%",
+      "diffema20": "-0.81%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "PONS-USDT-SWAP",
+      "diffema50": "-9.95%",
+      "diffema20": "-0.90%",
       "validFor": "LONG"
     },
     {
       "symbol": "PIEVERSE-USDT-SWAP",
-      "diffema50": "11.50%",
-      "diffema20": "-0.74%",
+      "diffema50": "10.59%",
+      "diffema20": "-0.98%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "ZAMA-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-10.09%",
-      "diffema50": "-6.75%",
-      "diffema20": "-0.97%",
-      "bbd": "0.36%",
-      "bbt": "-0.32%",
-      "hbb": "0.0008",
-      "hbbPercent": "1.53%",
-      "link": "https://www.okx.com/trade-swap/zama-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
