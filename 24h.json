@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-08T03:01:46.991Z",
+  "lastScanAt": "2026-09-08T03:06:09.188Z",
   "totalScanned": 172,
   "passedEmaCount": 2,
   "passedEmaList": [
@@ -16,6 +16,20 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "PONS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-8.99%",
+      "diffema50": "-8.68%",
+      "diffema20": "0.99%",
+      "bbd": "0.38%",
+      "bbt": "-7.14%",
+      "hbb": "0.0693",
+      "hbbPercent": "9.56%",
+      "link": "https://www.okx.com/trade-swap/pons-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
