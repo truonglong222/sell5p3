@@ -1,18 +1,24 @@
 {
-  "lastScanAt": "2026-09-08T21:41:19.761Z",
+  "lastScanAt": "2026-09-08T21:46:10.994Z",
   "totalScanned": 177,
-  "passedEmaCount": 2,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "CP-USDT-SWAP",
-      "diffema50": "-11.39%",
-      "diffema20": "0.23%",
+      "diffema50": "-10.75%",
+      "diffema20": "-0.01%",
       "validFor": "LONG"
     },
     {
       "symbol": "ICX-USDT-SWAP",
-      "diffema50": "12.51%",
-      "diffema20": "0.37%",
+      "diffema50": "11.20%",
+      "diffema20": "-0.27%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "ORDER-USDT-SWAP",
+      "diffema50": "6.92%",
+      "diffema20": "0.93%",
       "validFor": "SHORT"
     }
   ],
