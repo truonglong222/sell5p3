@@ -1,24 +1,30 @@
 {
-  "lastScanAt": "2026-09-08T15:41:13.699Z",
+  "lastScanAt": "2026-09-08T15:46:17.193Z",
   "totalScanned": 172,
-  "passedEmaCount": 3,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
+      "symbol": "RAY-USDT-SWAP",
+      "diffema50": "-8.36%",
+      "diffema20": "-0.78%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "DOOD-USDT-SWAP",
-      "diffema50": "-6.62%",
-      "diffema20": "0.04%",
+      "diffema50": "-6.24%",
+      "diffema20": "0.40%",
       "validFor": "LONG"
     },
     {
       "symbol": "AEON-USDT-SWAP",
-      "diffema50": "5.39%",
-      "diffema20": "0.80%",
+      "diffema50": "5.19%",
+      "diffema20": "0.43%",
       "validFor": "SHORT"
     },
     {
       "symbol": "KAITO-USDT-SWAP",
-      "diffema50": "5.09%",
-      "diffema20": "-0.13%",
+      "diffema50": "5.14%",
+      "diffema20": "-0.21%",
       "validFor": "SHORT"
     }
   ],
