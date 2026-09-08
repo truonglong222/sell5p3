@@ -1,47 +1,33 @@
 {
-  "lastScanAt": "2026-09-08T16:25:58.956Z",
+  "lastScanAt": "2026-09-08T16:31:35.324Z",
   "totalScanned": 172,
   "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "diffema50": "-8.57%",
-      "diffema20": "0.00%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "DOOD-USDT-SWAP",
-      "diffema50": "-5.70%",
-      "diffema20": "0.81%",
+      "diffema50": "-8.73%",
+      "diffema20": "0.30%",
       "validFor": "LONG"
     },
     {
       "symbol": "KAITO-USDT-SWAP",
-      "diffema50": "5.15%",
-      "diffema20": "-0.02%",
+      "diffema50": "5.10%",
+      "diffema20": "-0.06%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema50": "-6.66%",
-      "diffema20": "-0.70%",
+      "diffema50": "-6.15%",
+      "diffema20": "-0.02%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "CNPY-USDT-SWAP",
+      "diffema50": "-10.31%",
+      "diffema20": "-0.82%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "KAITO-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+7.56%",
-      "diffema50": "5.15%",
-      "diffema20": "-0.02%",
-      "bbd": "2.09%",
-      "bbt": "-0.15%",
-      "hbb": "0.0116",
-      "hbbPercent": "3.45%",
-      "link": "https://www.okx.com/trade-swap/kaito-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
