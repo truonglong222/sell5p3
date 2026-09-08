@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-08T16:01:48.284Z",
+  "lastScanAt": "2026-09-08T16:06:00.761Z",
   "totalScanned": 171,
   "passedEmaCount": 3,
   "passedEmaList": [
@@ -22,6 +22,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "KAITO-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+9.31%",
+      "diffema50": "5.07%",
+      "diffema20": "-0.15%",
+      "bbd": "2.20%",
+      "bbt": "0.71%",
+      "hbb": "0.0109",
+      "hbbPercent": "3.25%",
+      "link": "https://www.okx.com/trade-swap/kaito-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
