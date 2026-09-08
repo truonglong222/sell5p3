@@ -199,7 +199,7 @@ async function main() {
       // -1% < diffema20 < 1%
       const isEma20Valid = diffema20 > -1 && diffema20 < 1;
 
-      // Long: diffema50 < -5% và -1% < diffema20 < 1%
+      // Long: diffema50 < -6% và -1% < diffema20 < 1%
       const isEmaValidLong = diffema50 < -5 && isEma20Valid;
 
       // Short: diffema50 > 5% và -1% < diffema20 < 1%
