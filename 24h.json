@@ -1,12 +1,18 @@
 {
-  "lastScanAt": "2026-09-08T20:26:00.417Z",
+  "lastScanAt": "2026-09-08T20:31:25.502Z",
   "totalScanned": 178,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
+      "symbol": "USELESS-USDT-SWAP",
+      "diffema50": "19.00%",
+      "diffema20": "0.37%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "CP-USDT-SWAP",
-      "diffema50": "-14.31%",
-      "diffema20": "-0.05%",
+      "diffema50": "-13.82%",
+      "diffema20": "-0.17%",
       "validFor": "LONG"
     }
   ],
