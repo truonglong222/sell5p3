@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-08T00:46:07.192Z",
+  "lastScanAt": "2026-09-08T00:51:10.186Z",
   "totalScanned": 172,
   "passedEmaCount": 2,
   "passedEmaList": [
@@ -16,6 +16,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ZAMA-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-11.15%",
+      "diffema50": "-6.75%",
+      "diffema20": "-0.97%",
+      "bbd": "0.36%",
+      "bbt": "-0.66%",
+      "hbb": "0.0008",
+      "hbbPercent": "1.53%",
+      "link": "https://www.okx.com/trade-swap/zama-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
