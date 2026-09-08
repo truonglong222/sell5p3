@@ -1,6 +1,6 @@
 {
-  "lastScanAt": "2026-09-08T22:35:58.810Z",
-  "totalScanned": 178,
+  "lastScanAt": "2026-09-08T22:41:06.909Z",
+  "totalScanned": 177,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
@@ -16,6 +16,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "CP-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-10.43%",
+      "diffema50": "-8.57%",
+      "diffema20": "-0.28%",
+      "bbd": "0.48%",
+      "bbt": "-1.42%",
+      "hbb": "0.0005",
+      "hbbPercent": "2.94%",
+      "link": "https://www.okx.com/trade-swap/cp-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
