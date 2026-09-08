@@ -1,41 +1,27 @@
 {
-  "lastScanAt": "2026-09-08T00:11:14.363Z",
+  "lastScanAt": "2026-09-08T00:16:16.842Z",
   "totalScanned": 171,
   "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "ICX-USDT-SWAP",
-      "diffema50": "-5.28%",
-      "diffema20": "-0.86%",
+      "diffema50": "-5.03%",
+      "diffema20": "-0.70%",
       "validFor": "LONG"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "diffema50": "5.49%",
-      "diffema20": "0.83%",
+      "diffema50": "5.43%",
+      "diffema20": "0.75%",
       "validFor": "SHORT"
     },
     {
       "symbol": "PIEVERSE-USDT-SWAP",
-      "diffema50": "13.73%",
-      "diffema20": "0.21%",
+      "diffema50": "13.27%",
+      "diffema20": "0.05%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "BEAT-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+5.68%",
-      "diffema50": "5.49%",
-      "diffema20": "0.83%",
-      "bbd": "0.95%",
-      "bbt": "-0.25%",
-      "hbb": "0.0030",
-      "hbbPercent": "2.26%",
-      "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
