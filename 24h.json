@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-08T04:31:33.692Z",
+  "lastScanAt": "2026-09-08T04:35:59.777Z",
   "totalScanned": 170,
   "passedEmaCount": 2,
   "passedEmaList": [
@@ -16,6 +16,20 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-18.57%",
+      "diffema50": "-6.75%",
+      "diffema20": "0.11%",
+      "bbd": "-0.64%",
+      "bbt": "-6.45%",
+      "hbb": "0.0153",
+      "hbbPercent": "7.91%",
+      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
