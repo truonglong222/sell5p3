@@ -1,35 +1,27 @@
 {
-  "lastScanAt": "2026-09-08T03:41:11.894Z",
+  "lastScanAt": "2026-09-08T03:46:17.026Z",
   "totalScanned": 172,
-  "passedEmaCount": 2,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
+      "symbol": "IOST-USDT-SWAP",
+      "diffema50": "9.85%",
+      "diffema20": "0.43%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "CASHCAT-USDT-SWAP",
-      "diffema50": "-8.53%",
-      "diffema20": "-0.13%",
+      "diffema50": "-8.05%",
+      "diffema20": "0.06%",
       "validFor": "LONG"
     },
     {
       "symbol": "PONS-USDT-SWAP",
-      "diffema50": "-8.71%",
-      "diffema20": "0.33%",
+      "diffema50": "-8.56%",
+      "diffema20": "0.40%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "PONS-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-8.44%",
-      "diffema50": "-8.71%",
-      "diffema20": "0.33%",
-      "bbd": "0.03%",
-      "bbt": "-8.23%",
-      "hbb": "0.0806",
-      "hbbPercent": "11.16%",
-      "link": "https://www.okx.com/trade-swap/pons-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
