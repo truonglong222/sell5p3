@@ -1,54 +1,33 @@
 {
-  "lastScanAt": "2026-09-09T01:56:00.589Z",
+  "lastScanAt": "2026-09-09T02:01:46.057Z",
   "totalScanned": 175,
-  "passedEmaCount": 3,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "ACU-USDT-SWAP",
-      "diffema50": "-5.00%",
-      "diffema20": "-0.93%",
+      "diffema50": "-5.07%",
+      "diffema20": "-0.86%",
       "validFor": "LONG"
     },
     {
+      "symbol": "KMNO-USDT-SWAP",
+      "diffema50": "5.11%",
+      "diffema20": "0.01%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "APR-USDT-SWAP",
-      "diffema50": "-5.65%",
-      "diffema20": "-1.00%",
+      "diffema50": "-5.69%",
+      "diffema20": "-0.88%",
       "validFor": "LONG"
     },
     {
       "symbol": "DOT-USDT-SWAP",
-      "diffema50": "13.63%",
-      "diffema20": "0.46%",
+      "diffema50": "13.48%",
+      "diffema20": "-0.04%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "ACU-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-5.00%",
-      "diffema50": "-5.00%",
-      "diffema20": "-0.93%",
-      "bbd": "0.47%",
-      "bbt": "-2.19%",
-      "hbb": "0.0050",
-      "hbbPercent": "3.46%",
-      "link": "https://www.okx.com/trade-swap/acu-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "APR-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-4.96%",
-      "diffema50": "-5.65%",
-      "diffema20": "-1.00%",
-      "bbd": "0.29%",
-      "bbt": "-2.88%",
-      "hbb": "0.0068",
-      "hbbPercent": "3.77%",
-      "link": "https://www.okx.com/trade-swap/apr-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
