@@ -1,6 +1,6 @@
 {
-  "lastScanAt": "2026-09-09T15:31:30.361Z",
-  "totalScanned": 172,
+  "lastScanAt": "2026-09-09T15:36:02.168Z",
+  "totalScanned": 174,
   "passedEmaCount": 7,
   "passedEmaList": [
     {
@@ -46,15 +46,28 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 3,
+  "matchedCount": 4,
   "matchedList": [
+    {
+      "symbol": "PROS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+4.62%",
+      "diffema50": "7.28%",
+      "diffema20": "-0.98%",
+      "bbd": "0.32%",
+      "bbt": "-3.49%",
+      "hbb": "0.0207",
+      "hbbPercent": "4.44%",
+      "link": "https://www.okx.com/trade-swap/pros-usdt-swap",
+      "teleSent": false
+    },
     {
       "symbol": "AEON-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+2.62%",
+      "change24h": "+1.58%",
       "diffema50": "-5.50%",
       "diffema20": "-0.43%",
-      "bbd": "2.31%",
+      "bbd": "1.58%",
       "bbt": "1.43%",
       "hbb": "0.0010",
       "hbbPercent": "1.77%",
@@ -64,11 +77,11 @@
     {
       "symbol": "ZRX-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.40%",
+      "change24h": "+5.50%",
       "diffema50": "6.16%",
       "diffema20": "-0.33%",
       "bbd": "0.42%",
-      "bbt": "-3.00%",
+      "bbt": "-2.81%",
       "hbb": "0.0041",
       "hbbPercent": "3.83%",
       "link": "https://www.okx.com/trade-swap/zrx-usdt-swap",
@@ -77,15 +90,15 @@
     {
       "symbol": "CHIP-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+3.53%",
+      "change24h": "+3.79%",
       "diffema50": "8.57%",
       "diffema20": "0.52%",
-      "bbd": "0.11%",
-      "bbt": "-4.73%",
+      "bbd": "-0.11%",
+      "bbt": "-4.59%",
       "hbb": "0.0030",
       "hbbPercent": "5.15%",
       "link": "https://www.okx.com/trade-swap/chip-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
