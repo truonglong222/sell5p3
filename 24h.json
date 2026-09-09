@@ -1,77 +1,64 @@
 {
-  "lastScanAt": "2026-09-09T14:11:06.847Z",
+  "lastScanAt": "2026-09-09T14:16:23.871Z",
   "totalScanned": 171,
   "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "diffema50": "-6.35%",
-      "diffema20": "-0.64%",
+      "diffema50": "-6.69%",
+      "diffema20": "-0.59%",
       "validFor": "SHORT"
     },
     {
       "symbol": "PROS-USDT-SWAP",
-      "diffema50": "7.45%",
-      "diffema20": "-0.64%",
+      "diffema50": "7.40%",
+      "diffema20": "-0.81%",
       "validFor": "LONG"
     },
     {
       "symbol": "USELESS-USDT-SWAP",
-      "diffema50": "10.67%",
-      "diffema20": "0.25%",
+      "diffema50": "10.00%",
+      "diffema20": "-0.11%",
       "validFor": "LONG"
     },
     {
       "symbol": "GRASS-USDT-SWAP",
-      "diffema50": "9.28%",
-      "diffema20": "0.91%",
+      "diffema50": "9.32%",
+      "diffema20": "0.71%",
       "validFor": "LONG"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "diffema50": "5.71%",
-      "diffema20": "0.05%",
+      "diffema50": "5.84%",
+      "diffema20": "0.17%",
       "validFor": "LONG"
     },
     {
       "symbol": "ZRX-USDT-SWAP",
-      "diffema50": "7.38%",
-      "diffema20": "0.82%",
+      "diffema50": "7.19%",
+      "diffema20": "0.52%",
       "validFor": "LONG"
     },
     {
       "symbol": "TRUTH-USDT-SWAP",
-      "diffema50": "7.41%",
-      "diffema20": "0.35%",
+      "diffema50": "7.51%",
+      "diffema20": "0.15%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "PROS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+6.08%",
-      "diffema50": "7.45%",
-      "diffema20": "-0.64%",
-      "bbd": "-0.70%",
-      "bbt": "-2.40%",
-      "hbb": "0.0142",
-      "hbbPercent": "3.03%",
+      "change24h": "+6.07%",
+      "diffema50": "7.40%",
+      "diffema20": "-0.81%",
+      "bbd": "0.15%",
+      "bbt": "-3.07%",
+      "hbb": "0.0153",
+      "hbbPercent": "3.27%",
       "link": "https://www.okx.com/trade-swap/pros-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "GRASS-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+13.03%",
-      "diffema50": "9.28%",
-      "diffema20": "0.91%",
-      "bbd": "0.42%",
-      "bbt": "-0.93%",
-      "hbb": "0.0119",
-      "hbbPercent": "3.24%",
-      "link": "https://www.okx.com/trade-swap/grass-usdt-swap",
       "teleSent": false
     }
   ]
