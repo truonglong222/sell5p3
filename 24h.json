@@ -1,27 +1,41 @@
 {
-  "lastScanAt": "2026-09-09T02:41:05.481Z",
+  "lastScanAt": "2026-09-09T02:46:14.171Z",
   "totalScanned": 174,
   "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "KMNO-USDT-SWAP",
-      "diffema50": "5.13%",
-      "diffema20": "-0.11%",
+      "diffema50": "5.09%",
+      "diffema20": "-0.15%",
       "validFor": "SHORT"
     },
     {
       "symbol": "APR-USDT-SWAP",
-      "diffema50": "-5.68%",
-      "diffema20": "-0.57%",
+      "diffema50": "-5.67%",
+      "diffema20": "-0.67%",
       "validFor": "LONG"
     },
     {
       "symbol": "DOT-USDT-SWAP",
-      "diffema50": "12.98%",
-      "diffema20": "-0.73%",
+      "diffema50": "12.70%",
+      "diffema20": "-0.96%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "APR-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-5.91%",
+      "diffema50": "-5.67%",
+      "diffema20": "-0.67%",
+      "bbd": "0.42%",
+      "bbt": "-2.16%",
+      "hbb": "0.0054",
+      "hbbPercent": "2.99%",
+      "link": "https://www.okx.com/trade-swap/apr-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
