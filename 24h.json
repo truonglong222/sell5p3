@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T14:01:51.720Z",
+  "lastScanAt": "2026-09-09T14:06:10.344Z",
   "totalScanned": 173,
   "passedEmaCount": 7,
   "passedEmaList": [
@@ -46,20 +46,33 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "PROS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+6.82%",
+      "change24h": "+6.22%",
       "diffema50": "7.45%",
       "diffema20": "-0.64%",
-      "bbd": "0.17%",
+      "bbd": "-0.70%",
       "bbt": "-2.40%",
       "hbb": "0.0142",
       "hbbPercent": "3.03%",
       "link": "https://www.okx.com/trade-swap/pros-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "GRASS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+12.67%",
+      "diffema50": "9.28%",
+      "diffema20": "0.91%",
+      "bbd": "0.42%",
+      "bbt": "-1.17%",
+      "hbb": "0.0119",
+      "hbbPercent": "3.24%",
+      "link": "https://www.okx.com/trade-swap/grass-usdt-swap",
+      "teleSent": true
     }
   ]
 }
