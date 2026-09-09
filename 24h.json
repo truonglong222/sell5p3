@@ -1,18 +1,24 @@
 {
-  "lastScanAt": "2026-09-09T03:56:11.867Z",
+  "lastScanAt": "2026-09-09T04:01:44.533Z",
   "totalScanned": 174,
-  "passedEmaCount": 2,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
-      "symbol": "CASHCAT-USDT-SWAP",
-      "diffema50": "5.26%",
-      "diffema20": "0.12%",
+      "symbol": "RAY-USDT-SWAP",
+      "diffema50": "9.54%",
+      "diffema20": "0.92%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "IOST-USDT-SWAP",
+      "diffema50": "-5.02%",
+      "diffema20": "-0.96%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "SIGN-USDT-SWAP",
-      "diffema50": "5.26%",
-      "diffema20": "0.57%",
+      "diffema50": "5.31%",
+      "diffema20": "0.35%",
       "validFor": "SHORT"
     }
   ],
