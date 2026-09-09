@@ -1,15 +1,29 @@
 {
-  "lastScanAt": "2026-09-09T05:41:14.259Z",
+  "lastScanAt": "2026-09-09T05:46:14.610Z",
   "totalScanned": 176,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
-      "symbol": "OL-USDT-SWAP",
-      "diffema50": "19.73%",
-      "diffema20": "-0.28%",
-      "validFor": "SHORT"
+      "symbol": "WLD-USDT-SWAP",
+      "diffema50": "-5.09%",
+      "diffema20": "-0.61%",
+      "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "WLD-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-4.09%",
+      "diffema50": "-5.09%",
+      "diffema20": "-0.61%",
+      "bbd": "0.30%",
+      "bbt": "-1.51%",
+      "hbb": "0.0091",
+      "hbbPercent": "2.00%",
+      "link": "https://www.okx.com/trade-swap/wld-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
