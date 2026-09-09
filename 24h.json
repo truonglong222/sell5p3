@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T15:01:50.737Z",
+  "lastScanAt": "2026-09-09T15:06:11.770Z",
   "totalScanned": 170,
   "passedEmaCount": 5,
   "passedEmaList": [
@@ -34,15 +34,15 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "PROS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.80%",
+      "change24h": "+4.85%",
       "diffema50": "7.31%",
       "diffema20": "-0.86%",
-      "bbd": "0.24%",
+      "bbd": "-1.29%",
       "bbt": "-3.38%",
       "hbb": "0.0182",
       "hbbPercent": "3.90%",
@@ -50,12 +50,25 @@
       "teleSent": false
     },
     {
+      "symbol": "USELESS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-3.58%",
+      "diffema50": "8.14%",
+      "diffema20": "-0.38%",
+      "bbd": "-0.68%",
+      "bbt": "-7.35%",
+      "hbb": "0.0306",
+      "hbbPercent": "9.71%",
+      "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
+      "teleSent": false
+    },
+    {
       "symbol": "ZRX-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+7.49%",
+      "change24h": "+6.19%",
       "diffema50": "6.67%",
       "diffema20": "0.07%",
-      "bbd": "0.46%",
+      "bbd": "0.42%",
       "bbt": "-1.79%",
       "hbb": "0.0038",
       "hbbPercent": "3.52%",
