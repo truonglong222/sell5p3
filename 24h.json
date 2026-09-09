@@ -1,6 +1,6 @@
 {
-  "lastScanAt": "2026-09-09T02:01:46.057Z",
-  "totalScanned": 175,
+  "lastScanAt": "2026-09-09T02:06:04.414Z",
+  "totalScanned": 174,
   "passedEmaCount": 4,
   "passedEmaList": [
     {
@@ -28,6 +28,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ACU-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-5.20%",
+      "diffema50": "-5.07%",
+      "diffema20": "-0.86%",
+      "bbd": "0.29%",
+      "bbt": "-2.62%",
+      "hbb": "0.0052",
+      "hbbPercent": "3.58%",
+      "link": "https://www.okx.com/trade-swap/acu-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
