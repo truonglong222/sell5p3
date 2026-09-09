@@ -1,64 +1,65 @@
 {
-  "lastScanAt": "2026-09-09T14:56:11.450Z",
+  "lastScanAt": "2026-09-09T15:01:50.737Z",
   "totalScanned": 170,
-  "passedEmaCount": 7,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "diffema50": "-7.67%",
-      "diffema20": "-0.32%",
+      "diffema50": "-8.12%",
+      "diffema20": "-0.28%",
       "validFor": "SHORT"
     },
     {
       "symbol": "PROS-USDT-SWAP",
-      "diffema50": "7.37%",
-      "diffema20": "-0.82%",
+      "diffema50": "7.31%",
+      "diffema20": "-0.86%",
       "validFor": "LONG"
     },
     {
       "symbol": "USELESS-USDT-SWAP",
-      "diffema50": "8.73%",
-      "diffema20": "-0.15%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "GRASS-USDT-SWAP",
-      "diffema50": "9.68%",
-      "diffema20": "0.94%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "GPS-USDT-SWAP",
-      "diffema50": "6.63%",
-      "diffema20": "0.94%",
+      "diffema50": "8.14%",
+      "diffema20": "-0.38%",
       "validFor": "LONG"
     },
     {
       "symbol": "ZRX-USDT-SWAP",
-      "diffema50": "6.83%",
-      "diffema20": "0.21%",
+      "diffema50": "6.67%",
+      "diffema20": "0.07%",
       "validFor": "LONG"
     },
     {
       "symbol": "TRUTH-USDT-SWAP",
-      "diffema50": "7.69%",
-      "diffema20": "0.08%",
+      "diffema50": "7.77%",
+      "diffema20": "0.19%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "PROS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.96%",
-      "diffema50": "7.37%",
-      "diffema20": "-0.82%",
-      "bbd": "0.06%",
-      "bbt": "-3.05%",
-      "hbb": "0.0168",
-      "hbbPercent": "3.59%",
+      "change24h": "+5.80%",
+      "diffema50": "7.31%",
+      "diffema20": "-0.86%",
+      "bbd": "0.24%",
+      "bbt": "-3.38%",
+      "hbb": "0.0182",
+      "hbbPercent": "3.90%",
       "link": "https://www.okx.com/trade-swap/pros-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "ZRX-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+7.49%",
+      "diffema50": "6.67%",
+      "diffema20": "0.07%",
+      "bbd": "0.46%",
+      "bbt": "-1.79%",
+      "hbb": "0.0038",
+      "hbbPercent": "3.52%",
+      "link": "https://www.okx.com/trade-swap/zrx-usdt-swap",
       "teleSent": false
     }
   ]
