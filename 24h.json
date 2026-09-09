@@ -1,12 +1,18 @@
 {
-  "lastScanAt": "2026-09-09T03:11:12.070Z",
+  "lastScanAt": "2026-09-09T03:16:17.012Z",
   "totalScanned": 174,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "diffema50": "5.72%",
+      "diffema20": "0.84%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "APR-USDT-SWAP",
-      "diffema50": "-5.65%",
-      "diffema20": "-0.76%",
+      "diffema50": "-5.72%",
+      "diffema20": "-0.88%",
       "validFor": "LONG"
     }
   ],
@@ -15,13 +21,13 @@
     {
       "symbol": "APR-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-4.41%",
-      "diffema50": "-5.65%",
-      "diffema20": "-0.76%",
-      "bbd": "-0.01%",
-      "bbt": "-1.32%",
-      "hbb": "0.0052",
-      "hbbPercent": "2.88%",
+      "change24h": "-5.06%",
+      "diffema50": "-5.72%",
+      "diffema20": "-0.88%",
+      "bbd": "0.45%",
+      "bbt": "-2.15%",
+      "hbb": "0.0050",
+      "hbbPercent": "2.79%",
       "link": "https://www.okx.com/trade-swap/apr-usdt-swap",
       "teleSent": false
     }
