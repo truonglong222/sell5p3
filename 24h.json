@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T15:16:19.852Z",
+  "lastScanAt": "2026-09-09T15:21:17.945Z",
   "totalScanned": 170,
   "passedEmaCount": 5,
   "passedEmaList": [
@@ -34,29 +34,42 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "PROS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.59%",
+      "change24h": "+5.04%",
       "diffema50": "7.27%",
       "diffema20": "-0.99%",
       "bbd": "0.37%",
-      "bbt": "-3.51%",
+      "bbt": "-3.30%",
       "hbb": "0.0197",
       "hbbPercent": "4.23%",
       "link": "https://www.okx.com/trade-swap/pros-usdt-swap",
       "teleSent": false
     },
     {
+      "symbol": "AEON-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+0.32%",
+      "diffema50": "-5.46%",
+      "diffema20": "-0.60%",
+      "bbd": "0.03%",
+      "bbt": "1.75%",
+      "hbb": "0.0007",
+      "hbbPercent": "1.23%",
+      "link": "https://www.okx.com/trade-swap/aeon-usdt-swap",
+      "teleSent": true
+    },
+    {
       "symbol": "ZRX-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.92%",
+      "change24h": "+5.29%",
       "diffema50": "6.42%",
       "diffema20": "-0.19%",
       "bbd": "0.15%",
-      "bbt": "-2.92%",
+      "bbt": "-2.91%",
       "hbb": "0.0040",
       "hbbPercent": "3.77%",
       "link": "https://www.okx.com/trade-swap/zrx-usdt-swap",
