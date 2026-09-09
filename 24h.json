@@ -1,8 +1,15 @@
 {
-  "lastScanAt": "2026-09-09T08:41:10.687Z",
+  "lastScanAt": "2026-09-09T08:46:18.517Z",
   "totalScanned": 177,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "CNPY-USDT-SWAP",
+      "diffema50": "6.21%",
+      "diffema20": "-0.16%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
