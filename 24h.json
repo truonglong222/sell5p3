@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T21:46:21.083Z",
+  "lastScanAt": "2026-09-09T21:51:10.958Z",
   "totalScanned": 172,
   "passedEmaCount": 1,
   "passedEmaList": [
@@ -10,6 +10,20 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "XTZ-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+7.68%",
+      "diffema50": "6.07%",
+      "diffema20": "-0.25%",
+      "bbd": "0.12%",
+      "bbt": "-1.19%",
+      "hbb": "0.0059",
+      "hbbPercent": "2.23%",
+      "link": "https://www.okx.com/trade-swap/xtz-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
