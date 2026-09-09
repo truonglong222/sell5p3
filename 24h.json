@@ -1,51 +1,65 @@
 {
-  "lastScanAt": "2026-09-09T13:46:21.110Z",
-  "totalScanned": 172,
+  "lastScanAt": "2026-09-09T13:56:02.109Z",
+  "totalScanned": 173,
   "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
       "diffema50": "9.63%",
       "diffema20": "0.94%",
-      "validFor": "SHORT"
+      "validFor": "LONG"
     },
     {
       "symbol": "OL-USDT-SWAP",
       "diffema50": "-5.64%",
       "diffema20": "-0.57%",
-      "validFor": "LONG"
+      "validFor": "SHORT"
     },
     {
       "symbol": "PROS-USDT-SWAP",
       "diffema50": "7.37%",
       "diffema20": "-0.54%",
-      "validFor": "SHORT"
+      "validFor": "LONG"
     },
     {
       "symbol": "USELESS-USDT-SWAP",
       "diffema50": "11.05%",
       "diffema20": "0.60%",
-      "validFor": "SHORT"
+      "validFor": "LONG"
     },
     {
       "symbol": "GPS-USDT-SWAP",
       "diffema50": "5.51%",
       "diffema20": "-0.06%",
-      "validFor": "SHORT"
+      "validFor": "LONG"
     },
     {
       "symbol": "TRUTH-USDT-SWAP",
       "diffema50": "7.39%",
       "diffema20": "0.61%",
-      "validFor": "SHORT"
+      "validFor": "LONG"
     },
     {
       "symbol": "SOPH-USDT-SWAP",
       "diffema50": "-6.00%",
       "diffema20": "-0.49%",
-      "validFor": "LONG"
+      "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "PROS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+7.37%",
+      "diffema50": "7.37%",
+      "diffema20": "-0.54%",
+      "bbd": "0.44%",
+      "bbt": "-1.45%",
+      "hbb": "0.0137",
+      "hbbPercent": "2.92%",
+      "link": "https://www.okx.com/trade-swap/pros-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
