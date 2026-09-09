@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T00:06:07.074Z",
+  "lastScanAt": "2026-09-09T00:11:05.449Z",
   "totalScanned": 177,
   "passedEmaCount": 3,
   "passedEmaList": [
@@ -22,45 +22,19 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 3,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "USELESS-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+23.86%",
+      "change24h": "+23.38%",
       "diffema50": "13.95%",
       "diffema20": "0.41%",
-      "bbd": "4.57%",
+      "bbd": "3.72%",
       "bbt": "-0.09%",
       "hbb": "0.0155",
       "hbbPercent": "5.54%",
       "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "CP-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-12.26%",
-      "diffema50": "-5.10%",
-      "diffema20": "-0.93%",
-      "bbd": "-0.35%",
-      "bbt": "-1.40%",
-      "hbb": "0.0005",
-      "hbbPercent": "2.66%",
-      "link": "https://www.okx.com/trade-swap/cp-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "ARX-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+7.95%",
-      "diffema50": "7.37%",
-      "diffema20": "0.68%",
-      "bbd": "2.59%",
-      "bbt": "0.31%",
-      "hbb": "0.0062",
-      "hbbPercent": "4.07%",
-      "link": "https://www.okx.com/trade-swap/arx-usdt-swap",
       "teleSent": false
     }
   ]
