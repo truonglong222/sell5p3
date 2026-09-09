@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T20:46:09.890Z",
+  "lastScanAt": "2026-09-09T20:51:16.138Z",
   "totalScanned": 172,
   "passedEmaCount": 2,
   "passedEmaList": [
@@ -16,6 +16,20 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "NEAR-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+7.90%",
+      "diffema50": "7.45%",
+      "diffema20": "-0.44%",
+      "bbd": "0.00%",
+      "bbt": "-6.21%",
+      "hbb": "0.1837",
+      "hbbPercent": "7.13%",
+      "link": "https://www.okx.com/trade-swap/near-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
