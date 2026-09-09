@@ -1,8 +1,15 @@
 {
-  "lastScanAt": "2026-09-09T11:25:59.200Z",
+  "lastScanAt": "2026-09-09T11:31:22.880Z",
   "totalScanned": 175,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "KAT-USDT-SWAP",
+      "diffema50": "15.71%",
+      "diffema20": "-0.71%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
