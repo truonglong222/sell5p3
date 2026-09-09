@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T16:06:18.021Z",
+  "lastScanAt": "2026-09-09T16:11:17.669Z",
   "totalScanned": 175,
   "passedEmaCount": 7,
   "passedEmaList": [
@@ -46,25 +46,12 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 3,
+  "matchedCount": 2,
   "matchedList": [
-    {
-      "symbol": "OL-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+19.90%",
-      "diffema50": "-8.29%",
-      "diffema20": "-0.30%",
-      "bbd": "3.96%",
-      "bbt": "1.15%",
-      "hbb": "0.0005",
-      "hbbPercent": "7.90%",
-      "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "AEON-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+1.66%",
+      "change24h": "+1.99%",
       "diffema50": "-5.21%",
       "diffema20": "-0.19%",
       "bbd": "1.20%",
@@ -77,7 +64,7 @@
     {
       "symbol": "CHIP-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+4.76%",
+      "change24h": "+5.47%",
       "diffema50": "8.06%",
       "diffema20": "-0.16%",
       "bbd": "-0.20%",
