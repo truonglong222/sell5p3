@@ -1,21 +1,41 @@
 {
-  "lastScanAt": "2026-09-09T04:56:06.744Z",
-  "totalScanned": 174,
-  "passedEmaCount": 2,
+  "lastScanAt": "2026-09-09T05:01:46.970Z",
+  "totalScanned": 175,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "diffema50": "9.32%",
-      "diffema20": "0.34%",
+      "diffema50": "9.60%",
+      "diffema20": "0.52%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CNPY-USDT-SWAP",
-      "diffema50": "17.90%",
-      "diffema20": "-0.25%",
+      "diffema50": "17.13%",
+      "diffema20": "-0.82%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "ARX-USDT-SWAP",
+      "diffema50": "6.70%",
+      "diffema20": "0.35%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RAY-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+13.44%",
+      "diffema50": "9.60%",
+      "diffema20": "0.52%",
+      "bbd": "6.15%",
+      "bbt": "1.32%",
+      "hbb": "0.0647",
+      "hbbPercent": "5.38%",
+      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
