@@ -1,30 +1,24 @@
 {
-  "lastScanAt": "2026-09-08T23:56:08.090Z",
+  "lastScanAt": "2026-09-09T00:01:49.245Z",
   "totalScanned": 177,
-  "passedEmaCount": 4,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "USELESS-USDT-SWAP",
-      "diffema50": "14.59%",
-      "diffema20": "0.09%",
+      "diffema50": "13.95%",
+      "diffema20": "0.41%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "diffema50": "-5.67%",
-      "diffema20": "-0.94%",
+      "diffema50": "-5.10%",
+      "diffema20": "-0.93%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARX-USDT-SWAP",
-      "diffema50": "7.22%",
-      "diffema20": "0.70%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "PONS-USDT-SWAP",
-      "diffema50": "11.37%",
-      "diffema20": "-0.88%",
+      "diffema50": "7.37%",
+      "diffema20": "0.68%",
       "validFor": "SHORT"
     }
   ],
@@ -33,26 +27,26 @@
     {
       "symbol": "USELESS-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+23.82%",
-      "diffema50": "14.59%",
-      "diffema20": "0.09%",
-      "bbd": "4.14%",
-      "bbt": "0.05%",
-      "hbb": "0.0154",
-      "hbbPercent": "5.52%",
+      "change24h": "+23.68%",
+      "diffema50": "13.95%",
+      "diffema20": "0.41%",
+      "bbd": "4.57%",
+      "bbt": "-0.37%",
+      "hbb": "0.0155",
+      "hbbPercent": "5.54%",
       "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "CP-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-12.37%",
-      "diffema50": "-5.67%",
-      "diffema20": "-0.94%",
-      "bbd": "-0.42%",
-      "bbt": "-1.85%",
+      "change24h": "-12.02%",
+      "diffema50": "-5.10%",
+      "diffema20": "-0.93%",
+      "bbd": "0.28%",
+      "bbt": "-1.40%",
       "hbb": "0.0005",
-      "hbbPercent": "2.70%",
+      "hbbPercent": "2.66%",
       "link": "https://www.okx.com/trade-swap/cp-usdt-swap",
       "teleSent": false
     }
