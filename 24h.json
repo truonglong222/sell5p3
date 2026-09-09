@@ -1,8 +1,15 @@
 {
-  "lastScanAt": "2026-09-09T00:55:59.282Z",
+  "lastScanAt": "2026-09-09T01:01:35.534Z",
   "totalScanned": 177,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "ARX-USDT-SWAP",
+      "diffema50": "8.69%",
+      "diffema20": "0.99%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
