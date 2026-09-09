@@ -1,76 +1,51 @@
 {
-  "lastScanAt": "2026-09-09T16:11:17.669Z",
+  "lastScanAt": "2026-09-09T16:16:18.746Z",
   "totalScanned": 175,
-  "passedEmaCount": 7,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "diffema50": "-8.29%",
-      "diffema20": "-0.30%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "PROS-USDT-SWAP",
-      "diffema50": "6.24%",
-      "diffema20": "-0.97%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "AEON-USDT-SWAP",
-      "diffema50": "-5.21%",
-      "diffema20": "-0.19%",
+      "diffema50": "-7.03%",
+      "diffema20": "0.45%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GRASS-USDT-SWAP",
-      "diffema50": "9.95%",
-      "diffema20": "0.67%",
+      "diffema50": "9.99%",
+      "diffema20": "0.65%",
       "validFor": "LONG"
     },
     {
       "symbol": "ZRX-USDT-SWAP",
-      "diffema50": "5.91%",
-      "diffema20": "-0.07%",
+      "diffema50": "5.75%",
+      "diffema20": "0.05%",
       "validFor": "LONG"
     },
     {
       "symbol": "TRUTH-USDT-SWAP",
-      "diffema50": "7.91%",
-      "diffema20": "0.46%",
+      "diffema50": "7.75%",
+      "diffema20": "0.33%",
       "validFor": "LONG"
     },
     {
       "symbol": "CHIP-USDT-SWAP",
-      "diffema50": "8.06%",
-      "diffema20": "-0.16%",
+      "diffema50": "7.77%",
+      "diffema20": "-0.55%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "AEON-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+1.99%",
-      "diffema50": "-5.21%",
-      "diffema20": "-0.19%",
-      "bbd": "1.20%",
-      "bbt": "1.24%",
-      "hbb": "0.0013",
-      "hbbPercent": "2.26%",
-      "link": "https://www.okx.com/trade-swap/aeon-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "CHIP-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.47%",
-      "diffema50": "8.06%",
-      "diffema20": "-0.16%",
-      "bbd": "-0.20%",
-      "bbt": "-4.79%",
-      "hbb": "0.0033",
-      "hbbPercent": "5.64%",
+      "change24h": "+5.83%",
+      "diffema50": "7.77%",
+      "diffema20": "-0.55%",
+      "bbd": "0.20%",
+      "bbt": "-5.47%",
+      "hbb": "0.0036",
+      "hbbPercent": "6.14%",
       "link": "https://www.okx.com/trade-swap/chip-usdt-swap",
       "teleSent": false
     }
