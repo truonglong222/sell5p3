@@ -1,13 +1,25 @@
 {
-  "lastScanAt": "2026-09-09T09:41:10.518Z",
+  "lastScanAt": "2026-09-09T09:46:07.496Z",
   "totalScanned": 176,
-  "passedEmaCount": 1,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
+      "symbol": "PROS-USDT-SWAP",
+      "diffema50": "6.59%",
+      "diffema20": "0.90%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "SOPH-USDT-SWAP",
-      "diffema50": "-11.48%",
-      "diffema20": "0.29%",
+      "diffema50": "-10.94%",
+      "diffema20": "0.75%",
       "validFor": "LONG"
+    },
+    {
+      "symbol": "KAT-USDT-SWAP",
+      "diffema50": "15.19%",
+      "diffema20": "-0.02%",
+      "validFor": "SHORT"
     }
   ],
   "matchedCount": 0,
