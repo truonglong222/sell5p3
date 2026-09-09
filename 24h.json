@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-09T19:46:18.735Z",
+  "lastScanAt": "2026-09-09T19:51:07.600Z",
   "totalScanned": 171,
   "passedEmaCount": 3,
   "passedEmaList": [
@@ -22,16 +22,16 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "GRASS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+5.80%",
+      "change24h": "+6.06%",
       "diffema50": "5.40%",
       "diffema20": "0.89%",
       "bbd": "-0.41%",
-      "bbt": "-5.94%",
+      "bbt": "-5.68%",
       "hbb": "0.0221",
       "hbbPercent": "5.96%",
       "link": "https://www.okx.com/trade-swap/grass-usdt-swap",
@@ -40,14 +40,27 @@
     {
       "symbol": "NEAR-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+7.20%",
+      "change24h": "+7.14%",
       "diffema50": "9.82%",
       "diffema20": "0.70%",
-      "bbd": "-0.89%",
-      "bbt": "-4.86%",
+      "bbd": "-1.60%",
+      "bbt": "-4.71%",
       "hbb": "0.1153",
       "hbbPercent": "4.45%",
       "link": "https://www.okx.com/trade-swap/near-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "XTZ-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+7.86%",
+      "diffema50": "6.39%",
+      "diffema20": "0.15%",
+      "bbd": "0.43%",
+      "bbt": "-2.78%",
+      "hbb": "0.0117",
+      "hbbPercent": "4.43%",
+      "link": "https://www.okx.com/trade-swap/xtz-usdt-swap",
       "teleSent": true
     }
   ]
