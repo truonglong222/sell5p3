@@ -1,29 +1,15 @@
 {
-  "lastScanAt": "2026-09-09T07:11:07.122Z",
+  "lastScanAt": "2026-09-09T07:16:08.747Z",
   "totalScanned": 177,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "ROBO-USDT-SWAP",
-      "diffema50": "-5.84%",
-      "diffema20": "-0.63%",
+      "diffema50": "-5.63%",
+      "diffema20": "-0.55%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "ROBO-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-8.35%",
-      "diffema50": "-5.84%",
-      "diffema20": "-0.63%",
-      "bbd": "0.43%",
-      "bbt": "-0.48%",
-      "hbb": "0.0002",
-      "hbbPercent": "1.47%",
-      "link": "https://www.okx.com/trade-swap/robo-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
