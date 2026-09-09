@@ -199,11 +199,11 @@ async function main() {
       // -1% < diffema20 < 1%
       const isEma20Valid = diffema20 > -1 && diffema20 < 1;
 
-      // Long: diffema50 < -6% và -1% < diffema20 < 1%
-      const isEmaValidLong = diffema50 < -5 && isEma20Valid;
+      // Long: diffema50 > 5% và -1% < diffema20 < 1%
+      const isEmaValidLong = diffema50 > 5 && isEma20Valid;
 
-      // Short: diffema50 > 5% và -1% < diffema20 < 1%
-      const isEmaValidShort = diffema50 > 5 && isEma20Valid;
+      // Short: diffema50 < -5% và -1% < diffema20 < 1%
+      const isEmaValidShort = diffema50 < -5 && isEma20Valid;
 
       if (!isEmaValidLong && !isEmaValidShort) {
         await sleep(80);
@@ -326,8 +326,8 @@ async function main() {
     console.log('\n================== THỐNG KÊ CHI TIẾT (15M) ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
     console.log(`2️⃣ Dữ liệu nến 15m: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Lọc EMA Long (diffema50 < -5% & |diffema20| < 1%): Đạt = ${countMatchedEmaLong} coin`);
-    console.log(`   Lọc EMA Short (diffema50 > 5% & |diffema20| < 1%): Đạt = ${countMatchedEmaShort} coin`);
+    console.log(`3️⃣ Lọc EMA Long (diffema50 > 5% & |diffema20| < 1%): Đạt = ${countMatchedEmaLong} coin`);
+    console.log(`   Lọc EMA Short (diffema50 < -5% & |diffema20| < 1%): Đạt = ${countMatchedEmaShort} coin`);
     console.log(`4️⃣ Tín hiệu LONG khớp (-2% < bbd < 0.5%): ${countMatchedLong} coin`);
     console.log(`5️⃣ Tín hiệu SHORT khớp (-0.5% < bbt < 2%): ${countMatchedShort} coin`);
 
