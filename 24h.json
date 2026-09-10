@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-10T04:16:18.241Z",
+  "lastScanAt": "2026-09-10T04:21:16.251Z",
   "totalScanned": 186,
   "passedEmaCount": 3,
   "passedEmaList": [
@@ -22,20 +22,33 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "PEPE-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-5.40%",
+      "change24h": "-5.53%",
       "diffema50": "-5.04%",
       "diffema20": "-0.99%",
-      "bbd": "0.92%",
-      "bbt": "-0.48%",
+      "bbd": "0.72%",
+      "bbt": "-0.45%",
       "hbb": "0.0000",
       "hbbPercent": "1.43%",
       "link": "https://www.okx.com/trade-swap/pepe-usdt-swap",
-      "teleSent": true
+      "teleSent": false
+    },
+    {
+      "symbol": "ZORA-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-8.60%",
+      "diffema50": "-5.17%",
+      "diffema20": "-0.17%",
+      "bbd": "2.47%",
+      "bbt": "-0.12%",
+      "hbb": "0.0003",
+      "hbbPercent": "3.65%",
+      "link": "https://www.okx.com/trade-swap/zora-usdt-swap",
+      "teleSent": false
     }
   ]
 }
