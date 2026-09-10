@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-10T08:21:11.372Z",
+  "lastScanAt": "2026-09-10T08:26:12.108Z",
   "totalScanned": 183,
   "passedEmaCount": 27,
   "passedEmaList": [
@@ -169,29 +169,29 @@
   "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "OL-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-5.03%",
-      "diffema50": "-11.80%",
-      "diffema20": "-0.94%",
-      "bbd": "4.46%",
-      "bbt": "1.94%",
-      "hbb": "0.0002",
-      "hbbPercent": "3.55%",
-      "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
-      "teleSent": false
-    },
-    {
       "symbol": "CNPY-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-2.42%",
+      "change24h": "-2.60%",
       "diffema50": "5.56%",
       "diffema20": "-0.56%",
       "bbd": "-0.75%",
-      "bbt": "-4.38%",
+      "bbt": "-3.46%",
       "hbb": "0.0093",
       "hbbPercent": "4.58%",
       "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "PARTI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-7.89%",
+      "diffema50": "-5.82%",
+      "diffema20": "-0.36%",
+      "bbd": "0.38%",
+      "bbt": "-0.37%",
+      "hbb": "0.0004",
+      "hbbPercent": "1.53%",
+      "link": "https://www.okx.com/trade-swap/parti-usdt-swap",
       "teleSent": false
     }
   ]
