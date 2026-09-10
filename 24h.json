@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-10T07:01:39.429Z",
+  "lastScanAt": "2026-09-10T07:06:14.671Z",
   "totalScanned": 183,
   "passedEmaCount": 30,
   "passedEmaList": [
@@ -184,15 +184,15 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 9,
+  "matchedCount": 10,
   "matchedList": [
     {
       "symbol": "MEME-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-7.26%",
+      "change24h": "-8.03%",
       "diffema50": "-6.64%",
       "diffema20": "-0.36%",
-      "bbd": "1.33%",
+      "bbd": "0.71%",
       "bbt": "-0.23%",
       "hbb": "0.0000",
       "hbbPercent": "1.70%",
@@ -202,10 +202,10 @@
     {
       "symbol": "PNUT-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-4.72%",
+      "change24h": "-5.26%",
       "diffema50": "-5.22%",
       "diffema20": "-0.44%",
-      "bbd": "1.24%",
+      "bbd": "0.94%",
       "bbt": "-0.42%",
       "hbb": "0.0008",
       "hbbPercent": "1.78%",
@@ -215,10 +215,10 @@
     {
       "symbol": "BICO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-9.06%",
+      "change24h": "-9.27%",
       "diffema50": "-6.75%",
       "diffema20": "-0.60%",
-      "bbd": "2.82%",
+      "bbd": "2.58%",
       "bbt": "-0.18%",
       "hbb": "0.0006",
       "hbbPercent": "3.06%",
@@ -228,10 +228,10 @@
     {
       "symbol": "PYTH-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-3.47%",
+      "change24h": "-4.31%",
       "diffema50": "-6.02%",
       "diffema20": "0.21%",
-      "bbd": "2.61%",
+      "bbd": "2.03%",
       "bbt": "-0.15%",
       "hbb": "0.0015",
       "hbbPercent": "2.87%",
@@ -241,20 +241,33 @@
     {
       "symbol": "CNPY-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+2.02%",
+      "change24h": "+1.26%",
       "diffema50": "7.55%",
       "diffema20": "0.51%",
-      "bbd": "0.48%",
+      "bbd": "0.38%",
       "bbt": "-2.41%",
       "hbb": "0.0079",
       "hbbPercent": "3.87%",
       "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "PARTI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-8.04%",
+      "diffema50": "-6.07%",
+      "diffema20": "-0.39%",
+      "bbd": "1.06%",
+      "bbt": "-0.50%",
+      "hbb": "0.0004",
+      "hbbPercent": "1.86%",
+      "link": "https://www.okx.com/trade-swap/parti-usdt-swap",
       "teleSent": true
     },
     {
       "symbol": "EDEN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-3.05%",
+      "change24h": "-3.40%",
       "diffema50": "-6.02%",
       "diffema20": "0.04%",
       "bbd": "2.85%",
@@ -267,10 +280,10 @@
     {
       "symbol": "2Z-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-6.21%",
+      "change24h": "-6.65%",
       "diffema50": "-5.18%",
       "diffema20": "-0.39%",
-      "bbd": "1.40%",
+      "bbd": "1.06%",
       "bbt": "-0.27%",
       "hbb": "0.0008",
       "hbbPercent": "1.71%",
@@ -280,10 +293,10 @@
     {
       "symbol": "XPL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-8.87%",
+      "change24h": "-9.61%",
       "diffema50": "-8.10%",
       "diffema20": "-0.23%",
-      "bbd": "1.67%",
+      "bbd": "0.62%",
       "bbt": "-0.05%",
       "hbb": "0.0020",
       "hbbPercent": "2.30%",
@@ -293,15 +306,15 @@
     {
       "symbol": "JTO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-10.06%",
+      "change24h": "-10.83%",
       "diffema50": "-6.78%",
       "diffema20": "-0.85%",
-      "bbd": "1.18%",
+      "bbd": "0.20%",
       "bbt": "-0.16%",
       "hbb": "0.0076",
       "hbbPercent": "1.84%",
       "link": "https://www.okx.com/trade-swap/jto-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
