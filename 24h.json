@@ -1,15 +1,29 @@
 {
-  "lastScanAt": "2026-09-10T03:26:10.896Z",
+  "lastScanAt": "2026-09-10T03:31:27.998Z",
   "totalScanned": 187,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
-      "symbol": "CASHCAT-USDT-SWAP",
-      "diffema50": "-10.93%",
-      "diffema20": "0.03%",
+      "symbol": "ZORA-USDT-SWAP",
+      "diffema50": "-5.79%",
+      "diffema20": "-0.89%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ZORA-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-7.51%",
+      "diffema50": "-5.79%",
+      "diffema20": "-0.89%",
+      "bbd": "3.99%",
+      "bbt": "0.17%",
+      "hbb": "0.0003",
+      "hbbPercent": "4.30%",
+      "link": "https://www.okx.com/trade-swap/zora-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
