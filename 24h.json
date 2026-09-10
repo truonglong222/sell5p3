@@ -1,37 +1,16 @@
 {
-  "lastScanAt": "2026-09-10T15:15:40.516Z",
-  "totalScanned": 26,
-  "passedEmaCount": 2,
+  "lastScanAt": "2026-09-10T15:20:39.294Z",
+  "totalScanned": 28,
+  "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "USELESS-USDT-SWAP",
-      "change24h": "-17.22%",
-      "diffema50": "-4.46%",
-      "diffema20": "-0.32%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "RVN-USDT-SWAP",
-      "change24h": "-24.02%",
-      "diffema50": "-5.49%",
-      "diffema20": "-0.89%",
+      "change24h": "-13.69%",
+      "diffema50": "-4.51%",
+      "diffema20": "0.05%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "RVN-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-24.02%",
-      "diffema50": "-5.49%",
-      "diffema20": "-0.89%",
-      "bbd": "0.36%",
-      "bbt": "-2.27%",
-      "hbb": "0.0001",
-      "hbbPercent": "2.83%",
-      "link": "https://www.okx.com/trade-swap/rvn-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
