@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-10T09:16:10.093Z",
+  "lastScanAt": "2026-09-10T09:21:16.390Z",
   "totalScanned": 182,
   "passedEmaCount": 19,
   "passedEmaList": [
@@ -118,16 +118,29 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "OL-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-2.43%",
+      "diffema50": "-8.98%",
+      "diffema20": "0.33%",
+      "bbd": "4.58%",
+      "bbt": "1.16%",
+      "hbb": "0.0003",
+      "hbbPercent": "5.64%",
+      "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
+      "teleSent": false
+    },
     {
       "symbol": "PARTI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-7.48%",
+      "change24h": "-7.43%",
       "diffema50": "-5.20%",
       "diffema20": "-0.16%",
       "bbd": "1.01%",
-      "bbt": "-0.42%",
+      "bbt": "-0.25%",
       "hbb": "0.0004",
       "hbbPercent": "1.64%",
       "link": "https://www.okx.com/trade-swap/parti-usdt-swap",
@@ -136,10 +149,10 @@
     {
       "symbol": "EDEN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-3.05%",
+      "change24h": "-3.78%",
       "diffema50": "-5.27%",
       "diffema20": "0.45%",
-      "bbd": "2.45%",
+      "bbd": "1.99%",
       "bbt": "0.19%",
       "hbb": "0.0013",
       "hbbPercent": "2.62%",
