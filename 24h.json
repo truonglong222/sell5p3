@@ -1,30 +1,8 @@
 {
-  "lastScanAt": "2026-09-10T21:55:25.083Z",
+  "lastScanAt": "2026-09-10T22:01:07.227Z",
   "totalScanned": 19,
-  "passedEmaCount": 1,
-  "passedEmaList": [
-    {
-      "symbol": "IOST-USDT-SWAP",
-      "change24h": "-52.01%",
-      "diffema50": "-3.34%",
-      "diffema20": "-0.98%",
-      "validFor": "LONG"
-    }
-  ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "IOST-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-52.01%",
-      "diffema50": "-3.34%",
-      "diffema20": "-0.98%",
-      "bbd": "-0.33%",
-      "bbt": "-2.76%",
-      "hbb": "0.0000",
-      "hbbPercent": "2.55%",
-      "link": "https://www.okx.com/trade-swap/iost-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "passedEmaCount": 0,
+  "passedEmaList": [],
+  "matchedCount": 0,
+  "matchedList": []
 }
