@@ -1,8 +1,29 @@
 {
-  "lastScanAt": "2026-09-10T02:41:10.303Z",
+  "lastScanAt": "2026-09-10T02:46:21.607Z",
   "totalScanned": 186,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
-  "matchedCount": 0,
-  "matchedList": []
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "AERO-USDT-SWAP",
+      "diffema50": "-5.77%",
+      "diffema20": "-0.92%",
+      "validFor": "SHORT"
+    }
+  ],
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "AERO-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-8.46%",
+      "diffema50": "-5.77%",
+      "diffema20": "-0.92%",
+      "bbd": "3.58%",
+      "bbt": "0.27%",
+      "hbb": "0.0190",
+      "hbbPercent": "3.44%",
+      "link": "https://www.okx.com/trade-swap/aero-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
