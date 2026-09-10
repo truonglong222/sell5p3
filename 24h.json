@@ -1,13 +1,20 @@
 {
-  "lastScanAt": "2026-09-10T16:55:33.669Z",
+  "lastScanAt": "2026-09-10T17:01:11.427Z",
   "totalScanned": 43,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
-      "symbol": "USELESS-USDT-SWAP",
-      "change24h": "-11.58%",
-      "diffema50": "-3.88%",
-      "diffema20": "-0.53%",
+      "symbol": "ETHFI-USDT-SWAP",
+      "change24h": "14.23%",
+      "diffema50": "8.69%",
+      "diffema20": "0.81%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "RVN-USDT-SWAP",
+      "change24h": "-24.35%",
+      "diffema50": "-3.60%",
+      "diffema20": "-0.82%",
       "validFor": "LONG"
     }
   ],
