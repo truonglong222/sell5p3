@@ -1,91 +1,27 @@
 {
-  "lastScanAt": "2026-09-10T11:41:18.018Z",
+  "lastScanAt": "2026-09-10T11:46:22.995Z",
   "totalScanned": 185,
-  "passedEmaCount": 7,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
-      "symbol": "UNI-USDT-SWAP",
-      "diffema50": "-5.22%",
-      "diffema20": "-1.00%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-7.07%",
-      "diffema20": "-0.43%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "TRUMP-USDT-SWAP",
-      "diffema50": "-5.07%",
-      "diffema20": "-0.69%",
+      "diffema50": "-6.39%",
+      "diffema20": "-0.60%",
       "validFor": "SHORT"
     },
     {
       "symbol": "NES-USDT-SWAP",
-      "diffema50": "24.52%",
-      "diffema20": "-0.40%",
+      "diffema50": "24.63%",
+      "diffema20": "-0.60%",
       "validFor": "LONG"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "diffema50": "-15.07%",
-      "diffema20": "-0.20%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "GRASS-USDT-SWAP",
-      "diffema50": "-5.23%",
-      "diffema20": "-0.37%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "SOPH-USDT-SWAP",
-      "diffema50": "-5.25%",
-      "diffema20": "-0.95%",
+      "diffema50": "-14.24%",
+      "diffema20": "-0.26%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 3,
-  "matchedList": [
-    {
-      "symbol": "UNI-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-9.66%",
-      "diffema50": "-5.22%",
-      "diffema20": "-1.00%",
-      "bbd": "1.08%",
-      "bbt": "-0.06%",
-      "hbb": "0.0852",
-      "hbbPercent": "1.42%",
-      "link": "https://www.okx.com/trade-swap/uni-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "TRUMP-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-9.91%",
-      "diffema50": "-5.07%",
-      "diffema20": "-0.69%",
-      "bbd": "1.22%",
-      "bbt": "0.28%",
-      "hbb": "0.0254",
-      "hbbPercent": "1.27%",
-      "link": "https://www.okx.com/trade-swap/trump-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "GRASS-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-7.42%",
-      "diffema50": "-5.23%",
-      "diffema20": "-0.37%",
-      "bbd": "1.90%",
-      "bbt": "1.11%",
-      "hbb": "0.0067",
-      "hbbPercent": "2.01%",
-      "link": "https://www.okx.com/trade-swap/grass-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
