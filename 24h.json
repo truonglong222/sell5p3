@@ -1,27 +1,46 @@
 {
-  "lastScanAt": "2026-09-10T02:56:12.051Z",
+  "lastScanAt": "2026-09-10T03:01:47.371Z",
   "totalScanned": 186,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "diffema50": "-11.70%",
+      "diffema20": "-0.82%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "AERO-USDT-SWAP",
-      "diffema50": "-5.77%",
-      "diffema20": "-0.92%",
+      "diffema50": "-5.32%",
+      "diffema20": "-0.53%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-9.28%",
+      "diffema50": "-11.70%",
+      "diffema20": "-0.82%",
+      "bbd": "9.01%",
+      "bbt": "-0.17%",
+      "hbb": "0.0151",
+      "hbbPercent": "9.20%",
+      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
+      "teleSent": true
+    },
     {
       "symbol": "AERO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-8.12%",
-      "diffema50": "-5.77%",
-      "diffema20": "-0.92%",
-      "bbd": "3.58%",
-      "bbt": "0.73%",
-      "hbb": "0.0190",
-      "hbbPercent": "3.44%",
+      "change24h": "-8.19%",
+      "diffema50": "-5.32%",
+      "diffema20": "-0.53%",
+      "bbd": "4.06%",
+      "bbt": "0.16%",
+      "hbb": "0.0218",
+      "hbbPercent": "3.94%",
       "link": "https://www.okx.com/trade-swap/aero-usdt-swap",
       "teleSent": false
     }
