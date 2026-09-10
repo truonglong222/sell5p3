@@ -1,23 +1,37 @@
 {
-  "lastScanAt": "2026-09-10T17:25:34.356Z",
-  "totalScanned": 38,
+  "lastScanAt": "2026-09-10T17:30:57.448Z",
+  "totalScanned": 37,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "-11.19%",
-      "diffema50": "-3.74%",
-      "diffema20": "-0.73%",
+      "change24h": "-10.47%",
+      "diffema50": "-3.62%",
+      "diffema20": "-0.58%",
       "validFor": "LONG"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "14.50%",
-      "diffema50": "9.64%",
-      "diffema20": "0.19%",
+      "change24h": "16.33%",
+      "diffema50": "9.85%",
+      "diffema20": "0.38%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "ETHFI-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+16.33%",
+      "diffema50": "9.85%",
+      "diffema20": "0.38%",
+      "bbd": "4.50%",
+      "bbt": "0.27%",
+      "hbb": "0.0352",
+      "hbbPercent": "5.10%",
+      "link": "https://www.okx.com/trade-swap/ethfi-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
