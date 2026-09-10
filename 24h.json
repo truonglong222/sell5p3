@@ -1,18 +1,36 @@
 {
-  "lastScanAt": "2026-09-10T12:26:17.078Z",
+  "lastScanAt": "2026-09-10T12:31:39.847Z",
   "totalScanned": 184,
-  "passedEmaCount": 2,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
-      "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-5.43%",
-      "diffema20": "-0.74%",
+      "symbol": "PUMP-USDT-SWAP",
+      "diffema50": "-6.10%",
+      "diffema20": "-0.85%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "TRIA-USDT-SWAP",
+      "diffema50": "-5.12%",
+      "diffema20": "-0.66%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "NES-USDT-SWAP",
+      "diffema50": "22.67%",
+      "diffema20": "-0.97%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "LAB-USDT-SWAP",
-      "diffema50": "-12.83%",
-      "diffema20": "-0.51%",
+      "diffema50": "-12.22%",
+      "diffema20": "-0.62%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "ACT-USDT-SWAP",
+      "diffema50": "-5.69%",
+      "diffema20": "-0.97%",
       "validFor": "SHORT"
     }
   ],
