@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-10T05:01:39.765Z",
+  "lastScanAt": "2026-09-10T05:06:08.726Z",
   "totalScanned": 185,
   "passedEmaCount": 2,
   "passedEmaList": [
@@ -16,6 +16,20 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RAY-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+7.43%",
+      "diffema50": "-5.79%",
+      "diffema20": "0.94%",
+      "bbd": "16.45%",
+      "bbt": "0.30%",
+      "hbb": "0.2084",
+      "hbbPercent": "16.73%",
+      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
