@@ -1,49 +1,43 @@
 {
-  "lastScanAt": "2026-09-10T13:11:22.044Z",
+  "lastScanAt": "2026-09-10T13:16:20.120Z",
   "totalScanned": 188,
-  "passedEmaCount": 7,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "diffema50": "6.68%",
-      "diffema20": "0.02%",
+      "diffema50": "6.76%",
+      "diffema20": "-0.45%",
       "validFor": "LONG"
     },
     {
       "symbol": "PUMP-USDT-SWAP",
-      "diffema50": "-5.68%",
-      "diffema20": "-0.87%",
+      "diffema50": "-5.48%",
+      "diffema20": "-0.96%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RE-USDT-SWAP",
-      "diffema50": "5.62%",
-      "diffema20": "0.25%",
+      "diffema50": "5.45%",
+      "diffema20": "-0.39%",
       "validFor": "LONG"
     },
     {
       "symbol": "NES-USDT-SWAP",
-      "diffema50": "20.20%",
-      "diffema20": "0.01%",
+      "diffema50": "18.57%",
+      "diffema20": "0.38%",
       "validFor": "LONG"
     },
     {
       "symbol": "RLS-USDT-SWAP",
-      "diffema50": "6.19%",
-      "diffema20": "0.21%",
+      "diffema50": "5.44%",
+      "diffema20": "-0.07%",
       "validFor": "LONG"
     },
     {
-      "symbol": "LAB-USDT-SWAP",
-      "diffema50": "-10.88%",
-      "diffema20": "-0.94%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "ACT-USDT-SWAP",
-      "diffema50": "-5.36%",
-      "diffema20": "-0.96%",
-      "validFor": "SHORT"
+      "symbol": "ORDER-USDT-SWAP",
+      "diffema50": "7.33%",
+      "diffema20": "0.94%",
+      "validFor": "LONG"
     }
   ],
   "matchedCount": 1,
@@ -51,13 +45,13 @@
     {
       "symbol": "RAY-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-3.94%",
-      "diffema50": "6.68%",
-      "diffema20": "0.02%",
-      "bbd": "-1.83%",
-      "bbt": "-5.80%",
-      "hbb": "0.0759",
-      "hbbPercent": "5.66%",
+      "change24h": "-4.71%",
+      "diffema50": "6.76%",
+      "diffema20": "-0.45%",
+      "bbd": "-1.01%",
+      "bbt": "-7.31%",
+      "hbb": "0.0912",
+      "hbbPercent": "6.81%",
       "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
       "teleSent": false
     }
