@@ -12,9 +12,9 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 8 TIẾNG
-const COOLDOWN_TIME = 8 * 60 * 60 * 1000;
-const MIN_VOL_CCY24H = 10_000_000; // Volume 24h > 10 triệu USDT
+// Cấu hình Cooldown: 4 TIẾNG
+const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
+const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -97,34 +97,51 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOLUME > 10M) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOLUME > 5M & |bd24| > 10%) -------------------
 
-async function getVolumeFilteredMarkets() {
+async function getFilteredMarkets() {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
-    if (!res.data || res.data.code !== '0') return { allSwapsCount: 0, filteredCoins: [] };
+    if (!res.data || res.data.code !== '0') return { allSwapsCount: 0, volPassedCount: 0, filteredCoins: [] };
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
 
-    const filteredCoins = tickers
-      .filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H)
-      .map((item) => ({
-        instId: item.instId,
-        open24h: item.open24h,
-        last: item.last
-      }));
+    // Lọc Volume > 5 triệu đô
+    const volFiltered = tickers.filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H);
 
-    return { allSwapsCount: tickers.length, filteredCoins };
+    // Lọc biến động 24h: bd24 > +10% hoặc bd24 < -10%
+    const filteredCoins = [];
+    for (const item of volFiltered) {
+      const open24h = parseFloat(item.open24h || 0);
+      const lastPrice = parseFloat(item.last || 0);
+      if (open24h <= 0) continue;
+
+      const change24hVal = ((lastPrice - open24h) / open24h) * 100;
+      if (change24hVal > 10 || change24hVal < -10) {
+        filteredCoins.push({
+          instId: item.instId,
+          open24h,
+          last: lastPrice,
+          change24hVal
+        });
+      }
+    }
+
+    return {
+      allSwapsCount: tickers.length,
+      volPassedCount: volFiltered.length,
+      filteredCoins
+    };
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return { allSwapsCount: 0, filteredCoins: [] };
+    return { allSwapsCount: 0, volPassedCount: 0, filteredCoins: [] };
   }
 }
 
 // ------------------- LẤY DỮ LIỆU NẾN -------------------
 
-async function getCandles(symbol, bar = '15m', limit = 100) {
+async function getCandles(symbol, bar = '5m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
@@ -140,15 +157,17 @@ async function getCandles(symbol, bar = '15m', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (KHUNG 15M) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (KHUNG 5M) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // 1. Lọc Volume > 10M USDT
-    const { allSwapsCount, filteredCoins: targetCoins } = await getVolumeFilteredMarkets();
-    console.log(`📊 [Lọc 1 - Volume] Tổng USDT Swap: ${allSwapsCount} | Đạt Vol > 10M USDT: ${targetCoins.length} coin`);
+    // 1. Lọc Volume > 5M USDT và |bd24| > 10%
+    const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
+    console.log(
+      `📊 [Lọc] Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24| > 10%: ${targetCoins.length} coin`
+    );
 
     const scanResults = {
       totalScanned: targetCoins.length,
@@ -165,16 +184,16 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Cần tối thiểu 70-80 nến (20 nến SMA ban đầu + 50 nến để lùi về EMA thứ 50)
-      const candles15m = await getCandles(symbol, '15m', 100);
-      if (!candles15m || candles15m.length < 80) {
+      // Lấy 100 nến 5m
+      const candles5m = await getCandles(symbol, '5m', 100);
+      if (!candles5m || candles5m.length < 80) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
-      // ================= BƯỚC 2: TÍNH DIFFEMA50 VÀ DIFFEMA20 =================
-      const closedCandles = candles15m.slice(1).reverse();
+      // ================= BƯỚC 2: TÍNH DIFFEMA50 VÀ DIFFEMA20 TRÊN NẾN 5M =================
+      const closedCandles = candles5m.slice(1).reverse();
       const closedPrices = closedCandles.map((c) => parseFloat(c[4]));
 
       const emaSeries = calculateEMAArray(closedPrices, 20);
@@ -195,15 +214,15 @@ async function main() {
       const diffema50 = ((ema1 - ema50) / ema50) * 100;
       const diffema20 = ((ema1 - ema20) / ema20) * 100;
 
-      // Điều kiện EMA:
-      // -1% < diffema20 < 1%
+      // Điều kiện EMA cơ bản: -1% < diffema20 < 1%
       const isEma20Valid = diffema20 > -1 && diffema20 < 1;
 
-      // Long: diffema50 > 5% và -1% < diffema20 < 1%
-      const isEmaValidLong = diffema50 > 5 && isEma20Valid;
+      // Điều kiện kết hợp biến động 24h:
+      // LONG: bd24 < -10% VÀ diffema50 < -5% VÀ -1% < diffema20 < 1%
+      const isEmaValidLong = coin.change24hVal < -10 && diffema50 < -5 && isEma20Valid;
 
-      // Short: diffema50 < -5% và -1% < diffema20 < 1%
-      const isEmaValidShort = diffema50 < -5 && isEma20Valid;
+      // SHORT: bd24 > +10% VÀ diffema50 > 5% VÀ -1% < diffema20 < 1%
+      const isEmaValidShort = coin.change24hVal > 10 && diffema50 > 5 && isEma20Valid;
 
       if (!isEmaValidLong && !isEmaValidShort) {
         await sleep(80);
@@ -213,16 +232,16 @@ async function main() {
       if (isEmaValidLong) countMatchedEmaLong++;
       if (isEmaValidShort) countMatchedEmaShort++;
 
-      // Lưu coin thoả mãn bước lọc EMA vào file JSON
       scanResults.passedEma.push({
         symbol,
+        change24h: coin.change24hVal.toFixed(2) + '%',
         diffema50: diffema50.toFixed(2) + '%',
         diffema20: diffema20.toFixed(2) + '%',
         validFor: isEmaValidLong ? 'LONG' : 'SHORT'
       });
 
       // ================= BƯỚC 3: TÍNH BB NẾN 1 VÀ XÉT ĐIỀU KIỆN ENTRY =================
-      const closesBB1 = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const closesBB1 = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb1 = calculateBollingerBands(closesBB1, 20);
 
       if (!bb1 || bb1.lower <= 0 || bb1.upper <= 0) {
@@ -230,7 +249,7 @@ async function main() {
         continue;
       }
 
-      const candle0 = candles15m[0];
+      const candle0 = candles5m[0];
       const high0 = parseFloat(candle0[2]);
       const low0 = parseFloat(candle0[3]);
 
@@ -240,10 +259,8 @@ async function main() {
       // bbt: % chênh lệch giữa giá cao nhất nến 0 và dải trên BB nến 1
       const bbt = ((high0 - bb1.upper) / bb1.upper) * 100;
 
-      // LONG: -2% < bbd < 0.5%
+      // Điều kiện Entry
       const isLong = isEmaValidLong && bbd > -2 && bbd < 0.5;
-
-      // SHORT: -0.5% < bbt < 2%
       const isShort = isEmaValidShort && bbt > -0.5 && bbt < 2;
 
       if (!isLong && !isShort) {
@@ -251,13 +268,10 @@ async function main() {
         continue;
       }
 
-      // ================= BƯỚC 4: TÍNH BIẾN ĐỘNG 24H, HBB VÀ GỬI CẢNH BÁO =================
-      const open24h = parseFloat(coin.open24h || 0);
-      const lastPrice = parseFloat(coin.last || 0);
-      const change24hVal = open24h > 0 ? ((lastPrice - open24h) / open24h) * 100 : 0;
-      const change24hStr = (change24hVal >= 0 ? '+' : '') + change24hVal.toFixed(2) + '%';
+      // ================= BƯỚC 4: TÍNH TOÁN VÀ GỬI CẢNH BÁO =================
+      const change24hStr = (coin.change24hVal >= 0 ? '+' : '') + coin.change24hVal.toFixed(2) + '%';
 
-      // Tính Hbb: Độ rộng dải Bollinger Bands tại nến 1
+      // Độ rộng dải Bollinger Bands tại nến 1
       const hbb = bb1.upper - bb1.lower;
       const hbbPercent = (hbb / bb1.middle) * 100;
 
@@ -294,7 +308,7 @@ async function main() {
           : `• <b>bbt:</b> ${bbt.toFixed(2)}% (so với Upper BB)`;
 
         const message =
-          `${icon} <b>TÍN HIỆU ${signalType} (15m): ${coinName}</b>\n` +
+          `${icon} <b>TÍN HIỆU ${signalType} (5m): ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
           `• <b>diffema50:</b> ${diffema50.toFixed(2)}%\n` +
           `• <b>diffema20:</b> ${diffema20.toFixed(2)}%\n` +
@@ -302,7 +316,7 @@ async function main() {
           `• <b>Hbb (Độ rộng BB):</b> ${hbb.toFixed(4)} (${hbbPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
 
-        console.log(`🚀 [${signalType} 15m] Gửi Telegram cho ${symbol}...`);
+        console.log(`🚀 [${signalType} 5m] Gửi Telegram cho ${symbol}...`);
         await axios
           .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
@@ -323,13 +337,13 @@ async function main() {
 
     saveScanResults(scanResults);
 
-    console.log('\n================== THỐNG KÊ CHI TIẾT (15M) ==================');
-    console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Đạt Vol > 10M = ${targetCoins.length}`);
-    console.log(`2️⃣ Dữ liệu nến 15m: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Lọc EMA Long (diffema50 > 5% & |diffema20| < 1%): Đạt = ${countMatchedEmaLong} coin`);
-    console.log(`   Lọc EMA Short (diffema50 < -5% & |diffema20| < 1%): Đạt = ${countMatchedEmaShort} coin`);
-    console.log(`4️⃣ Tín hiệu LONG khớp (-2% < bbd < 0.5%): ${countMatchedLong} coin`);
-    console.log(`5️⃣ Tín hiệu SHORT khớp (-0.5% < bbt < 2%): ${countMatchedShort} coin`);
+    console.log('\n================== THỐNG KÊ CHI TIẾT (5M) ==================');
+    console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount} | |bd24| > 10% = ${targetCoins.length}`);
+    console.log(`2️⃣ Dữ liệu nến 5m: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
+    console.log(`3️⃣ Lọc EMA Long (bd24 < -10% & diffema50 < -5% & |diffema20| < 1%): ${countMatchedEmaLong} coin`);
+    console.log(`   Lọc EMA Short (bd24 > +10% & diffema50 > 5% & |diffema20| < 1%): ${countMatchedEmaShort} coin`);
+    console.log(`4️⃣ Tín hiệu LONG 5m khớp (-2% < bbd < 0.5%): ${countMatchedLong} coin`);
+    console.log(`5️⃣ Tín hiệu SHORT 5m khớp (-0.5% < bbt < 2%): ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
