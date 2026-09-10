@@ -1,39 +1,65 @@
 {
-  "lastScanAt": "2026-09-10T12:41:16.986Z",
+  "lastScanAt": "2026-09-10T12:46:11.080Z",
   "totalScanned": 185,
-  "passedEmaCount": 5,
+  "passedEmaCount": 7,
   "passedEmaList": [
     {
+      "symbol": "RAY-USDT-SWAP",
+      "diffema50": "6.60%",
+      "diffema20": "0.48%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "PUMP-USDT-SWAP",
-      "diffema50": "-6.10%",
-      "diffema20": "-0.85%",
+      "diffema50": "-5.87%",
+      "diffema20": "-0.78%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-5.12%",
-      "diffema20": "-0.66%",
-      "validFor": "SHORT"
+      "symbol": "RE-USDT-SWAP",
+      "diffema50": "5.71%",
+      "diffema20": "0.87%",
+      "validFor": "LONG"
     },
     {
       "symbol": "NES-USDT-SWAP",
-      "diffema50": "22.67%",
-      "diffema20": "-0.97%",
+      "diffema50": "21.80%",
+      "diffema20": "-0.61%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "RLS-USDT-SWAP",
+      "diffema50": "6.81%",
+      "diffema20": "0.56%",
       "validFor": "LONG"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "diffema50": "-12.22%",
-      "diffema20": "-0.62%",
+      "diffema50": "-11.56%",
+      "diffema20": "-0.72%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ACT-USDT-SWAP",
-      "diffema50": "-5.69%",
-      "diffema20": "-0.97%",
+      "diffema50": "-5.52%",
+      "diffema20": "-0.95%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RAY-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-3.40%",
+      "diffema50": "6.60%",
+      "diffema20": "0.48%",
+      "bbd": "-1.71%",
+      "bbt": "-4.69%",
+      "hbb": "0.0593",
+      "hbbPercent": "4.41%",
+      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
