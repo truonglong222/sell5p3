@@ -1,12 +1,18 @@
 {
-  "lastScanAt": "2026-09-10T03:56:12.413Z",
+  "lastScanAt": "2026-09-10T04:01:49.764Z",
   "totalScanned": 188,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
+      "symbol": "AVNT-USDT-SWAP",
+      "diffema50": "-5.36%",
+      "diffema20": "-0.88%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "ZORA-USDT-SWAP",
-      "diffema50": "-5.59%",
-      "diffema20": "-0.56%",
+      "diffema50": "-5.36%",
+      "diffema20": "-0.34%",
       "validFor": "SHORT"
     }
   ],
