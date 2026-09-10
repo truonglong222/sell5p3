@@ -1,45 +1,72 @@
 {
-  "lastScanAt": "2026-09-10T11:11:05.944Z",
+  "lastScanAt": "2026-09-10T11:16:13.185Z",
   "totalScanned": 184,
   "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-8.70%",
-      "diffema20": "-0.14%",
+      "diffema50": "-7.78%",
+      "diffema20": "-0.27%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ALLO-USDT-SWAP",
-      "diffema50": "-6.20%",
-      "diffema20": "-0.96%",
+      "diffema50": "-6.03%",
+      "diffema20": "-0.98%",
       "validFor": "SHORT"
     },
     {
       "symbol": "TRUMP-USDT-SWAP",
-      "diffema50": "-6.03%",
-      "diffema20": "-0.91%",
+      "diffema50": "-5.49%",
+      "diffema20": "-0.84%",
       "validFor": "SHORT"
     },
     {
       "symbol": "NES-USDT-SWAP",
-      "diffema50": "23.96%",
-      "diffema20": "-0.52%",
+      "diffema50": "24.35%",
+      "diffema20": "-0.42%",
       "validFor": "LONG"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "diffema50": "-16.83%",
-      "diffema20": "0.39%",
+      "diffema50": "-15.69%",
+      "diffema20": "0.10%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GRASS-USDT-SWAP",
-      "diffema50": "-6.06%",
-      "diffema20": "-0.57%",
+      "diffema50": "-5.63%",
+      "diffema20": "-0.52%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "TRUMP-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-9.62%",
+      "diffema50": "-5.49%",
+      "diffema20": "-0.84%",
+      "bbd": "0.62%",
+      "bbt": "-0.17%",
+      "hbb": "0.0227",
+      "hbbPercent": "1.14%",
+      "link": "https://www.okx.com/trade-swap/trump-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "GRASS-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-9.01%",
+      "diffema50": "-5.63%",
+      "diffema20": "-0.52%",
+      "bbd": "1.06%",
+      "bbt": "0.04%",
+      "hbb": "0.0054",
+      "hbbPercent": "1.61%",
+      "link": "https://www.okx.com/trade-swap/grass-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
