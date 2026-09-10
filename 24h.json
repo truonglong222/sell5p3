@@ -1,35 +1,41 @@
 {
-  "lastScanAt": "2026-09-10T04:11:06.738Z",
-  "totalScanned": 187,
-  "passedEmaCount": 2,
+  "lastScanAt": "2026-09-10T04:16:18.241Z",
+  "totalScanned": 186,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
+      "symbol": "PEPE-USDT-SWAP",
+      "diffema50": "-5.04%",
+      "diffema20": "-0.99%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "AVNT-USDT-SWAP",
-      "diffema50": "-5.36%",
-      "diffema20": "-0.88%",
+      "diffema50": "-5.13%",
+      "diffema20": "-0.76%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ZORA-USDT-SWAP",
-      "diffema50": "-5.36%",
-      "diffema20": "-0.34%",
+      "diffema50": "-5.17%",
+      "diffema20": "-0.17%",
       "validFor": "SHORT"
     }
   ],
   "matchedCount": 1,
   "matchedList": [
     {
-      "symbol": "ZORA-USDT-SWAP",
+      "symbol": "PEPE-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-8.66%",
-      "diffema50": "-5.36%",
-      "diffema20": "-0.34%",
-      "bbd": "2.56%",
-      "bbt": "-0.41%",
-      "hbb": "0.0003",
-      "hbbPercent": "3.65%",
-      "link": "https://www.okx.com/trade-swap/zora-usdt-swap",
-      "teleSent": false
+      "change24h": "-5.40%",
+      "diffema50": "-5.04%",
+      "diffema20": "-0.99%",
+      "bbd": "0.92%",
+      "bbt": "-0.48%",
+      "hbb": "0.0000",
+      "hbbPercent": "1.43%",
+      "link": "https://www.okx.com/trade-swap/pepe-usdt-swap",
+      "teleSent": true
     }
   ]
 }
