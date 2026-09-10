@@ -1,30 +1,16 @@
 {
-  "lastScanAt": "2026-09-10T18:45:39.609Z",
-  "totalScanned": 39,
+  "lastScanAt": "2026-09-10T18:50:36.997Z",
+  "totalScanned": 37,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "OPN-USDT-SWAP",
-      "change24h": "-10.82%",
-      "diffema50": "-3.15%",
+      "change24h": "-10.91%",
+      "diffema50": "-3.19%",
       "diffema20": "-0.97%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "OPN-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-10.82%",
-      "diffema50": "-3.15%",
-      "diffema20": "-0.97%",
-      "bbd": "0.50%",
-      "bbt": "-1.63%",
-      "hbb": "0.0011",
-      "hbbPercent": "2.26%",
-      "link": "https://www.okx.com/trade-swap/opn-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
