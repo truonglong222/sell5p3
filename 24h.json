@@ -1,148 +1,155 @@
 {
-  "lastScanAt": "2026-09-10T09:26:10.023Z",
+  "lastScanAt": "2026-09-10T09:31:31.474Z",
   "totalScanned": 182,
-  "passedEmaCount": 19,
+  "passedEmaCount": 18,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "diffema50": "-8.98%",
-      "diffema20": "0.33%",
+      "diffema50": "-8.25%",
+      "diffema20": "0.88%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MEME-USDT-SWAP",
-      "diffema50": "-5.82%",
-      "diffema20": "-0.57%",
+      "diffema50": "-5.68%",
+      "diffema20": "-0.55%",
       "validFor": "SHORT"
     },
     {
       "symbol": "AIXBT-USDT-SWAP",
-      "diffema50": "-6.02%",
-      "diffema20": "-0.78%",
+      "diffema50": "-5.89%",
+      "diffema20": "-0.73%",
       "validFor": "SHORT"
     },
     {
       "symbol": "TRIA-USDT-SWAP",
-      "diffema50": "-12.95%",
-      "diffema20": "-0.61%",
+      "diffema50": "-12.65%",
+      "diffema20": "-0.30%",
       "validFor": "SHORT"
     },
     {
       "symbol": "PLUME-USDT-SWAP",
-      "diffema50": "-6.30%",
-      "diffema20": "-0.99%",
+      "diffema50": "-6.28%",
+      "diffema20": "-0.96%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BONK-USDT-SWAP",
-      "diffema50": "-5.44%",
-      "diffema20": "-0.94%",
+      "diffema50": "-5.31%",
+      "diffema20": "-0.93%",
       "validFor": "SHORT"
     },
     {
       "symbol": "PNUT-USDT-SWAP",
-      "diffema50": "-5.44%",
-      "diffema20": "-0.70%",
+      "diffema50": "-5.36%",
+      "diffema20": "-0.68%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BICO-USDT-SWAP",
-      "diffema50": "-6.51%",
-      "diffema20": "-0.41%",
+      "diffema50": "-6.54%",
+      "diffema20": "-0.40%",
       "validFor": "SHORT"
     },
     {
       "symbol": "JUP-USDT-SWAP",
-      "diffema50": "-6.24%",
-      "diffema20": "-0.90%",
+      "diffema50": "-6.10%",
+      "diffema20": "-0.99%",
       "validFor": "SHORT"
     },
     {
       "symbol": "VIRTUAL-USDT-SWAP",
-      "diffema50": "-5.64%",
-      "diffema20": "-0.95%",
+      "diffema50": "-5.51%",
+      "diffema20": "-0.94%",
       "validFor": "SHORT"
     },
     {
       "symbol": "KAITO-USDT-SWAP",
-      "diffema50": "-5.39%",
-      "diffema20": "-0.84%",
+      "diffema50": "-5.25%",
+      "diffema20": "-0.86%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "diffema50": "-21.52%",
-      "diffema20": "0.16%",
+      "diffema50": "-21.14%",
+      "diffema20": "0.93%",
       "validFor": "SHORT"
     },
     {
       "symbol": "0G-USDT-SWAP",
-      "diffema50": "-5.32%",
-      "diffema20": "-0.44%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "GRASS-USDT-SWAP",
-      "diffema50": "-7.79%",
-      "diffema20": "0.33%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "PARTI-USDT-SWAP",
-      "diffema50": "-5.20%",
-      "diffema20": "-0.16%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "EDEN-USDT-SWAP",
-      "diffema50": "-5.27%",
-      "diffema20": "0.45%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "2Z-USDT-SWAP",
-      "diffema50": "-5.02%",
+      "diffema50": "-5.24%",
       "diffema20": "-0.43%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "GRASS-USDT-SWAP",
+      "diffema50": "-7.59%",
+      "diffema20": "0.43%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "PARTI-USDT-SWAP",
+      "diffema50": "-5.11%",
+      "diffema20": "-0.13%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "EDEN-USDT-SWAP",
+      "diffema50": "-5.13%",
+      "diffema20": "0.50%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "XPL-USDT-SWAP",
-      "diffema50": "-5.78%",
-      "diffema20": "-0.22%",
+      "diffema50": "-5.48%",
+      "diffema20": "-0.28%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BIO-USDT-SWAP",
-      "diffema50": "-5.55%",
-      "diffema20": "-0.61%",
+      "diffema50": "-5.44%",
+      "diffema20": "-0.53%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "OL-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-1.62%",
+      "diffema50": "-8.25%",
+      "diffema20": "0.88%",
+      "bbd": "8.04%",
+      "bbt": "1.12%",
+      "hbb": "0.0004",
+      "hbbPercent": "6.96%",
+      "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
+      "teleSent": false
+    },
     {
       "symbol": "PARTI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-7.52%",
-      "diffema50": "-5.20%",
-      "diffema20": "-0.16%",
-      "bbd": "1.01%",
-      "bbt": "-0.25%",
+      "change24h": "-7.44%",
+      "diffema50": "-5.11%",
+      "diffema20": "-0.13%",
+      "bbd": "1.23%",
+      "bbt": "-0.46%",
       "hbb": "0.0004",
-      "hbbPercent": "1.64%",
+      "hbbPercent": "1.68%",
       "link": "https://www.okx.com/trade-swap/parti-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "EDEN-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-3.69%",
-      "diffema50": "-5.27%",
-      "diffema20": "0.45%",
-      "bbd": "1.99%",
-      "bbt": "0.19%",
+      "change24h": "-4.21%",
+      "diffema50": "-5.13%",
+      "diffema20": "0.50%",
+      "bbd": "1.73%",
+      "bbt": "-0.46%",
       "hbb": "0.0013",
-      "hbbPercent": "2.62%",
+      "hbbPercent": "2.53%",
       "link": "https://www.okx.com/trade-swap/eden-usdt-swap",
       "teleSent": false
     }
