@@ -1,6 +1,6 @@
 {
-  "lastScanAt": "2026-09-10T05:31:23.434Z",
-  "totalScanned": 185,
+  "lastScanAt": "2026-09-10T05:36:07.476Z",
+  "totalScanned": 183,
   "passedEmaCount": 8,
   "passedEmaList": [
     {
@@ -52,16 +52,16 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 4,
+  "matchedCount": 5,
   "matchedList": [
     {
       "symbol": "HMSTR-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-5.18%",
+      "change24h": "-4.90%",
       "diffema50": "-5.10%",
       "diffema20": "-0.70%",
       "bbd": "1.95%",
-      "bbt": "-0.03%",
+      "bbt": "0.09%",
       "hbb": "0.0000",
       "hbbPercent": "2.08%",
       "link": "https://www.okx.com/trade-swap/hmstr-usdt-swap",
@@ -70,41 +70,54 @@
     {
       "symbol": "PYTH-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-3.26%",
+      "change24h": "-3.12%",
       "diffema50": "-6.18%",
       "diffema20": "-0.87%",
-      "bbd": "1.68%",
+      "bbd": "1.60%",
       "bbt": "0.11%",
       "hbb": "0.0009",
       "hbbPercent": "1.77%",
       "link": "https://www.okx.com/trade-swap/pyth-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "KAITO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-6.66%",
+      "change24h": "-6.29%",
       "diffema50": "-5.69%",
       "diffema20": "-0.95%",
-      "bbd": "2.24%",
-      "bbt": "-0.27%",
+      "bbd": "2.21%",
+      "bbt": "-0.14%",
       "hbb": "0.0079",
       "hbbPercent": "2.55%",
       "link": "https://www.okx.com/trade-swap/kaito-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "ARB-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-8.78%",
+      "diffema50": "-5.16%",
+      "diffema20": "-0.72%",
+      "bbd": "4.01%",
+      "bbt": "-0.18%",
+      "hbb": "0.0077",
+      "hbbPercent": "5.17%",
+      "link": "https://www.okx.com/trade-swap/arb-usdt-swap",
       "teleSent": true
     },
     {
       "symbol": "FOGO-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-7.54%",
+      "change24h": "-7.88%",
       "diffema50": "-6.16%",
       "diffema20": "-0.74%",
-      "bbd": "3.71%",
+      "bbd": "3.40%",
       "bbt": "0.29%",
       "hbb": "0.0002",
       "hbbPercent": "3.56%",
       "link": "https://www.okx.com/trade-swap/fogo-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
