@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-10T11:36:08.499Z",
+  "lastScanAt": "2026-09-10T11:41:18.018Z",
   "totalScanned": 185,
   "passedEmaCount": 7,
   "passedEmaList": [
@@ -46,16 +46,16 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 4,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "UNI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-9.38%",
+      "change24h": "-9.66%",
       "diffema50": "-5.22%",
       "diffema20": "-1.00%",
       "bbd": "1.08%",
-      "bbt": "-0.11%",
+      "bbt": "-0.06%",
       "hbb": "0.0852",
       "hbbPercent": "1.42%",
       "link": "https://www.okx.com/trade-swap/uni-usdt-swap",
@@ -77,27 +77,14 @@
     {
       "symbol": "GRASS-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-7.57%",
+      "change24h": "-7.42%",
       "diffema50": "-5.23%",
       "diffema20": "-0.37%",
       "bbd": "1.90%",
-      "bbt": "0.70%",
+      "bbt": "1.11%",
       "hbb": "0.0067",
       "hbbPercent": "2.01%",
       "link": "https://www.okx.com/trade-swap/grass-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "SOPH-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-21.08%",
-      "diffema50": "-5.25%",
-      "diffema20": "-0.95%",
-      "bbd": "5.16%",
-      "bbt": "1.59%",
-      "hbb": "0.0002",
-      "hbbPercent": "4.78%",
-      "link": "https://www.okx.com/trade-swap/soph-usdt-swap",
       "teleSent": false
     }
   ]
