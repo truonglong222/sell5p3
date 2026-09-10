@@ -1,5 +1,5 @@
 {
-  "lastScanAt": "2026-09-10T06:16:14.468Z",
+  "lastScanAt": "2026-09-10T06:21:04.483Z",
   "totalScanned": 183,
   "passedEmaCount": 21,
   "passedEmaList": [
@@ -130,20 +130,33 @@
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "PYTH-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-3.67%",
+      "change24h": "-4.11%",
       "diffema50": "-6.18%",
       "diffema20": "-0.28%",
-      "bbd": "2.34%",
+      "bbd": "1.93%",
       "bbt": "-0.14%",
       "hbb": "0.0014",
       "hbbPercent": "2.66%",
       "link": "https://www.okx.com/trade-swap/pyth-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "XPL-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "-9.63%",
+      "diffema50": "-8.33%",
+      "diffema20": "-0.94%",
+      "bbd": "1.47%",
+      "bbt": "-0.47%",
+      "hbb": "0.0021",
+      "hbbPercent": "2.41%",
+      "link": "https://www.okx.com/trade-swap/xpl-usdt-swap",
+      "teleSent": true
     }
   ]
 }
