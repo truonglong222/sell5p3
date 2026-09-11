@@ -1,57 +1,64 @@
 {
-  "lastScanAt": "2026-09-11T21:56:10.534Z",
+  "lastScanAt": "2026-09-11T22:01:50.457Z",
   "totalScanned": 209,
-  "passedEmaCount": 8,
+  "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "9.60%",
-      "diffema50": "-2.38%",
+      "change24h": "8.72%",
+      "diffema50": "-2.57%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "7.64%",
-      "diffema50": "-6.14%",
+      "change24h": "7.97%",
+      "diffema50": "-6.22%",
       "validFor": "SHORT"
     },
     {
       "symbol": "OFC-USDT-SWAP",
-      "change24h": "7.44%",
-      "diffema50": "-3.46%",
+      "change24h": "9.28%",
+      "diffema50": "-3.39%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "13.75%",
-      "diffema50": "-1.72%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "9.25%",
-      "diffema50": "-1.58%",
+      "change24h": "12.34%",
+      "diffema50": "-2.18%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "13.81%",
-      "diffema50": "-1.05%",
+      "change24h": "13.17%",
+      "diffema50": "-1.08%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BASED-USDT-SWAP",
-      "change24h": "8.08%",
-      "diffema50": "-0.64%",
+      "change24h": "7.52%",
+      "diffema50": "-0.68%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "10.40%",
-      "diffema50": "-0.82%",
+      "change24h": "10.16%",
+      "diffema50": "-0.71%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "OFC-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+9.28%",
+      "diffema50": "-3.39%",
+      "bbd": "3.09%",
+      "bbt": "0.37%",
+      "hbb15m": "0.0006",
+      "hbbPercent15m": "7.13%",
+      "link": "https://www.okx.com/trade-swap/ofc-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
