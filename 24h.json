@@ -1,36 +1,36 @@
 {
-  "lastScanAt": "2026-09-11T19:46:26.833Z",
+  "lastScanAt": "2026-09-11T19:51:25.144Z",
   "totalScanned": 207,
   "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "14.83%",
+      "change24h": "15.62%",
       "diffema50": "-3.30%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "9.88%",
-      "diffema50": "-4.68%",
+      "change24h": "9.90%",
+      "diffema50": "-5.54%",
       "validFor": "SHORT"
     },
     {
       "symbol": "JUP-USDT-SWAP",
-      "change24h": "7.07%",
-      "diffema50": "-3.56%",
+      "change24h": "7.76%",
+      "diffema50": "-3.68%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "13.12%",
-      "diffema50": "-1.55%",
+      "change24h": "13.96%",
+      "diffema50": "-1.47%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "12.10%",
-      "diffema50": "-4.63%",
+      "change24h": "12.49%",
+      "diffema50": "-4.38%",
       "validFor": "SHORT"
     }
   ],
@@ -39,14 +39,14 @@
     {
       "symbol": "MINA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+13.12%",
-      "diffema50": "-1.55%",
-      "bbd": "3.30%",
-      "bbt": "-0.10%",
+      "change24h": "+13.96%",
+      "diffema50": "-1.47%",
+      "bbd": "3.59%",
+      "bbt": "0.08%",
       "hbb15m": "0.0071",
       "hbbPercent15m": "6.83%",
       "link": "https://www.okx.com/trade-swap/mina-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
