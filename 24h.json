@@ -1,98 +1,116 @@
 {
-  "lastScanAt": "2026-09-11T21:11:17.429Z",
+  "lastScanAt": "2026-09-11T21:16:27.287Z",
   "totalScanned": 209,
-  "passedEmaCount": 7,
+  "passedEmaCount": 8,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "10.30%",
-      "diffema50": "-1.47%",
+      "change24h": "10.51%",
+      "diffema50": "-1.59%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "11.63%",
-      "diffema50": "-1.60%",
+      "change24h": "10.46%",
+      "diffema50": "-1.43%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "10.22%",
-      "diffema50": "-6.17%",
+      "change24h": "9.93%",
+      "diffema50": "-6.02%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "24.73%",
-      "diffema50": "-0.50%",
+      "change24h": "25.63%",
+      "diffema50": "-0.39%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "change24h": "7.99%",
+      "diffema50": "-0.53%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "13.54%",
-      "diffema50": "-0.70%",
+      "change24h": "14.12%",
+      "diffema50": "-0.96%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BASED-USDT-SWAP",
-      "change24h": "9.56%",
-      "diffema50": "-0.74%",
+      "change24h": "9.73%",
+      "diffema50": "-0.80%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "11.44%",
-      "diffema50": "-2.26%",
+      "change24h": "11.14%",
+      "diffema50": "-2.13%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 4,
+  "matchedCount": 5,
   "matchedList": [
     {
       "symbol": "RAY-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.63%",
-      "diffema50": "-1.60%",
-      "bbd": "3.48%",
-      "bbt": "0.30%",
-      "hbb15m": "0.0947",
-      "hbbPercent15m": "5.95%",
+      "change24h": "+10.46%",
+      "diffema50": "-1.43%",
+      "bbd": "3.50%",
+      "bbt": "0.49%",
+      "hbb15m": "0.0998",
+      "hbbPercent15m": "6.26%",
       "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "MET-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+24.73%",
-      "diffema50": "-0.50%",
-      "bbd": "2.72%",
-      "bbt": "0.33%",
-      "hbb15m": "0.0165",
-      "hbbPercent15m": "6.10%",
+      "change24h": "+25.63%",
+      "diffema50": "-0.39%",
+      "bbd": "3.05%",
+      "bbt": "0.47%",
+      "hbb15m": "0.0170",
+      "hbbPercent15m": "6.30%",
       "link": "https://www.okx.com/trade-swap/met-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+7.99%",
+      "diffema50": "-0.53%",
+      "bbd": "2.23%",
+      "bbt": "0.17%",
+      "hbb15m": "0.0148",
+      "hbbPercent15m": "8.09%",
+      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "BASED-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+9.56%",
-      "diffema50": "-0.74%",
-      "bbd": "1.20%",
-      "bbt": "-0.32%",
+      "change24h": "+9.73%",
+      "diffema50": "-0.80%",
+      "bbd": "1.60%",
+      "bbt": "-0.01%",
       "hbb15m": "0.0021",
-      "hbbPercent15m": "3.13%",
+      "hbbPercent15m": "3.14%",
       "link": "https://www.okx.com/trade-swap/based-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "THETA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.44%",
-      "diffema50": "-2.26%",
-      "bbd": "0.98%",
-      "bbt": "-0.19%",
-      "hbb15m": "0.0090",
-      "hbbPercent15m": "4.69%",
+      "change24h": "+11.14%",
+      "diffema50": "-2.13%",
+      "bbd": "0.92%",
+      "bbt": "-0.39%",
+      "hbb15m": "0.0083",
+      "hbbPercent15m": "4.38%",
       "link": "https://www.okx.com/trade-swap/theta-usdt-swap",
       "teleSent": false
     }
