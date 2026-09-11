@@ -211,8 +211,8 @@ async function main() {
       // LONG: bd24 < -10% VÀ diffema50 > 0
       const isTrendValidLong = coin.change24hVal < -10 && diffema50 > 0;
 
-      // SHORT: bd24 > 5% VÀ diffema50 < 0
-      const isTrendValidShort = coin.change24hVal > 5 && diffema50 < 0;
+      // SHORT: bd24 > 7% VÀ diffema50 < 0
+      const isTrendValidShort = coin.change24hVal > 7 && diffema50 < 0;
 
       if (!isTrendValidLong && !isTrendValidShort) {
         await sleep(80);
