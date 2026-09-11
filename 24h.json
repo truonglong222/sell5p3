@@ -1,13 +1,13 @@
 {
-  "lastScanAt": "2026-09-11T02:30:48.480Z",
-  "totalScanned": 10,
+  "lastScanAt": "2026-09-11T02:35:26.033Z",
+  "totalScanned": 11,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "PUMP-USDT-SWAP",
-      "change24h": "-10.39%",
-      "diffema50": "-4.07%",
-      "diffema20": "-0.86%",
+      "change24h": "-10.71%",
+      "diffema50": "-4.15%",
+      "diffema20": "-0.96%",
       "validFor": "LONG"
     }
   ],
@@ -16,15 +16,15 @@
     {
       "symbol": "PUMP-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-10.39%",
-      "diffema50": "-4.07%",
-      "diffema20": "-0.86%",
-      "bbd": "-0.10%",
-      "bbt": "-2.71%",
+      "change24h": "-10.71%",
+      "diffema50": "-4.15%",
+      "diffema20": "-0.96%",
+      "bbd": "0.30%",
+      "bbt": "-2.59%",
       "hbb": "0.0001",
-      "hbbPercent": "2.89%",
+      "hbbPercent": "3.01%",
       "link": "https://www.okx.com/trade-swap/pump-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
