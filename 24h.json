@@ -1,8 +1,34 @@
 {
-  "lastScanAt": "2026-09-11T16:11:12.403Z",
+  "lastScanAt": "2026-09-11T16:16:29.338Z",
   "totalScanned": 207,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
-  "matchedCount": 0,
-  "matchedList": []
+  "passedEmaCount": 2,
+  "passedEmaList": [
+    {
+      "symbol": "0G-USDT-SWAP",
+      "change24h": "7.17%",
+      "diffema50": "-0.52%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "MET-USDT-SWAP",
+      "change24h": "24.52%",
+      "diffema50": "-0.19%",
+      "validFor": "SHORT"
+    }
+  ],
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "MET-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+24.52%",
+      "diffema50": "-0.19%",
+      "bbd": "3.44%",
+      "bbt": "0.04%",
+      "hbb15m": "0.0230",
+      "hbbPercent15m": "8.67%",
+      "link": "https://www.okx.com/trade-swap/met-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
