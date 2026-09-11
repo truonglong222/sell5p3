@@ -107,7 +107,6 @@ async function getFilteredMarkets() {
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
 
-    // Lọc Volume > 5 triệu đô
     const volFiltered = tickers.filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H);
 
     const filteredCoins = [];
@@ -188,31 +187,31 @@ async function main() {
       }
       countValidCandles++;
 
-      // ================= BƯỚC 2: TÍNH DIFFEMA50 TRÊN NẾN 5M =================
+      // ================= BƯỚC 2: TÍNH DIFFEMA30 TRÊN NẾN 5M =================
       const closedCandles = candles5m.slice(1).reverse();
       const closedPrices = closedCandles.map((c) => parseFloat(c[4]));
 
       const emaSeries = calculateEMAArray(closedPrices, 20);
-      if (emaSeries.length < 50) {
+      if (emaSeries.length < 30) {
         await sleep(80);
         continue;
       }
 
       const ema1 = emaSeries[emaSeries.length - 1];
-      const ema50 = emaSeries[emaSeries.length - 50];
+      const ema30 = emaSeries[emaSeries.length - 30];
 
-      if (!ema50 || ema50 <= 0) {
+      if (!ema30 || ema30 <= 0) {
         await sleep(80);
         continue;
       }
 
-      const diffema50 = ((ema1 - ema50) / ema50) * 100;
+      const diffema30 = ((ema1 - ema30) / ema30) * 100;
 
-      // LONG: bd24 < -10% VÀ diffema50 > 0
-      const isTrendValidLong = coin.change24hVal < -10 && diffema50 > 0;
+      // LONG: bd24 < -10% VÀ diffema30 > 0
+      const isTrendValidLong = coin.change24hVal < -10 && diffema30 > 0;
 
-      // SHORT: bd24 > 7% VÀ diffema50 < 0
-      const isTrendValidShort = coin.change24hVal > 7 && diffema50 < 0;
+      // SHORT: bd24 > 7% VÀ diffema30 < 0
+      const isTrendValidShort = coin.change24hVal > 7 && diffema30 < 0;
 
       if (!isTrendValidLong && !isTrendValidShort) {
         await sleep(80);
@@ -225,7 +224,7 @@ async function main() {
       scanResults.passedEma.push({
         symbol,
         change24h: coin.change24hVal.toFixed(2) + '%',
-        diffema50: diffema50.toFixed(2) + '%',
+        diffema30: diffema30.toFixed(2) + '%',
         validFor: isTrendValidLong ? 'LONG' : 'SHORT'
       });
 
@@ -288,7 +287,7 @@ async function main() {
         symbol,
         type: signalType,
         change24h: change24hStr,
-        diffema50: diffema50.toFixed(2) + '%',
+        diffema30: diffema30.toFixed(2) + '%',
         bbd: bbd.toFixed(2) + '%',
         bbt: bbt.toFixed(2) + '%',
         hbb15m: hbb.toFixed(4),
@@ -306,7 +305,7 @@ async function main() {
         const message =
           `${icon} <b>TÍN HIỆU ${signalType} (5m): ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
-          `• <b>diffema50:</b> ${diffema50.toFixed(2)}%\n` +
+          `• <b>diffema30:</b> ${diffema30.toFixed(2)}%\n` +
           `${entryDetail}\n` +
           `• <b>Hbb 15m (Độ rộng BB):</b> ${hbb.toFixed(4)} (${hbbPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -335,8 +334,8 @@ async function main() {
     console.log('\n================== THỐNG KÊ CHI TIẾT (5M & 15M) ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount}`);
     console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Lọc Xu hướng Long (bd24 < -10% & diffema50 > 0): ${countMatchedEmaLong} coin`);
-    console.log(`   Lọc Xu hướng Short (bd24 > 5% & diffema50 < 0): ${countMatchedEmaShort} coin`);
+    console.log(`3️⃣ Lọc Xu hướng Long (bd24 < -10% & diffema30 > 0): ${countMatchedEmaLong} coin`);
+    console.log(`   Lọc Xu hướng Short (bd24 > 7% & diffema30 < 0): ${countMatchedEmaShort} coin`);
     console.log(`4️⃣ Tín hiệu LONG khớp (-2% < bbd < 0.5%): ${countMatchedLong} coin`);
     console.log(`5️⃣ Tín hiệu SHORT khớp (-0.5% < bbt < 2%): ${countMatchedShort} coin`);
 
