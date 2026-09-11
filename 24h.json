@@ -1,48 +1,54 @@
 {
-  "lastScanAt": "2026-09-11T22:41:23.170Z",
+  "lastScanAt": "2026-09-11T22:46:28.453Z",
   "totalScanned": 210,
-  "passedEmaCount": 7,
+  "passedEmaCount": 8,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "8.61%",
-      "diffema50": "-2.63%",
+      "change24h": "7.61%",
+      "diffema50": "-2.60%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "OL-USDT-SWAP",
+      "change24h": "7.51%",
+      "diffema50": "-0.33%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "9.93%",
-      "diffema50": "-5.78%",
+      "change24h": "9.36%",
+      "diffema50": "-5.70%",
       "validFor": "SHORT"
     },
     {
       "symbol": "OFC-USDT-SWAP",
-      "change24h": "8.73%",
-      "diffema50": "-3.11%",
+      "change24h": "8.03%",
+      "diffema50": "-3.03%",
       "validFor": "SHORT"
     },
     {
       "symbol": "JUP-USDT-SWAP",
-      "change24h": "7.39%",
-      "diffema50": "-0.50%",
+      "change24h": "7.11%",
+      "diffema50": "-0.42%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "11.32%",
-      "diffema50": "-6.35%",
+      "change24h": "12.64%",
+      "diffema50": "-6.68%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MERL-USDT-SWAP",
-      "change24h": "7.82%",
-      "diffema50": "-0.99%",
+      "change24h": "7.78%",
+      "diffema50": "-1.01%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "10.52%",
-      "diffema50": "-0.01%",
+      "change24h": "10.41%",
+      "diffema50": "-0.03%",
       "validFor": "SHORT"
     }
   ],
@@ -51,12 +57,12 @@
     {
       "symbol": "MERL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+7.82%",
-      "diffema50": "-0.99%",
-      "bbd": "0.91%",
-      "bbt": "-0.18%",
+      "change24h": "+7.78%",
+      "diffema50": "-1.01%",
+      "bbd": "0.74%",
+      "bbt": "-0.34%",
       "hbb15m": "0.0005",
-      "hbbPercent15m": "2.36%",
+      "hbbPercent15m": "2.15%",
       "link": "https://www.okx.com/trade-swap/merl-usdt-swap",
       "teleSent": false
     }
