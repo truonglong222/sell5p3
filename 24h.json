@@ -1,20 +1,20 @@
 {
-  "lastScanAt": "2026-09-11T05:15:33.611Z",
-  "totalScanned": 8,
+  "lastScanAt": "2026-09-11T05:20:28.637Z",
+  "totalScanned": 9,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "CNPY-USDT-SWAP",
-      "change24h": "14.83%",
-      "diffema50": "6.04%",
-      "diffema20": "-0.39%",
+      "change24h": "15.83%",
+      "diffema50": "6.18%",
+      "diffema20": "-0.47%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "-13.95%",
-      "diffema50": "-3.30%",
-      "diffema20": "-0.57%",
+      "change24h": "-13.92%",
+      "diffema50": "-3.45%",
+      "diffema20": "-0.73%",
       "validFor": "LONG"
     }
   ],
@@ -23,13 +23,13 @@
     {
       "symbol": "BEAT-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-13.95%",
-      "diffema50": "-3.30%",
-      "diffema20": "-0.57%",
-      "bbd": "-0.03%",
-      "bbt": "-2.65%",
-      "hbb": "0.0025",
-      "hbbPercent": "3.33%",
+      "change24h": "-13.92%",
+      "diffema50": "-3.45%",
+      "diffema20": "-0.73%",
+      "bbd": "0.07%",
+      "bbt": "-3.25%",
+      "hbb": "0.0027",
+      "hbbPercent": "3.64%",
       "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
       "teleSent": false
     }
