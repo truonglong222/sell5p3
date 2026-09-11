@@ -1,72 +1,54 @@
 {
-  "lastScanAt": "2026-09-11T22:16:32.693Z",
+  "lastScanAt": "2026-09-11T22:21:28.522Z",
   "totalScanned": 210,
-  "passedEmaCount": 7,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "9.59%",
-      "diffema50": "-2.49%",
+      "change24h": "9.16%",
+      "diffema50": "-2.35%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "8.25%",
-      "diffema50": "-5.97%",
+      "change24h": "8.49%",
+      "diffema50": "-5.87%",
       "validFor": "SHORT"
     },
     {
       "symbol": "OFC-USDT-SWAP",
-      "change24h": "8.77%",
-      "diffema50": "-3.26%",
+      "change24h": "8.05%",
+      "diffema50": "-3.30%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "10.38%",
-      "diffema50": "-3.82%",
+      "change24h": "11.11%",
+      "diffema50": "-4.33%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "7.66%",
-      "diffema50": "-1.71%",
+      "change24h": "7.34%",
+      "diffema50": "-1.81%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "15.27%",
-      "diffema50": "-0.68%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "THETA-USDT-SWAP",
-      "change24h": "10.91%",
-      "diffema50": "-0.16%",
+      "change24h": "13.71%",
+      "diffema50": "-0.48%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "OFC-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+8.77%",
-      "diffema50": "-3.26%",
-      "bbd": "2.88%",
-      "bbt": "-0.24%",
-      "hbb15m": "0.0006",
-      "hbbPercent15m": "6.99%",
-      "link": "https://www.okx.com/trade-swap/ofc-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "MINA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+15.27%",
-      "diffema50": "-0.68%",
-      "bbd": "1.84%",
-      "bbt": "0.39%",
+      "change24h": "+13.71%",
+      "diffema50": "-0.48%",
+      "bbd": "1.48%",
+      "bbt": "0.01%",
       "hbb15m": "0.0047",
       "hbbPercent15m": "4.49%",
       "link": "https://www.okx.com/trade-swap/mina-usdt-swap",
