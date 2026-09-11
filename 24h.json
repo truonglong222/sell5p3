@@ -1,75 +1,75 @@
 {
-  "lastScanAt": "2026-09-11T22:06:15.265Z",
-  "totalScanned": 209,
-  "passedEmaCount": 9,
+  "lastScanAt": "2026-09-11T22:11:13.559Z",
+  "totalScanned": 210,
+  "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "9.02%",
-      "diffema50": "-2.58%",
+      "change24h": "8.70%",
+      "diffema50": "-2.61%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "8.70%",
-      "diffema50": "-6.16%",
+      "change24h": "8.37%",
+      "diffema50": "-6.10%",
       "validFor": "SHORT"
     },
     {
       "symbol": "OFC-USDT-SWAP",
-      "change24h": "9.09%",
-      "diffema50": "-3.27%",
+      "change24h": "8.45%",
+      "diffema50": "-3.29%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "10.63%",
-      "diffema50": "-2.69%",
+      "change24h": "8.76%",
+      "diffema50": "-3.24%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "7.72%",
-      "diffema50": "-1.83%",
+      "change24h": "7.55%",
+      "diffema50": "-1.74%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "14.35%",
-      "diffema50": "-1.02%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "BASED-USDT-SWAP",
-      "change24h": "7.09%",
-      "diffema50": "-0.66%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "MERL-USDT-SWAP",
-      "change24h": "7.24%",
-      "diffema50": "-0.55%",
+      "change24h": "13.95%",
+      "diffema50": "-0.94%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "10.98%",
-      "diffema50": "-0.59%",
+      "change24h": "10.85%",
+      "diffema50": "-0.38%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "OFC-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+9.09%",
-      "diffema50": "-3.27%",
-      "bbd": "3.35%",
-      "bbt": "0.36%",
+      "change24h": "+8.45%",
+      "diffema50": "-3.29%",
+      "bbd": "2.85%",
+      "bbt": "-0.40%",
       "hbb15m": "0.0006",
       "hbbPercent15m": "7.13%",
       "link": "https://www.okx.com/trade-swap/ofc-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "MINA-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+13.95%",
+      "diffema50": "-0.94%",
+      "bbd": "0.66%",
+      "bbt": "-0.38%",
+      "hbb15m": "0.0058",
+      "hbbPercent15m": "5.61%",
+      "link": "https://www.okx.com/trade-swap/mina-usdt-swap",
       "teleSent": false
     }
   ]
