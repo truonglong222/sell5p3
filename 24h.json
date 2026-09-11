@@ -1,16 +1,30 @@
 {
-  "lastScanAt": "2026-09-11T00:25:23.872Z",
-  "totalScanned": 9,
+  "lastScanAt": "2026-09-11T00:30:49.537Z",
+  "totalScanned": 8,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "-16.20%",
-      "diffema50": "-3.70%",
+      "change24h": "-16.79%",
+      "diffema50": "-4.04%",
       "diffema20": "-0.76%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "BEAT-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-16.79%",
+      "diffema50": "-4.04%",
+      "diffema20": "-0.76%",
+      "bbd": "-0.01%",
+      "bbt": "-1.54%",
+      "hbb": "0.0016",
+      "hbbPercent": "2.07%",
+      "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
