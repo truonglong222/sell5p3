@@ -1,62 +1,56 @@
 {
-  "lastScanAt": "2026-09-11T19:26:19.865Z",
+  "lastScanAt": "2026-09-11T19:31:43.982Z",
   "totalScanned": 207,
-  "passedEmaCount": 5,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "15.84%",
-      "diffema50": "-3.64%",
+      "change24h": "14.27%",
+      "diffema50": "-3.42%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "11.96%",
-      "diffema50": "-1.18%",
+      "change24h": "11.32%",
+      "diffema50": "-2.38%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "JUP-USDT-SWAP",
+      "change24h": "7.38%",
+      "diffema50": "-3.23%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "8.04%",
-      "diffema50": "-1.79%",
+      "change24h": "8.61%",
+      "diffema50": "-1.87%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "11.81%",
-      "diffema50": "-1.32%",
+      "change24h": "12.19%",
+      "diffema50": "-1.51%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "12.15%",
-      "diffema50": "-5.89%",
+      "change24h": "12.28%",
+      "diffema50": "-5.55%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "RAY-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+15.84%",
-      "diffema50": "-3.64%",
-      "bbd": "4.15%",
-      "bbt": "-0.15%",
-      "hbb15m": "0.1311",
-      "hbbPercent15m": "8.17%",
-      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
-      "teleSent": true
-    },
     {
       "symbol": "THETA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+12.15%",
-      "diffema50": "-5.89%",
-      "bbd": "2.42%",
-      "bbt": "0.12%",
-      "hbb15m": "0.0208",
-      "hbbPercent15m": "10.74%",
+      "change24h": "+12.28%",
+      "diffema50": "-5.55%",
+      "bbd": "2.48%",
+      "bbt": "-0.02%",
+      "hbb15m": "0.0189",
+      "hbbPercent15m": "9.80%",
       "link": "https://www.okx.com/trade-swap/theta-usdt-swap",
       "teleSent": false
     }
