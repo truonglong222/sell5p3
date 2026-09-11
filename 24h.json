@@ -1,8 +1,23 @@
 {
-  "lastScanAt": "2026-09-11T15:56:16.729Z",
+  "lastScanAt": "2026-09-11T16:02:00.390Z",
   "totalScanned": 207,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 2,
+  "passedEmaList": [
+    {
+      "symbol": "BICO-USDT-SWAP",
+      "change24h": "-0.59%",
+      "diffema50": "3.18%",
+      "diffema30": "0.88%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "BILL-USDT-SWAP",
+      "change24h": "0.62%",
+      "diffema50": "3.19%",
+      "diffema30": "0.96%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
