@@ -1,64 +1,57 @@
 {
-  "lastScanAt": "2026-09-11T21:51:25.835Z",
+  "lastScanAt": "2026-09-11T21:56:10.534Z",
   "totalScanned": 209,
-  "passedEmaCount": 7,
+  "passedEmaCount": 8,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "9.90%",
-      "diffema50": "-2.24%",
+      "change24h": "9.60%",
+      "diffema50": "-2.38%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "8.25%",
-      "diffema50": "-6.03%",
+      "change24h": "7.64%",
+      "diffema50": "-6.14%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "OFC-USDT-SWAP",
+      "change24h": "7.44%",
+      "diffema50": "-3.46%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "15.23%",
-      "diffema50": "-1.33%",
+      "change24h": "13.75%",
+      "diffema50": "-1.72%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "11.09%",
-      "diffema50": "-1.45%",
+      "change24h": "9.25%",
+      "diffema50": "-1.58%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "14.21%",
-      "diffema50": "-1.01%",
+      "change24h": "13.81%",
+      "diffema50": "-1.05%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BASED-USDT-SWAP",
-      "change24h": "8.63%",
-      "diffema50": "-0.58%",
+      "change24h": "8.08%",
+      "diffema50": "-0.64%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "10.35%",
-      "diffema50": "-0.86%",
+      "change24h": "10.40%",
+      "diffema50": "-0.82%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "CASHCAT-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+11.09%",
-      "diffema50": "-1.45%",
-      "bbd": "2.55%",
-      "bbt": "-0.17%",
-      "hbb15m": "0.0148",
-      "hbbPercent15m": "8.08%",
-      "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
