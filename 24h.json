@@ -1,13 +1,20 @@
 {
-  "lastScanAt": "2026-09-11T13:01:43.530Z",
-  "totalScanned": 186,
-  "passedEmaCount": 1,
+  "lastScanAt": "2026-09-11T13:06:13.203Z",
+  "totalScanned": 184,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "DOT-USDT-SWAP",
-      "change24h": "-0.07%",
-      "diffema50": "-3.20%",
-      "diffema30": "-0.96%",
+      "change24h": "-0.26%",
+      "diffema50": "-3.18%",
+      "diffema30": "-0.82%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "WLFI-USDT-SWAP",
+      "change24h": "-6.78%",
+      "diffema50": "-6.07%",
+      "diffema30": "-0.83%",
       "validFor": "LONG"
     }
   ],
