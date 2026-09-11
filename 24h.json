@@ -1,27 +1,46 @@
 {
-  "lastScanAt": "2026-09-11T19:01:44.485Z",
+  "lastScanAt": "2026-09-11T19:06:19.532Z",
   "totalScanned": 207,
-  "passedEmaCount": 3,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "17.66%",
-      "diffema50": "-3.68%",
+      "change24h": "19.03%",
+      "diffema50": "-3.99%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "JUP-USDT-SWAP",
+      "change24h": "7.28%",
+      "diffema50": "-2.07%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "8.06%",
-      "diffema50": "-1.16%",
+      "change24h": "8.84%",
+      "diffema50": "-1.32%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "10.68%",
-      "diffema50": "-6.27%",
+      "change24h": "11.71%",
+      "diffema50": "-6.37%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "THETA-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+11.71%",
+      "diffema50": "-6.37%",
+      "bbd": "1.85%",
+      "bbt": "-0.38%",
+      "hbb15m": "0.0223",
+      "hbbPercent15m": "11.48%",
+      "link": "https://www.okx.com/trade-swap/theta-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
