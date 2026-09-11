@@ -1,34 +1,27 @@
 {
-  "lastScanAt": "2026-09-11T13:36:02.042Z",
-  "totalScanned": 191,
-  "passedEmaCount": 4,
+  "lastScanAt": "2026-09-11T13:41:14.575Z",
+  "totalScanned": 194,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "2.83%",
-      "diffema50": "-5.66%",
-      "diffema30": "-0.68%",
+      "change24h": "0.99%",
+      "diffema50": "-5.48%",
+      "diffema30": "-0.31%",
       "validFor": "LONG"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "-2.80%",
-      "diffema50": "4.20%",
-      "diffema30": "1.00%",
+      "change24h": "-3.16%",
+      "diffema50": "4.23%",
+      "diffema30": "0.99%",
       "validFor": "SHORT"
     },
     {
       "symbol": "DOT-USDT-SWAP",
-      "change24h": "-1.03%",
-      "diffema50": "-3.04%",
-      "diffema30": "-0.21%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "PONS-USDT-SWAP",
-      "change24h": "5.88%",
-      "diffema50": "-3.67%",
-      "diffema30": "1.00%",
+      "change24h": "-1.74%",
+      "diffema50": "-3.07%",
+      "diffema30": "-0.25%",
       "validFor": "LONG"
     }
   ],
@@ -37,15 +30,15 @@
     {
       "symbol": "DOT-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-1.03%",
-      "diffema50": "-3.04%",
-      "diffema30": "-0.21%",
-      "bbd": "-0.30%",
-      "bbt": "-1.98%",
+      "change24h": "-1.74%",
+      "diffema50": "-3.07%",
+      "diffema30": "-0.25%",
+      "bbd": "-0.23%",
+      "bbt": "-2.73%",
       "hbb15m": "0.0567",
       "hbbPercent15m": "5.19%",
       "link": "https://www.okx.com/trade-swap/dot-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
