@@ -1,54 +1,78 @@
 {
-  "lastScanAt": "2026-09-11T23:01:47.861Z",
+  "lastScanAt": "2026-09-11T23:06:22.922Z",
   "totalScanned": 210,
   "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "7.20%",
-      "diffema50": "-2.70%",
+      "change24h": "7.93%",
+      "diffema50": "-2.69%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "9.51%",
-      "diffema50": "-5.30%",
+      "change24h": "10.43%",
+      "diffema50": "-5.17%",
       "validFor": "SHORT"
     },
     {
       "symbol": "OFC-USDT-SWAP",
-      "change24h": "7.93%",
+      "change24h": "8.70%",
       "diffema50": "-2.99%",
       "validFor": "SHORT"
     },
     {
       "symbol": "JUP-USDT-SWAP",
-      "change24h": "7.02%",
-      "diffema50": "-0.16%",
+      "change24h": "7.32%",
+      "diffema50": "-0.04%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "12.05%",
-      "diffema50": "-7.43%",
+      "change24h": "12.41%",
+      "diffema50": "-7.72%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MERL-USDT-SWAP",
-      "change24h": "8.26%",
-      "diffema50": "-0.87%",
+      "change24h": "8.78%",
+      "diffema50": "-0.72%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "BLUR-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+10.43%",
+      "diffema50": "-5.17%",
+      "bbd": "1.42%",
+      "bbt": "-0.21%",
+      "hbb15m": "0.0014",
+      "hbbPercent15m": "7.57%",
+      "link": "https://www.okx.com/trade-swap/blur-usdt-swap",
+      "teleSent": true
+    },
+    {
+      "symbol": "JUP-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+7.32%",
+      "diffema50": "-0.04%",
+      "bbd": "1.15%",
+      "bbt": "-0.48%",
+      "hbb15m": "0.0045",
+      "hbbPercent15m": "1.86%",
+      "link": "https://www.okx.com/trade-swap/jup-usdt-swap",
+      "teleSent": false
+    },
     {
       "symbol": "MERL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+8.26%",
-      "diffema50": "-0.87%",
-      "bbd": "1.10%",
-      "bbt": "-0.03%",
+      "change24h": "+8.78%",
+      "diffema50": "-0.72%",
+      "bbd": "1.44%",
+      "bbt": "0.30%",
       "hbb15m": "0.0005",
       "hbbPercent15m": "2.12%",
       "link": "https://www.okx.com/trade-swap/merl-usdt-swap",
