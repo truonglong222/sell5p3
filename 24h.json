@@ -1,8 +1,30 @@
 {
-  "lastScanAt": "2026-09-11T08:35:23.680Z",
+  "lastScanAt": "2026-09-11T08:40:29.310Z",
   "totalScanned": 7,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
-  "matchedCount": 0,
-  "matchedList": []
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "RLS-USDT-SWAP",
+      "change24h": "-10.01%",
+      "diffema50": "-3.15%",
+      "diffema30": "-0.09%",
+      "validFor": "LONG"
+    }
+  ],
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RLS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-10.01%",
+      "diffema50": "-3.15%",
+      "diffema30": "-0.09%",
+      "bbd": "-0.28%",
+      "bbt": "-3.73%",
+      "hbb15m": "0.0001",
+      "hbbPercent15m": "6.91%",
+      "link": "https://www.okx.com/trade-swap/rls-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
