@@ -1,49 +1,36 @@
 {
-  "lastScanAt": "2026-09-11T05:25:23.205Z",
+  "lastScanAt": "2026-09-11T05:30:45.630Z",
   "totalScanned": 9,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "CNPY-USDT-SWAP",
-      "change24h": "16.33%",
-      "diffema50": "6.30%",
-      "diffema20": "-0.32%",
+      "change24h": "16.15%",
+      "diffema50": "6.26%",
+      "diffema20": "-0.18%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "-14.20%",
-      "diffema50": "-3.60%",
-      "diffema20": "-0.86%",
+      "change24h": "-13.65%",
+      "diffema50": "-3.62%",
+      "diffema20": "-0.89%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "CNPY-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+16.33%",
-      "diffema50": "6.30%",
-      "diffema20": "-0.32%",
-      "bbd": "3.30%",
-      "bbt": "-0.19%",
-      "hbb": "0.0087",
-      "hbbPercent": "3.77%",
-      "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
-      "teleSent": true
-    },
-    {
-      "symbol": "BEAT-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-14.20%",
-      "diffema50": "-3.60%",
-      "diffema20": "-0.86%",
-      "bbd": "0.21%",
-      "bbt": "-3.40%",
-      "hbb": "0.0030",
+      "change24h": "+16.15%",
+      "diffema50": "6.26%",
+      "diffema20": "-0.18%",
+      "bbd": "3.47%",
+      "bbt": "0.22%",
+      "hbb": "0.0092",
       "hbbPercent": "3.95%",
-      "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
+      "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
       "teleSent": false
     }
   ]
