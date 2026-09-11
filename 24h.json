@@ -1,54 +1,60 @@
 {
-  "lastScanAt": "2026-09-11T21:41:14.265Z",
+  "lastScanAt": "2026-09-11T21:46:26.736Z",
   "totalScanned": 209,
-  "passedEmaCount": 8,
+  "passedEmaCount": 9,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "11.39%",
-      "diffema50": "-2.05%",
+      "change24h": "10.13%",
+      "diffema50": "-2.11%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "9.55%",
-      "diffema50": "-5.93%",
+      "change24h": "8.87%",
+      "diffema50": "-5.96%",
       "validFor": "SHORT"
     },
     {
       "symbol": "JUP-USDT-SWAP",
-      "change24h": "7.30%",
-      "diffema50": "-1.37%",
+      "change24h": "7.03%",
+      "diffema50": "-1.23%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "20.06%",
-      "diffema50": "-1.05%",
+      "change24h": "17.64%",
+      "diffema50": "-1.09%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "10.67%",
-      "diffema50": "-1.30%",
+      "change24h": "10.48%",
+      "diffema50": "-1.42%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "13.84%",
-      "diffema50": "-0.98%",
+      "change24h": "13.59%",
+      "diffema50": "-0.97%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BASED-USDT-SWAP",
-      "change24h": "9.31%",
-      "diffema50": "-0.61%",
+      "change24h": "9.00%",
+      "diffema50": "-0.59%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "MERL-USDT-SWAP",
+      "change24h": "7.16%",
+      "diffema50": "-0.19%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "11.37%",
-      "diffema50": "-1.13%",
+      "change24h": "10.76%",
+      "diffema50": "-0.96%",
       "validFor": "SHORT"
     }
   ],
@@ -57,12 +63,12 @@
     {
       "symbol": "CASHCAT-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.67%",
-      "diffema50": "-1.30%",
-      "bbd": "2.70%",
-      "bbt": "-0.12%",
-      "hbb15m": "0.0147",
-      "hbbPercent15m": "8.02%",
+      "change24h": "+10.48%",
+      "diffema50": "-1.42%",
+      "bbd": "2.64%",
+      "bbt": "-0.47%",
+      "hbb15m": "0.0148",
+      "hbbPercent15m": "8.08%",
       "link": "https://www.okx.com/trade-swap/cashcat-usdt-swap",
       "teleSent": false
     }
