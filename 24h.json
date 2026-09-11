@@ -1,18 +1,24 @@
 {
-  "lastScanAt": "2026-09-11T18:56:17.163Z",
+  "lastScanAt": "2026-09-11T19:01:44.485Z",
   "totalScanned": 207,
-  "passedEmaCount": 2,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "16.70%",
-      "diffema50": "-3.40%",
+      "change24h": "17.66%",
+      "diffema50": "-3.68%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "change24h": "8.06%",
+      "diffema50": "-1.16%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "10.08%",
-      "diffema50": "-6.10%",
+      "change24h": "10.68%",
+      "diffema50": "-6.27%",
       "validFor": "SHORT"
     }
   ],
