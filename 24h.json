@@ -1,8 +1,16 @@
 {
-  "lastScanAt": "2026-09-11T03:05:23.712Z",
+  "lastScanAt": "2026-09-11T03:10:31.459Z",
   "totalScanned": 12,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "RVN-USDT-SWAP",
+      "change24h": "-27.40%",
+      "diffema50": "-3.83%",
+      "diffema20": "-0.81%",
+      "validFor": "LONG"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
