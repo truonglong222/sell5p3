@@ -1,37 +1,23 @@
 {
-  "lastScanAt": "2026-09-11T01:35:23.743Z",
+  "lastScanAt": "2026-09-11T01:40:28.445Z",
   "totalScanned": 8,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "SAHARA-USDT-SWAP",
-      "change24h": "-10.22%",
-      "diffema50": "-3.27%",
-      "diffema20": "-0.80%",
+      "change24h": "-11.06%",
+      "diffema50": "-3.29%",
+      "diffema20": "-0.78%",
       "validFor": "LONG"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "-11.99%",
-      "diffema50": "-3.12%",
-      "diffema20": "0.19%",
+      "change24h": "-12.11%",
+      "diffema50": "-3.01%",
+      "diffema20": "0.16%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "SAHARA-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-10.22%",
-      "diffema50": "-3.27%",
-      "diffema20": "-0.80%",
-      "bbd": "0.37%",
-      "bbt": "-1.08%",
-      "hbb": "0.0002",
-      "hbbPercent": "2.18%",
-      "link": "https://www.okx.com/trade-swap/sahara-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
