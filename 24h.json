@@ -1,51 +1,70 @@
 {
-  "lastScanAt": "2026-09-11T20:51:26.423Z",
+  "lastScanAt": "2026-09-11T20:56:22.239Z",
   "totalScanned": 209,
-  "passedEmaCount": 7,
+  "passedEmaCount": 8,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "9.66%",
-      "diffema50": "-0.77%",
+      "change24h": "9.69%",
+      "diffema50": "-1.00%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "12.11%",
-      "diffema50": "-1.77%",
+      "change24h": "12.67%",
+      "diffema50": "-1.89%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "OL-USDT-SWAP",
+      "change24h": "7.01%",
+      "diffema50": "-1.61%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "10.36%",
-      "diffema50": "-6.63%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "JUP-USDT-SWAP",
-      "change24h": "7.00%",
-      "diffema50": "-2.46%",
+      "change24h": "10.49%",
+      "diffema50": "-6.50%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "24.51%",
-      "diffema50": "-0.14%",
+      "change24h": "24.53%",
+      "diffema50": "-0.28%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "13.77%",
-      "diffema50": "-0.36%",
+      "change24h": "13.21%",
+      "diffema50": "-0.48%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "BASED-USDT-SWAP",
+      "change24h": "8.90%",
+      "diffema50": "-0.19%",
       "validFor": "SHORT"
     },
     {
       "symbol": "THETA-USDT-SWAP",
-      "change24h": "11.29%",
+      "change24h": "11.57%",
       "diffema50": "-2.33%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "OL-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+7.01%",
+      "diffema50": "-1.61%",
+      "bbd": "2.02%",
+      "bbt": "0.29%",
+      "hbb15m": "0.0003",
+      "hbbPercent15m": "5.52%",
+      "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
