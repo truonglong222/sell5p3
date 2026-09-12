@@ -1,112 +1,88 @@
 {
-  "lastScanAt": "2026-09-12T16:26:17.720Z",
-  "totalScanned": 187,
-  "passedEmaCount": 7,
+  "lastScanAt": "2026-09-12T16:31:37.449Z",
+  "totalScanned": 186,
+  "passedEmaCount": 9,
   "passedEmaList": [
     {
       "symbol": "ALLO-USDT-SWAP",
-      "change24h": "3.74%",
-      "diffema20": "-1.16%",
+      "change24h": "3.71%",
+      "diffema20": "-1.18%",
       "validFor": "LONG"
     },
     {
       "symbol": "ENA-USDT-SWAP",
-      "change24h": "-2.68%",
+      "change24h": "-2.11%",
+      "diffema20": "0.64%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "USELESS-USDT-SWAP",
+      "change24h": "-3.38%",
+      "diffema20": "1.47%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "RESOLV-USDT-SWAP",
+      "change24h": "2.02%",
+      "diffema20": "-1.00%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "NEAR-USDT-SWAP",
+      "change24h": "-6.77%",
       "diffema20": "0.58%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BILL-USDT-SWAP",
-      "change24h": "2.97%",
-      "diffema20": "-0.63%",
+      "change24h": "3.36%",
+      "diffema20": "-0.52%",
       "validFor": "LONG"
     },
     {
       "symbol": "CHZ-USDT-SWAP",
-      "change24h": "3.32%",
-      "diffema20": "-0.85%",
+      "change24h": "3.75%",
+      "diffema20": "-0.77%",
       "validFor": "LONG"
     },
     {
       "symbol": "TRUTH-USDT-SWAP",
-      "change24h": "2.16%",
-      "diffema20": "-1.49%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "PONS-USDT-SWAP",
-      "change24h": "2.04%",
-      "diffema20": "-0.68%",
+      "change24h": "2.03%",
+      "diffema20": "-1.52%",
       "validFor": "LONG"
     },
     {
       "symbol": "BOME-USDT-SWAP",
-      "change24h": "2.05%",
+      "change24h": "2.15%",
       "diffema20": "-0.57%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 5,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "ALLO-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+3.74%",
-      "diffema20": "-1.16%",
-      "bbd": "-0.41%",
-      "bbt": "-1.30%",
-      "hbb15m": "0.0036",
-      "hbbPercent15m": "1.57%",
+      "change24h": "+3.71%",
+      "diffema20": "-1.18%",
+      "bbd": "-0.07%",
+      "bbt": "-1.76%",
+      "hbb15m": "0.0041",
+      "hbbPercent15m": "1.80%",
       "link": "https://www.okx.com/trade-swap/allo-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "ENA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-2.68%",
-      "diffema20": "0.58%",
+      "change24h": "-2.11%",
+      "diffema20": "0.64%",
       "bbd": "1.91%",
-      "bbt": "-0.28%",
+      "bbt": "-0.48%",
       "hbb15m": "0.0036",
-      "hbbPercent15m": "2.52%",
+      "hbbPercent15m": "2.50%",
       "link": "https://www.okx.com/trade-swap/ena-usdt-swap",
-      "teleSent": true
-    },
-    {
-      "symbol": "CHZ-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+3.32%",
-      "diffema20": "-0.85%",
-      "bbd": "0.50%",
-      "bbt": "-0.45%",
-      "hbb15m": "0.0002",
-      "hbbPercent15m": "1.23%",
-      "link": "https://www.okx.com/trade-swap/chz-usdt-swap",
-      "teleSent": true
-    },
-    {
-      "symbol": "PONS-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+2.04%",
-      "diffema20": "-0.68%",
-      "bbd": "-0.06%",
-      "bbt": "-3.45%",
-      "hbb15m": "0.0286",
-      "hbbPercent15m": "4.51%",
-      "link": "https://www.okx.com/trade-swap/pons-usdt-swap",
-      "teleSent": true
-    },
-    {
-      "symbol": "BOME-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+2.05%",
-      "diffema20": "-0.57%",
-      "bbd": "0.17%",
-      "bbt": "-0.76%",
-      "hbb15m": "0.0000",
-      "hbbPercent15m": "1.18%",
-      "link": "https://www.okx.com/trade-swap/bome-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
