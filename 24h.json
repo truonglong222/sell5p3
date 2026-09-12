@@ -1,24 +1,30 @@
 {
-  "lastScanAt": "2026-09-12T13:36:12.077Z",
+  "lastScanAt": "2026-09-12T13:41:23.235Z",
   "totalScanned": 197,
-  "passedEmaCount": 3,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "11.22%",
-      "diffema30": "0.80%",
+      "change24h": "11.68%",
+      "diffema30": "0.71%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "ETHFI-USDT-SWAP",
+      "change24h": "17.64%",
+      "diffema30": "1.96%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MERL-USDT-SWAP",
-      "change24h": "10.26%",
-      "diffema30": "0.90%",
+      "change24h": "10.40%",
+      "diffema30": "0.88%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "10.76%",
-      "diffema30": "0.44%",
+      "change24h": "10.50%",
+      "diffema30": "0.42%",
       "validFor": "SHORT"
     }
   ],
