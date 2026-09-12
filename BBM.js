@@ -207,11 +207,11 @@ async function main() {
 
       const diffema30 = ((ema1 - ema30) / ema30) * 100;
 
-      // LONG: bd24 < -10% VÀ diffema30 > 0
-      const isTrendValidLong = coin.change24hVal < -10 && diffema30 > 0;
+      // LONG: bd24 < -10% VÀ -3% < diffema30 < 0%
+      const isTrendValidLong = coin.change24hVal < -10 && diffema30 > -3 && diffema30 < 0;
 
-      // SHORT: bd24 > 10% VÀ diffema30 < 0
-      const isTrendValidShort = coin.change24hVal > 10 && diffema30 < 0;
+      // SHORT: bd24 > 10% VÀ 0% < diffema30 < 3%
+      const isTrendValidShort = coin.change24hVal > 10 && diffema30 > 0 && diffema30 < 3;
 
       if (!isTrendValidLong && !isTrendValidShort) {
         await sleep(80);
@@ -334,8 +334,8 @@ async function main() {
     console.log('\n================== THỐNG KÊ CHI TIẾT (5M & 15M) ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount}`);
     console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Lọc Xu hướng Long (bd24 < -10% & diffema30 > 0): ${countMatchedEmaLong} coin`);
-    console.log(`   Lọc Xu hướng Short (bd24 > 7% & diffema30 < 0): ${countMatchedEmaShort} coin`);
+    console.log(`3️⃣ Lọc Xu hướng Long (bd24 < -10% & -3% < diffema30 < 0%): ${countMatchedEmaLong} coin`);
+    console.log(`   Lọc Xu hướng Short (bd24 > 10% & 0% < diffema30 < 3%): ${countMatchedEmaShort} coin`);
     console.log(`4️⃣ Tín hiệu LONG khớp (-2% < bbd < 0.5%): ${countMatchedLong} coin`);
     console.log(`5️⃣ Tín hiệu SHORT khớp (-0.5% < bbt < 2%): ${countMatchedShort} coin`);
 
