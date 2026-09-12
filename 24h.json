@@ -1,60 +1,48 @@
 {
-  "lastScanAt": "2026-09-12T05:46:18.845Z",
+  "lastScanAt": "2026-09-12T05:51:19.726Z",
   "totalScanned": 206,
   "passedEmaCount": 5,
   "passedEmaList": [
     {
-      "symbol": "AEON-USDT-SWAP",
-      "change24h": "10.88%",
-      "diffema30": "0.85%",
+      "symbol": "TRIA-USDT-SWAP",
+      "change24h": "10.17%",
+      "diffema30": "2.12%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "10.33%",
-      "diffema30": "1.26%",
+      "change24h": "11.05%",
+      "diffema30": "1.31%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "change24h": "10.92%",
-      "diffema30": "2.22%",
+      "change24h": "12.84%",
+      "diffema30": "1.81%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "MINA-USDT-SWAP",
-      "change24h": "21.35%",
-      "diffema30": "2.86%",
+      "symbol": "CNPY-USDT-SWAP",
+      "change24h": "10.73%",
+      "diffema30": "0.76%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "10.55%",
-      "diffema30": "2.54%",
+      "change24h": "10.73%",
+      "diffema30": "2.45%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 3,
+  "matchedCount": 2,
   "matchedList": [
-    {
-      "symbol": "AEON-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+10.88%",
-      "diffema30": "0.85%",
-      "bbd": "4.22%",
-      "bbt": "0.28%",
-      "hbb15m": "0.0016",
-      "hbbPercent15m": "3.24%",
-      "link": "https://www.okx.com/trade-swap/aeon-usdt-swap",
-      "teleSent": true
-    },
     {
       "symbol": "LIGHT-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.33%",
-      "diffema30": "1.26%",
-      "bbd": "1.15%",
-      "bbt": "-0.04%",
+      "change24h": "+11.05%",
+      "diffema30": "1.31%",
+      "bbd": "1.47%",
+      "bbt": "0.55%",
       "hbb15m": "0.0066",
       "hbbPercent15m": "4.01%",
       "link": "https://www.okx.com/trade-swap/light-usdt-swap",
@@ -63,14 +51,14 @@
     {
       "symbol": "BERA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.55%",
-      "diffema30": "2.54%",
-      "bbd": "0.72%",
-      "bbt": "-0.44%",
+      "change24h": "+10.73%",
+      "diffema30": "2.45%",
+      "bbd": "0.59%",
+      "bbt": "-0.39%",
       "hbb15m": "0.0131",
       "hbbPercent15m": "7.06%",
       "link": "https://www.okx.com/trade-swap/bera-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
