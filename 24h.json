@@ -1,63 +1,45 @@
 {
-  "lastScanAt": "2026-09-12T05:51:19.726Z",
+  "lastScanAt": "2026-09-12T05:56:54.427Z",
   "totalScanned": 206,
-  "passedEmaCount": 5,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
-      "symbol": "TRIA-USDT-SWAP",
-      "change24h": "10.17%",
-      "diffema30": "2.12%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "11.05%",
+      "change24h": "10.12%",
       "diffema30": "1.31%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "change24h": "12.84%",
-      "diffema30": "1.81%",
+      "change24h": "12.45%",
+      "diffema30": "1.71%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CNPY-USDT-SWAP",
-      "change24h": "10.73%",
-      "diffema30": "0.76%",
+      "change24h": "10.20%",
+      "diffema30": "0.94%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "10.73%",
-      "diffema30": "2.45%",
+      "change24h": "10.49%",
+      "diffema30": "2.35%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "LIGHT-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.05%",
+      "change24h": "+10.12%",
       "diffema30": "1.31%",
-      "bbd": "1.47%",
-      "bbt": "0.55%",
+      "bbd": "0.78%",
+      "bbt": "-0.40%",
       "hbb15m": "0.0066",
       "hbbPercent15m": "4.01%",
       "link": "https://www.okx.com/trade-swap/light-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "BERA-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+10.73%",
-      "diffema30": "2.45%",
-      "bbd": "0.59%",
-      "bbt": "-0.39%",
-      "hbb15m": "0.0131",
-      "hbbPercent15m": "7.06%",
-      "link": "https://www.okx.com/trade-swap/bera-usdt-swap",
       "teleSent": false
     }
   ]
