@@ -1,14 +1,22 @@
 {
-  "lastScanAt": "2026-09-12T20:46:05.240Z",
-  "totalScanned": 180,
-  "passedEmaCount": 1,
+  "lastScanAt": "2026-09-12T21:02:07.523Z",
+  "totalScanned": 179,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "SKY-USDT-SWAP",
-      "change24h": "2.83%",
-      "hbbPercent1h": "3.37%",
-      "diffema20_15m": "-0.84%",
-      "diffema40_1h": "4.59%",
+      "change24h": "3.17%",
+      "hbbPercent1h": "2.72%",
+      "diffema20_15m": "-0.85%",
+      "diffema40_1h": "4.61%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "CELO-USDT-SWAP",
+      "change24h": "6.17%",
+      "hbbPercent1h": "4.88%",
+      "diffema20_15m": "-0.78%",
+      "diffema40_1h": "6.01%",
       "validFor": "LONG"
     }
   ],
