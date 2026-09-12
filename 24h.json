@@ -1,48 +1,42 @@
 {
-  "lastScanAt": "2026-09-12T09:41:20.316Z",
+  "lastScanAt": "2026-09-12T09:46:15.768Z",
   "totalScanned": 206,
-  "passedEmaCount": 7,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "14.43%",
-      "diffema30": "0.97%",
+      "change24h": "13.97%",
+      "diffema30": "0.77%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": "11.80%",
-      "diffema30": "0.83%",
+      "change24h": "11.99%",
+      "diffema30": "0.56%",
       "validFor": "SHORT"
     },
     {
       "symbol": "IOST-USDT-SWAP",
-      "change24h": "-13.45%",
-      "diffema30": "-1.39%",
+      "change24h": "-11.65%",
+      "diffema30": "-1.61%",
       "validFor": "LONG"
     },
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "10.86%",
-      "diffema30": "0.17%",
+      "change24h": "10.97%",
+      "diffema30": "0.28%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-13.08%",
+      "change24h": "-13.12%",
       "diffema30": "-0.67%",
       "validFor": "LONG"
     },
     {
       "symbol": "SOPH-USDT-SWAP",
-      "change24h": "11.19%",
-      "diffema30": "0.56%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "BERA-USDT-SWAP",
-      "change24h": "11.02%",
-      "diffema30": "0.07%",
+      "change24h": "11.29%",
+      "diffema30": "0.75%",
       "validFor": "SHORT"
     }
   ],
@@ -51,24 +45,24 @@
     {
       "symbol": "MUBARAK-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.80%",
-      "diffema30": "0.83%",
-      "bbd": "1.45%",
-      "bbt": "-0.33%",
-      "hbb15m": "0.0028",
-      "hbbPercent15m": "8.92%",
+      "change24h": "+11.99%",
+      "diffema30": "0.56%",
+      "bbd": "1.13%",
+      "bbt": "-0.44%",
+      "hbb15m": "0.0026",
+      "hbbPercent15m": "8.29%",
       "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "SOPH-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.19%",
-      "diffema30": "0.56%",
-      "bbd": "3.29%",
-      "bbt": "-0.02%",
+      "change24h": "+11.29%",
+      "diffema30": "0.75%",
+      "bbd": "3.16%",
+      "bbt": "-0.35%",
       "hbb15m": "0.0004",
-      "hbbPercent15m": "9.09%",
+      "hbbPercent15m": "7.83%",
       "link": "https://www.okx.com/trade-swap/soph-usdt-swap",
       "teleSent": false
     }
