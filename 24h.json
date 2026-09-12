@@ -1,40 +1,21 @@
 {
-  "lastScanAt": "2026-09-12T01:06:16.401Z",
+  "lastScanAt": "2026-09-12T01:11:27.994Z",
   "totalScanned": 208,
-  "passedEmaCount": 3,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "8.06%",
-      "diffema30": "-6.55%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "THETA-USDT-SWAP",
-      "change24h": "8.47%",
-      "diffema30": "-0.14%",
+      "change24h": "8.67%",
+      "diffema30": "-6.32%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BSB-USDT-SWAP",
-      "change24h": "8.27%",
-      "diffema30": "-0.48%",
+      "change24h": "8.43%",
+      "diffema30": "-0.34%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "THETA-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+8.47%",
-      "diffema30": "-0.14%",
-      "bbd": "1.18%",
-      "bbt": "0.61%",
-      "hbb15m": "0.0049",
-      "hbbPercent15m": "2.60%",
-      "link": "https://www.okx.com/trade-swap/theta-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
