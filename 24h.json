@@ -1,60 +1,78 @@
 {
-  "lastScanAt": "2026-09-12T06:36:07.070Z",
+  "lastScanAt": "2026-09-12T06:41:21.879Z",
   "totalScanned": 207,
-  "passedEmaCount": 5,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "CP-USDT-SWAP",
-      "change24h": "13.61%",
-      "diffema30": "1.37%",
+      "change24h": "15.03%",
+      "diffema30": "1.49%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CNPY-USDT-SWAP",
-      "change24h": "15.76%",
-      "diffema30": "1.00%",
+      "change24h": "14.41%",
+      "diffema30": "0.94%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-13.93%",
-      "diffema30": "-2.95%",
+      "change24h": "-14.08%",
+      "diffema30": "-2.59%",
       "validFor": "LONG"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "17.75%",
-      "diffema30": "2.54%",
+      "change24h": "18.10%",
+      "diffema30": "2.48%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "BABY-USDT-SWAP",
+      "change24h": "10.76%",
+      "diffema30": "1.05%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "12.45%",
-      "diffema30": "2.20%",
+      "change24h": "13.26%",
+      "diffema30": "2.23%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "CNPY-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+15.76%",
-      "diffema30": "1.00%",
-      "bbd": "2.24%",
-      "bbt": "-0.41%",
+      "change24h": "+14.41%",
+      "diffema30": "0.94%",
+      "bbd": "2.20%",
+      "bbt": "-0.42%",
       "hbb15m": "0.0144",
       "hbbPercent15m": "5.71%",
       "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
       "teleSent": false
     },
     {
+      "symbol": "BABY-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+10.76%",
+      "diffema30": "1.05%",
+      "bbd": "5.49%",
+      "bbt": "0.69%",
+      "hbb15m": "0.0003",
+      "hbbPercent15m": "2.34%",
+      "link": "https://www.okx.com/trade-swap/baby-usdt-swap",
+      "teleSent": false
+    },
+    {
       "symbol": "BERA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+12.45%",
-      "diffema30": "2.20%",
-      "bbd": "2.56%",
-      "bbt": "0.26%",
+      "change24h": "+13.26%",
+      "diffema30": "2.23%",
+      "bbd": "3.36%",
+      "bbt": "0.52%",
       "hbb15m": "0.0115",
       "hbbPercent15m": "6.18%",
       "link": "https://www.okx.com/trade-swap/bera-usdt-swap",
