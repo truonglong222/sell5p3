@@ -1,69 +1,45 @@
 {
-  "lastScanAt": "2026-09-12T08:11:19.873Z",
+  "lastScanAt": "2026-09-12T08:16:16.912Z",
   "totalScanned": 206,
-  "passedEmaCount": 6,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "13.12%",
-      "diffema30": "1.86%",
+      "change24h": "12.97%",
+      "diffema30": "1.92%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RIVER-USDT-SWAP",
-      "change24h": "26.03%",
-      "diffema30": "1.27%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "CP-USDT-SWAP",
-      "change24h": "11.09%",
-      "diffema30": "0.62%",
+      "change24h": "23.87%",
+      "diffema30": "0.73%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-14.98%",
-      "diffema30": "-1.44%",
+      "change24h": "-15.41%",
+      "diffema30": "-1.36%",
       "validFor": "LONG"
     },
     {
-      "symbol": "BEAT-USDT-SWAP",
-      "change24h": "19.43%",
-      "diffema30": "0.18%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "14.86%",
-      "diffema30": "2.21%",
+      "change24h": "13.20%",
+      "diffema30": "2.29%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "GPS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-14.98%",
-      "diffema30": "-1.44%",
-      "bbd": "0.28%",
-      "bbt": "-0.50%",
+      "change24h": "-15.41%",
+      "diffema30": "-1.36%",
+      "bbd": "-0.02%",
+      "bbt": "-0.88%",
       "hbb15m": "0.0003",
-      "hbbPercent15m": "3.49%",
+      "hbbPercent15m": "3.53%",
       "link": "https://www.okx.com/trade-swap/gps-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "BERA-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+14.86%",
-      "diffema30": "2.21%",
-      "bbd": "3.14%",
-      "bbt": "0.35%",
-      "hbb15m": "0.0099",
-      "hbbPercent15m": "5.24%",
-      "link": "https://www.okx.com/trade-swap/bera-usdt-swap",
       "teleSent": false
     }
   ]
