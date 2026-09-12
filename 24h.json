@@ -1,24 +1,30 @@
 {
-  "lastScanAt": "2026-09-12T09:06:17.978Z",
+  "lastScanAt": "2026-09-12T09:11:21.097Z",
   "totalScanned": 206,
-  "passedEmaCount": 3,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
+      "symbol": "IOST-USDT-SWAP",
+      "change24h": "-15.27%",
+      "diffema30": "-0.05%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "10.05%",
-      "diffema30": "0.00%",
+      "change24h": "10.44%",
+      "diffema30": "0.04%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-14.81%",
-      "diffema30": "-0.89%",
+      "change24h": "-14.09%",
+      "diffema30": "-0.83%",
       "validFor": "LONG"
     },
     {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "11.72%",
-      "diffema30": "1.32%",
+      "change24h": "11.68%",
+      "diffema30": "1.04%",
       "validFor": "SHORT"
     }
   ],
