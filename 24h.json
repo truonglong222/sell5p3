@@ -1,33 +1,52 @@
 {
-  "lastScanAt": "2026-09-12T04:46:24.623Z",
+  "lastScanAt": "2026-09-12T04:51:25.159Z",
   "totalScanned": 207,
-  "passedEmaCount": 4,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "RIVER-USDT-SWAP",
-      "change24h": "29.11%",
-      "diffema30": "-0.74%",
+      "change24h": "28.91%",
+      "diffema30": "-0.77%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "64.02%",
-      "diffema30": "-6.41%",
+      "change24h": "74.52%",
+      "diffema30": "-6.05%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "CNPY-USDT-SWAP",
+      "change24h": "10.01%",
+      "diffema30": "-1.30%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "18.38%",
+      "change24h": "17.95%",
       "diffema30": "-1.72%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "17.55%",
-      "diffema30": "-2.27%",
+      "change24h": "20.82%",
+      "diffema30": "-2.14%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "LAB-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+74.52%",
+      "diffema30": "-6.05%",
+      "bbd": "17.85%",
+      "bbt": "0.23%",
+      "hbb15m": "0.0166",
+      "hbbPercent15m": "21.10%",
+      "link": "https://www.okx.com/trade-swap/lab-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
