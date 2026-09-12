@@ -106,7 +106,6 @@ async function getFilteredMarkets() {
     if (!res.data || res.data.code !== '0') return { allSwapsCount: 0, volPassedCount: 0, filteredCoins: [] };
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
-
     const volFiltered = tickers.filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H);
 
     const filteredCoins = [];
@@ -137,11 +136,11 @@ async function getFilteredMarkets() {
 
 // ------------------- LẤY DỮ LIỆU NẾN -------------------
 
-async function getCandles(symbol, bar = '5m', limit = 100) {
+async function getCandles(symbol, bar = '15m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
-    if (!res.data || res.data.code !== '0' || res.data.data.length < (bar === '15m' ? 25 : 80)) return null;
+    if (!res.data || res.data.code !== '0' || res.data.data.length < 60) return null;
     return res.data.data;
   } catch (error) {
     console.error(`Lỗi lấy dữ liệu nến ${bar} (${symbol}):`, error.message);
@@ -153,7 +152,7 @@ async function getCandles(symbol, bar = '5m', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (KHUNG 5M & HBB 15M) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (TOÀN BỘ KHUNG 15M) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -179,39 +178,39 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy 100 nến 5m
-      const candles5m = await getCandles(symbol, '5m', 100);
-      if (!candles5m || candles5m.length < 80) {
+      // 1. Lấy nến 15m
+      const candles15m = await getCandles(symbol, '15m', 100);
+      if (!candles15m || candles15m.length < 60) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
-      // ================= BƯỚC 2: TÍNH DIFFEMA30 TRÊN NẾN 5M =================
-      const closedCandles = candles5m.slice(1).reverse();
+      // ================= BƯỚC 2: TÍNH DIFFEMA20 TRÊN NẾN 15M =================
+      const closedCandles = candles15m.slice(1).reverse();
       const closedPrices = closedCandles.map((c) => parseFloat(c[4]));
 
       const emaSeries = calculateEMAArray(closedPrices, 20);
-      if (emaSeries.length < 30) {
+      if (emaSeries.length < 20) {
         await sleep(80);
         continue;
       }
 
       const ema1 = emaSeries[emaSeries.length - 1];
-      const ema30 = emaSeries[emaSeries.length - 30];
+      const ema20 = emaSeries[emaSeries.length - 20];
 
-      if (!ema30 || ema30 <= 0) {
+      if (!ema20 || ema20 <= 0) {
         await sleep(80);
         continue;
       }
 
-      const diffema30 = ((ema1 - ema30) / ema30) * 100;
+      const diffema20 = ((ema1 - ema20) / ema20) * 100;
 
-      // LONG: bd24 < -10% VÀ -2% < diffema30 < 0%
-      const isTrendValidLong = coin.change24hVal < -10 && diffema30 > -2 && diffema30 < 0;
+      // SHORT: -7% < bd24 < -2% VÀ diffema20 > 0.5%
+      const isTrendValidShort = coin.change24hVal > -7 && coin.change24hVal < -2 && diffema20 > 0.5;
 
-      // SHORT: bd24 > 10% VÀ 0% < diffema30 < 2%
-      const isTrendValidShort = coin.change24hVal > 10 && diffema30 > 0 && diffema30 < 2;
+      // LONG: 2% < bd24 < 7% VÀ diffema20 < -0.5%
+      const isTrendValidLong = coin.change24hVal > 2 && coin.change24hVal < 7 && diffema20 < -0.5;
 
       if (!isTrendValidLong && !isTrendValidShort) {
         await sleep(80);
@@ -224,12 +223,12 @@ async function main() {
       scanResults.passedEma.push({
         symbol,
         change24h: coin.change24hVal.toFixed(2) + '%',
-        diffema30: diffema30.toFixed(2) + '%',
+        diffema20: diffema20.toFixed(2) + '%',
         validFor: isTrendValidLong ? 'LONG' : 'SHORT'
       });
 
-      // ================= BƯỚC 3: TÍNH BB NẾN 1 TRÊN 5M VÀ XÉT ĐIỀU KIỆN ENTRY =================
-      const closesBB1 = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      // ================= BƯỚC 3: TÍNH BOLLINGER BANDS NẾN 1 TRÊN 15M =================
+      const closesBB1 = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb1 = calculateBollingerBands(closesBB1, 20);
 
       if (!bb1 || bb1.lower <= 0 || bb1.upper <= 0) {
@@ -237,14 +236,14 @@ async function main() {
         continue;
       }
 
-      const candle0 = candles5m[0];
+      const candle0 = candles15m[0];
       const high0 = parseFloat(candle0[2]);
       const low0 = parseFloat(candle0[3]);
 
-      // bbd: % chênh lệch giữa giá thấp nhất nến 0 và dải dưới BB nến 1
+      // bbd: % chênh lệch giữa giá thấp nhất nến 0 và dải dưới BB nến 1 (15m)
       const bbd = ((low0 - bb1.lower) / bb1.lower) * 100;
 
-      // bbt: % chênh lệch giữa giá cao nhất nến 0 và dải trên BB nến 1
+      // bbt: % chênh lệch giữa giá cao nhất nến 0 và dải trên BB nến 1 (15m)
       const bbt = ((high0 - bb1.upper) / bb1.upper) * 100;
 
       // Điều kiện Entry kết hợp
@@ -256,19 +255,9 @@ async function main() {
         continue;
       }
 
-      // ================= BƯỚC 4: TÍNH HBB TRÊN KHUNG 15M =================
-      const candles15m = await getCandles(symbol, '15m', 30);
-      let hbb = 0;
-      let hbbPercent = 0;
-
-      if (candles15m && candles15m.length >= 21) {
-        const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-        const bb15m = calculateBollingerBands(closesBB15m, 20);
-        if (bb15m && bb15m.middle > 0) {
-          hbb = bb15m.upper - bb15m.lower;
-          hbbPercent = (hbb / bb15m.middle) * 100;
-        }
-      }
+      // ================= BƯỚC 4: TÍNH HBB TRÊN 15M =================
+      const hbb = bb1.upper - bb1.lower;
+      const hbbPercent = bb1.middle > 0 ? (hbb / bb1.middle) * 100 : 0;
 
       const change24hStr = (coin.change24hVal >= 0 ? '+' : '') + coin.change24hVal.toFixed(2) + '%';
       const signalType = isLong ? 'LONG' : 'SHORT';
@@ -287,7 +276,7 @@ async function main() {
         symbol,
         type: signalType,
         change24h: change24hStr,
-        diffema30: diffema30.toFixed(2) + '%',
+        diffema20: diffema20.toFixed(2) + '%',
         bbd: bbd.toFixed(2) + '%',
         bbt: bbt.toFixed(2) + '%',
         hbb15m: hbb.toFixed(4),
@@ -299,18 +288,18 @@ async function main() {
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const entryDetail = isLong
-          ? `• <b>bbd:</b> ${bbd.toFixed(2)}% (so với Lower BB 5m)`
-          : `• <b>bbt:</b> ${bbt.toFixed(2)}% (so với Upper BB 5m)`;
+          ? `• <b>bbd:</b> ${bbd.toFixed(2)}% (so với Lower BB 15m)`
+          : `• <b>bbt:</b> ${bbt.toFixed(2)}% (so với Upper BB 15m)`;
 
         const message =
-          `${icon} <b>TÍN HIỆU ${signalType} (5m): ${coinName}</b>\n` +
+          `${icon} <b>TÍN HIỆU ${signalType} (15m): ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
-          `• <b>diffema30:</b> ${diffema30.toFixed(2)}%\n` +
+          `• <b>diffema20:</b> ${diffema20.toFixed(2)}%\n` +
           `${entryDetail}\n` +
           `• <b>Hbb 15m (Độ rộng BB):</b> ${hbb.toFixed(4)} (${hbbPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
 
-        console.log(`🚀 [${signalType} 5m] Gửi Telegram cho ${symbol}...`);
+        console.log(`🚀 [${signalType} 15m] Gửi Telegram cho ${symbol}...`);
         await axios
           .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
@@ -331,11 +320,11 @@ async function main() {
 
     saveScanResults(scanResults);
 
-    console.log('\n================== THỐNG KÊ CHI TIẾT (5M & 15M) ==================');
+    console.log('\n================== THỐNG KÊ CHI TIẾT (15M) ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount}`);
-    console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Lọc Xu hướng Long (bd24 < -10% & -3% < diffema30 < 0%): ${countMatchedEmaLong} coin`);
-    console.log(`   Lọc Xu hướng Short (bd24 > 10% & 0% < diffema30 < 3%): ${countMatchedEmaShort} coin`);
+    console.log(`2️⃣ Dữ liệu nến 15m: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
+    console.log(`3️⃣ Lọc Xu hướng Long (2% < bd24 < 7% & diffema20 < -0.5%): ${countMatchedEmaLong} coin`);
+    console.log(`   Lọc Xu hướng Short (-7% < bd24 < -2% & diffema20 > 0.5%): ${countMatchedEmaShort} coin`);
     console.log(`4️⃣ Tín hiệu LONG khớp (-2% < bbd < 0.5%): ${countMatchedLong} coin`);
     console.log(`5️⃣ Tín hiệu SHORT khớp (-0.5% < bbt < 2%): ${countMatchedShort} coin`);
 
