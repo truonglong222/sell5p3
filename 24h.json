@@ -1,69 +1,87 @@
 {
-  "lastScanAt": "2026-09-12T15:01:54.599Z",
+  "lastScanAt": "2026-09-12T15:06:05.817Z",
   "totalScanned": 192,
-  "passedEmaCount": 6,
+  "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "11.88%",
-      "diffema30": "0.64%",
+      "change24h": "11.33%",
+      "diffema30": "0.33%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LIT-USDT-SWAP",
-      "change24h": "-10.47%",
-      "diffema30": "-0.73%",
+      "change24h": "-10.24%",
+      "diffema30": "-0.80%",
       "validFor": "LONG"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "-10.34%",
-      "diffema30": "-1.19%",
+      "change24h": "-10.68%",
+      "diffema30": "-1.12%",
       "validFor": "LONG"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "13.67%",
-      "diffema30": "0.25%",
+      "change24h": "12.84%",
+      "diffema30": "0.14%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "-11.36%",
-      "diffema30": "-0.78%",
+      "change24h": "-12.62%",
+      "diffema30": "-1.12%",
       "validFor": "LONG"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-12.02%",
-      "diffema30": "-0.00%",
+      "change24h": "-11.59%",
+      "diffema30": "-0.01%",
       "validFor": "LONG"
+    },
+    {
+      "symbol": "MERL-USDT-SWAP",
+      "change24h": "10.05%",
+      "diffema30": "1.11%",
+      "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "LIT-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-10.47%",
-      "diffema30": "-0.73%",
-      "bbd": "0.03%",
-      "bbt": "-0.93%",
+      "change24h": "-10.24%",
+      "diffema30": "-0.80%",
+      "bbd": "0.15%",
+      "bbt": "-0.77%",
       "hbb15m": "0.1065",
       "hbbPercent15m": "2.44%",
       "link": "https://www.okx.com/trade-swap/lit-usdt-swap",
       "teleSent": false
     },
     {
-      "symbol": "BLUR-USDT-SWAP",
+      "symbol": "MET-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-10.34%",
-      "diffema30": "-1.19%",
-      "bbd": "0.27%",
-      "bbt": "-0.48%",
-      "hbb15m": "0.0005",
-      "hbbPercent15m": "3.15%",
-      "link": "https://www.okx.com/trade-swap/blur-usdt-swap",
+      "change24h": "-12.62%",
+      "diffema30": "-1.12%",
+      "bbd": "-0.01%",
+      "bbt": "-1.76%",
+      "hbb15m": "0.0134",
+      "hbbPercent15m": "5.63%",
+      "link": "https://www.okx.com/trade-swap/met-usdt-swap",
+      "teleSent": true
+    },
+    {
+      "symbol": "MERL-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+10.05%",
+      "diffema30": "1.11%",
+      "bbd": "2.41%",
+      "bbt": "0.62%",
+      "hbb15m": "0.0007",
+      "hbbPercent15m": "2.69%",
+      "link": "https://www.okx.com/trade-swap/merl-usdt-swap",
       "teleSent": false
     }
   ]
