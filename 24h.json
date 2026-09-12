@@ -1,18 +1,18 @@
 {
-  "lastScanAt": "2026-09-12T16:11:19.209Z",
+  "lastScanAt": "2026-09-12T16:16:25.002Z",
   "totalScanned": 187,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "12.01%",
-      "diffema30": "1.51%",
+      "change24h": "12.80%",
+      "diffema30": "1.79%",
       "validFor": "SHORT"
     },
     {
       "symbol": "WLFI-USDT-SWAP",
-      "change24h": "11.16%",
-      "diffema30": "0.61%",
+      "change24h": "10.73%",
+      "diffema30": "0.77%",
       "validFor": "SHORT"
     }
   ],
@@ -21,24 +21,24 @@
     {
       "symbol": "BEAT-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+12.01%",
-      "diffema30": "1.51%",
-      "bbd": "4.76%",
-      "bbt": "-0.39%",
-      "hbb15m": "0.0033",
-      "hbbPercent15m": "3.71%",
+      "change24h": "+12.80%",
+      "diffema30": "1.79%",
+      "bbd": "5.43%",
+      "bbt": "0.29%",
+      "hbb15m": "0.0045",
+      "hbbPercent15m": "4.98%",
       "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "WLFI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.16%",
-      "diffema30": "0.61%",
-      "bbd": "2.72%",
-      "bbt": "0.53%",
-      "hbb15m": "0.0008",
-      "hbbPercent15m": "1.40%",
+      "change24h": "+10.73%",
+      "diffema30": "0.77%",
+      "bbd": "2.56%",
+      "bbt": "0.09%",
+      "hbb15m": "0.0012",
+      "hbbPercent15m": "2.09%",
       "link": "https://www.okx.com/trade-swap/wlfi-usdt-swap",
       "teleSent": false
     }
