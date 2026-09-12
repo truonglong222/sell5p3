@@ -1,84 +1,78 @@
 {
-  "lastScanAt": "2026-09-12T16:31:37.449Z",
+  "lastScanAt": "2026-09-12T16:36:04.495Z",
   "totalScanned": 186,
-  "passedEmaCount": 9,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "ALLO-USDT-SWAP",
-      "change24h": "3.71%",
+      "change24h": "3.48%",
       "diffema20": "-1.18%",
       "validFor": "LONG"
     },
     {
+      "symbol": "MUBARAK-USDT-SWAP",
+      "change24h": "5.87%",
+      "diffema20": "-2.79%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "ENA-USDT-SWAP",
-      "change24h": "-2.11%",
+      "change24h": "-2.56%",
       "diffema20": "0.64%",
       "validFor": "SHORT"
     },
     {
       "symbol": "USELESS-USDT-SWAP",
-      "change24h": "-3.38%",
+      "change24h": "-3.77%",
       "diffema20": "1.47%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "RESOLV-USDT-SWAP",
-      "change24h": "2.02%",
-      "diffema20": "-1.00%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "NEAR-USDT-SWAP",
-      "change24h": "-6.77%",
-      "diffema20": "0.58%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "BILL-USDT-SWAP",
-      "change24h": "3.36%",
+      "change24h": "2.66%",
       "diffema20": "-0.52%",
       "validFor": "LONG"
     },
     {
       "symbol": "CHZ-USDT-SWAP",
-      "change24h": "3.75%",
+      "change24h": "3.60%",
       "diffema20": "-0.77%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "TRUTH-USDT-SWAP",
-      "change24h": "2.03%",
-      "diffema20": "-1.52%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "BOME-USDT-SWAP",
-      "change24h": "2.15%",
-      "diffema20": "-0.57%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
     {
       "symbol": "ALLO-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+3.71%",
+      "change24h": "+3.48%",
       "diffema20": "-1.18%",
-      "bbd": "-0.07%",
-      "bbt": "-1.76%",
+      "bbd": "-0.23%",
+      "bbt": "-1.69%",
       "hbb15m": "0.0041",
       "hbbPercent15m": "1.80%",
       "link": "https://www.okx.com/trade-swap/allo-usdt-swap",
       "teleSent": false
     },
     {
+      "symbol": "MUBARAK-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+5.87%",
+      "diffema20": "-2.79%",
+      "bbd": "-0.17%",
+      "bbt": "-6.08%",
+      "hbb15m": "0.0024",
+      "hbbPercent15m": "7.63%",
+      "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap",
+      "teleSent": true
+    },
+    {
       "symbol": "ENA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "-2.11%",
+      "change24h": "-2.56%",
       "diffema20": "0.64%",
-      "bbd": "1.91%",
-      "bbt": "-0.48%",
+      "bbd": "1.85%",
+      "bbt": "-0.37%",
       "hbb15m": "0.0036",
       "hbbPercent15m": "2.50%",
       "link": "https://www.okx.com/trade-swap/ena-usdt-swap",
