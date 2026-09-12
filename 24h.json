@@ -1,49 +1,43 @@
 {
-  "lastScanAt": "2026-09-12T11:51:20.973Z",
+  "lastScanAt": "2026-09-12T11:56:14.170Z",
   "totalScanned": 203,
-  "passedEmaCount": 7,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "16.38%",
-      "diffema30": "1.05%",
+      "change24h": "17.49%",
+      "diffema30": "1.23%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "11.34%",
-      "diffema30": "0.09%",
+      "change24h": "11.07%",
+      "diffema30": "0.11%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "36.51%",
-      "diffema30": "0.33%",
+      "change24h": "33.06%",
+      "diffema30": "0.31%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "22.39%",
-      "diffema30": "0.86%",
+      "change24h": "23.42%",
+      "diffema30": "1.27%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "12.32%",
-      "diffema30": "1.29%",
+      "change24h": "11.47%",
+      "diffema30": "0.94%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-12.00%",
-      "diffema30": "-0.10%",
+      "change24h": "-11.94%",
+      "diffema30": "-0.05%",
       "validFor": "LONG"
-    },
-    {
-      "symbol": "MERL-USDT-SWAP",
-      "change24h": "10.18%",
-      "diffema30": "0.04%",
-      "validFor": "SHORT"
     }
   ],
   "matchedCount": 2,
@@ -51,10 +45,10 @@
     {
       "symbol": "OL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+16.38%",
-      "diffema30": "1.05%",
-      "bbd": "2.50%",
-      "bbt": "-0.09%",
+      "change24h": "+17.49%",
+      "diffema30": "1.23%",
+      "bbd": "2.93%",
+      "bbt": "0.14%",
       "hbb15m": "0.0002",
       "hbbPercent15m": "3.03%",
       "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
@@ -63,14 +57,14 @@
     {
       "symbol": "ETHFI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+22.39%",
-      "diffema30": "0.86%",
-      "bbd": "6.10%",
-      "bbt": "0.12%",
+      "change24h": "+23.42%",
+      "diffema30": "1.27%",
+      "bbd": "7.02%",
+      "bbt": "0.00%",
       "hbb15m": "0.0434",
       "hbbPercent15m": "5.89%",
       "link": "https://www.okx.com/trade-swap/ethfi-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
