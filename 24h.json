@@ -1,40 +1,64 @@
 {
-  "lastScanAt": "2026-09-12T14:51:19.408Z",
+  "lastScanAt": "2026-09-12T14:56:05.208Z",
   "totalScanned": 193,
-  "passedEmaCount": 3,
+  "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "13.99%",
-      "diffema30": "1.24%",
+      "change24h": "13.37%",
+      "diffema30": "0.94%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "LIT-USDT-SWAP",
+      "change24h": "-10.73%",
+      "diffema30": "-0.66%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "BLUR-USDT-SWAP",
+      "change24h": "-10.07%",
+      "diffema30": "-1.21%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "13.08%",
-      "diffema30": "0.41%",
+      "change24h": "13.17%",
+      "diffema30": "0.37%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-12.18%",
-      "diffema30": "-0.03%",
+      "change24h": "-12.51%",
+      "diffema30": "-0.00%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
     {
-      "symbol": "OL-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+13.99%",
-      "diffema30": "1.24%",
-      "bbd": "2.72%",
-      "bbt": "-0.46%",
-      "hbb15m": "0.0004",
-      "hbbPercent15m": "7.39%",
-      "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
+      "symbol": "LIT-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-10.73%",
+      "diffema30": "-0.66%",
+      "bbd": "0.05%",
+      "bbt": "-0.94%",
+      "hbb15m": "0.1038",
+      "hbbPercent15m": "2.38%",
+      "link": "https://www.okx.com/trade-swap/lit-usdt-swap",
       "teleSent": false
+    },
+    {
+      "symbol": "BLUR-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-10.07%",
+      "diffema30": "-1.21%",
+      "bbd": "0.10%",
+      "bbt": "-0.71%",
+      "hbb15m": "0.0005",
+      "hbbPercent15m": "3.03%",
+      "link": "https://www.okx.com/trade-swap/blur-usdt-swap",
+      "teleSent": true
     }
   ]
 }
