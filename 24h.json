@@ -1,46 +1,21 @@
 {
-  "lastScanAt": "2026-09-12T13:11:20.122Z",
+  "lastScanAt": "2026-09-12T13:16:25.935Z",
   "totalScanned": 197,
-  "passedEmaCount": 4,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
-      "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": "11.00%",
-      "diffema30": "0.10%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "11.72%",
-      "diffema30": "1.16%",
+      "change24h": "10.99%",
+      "diffema30": "1.11%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BSB-USDT-SWAP",
-      "change24h": "11.29%",
-      "diffema30": "1.10%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "BERA-USDT-SWAP",
-      "change24h": "10.06%",
-      "diffema30": "0.82%",
+      "change24h": "19.03%",
+      "diffema30": "1.72%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "BSB-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+11.29%",
-      "diffema30": "1.10%",
-      "bbd": "2.59%",
-      "bbt": "0.34%",
-      "hbb15m": "0.0025",
-      "hbbPercent15m": "2.61%",
-      "link": "https://www.okx.com/trade-swap/bsb-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
