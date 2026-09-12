@@ -1,33 +1,46 @@
 {
-  "lastScanAt": "2026-09-12T05:21:26.667Z",
+  "lastScanAt": "2026-09-12T05:26:11.498Z",
   "totalScanned": 206,
   "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "RIVER-USDT-SWAP",
-      "change24h": "24.36%",
-      "diffema30": "-2.41%",
+      "change24h": "25.78%",
+      "diffema30": "-2.62%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "69.38%",
-      "diffema30": "-4.93%",
+      "change24h": "68.86%",
+      "diffema30": "-5.22%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "28.03%",
-      "diffema30": "-1.17%",
+      "change24h": "28.94%",
+      "diffema30": "-1.70%",
       "validFor": "SHORT"
     },
     {
       "symbol": "SOPH-USDT-SWAP",
-      "change24h": "11.79%",
-      "diffema30": "-4.17%",
+      "change24h": "11.90%",
+      "diffema30": "-3.77%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "SOPH-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+11.90%",
+      "diffema30": "-3.77%",
+      "bbd": "5.06%",
+      "bbt": "1.08%",
+      "hbb15m": "0.0006",
+      "hbbPercent15m": "12.70%",
+      "link": "https://www.okx.com/trade-swap/soph-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
