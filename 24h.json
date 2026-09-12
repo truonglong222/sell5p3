@@ -1,48 +1,30 @@
 {
-  "lastScanAt": "2026-09-12T00:31:29.297Z",
+  "lastScanAt": "2026-09-12T00:36:19.223Z",
   "totalScanned": 207,
-  "passedEmaCount": 3,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "7.18%",
-      "diffema30": "-9.48%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "BABY-USDT-SWAP",
-      "change24h": "8.25%",
-      "diffema30": "-0.05%",
+      "change24h": "7.69%",
+      "diffema30": "-8.98%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BSB-USDT-SWAP",
-      "change24h": "8.72%",
-      "diffema30": "-1.18%",
+      "change24h": "8.95%",
+      "diffema30": "-1.10%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "BABY-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+8.25%",
-      "diffema30": "-0.05%",
-      "bbd": "2.92%",
-      "bbt": "0.15%",
-      "hbb15m": "0.0004",
-      "hbbPercent15m": "3.40%",
-      "link": "https://www.okx.com/trade-swap/baby-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "BSB-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+8.72%",
-      "diffema30": "-1.18%",
-      "bbd": "0.83%",
-      "bbt": "0.15%",
+      "change24h": "+8.95%",
+      "diffema30": "-1.10%",
+      "bbd": "1.14%",
+      "bbt": "0.24%",
       "hbb15m": "0.0032",
       "hbbPercent15m": "3.34%",
       "link": "https://www.okx.com/trade-swap/bsb-usdt-swap",
