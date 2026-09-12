@@ -1,27 +1,46 @@
 {
-  "lastScanAt": "2026-09-12T02:22:02.327Z",
+  "lastScanAt": "2026-09-12T02:26:17.877Z",
   "totalScanned": 207,
-  "passedEmaCount": 3,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "7.57%",
-      "diffema30": "-0.91%",
+      "change24h": "7.58%",
+      "diffema30": "-1.10%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "7.39%",
-      "diffema30": "-4.78%",
+      "change24h": "7.45%",
+      "diffema30": "-4.52%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "RAVE-USDT-SWAP",
-      "change24h": "7.41%",
+      "symbol": "BASED-USDT-SWAP",
+      "change24h": "7.05%",
       "diffema30": "-0.23%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "BEAT-USDT-SWAP",
+      "change24h": "21.81%",
+      "diffema30": "-0.30%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "BASED-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+7.05%",
+      "diffema30": "-0.23%",
+      "bbd": "0.33%",
+      "bbt": "-0.37%",
+      "hbb15m": "0.0020",
+      "hbbPercent15m": "3.17%",
+      "link": "https://www.okx.com/trade-swap/based-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
