@@ -1,76 +1,51 @@
 {
-  "lastScanAt": "2026-09-12T16:46:08.809Z",
-  "totalScanned": 185,
-  "passedEmaCount": 7,
+  "lastScanAt": "2026-09-12T16:50:47.186Z",
+  "totalScanned": 184,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "ALLO-USDT-SWAP",
-      "change24h": "3.30%",
-      "diffema20": "-1.17%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "AEON-USDT-SWAP",
-      "change24h": "2.63%",
-      "diffema20": "-0.76%",
+      "change24h": "3.09%",
+      "diffema20_15m": "-1.17%",
+      "diffema40_1h": "6.30%",
       "validFor": "LONG"
     },
     {
       "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": "6.39%",
-      "diffema20": "-3.09%",
+      "change24h": "6.22%",
+      "diffema20_15m": "-3.09%",
+      "diffema40_1h": "10.20%",
       "validFor": "LONG"
     },
     {
-      "symbol": "ENA-USDT-SWAP",
-      "change24h": "-2.65%",
-      "diffema20": "0.66%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "USELESS-USDT-SWAP",
-      "change24h": "-4.79%",
-      "diffema20": "0.83%",
-      "validFor": "SHORT"
-    },
-    {
       "symbol": "CP-USDT-SWAP",
-      "change24h": "6.39%",
-      "diffema20": "-0.56%",
+      "change24h": "6.90%",
+      "diffema20_15m": "-0.56%",
+      "diffema40_1h": "6.78%",
       "validFor": "LONG"
     },
     {
       "symbol": "CHZ-USDT-SWAP",
-      "change24h": "3.22%",
-      "diffema20": "-0.67%",
+      "change24h": "2.93%",
+      "diffema20_15m": "-0.67%",
+      "diffema40_1h": "4.25%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "ALLO-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+3.30%",
-      "diffema20": "-1.17%",
+      "change24h": "+3.09%",
+      "diffema20_15m": "-1.17%",
+      "diffema40_1h": "6.30%",
       "bbd": "0.27%",
-      "bbt": "-1.55%",
+      "bbt": "-1.45%",
       "hbb15m": "0.0042",
       "hbbPercent15m": "1.85%",
       "link": "https://www.okx.com/trade-swap/allo-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "AEON-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+2.63%",
-      "diffema20": "-0.76%",
-      "bbd": "0.01%",
-      "bbt": "-1.96%",
-      "hbb15m": "0.0011",
-      "hbbPercent15m": "2.20%",
-      "link": "https://www.okx.com/trade-swap/aeon-usdt-swap",
-      "teleSent": false
+      "teleSent": true
     }
   ]
 }
