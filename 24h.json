@@ -1,15 +1,40 @@
 {
-  "lastScanAt": "2026-09-12T01:51:11.844Z",
+  "lastScanAt": "2026-09-12T01:56:13.004Z",
   "totalScanned": 207,
-  "passedEmaCount": 1,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
+      "symbol": "LIGHT-USDT-SWAP",
+      "change24h": "7.49%",
+      "diffema30": "-0.60%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "CP-USDT-SWAP",
+      "change24h": "8.28%",
+      "diffema30": "-0.20%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "8.05%",
-      "diffema30": "-5.33%",
+      "change24h": "7.88%",
+      "diffema30": "-5.21%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "CP-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+8.28%",
+      "diffema30": "-0.20%",
+      "bbd": "3.78%",
+      "bbt": "1.30%",
+      "hbb15m": "0.0008",
+      "hbbPercent15m": "5.36%",
+      "link": "https://www.okx.com/trade-swap/cp-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
