@@ -1,129 +1,75 @@
 {
-  "lastScanAt": "2026-09-12T16:41:20.861Z",
-  "totalScanned": 186,
-  "passedEmaCount": 8,
+  "lastScanAt": "2026-09-12T16:46:08.809Z",
+  "totalScanned": 185,
+  "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "ALLO-USDT-SWAP",
-      "change24h": "3.56%",
-      "diffema20": "-1.18%",
+      "change24h": "3.30%",
+      "diffema20": "-1.17%",
       "validFor": "LONG"
     },
     {
       "symbol": "AEON-USDT-SWAP",
-      "change24h": "2.59%",
-      "diffema20": "-0.68%",
+      "change24h": "2.63%",
+      "diffema20": "-0.76%",
       "validFor": "LONG"
     },
     {
       "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": "6.24%",
-      "diffema20": "-2.79%",
+      "change24h": "6.39%",
+      "diffema20": "-3.09%",
       "validFor": "LONG"
     },
     {
       "symbol": "ENA-USDT-SWAP",
-      "change24h": "-2.08%",
-      "diffema20": "0.64%",
+      "change24h": "-2.65%",
+      "diffema20": "0.66%",
       "validFor": "SHORT"
     },
     {
       "symbol": "USELESS-USDT-SWAP",
-      "change24h": "-5.24%",
-      "diffema20": "1.47%",
+      "change24h": "-4.79%",
+      "diffema20": "0.83%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "BILL-USDT-SWAP",
-      "change24h": "2.51%",
-      "diffema20": "-0.52%",
+      "symbol": "CP-USDT-SWAP",
+      "change24h": "6.39%",
+      "diffema20": "-0.56%",
       "validFor": "LONG"
     },
     {
       "symbol": "CHZ-USDT-SWAP",
-      "change24h": "3.46%",
-      "diffema20": "-0.77%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "BOME-USDT-SWAP",
-      "change24h": "2.17%",
-      "diffema20": "-0.57%",
+      "change24h": "3.22%",
+      "diffema20": "-0.67%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 6,
+  "matchedCount": 2,
   "matchedList": [
     {
       "symbol": "ALLO-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+3.56%",
-      "diffema20": "-1.18%",
-      "bbd": "-0.23%",
-      "bbt": "-1.51%",
-      "hbb15m": "0.0041",
-      "hbbPercent15m": "1.80%",
+      "change24h": "+3.30%",
+      "diffema20": "-1.17%",
+      "bbd": "0.27%",
+      "bbt": "-1.55%",
+      "hbb15m": "0.0042",
+      "hbbPercent15m": "1.85%",
       "link": "https://www.okx.com/trade-swap/allo-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "AEON-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+2.59%",
-      "diffema20": "-0.68%",
-      "bbd": "-0.57%",
-      "bbt": "-1.95%",
+      "change24h": "+2.63%",
+      "diffema20": "-0.76%",
+      "bbd": "0.01%",
+      "bbt": "-1.96%",
       "hbb15m": "0.0011",
-      "hbbPercent15m": "2.13%",
+      "hbbPercent15m": "2.20%",
       "link": "https://www.okx.com/trade-swap/aeon-usdt-swap",
-      "teleSent": true
-    },
-    {
-      "symbol": "MUBARAK-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+6.24%",
-      "diffema20": "-2.79%",
-      "bbd": "-0.17%",
-      "bbt": "-6.08%",
-      "hbb15m": "0.0024",
-      "hbbPercent15m": "7.63%",
-      "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "ENA-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "-2.08%",
-      "diffema20": "0.64%",
-      "bbd": "1.51%",
-      "bbt": "-0.37%",
-      "hbb15m": "0.0036",
-      "hbbPercent15m": "2.50%",
-      "link": "https://www.okx.com/trade-swap/ena-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "BILL-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+2.51%",
-      "diffema20": "-0.52%",
-      "bbd": "0.15%",
-      "bbt": "0.24%",
-      "hbb15m": "0.0001",
-      "hbbPercent15m": "1.02%",
-      "link": "https://www.okx.com/trade-swap/bill-usdt-swap",
-      "teleSent": true
-    },
-    {
-      "symbol": "BOME-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+2.17%",
-      "diffema20": "-0.57%",
-      "bbd": "0.28%",
-      "bbt": "-0.57%",
-      "hbb15m": "0.0000",
-      "hbbPercent15m": "1.13%",
-      "link": "https://www.okx.com/trade-swap/bome-usdt-swap",
       "teleSent": false
     }
   ]
