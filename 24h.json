@@ -1,58 +1,33 @@
 {
-  "lastScanAt": "2026-09-12T05:01:58.136Z",
+  "lastScanAt": "2026-09-12T05:06:18.293Z",
   "totalScanned": 206,
   "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "RIVER-USDT-SWAP",
-      "change24h": "25.19%",
-      "diffema30": "-1.16%",
+      "change24h": "25.54%",
+      "diffema30": "-1.46%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "76.89%",
-      "diffema30": "-5.28%",
+      "change24h": "76.69%",
+      "diffema30": "-5.07%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "19.24%",
-      "diffema30": "-1.44%",
+      "change24h": "23.87%",
+      "diffema30": "-0.84%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "24.97%",
-      "diffema30": "-1.78%",
+      "change24h": "26.90%",
+      "diffema30": "-1.68%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "LAB-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+76.89%",
-      "diffema30": "-5.28%",
-      "bbd": "17.23%",
-      "bbt": "1.01%",
-      "hbb15m": "0.0167",
-      "hbbPercent15m": "21.21%",
-      "link": "https://www.okx.com/trade-swap/lab-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "MINA-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+19.24%",
-      "diffema30": "-1.44%",
-      "bbd": "1.39%",
-      "bbt": "-0.04%",
-      "hbb15m": "0.0044",
-      "hbbPercent15m": "4.11%",
-      "link": "https://www.okx.com/trade-swap/mina-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
