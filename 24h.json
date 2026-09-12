@@ -1,35 +1,41 @@
 {
-  "lastScanAt": "2026-09-12T14:56:05.208Z",
-  "totalScanned": 193,
-  "passedEmaCount": 5,
+  "lastScanAt": "2026-09-12T15:01:54.599Z",
+  "totalScanned": 192,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "13.37%",
-      "diffema30": "0.94%",
+      "change24h": "11.88%",
+      "diffema30": "0.64%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LIT-USDT-SWAP",
-      "change24h": "-10.73%",
-      "diffema30": "-0.66%",
+      "change24h": "-10.47%",
+      "diffema30": "-0.73%",
       "validFor": "LONG"
     },
     {
       "symbol": "BLUR-USDT-SWAP",
-      "change24h": "-10.07%",
-      "diffema30": "-1.21%",
+      "change24h": "-10.34%",
+      "diffema30": "-1.19%",
       "validFor": "LONG"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "13.17%",
-      "diffema30": "0.37%",
+      "change24h": "13.67%",
+      "diffema30": "0.25%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "MET-USDT-SWAP",
+      "change24h": "-11.36%",
+      "diffema30": "-0.78%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-12.51%",
+      "change24h": "-12.02%",
       "diffema30": "-0.00%",
       "validFor": "LONG"
     }
@@ -39,26 +45,26 @@
     {
       "symbol": "LIT-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-10.73%",
-      "diffema30": "-0.66%",
-      "bbd": "0.05%",
-      "bbt": "-0.94%",
-      "hbb15m": "0.1038",
-      "hbbPercent15m": "2.38%",
+      "change24h": "-10.47%",
+      "diffema30": "-0.73%",
+      "bbd": "0.03%",
+      "bbt": "-0.93%",
+      "hbb15m": "0.1065",
+      "hbbPercent15m": "2.44%",
       "link": "https://www.okx.com/trade-swap/lit-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "BLUR-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-10.07%",
-      "diffema30": "-1.21%",
-      "bbd": "0.10%",
-      "bbt": "-0.71%",
+      "change24h": "-10.34%",
+      "diffema30": "-1.19%",
+      "bbd": "0.27%",
+      "bbt": "-0.48%",
       "hbb15m": "0.0005",
-      "hbbPercent15m": "3.03%",
+      "hbbPercent15m": "3.15%",
       "link": "https://www.okx.com/trade-swap/blur-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
