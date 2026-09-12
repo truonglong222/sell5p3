@@ -1,58 +1,27 @@
 {
-  "lastScanAt": "2026-09-12T04:16:17.412Z",
+  "lastScanAt": "2026-09-12T04:21:20.512Z",
   "totalScanned": 208,
-  "passedEmaCount": 4,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "58.91%",
-      "diffema30": "-4.83%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "CNPY-USDT-SWAP",
-      "change24h": "10.21%",
-      "diffema30": "-1.25%",
+      "change24h": "58.55%",
+      "diffema30": "-5.34%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "18.23%",
-      "diffema30": "-1.30%",
+      "change24h": "17.15%",
+      "diffema30": "-1.46%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "16.98%",
-      "diffema30": "-0.88%",
+      "change24h": "16.29%",
+      "diffema30": "-1.46%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "CNPY-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+10.21%",
-      "diffema30": "-1.25%",
-      "bbd": "4.92%",
-      "bbt": "0.08%",
-      "hbb15m": "0.0269",
-      "hbbPercent15m": "10.74%",
-      "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "MINA-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+18.23%",
-      "diffema30": "-1.30%",
-      "bbd": "2.75%",
-      "bbt": "-0.21%",
-      "hbb15m": "0.0053",
-      "hbbPercent15m": "4.96%",
-      "link": "https://www.okx.com/trade-swap/mina-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
