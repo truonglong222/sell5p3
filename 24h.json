@@ -1,39 +1,70 @@
 {
-  "lastScanAt": "2026-09-12T09:26:04.919Z",
+  "lastScanAt": "2026-09-12T09:31:31.238Z",
   "totalScanned": 206,
-  "passedEmaCount": 5,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "13.05%",
-      "diffema30": "1.70%",
+      "change24h": "13.08%",
+      "diffema30": "1.52%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": "10.72%",
-      "diffema30": "1.40%",
+      "change24h": "10.63%",
+      "diffema30": "1.21%",
       "validFor": "SHORT"
     },
     {
       "symbol": "IOST-USDT-SWAP",
-      "change24h": "-12.54%",
-      "diffema30": "-0.35%",
+      "change24h": "-14.18%",
+      "diffema30": "-0.75%",
       "validFor": "LONG"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-13.82%",
-      "diffema30": "-0.71%",
+      "change24h": "-13.95%",
+      "diffema30": "-0.67%",
       "validFor": "LONG"
     },
     {
+      "symbol": "SOPH-USDT-SWAP",
+      "change24h": "13.87%",
+      "diffema30": "0.01%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "12.16%",
-      "diffema30": "0.60%",
+      "change24h": "11.16%",
+      "diffema30": "0.43%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "GPS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-13.95%",
+      "diffema30": "-0.67%",
+      "bbd": "0.48%",
+      "bbt": "-0.77%",
+      "hbb15m": "0.0003",
+      "hbbPercent15m": "3.21%",
+      "link": "https://www.okx.com/trade-swap/gps-usdt-swap",
+      "teleSent": false
+    },
+    {
+      "symbol": "SOPH-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+13.87%",
+      "diffema30": "0.01%",
+      "bbd": "3.35%",
+      "bbt": "0.44%",
+      "hbb15m": "0.0004",
+      "hbbPercent15m": "9.09%",
+      "link": "https://www.okx.com/trade-swap/soph-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
