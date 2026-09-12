@@ -1,24 +1,30 @@
 {
-  "lastScanAt": "2026-09-12T16:01:47.979Z",
-  "totalScanned": 188,
-  "passedEmaCount": 3,
+  "lastScanAt": "2026-09-12T16:06:04.770Z",
+  "totalScanned": 187,
+  "passedEmaCount": 4,
   "passedEmaList": [
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "11.70%",
-      "diffema30": "1.74%",
+      "change24h": "10.58%",
+      "diffema30": "1.73%",
       "validFor": "SHORT"
     },
     {
+      "symbol": "MET-USDT-SWAP",
+      "change24h": "-10.59%",
+      "diffema30": "-0.29%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "11.21%",
-      "diffema30": "1.16%",
+      "change24h": "12.36%",
+      "diffema30": "1.29%",
       "validFor": "SHORT"
     },
     {
       "symbol": "WLFI-USDT-SWAP",
-      "change24h": "10.23%",
-      "diffema30": "0.27%",
+      "change24h": "10.60%",
+      "diffema30": "0.42%",
       "validFor": "SHORT"
     }
   ],
@@ -27,10 +33,10 @@
     {
       "symbol": "WLFI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.23%",
-      "diffema30": "0.27%",
-      "bbd": "1.56%",
-      "bbt": "0.35%",
+      "change24h": "+10.60%",
+      "diffema30": "0.42%",
+      "bbd": "2.23%",
+      "bbt": "0.52%",
       "hbb15m": "0.0008",
       "hbbPercent15m": "1.40%",
       "link": "https://www.okx.com/trade-swap/wlfi-usdt-swap",
