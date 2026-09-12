@@ -1,76 +1,51 @@
 {
-  "lastScanAt": "2026-09-12T07:36:18.358Z",
-  "totalScanned": 206,
+  "lastScanAt": "2026-09-12T07:41:12.998Z",
+  "totalScanned": 207,
   "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "10.70%",
-      "diffema30": "1.45%",
+      "change24h": "10.53%",
+      "diffema30": "1.49%",
       "validFor": "SHORT"
     },
     {
       "symbol": "RIVER-USDT-SWAP",
-      "change24h": "30.95%",
-      "diffema30": "1.98%",
+      "change24h": "27.42%",
+      "diffema30": "1.96%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "change24h": "10.60%",
-      "diffema30": "1.77%",
+      "change24h": "10.45%",
+      "diffema30": "1.59%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-14.84%",
+      "change24h": "-14.79%",
       "diffema30": "-1.49%",
       "validFor": "LONG"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "17.66%",
-      "diffema30": "1.67%",
+      "change24h": "15.65%",
+      "diffema30": "1.39%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BEAT-USDT-SWAP",
-      "change24h": "22.50%",
-      "diffema30": "0.71%",
+      "change24h": "21.53%",
+      "diffema30": "0.56%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BERA-USDT-SWAP",
-      "change24h": "10.93%",
-      "diffema30": "1.65%",
+      "change24h": "12.21%",
+      "diffema30": "1.66%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "GPS-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-14.84%",
-      "diffema30": "-1.49%",
-      "bbd": "0.44%",
-      "bbt": "-0.47%",
-      "hbb15m": "0.0017",
-      "hbbPercent15m": "16.77%",
-      "link": "https://www.okx.com/trade-swap/gps-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "BEAT-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+22.50%",
-      "diffema30": "0.71%",
-      "bbd": "4.97%",
-      "bbt": "-0.01%",
-      "hbb15m": "0.0164",
-      "hbbPercent15m": "17.57%",
-      "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
