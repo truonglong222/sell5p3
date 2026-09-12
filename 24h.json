@@ -1,30 +1,24 @@
 {
-  "lastScanAt": "2026-09-12T10:06:11.521Z",
-  "totalScanned": 207,
-  "passedEmaCount": 4,
+  "lastScanAt": "2026-09-12T10:11:11.214Z",
+  "totalScanned": 206,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "14.40%",
-      "diffema30": "0.60%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "10.21%",
-      "diffema30": "0.49%",
+      "change24h": "14.65%",
+      "diffema30": "0.65%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-13.73%",
-      "diffema30": "-0.81%",
+      "change24h": "-13.49%",
+      "diffema30": "-0.84%",
       "validFor": "LONG"
     },
     {
       "symbol": "BIGTIME-USDT-SWAP",
-      "change24h": "10.13%",
-      "diffema30": "1.43%",
+      "change24h": "10.39%",
+      "diffema30": "1.55%",
       "validFor": "SHORT"
     }
   ],
@@ -33,10 +27,10 @@
     {
       "symbol": "OL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+14.40%",
-      "diffema30": "0.60%",
-      "bbd": "1.44%",
-      "bbt": "-0.32%",
+      "change24h": "+14.65%",
+      "diffema30": "0.65%",
+      "bbd": "1.41%",
+      "bbt": "-0.27%",
       "hbb15m": "0.0003",
       "hbbPercent15m": "4.52%",
       "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
@@ -45,10 +39,10 @@
     {
       "symbol": "GPS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-13.73%",
-      "diffema30": "-0.81%",
-      "bbd": "0.44%",
-      "bbt": "-1.01%",
+      "change24h": "-13.49%",
+      "diffema30": "-0.84%",
+      "bbd": "0.30%",
+      "bbt": "-0.69%",
       "hbb15m": "0.0003",
       "hbbPercent15m": "3.04%",
       "link": "https://www.okx.com/trade-swap/gps-usdt-swap",
@@ -57,10 +51,10 @@
     {
       "symbol": "BIGTIME-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.13%",
-      "diffema30": "1.43%",
-      "bbd": "3.61%",
-      "bbt": "-0.08%",
+      "change24h": "+10.39%",
+      "diffema30": "1.55%",
+      "bbd": "3.59%",
+      "bbt": "-0.22%",
       "hbb15m": "0.0002",
       "hbbPercent15m": "3.44%",
       "link": "https://www.okx.com/trade-swap/bigtime-usdt-swap",
