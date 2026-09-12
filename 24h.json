@@ -1,124 +1,94 @@
 {
-  "lastScanAt": "2026-09-12T10:26:14.576Z",
-  "totalScanned": 207,
-  "passedEmaCount": 7,
+  "lastScanAt": "2026-09-12T10:31:43.791Z",
+  "totalScanned": 204,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "14.97%",
-      "diffema30": "0.71%",
+      "change24h": "15.77%",
+      "diffema30": "0.74%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "12.14%",
-      "diffema30": "0.28%",
+      "change24h": "12.80%",
+      "diffema30": "0.04%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-13.71%",
-      "diffema30": "-0.91%",
+      "change24h": "-13.17%",
+      "diffema30": "-0.84%",
       "validFor": "LONG"
     },
     {
       "symbol": "MERL-USDT-SWAP",
-      "change24h": "11.09%",
-      "diffema30": "0.11%",
+      "change24h": "11.31%",
+      "diffema30": "0.08%",
       "validFor": "SHORT"
     },
     {
       "symbol": "WLFI-USDT-SWAP",
-      "change24h": "15.95%",
-      "diffema30": "1.13%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "BIGTIME-USDT-SWAP",
-      "change24h": "11.45%",
-      "diffema30": "1.91%",
+      "change24h": "16.81%",
+      "diffema30": "1.16%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BSB-USDT-SWAP",
-      "change24h": "10.16%",
+      "change24h": "10.13%",
       "diffema30": "0.86%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 6,
+  "matchedCount": 4,
   "matchedList": [
     {
       "symbol": "OL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+14.97%",
-      "diffema30": "0.71%",
-      "bbd": "1.70%",
-      "bbt": "-0.03%",
+      "change24h": "+15.77%",
+      "diffema30": "0.74%",
+      "bbd": "1.88%",
+      "bbt": "-0.22%",
       "hbb15m": "0.0003",
-      "hbbPercent15m": "4.46%",
+      "hbbPercent15m": "4.37%",
       "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "GPS-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-13.71%",
-      "diffema30": "-0.91%",
-      "bbd": "0.12%",
-      "bbt": "-0.83%",
-      "hbb15m": "0.0002",
-      "hbbPercent15m": "2.54%",
-      "link": "https://www.okx.com/trade-swap/gps-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "MERL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.09%",
-      "diffema30": "0.11%",
-      "bbd": "1.23%",
-      "bbt": "0.65%",
-      "hbb15m": "0.0011",
-      "hbbPercent15m": "4.40%",
+      "change24h": "+11.31%",
+      "diffema30": "0.08%",
+      "bbd": "1.53%",
+      "bbt": "0.24%",
+      "hbb15m": "0.0010",
+      "hbbPercent15m": "3.98%",
       "link": "https://www.okx.com/trade-swap/merl-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "WLFI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+15.95%",
-      "diffema30": "1.13%",
-      "bbd": "0.34%",
-      "bbt": "0.46%",
+      "change24h": "+16.81%",
+      "diffema30": "1.16%",
+      "bbd": "1.39%",
+      "bbt": "0.72%",
       "hbb15m": "0.0026",
-      "hbbPercent15m": "4.62%",
+      "hbbPercent15m": "4.57%",
       "link": "https://www.okx.com/trade-swap/wlfi-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "BIGTIME-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+11.45%",
-      "diffema30": "1.91%",
-      "bbd": "3.68%",
-      "bbt": "-0.13%",
-      "hbb15m": "0.0003",
-      "hbbPercent15m": "3.94%",
-      "link": "https://www.okx.com/trade-swap/bigtime-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "BSB-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.16%",
+      "change24h": "+10.13%",
       "diffema30": "0.86%",
-      "bbd": "1.14%",
-      "bbt": "0.17%",
-      "hbb15m": "0.0049",
-      "hbbPercent15m": "5.11%",
+      "bbd": "1.07%",
+      "bbt": "0.09%",
+      "hbb15m": "0.0048",
+      "hbbPercent15m": "4.99%",
       "link": "https://www.okx.com/trade-swap/bsb-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
