@@ -1,36 +1,42 @@
 {
-  "lastScanAt": "2026-09-12T11:21:19.711Z",
+  "lastScanAt": "2026-09-12T11:26:04.391Z",
   "totalScanned": 203,
-  "passedEmaCount": 5,
+  "passedEmaCount": 6,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
       "change24h": "16.57%",
-      "diffema30": "0.71%",
+      "diffema30": "0.81%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "change24h": "10.98%",
-      "diffema30": "0.28%",
+      "change24h": "11.13%",
+      "diffema30": "0.39%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "21.02%",
-      "diffema30": "0.06%",
+      "change24h": "20.84%",
+      "diffema30": "0.19%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-11.47%",
-      "diffema30": "-0.44%",
+      "change24h": "-11.50%",
+      "diffema30": "-0.34%",
       "validFor": "LONG"
     },
     {
+      "symbol": "MINA-USDT-SWAP",
+      "change24h": "18.44%",
+      "diffema30": "0.42%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "WLFI-USDT-SWAP",
-      "change24h": "11.43%",
-      "diffema30": "0.69%",
+      "change24h": "10.92%",
+      "diffema30": "0.63%",
       "validFor": "SHORT"
     }
   ],
@@ -40,9 +46,9 @@
       "symbol": "OL-USDT-SWAP",
       "type": "SHORT",
       "change24h": "+16.57%",
-      "diffema30": "0.71%",
-      "bbd": "2.50%",
-      "bbt": "-0.22%",
+      "diffema30": "0.81%",
+      "bbd": "2.45%",
+      "bbt": "0.13%",
       "hbb15m": "0.0002",
       "hbbPercent15m": "3.19%",
       "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
