@@ -1,21 +1,40 @@
 {
-  "lastScanAt": "2026-09-12T13:46:26.548Z",
+  "lastScanAt": "2026-09-12T13:51:11.936Z",
   "totalScanned": 197,
-  "passedEmaCount": 2,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "11.36%",
-      "diffema30": "0.65%",
+      "change24h": "10.06%",
+      "diffema30": "0.59%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "16.80%",
-      "diffema30": "1.80%",
+      "change24h": "14.27%",
+      "diffema30": "1.63%",
       "validFor": "SHORT"
+    },
+    {
+      "symbol": "NEAR-USDT-SWAP",
+      "change24h": "-10.64%",
+      "diffema30": "-0.43%",
+      "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "NEAR-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-10.64%",
+      "diffema30": "-0.43%",
+      "bbd": "0.27%",
+      "bbt": "-0.50%",
+      "hbb15m": "0.0302",
+      "hbbPercent15m": "1.28%",
+      "link": "https://www.okx.com/trade-swap/near-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
