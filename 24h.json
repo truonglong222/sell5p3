@@ -1,25 +1,39 @@
 {
-  "lastScanAt": "2026-09-12T21:31:02.797Z",
+  "lastScanAt": "2026-09-12T21:45:50.700Z",
   "totalScanned": 180,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "SKY-USDT-SWAP",
-      "change24h": "3.17%",
+      "change24h": "3.22%",
       "hbbPercent1h": "2.72%",
-      "diffema20_15m": "-0.78%",
+      "diffema20_15m": "-0.71%",
       "diffema40_1h": "4.61%",
       "validFor": "LONG"
     },
     {
       "symbol": "CELO-USDT-SWAP",
-      "change24h": "6.59%",
+      "change24h": "5.55%",
       "hbbPercent1h": "4.88%",
-      "diffema20_15m": "-0.57%",
+      "diffema20_15m": "-0.59%",
       "diffema40_1h": "6.01%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "CELO-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+5.55%",
+      "hbb1h": "0.0039",
+      "hbbPercent1h": "4.88%",
+      "diffema20_15m": "-0.59%",
+      "diffema40_1h": "6.01%",
+      "bbd": "0.01%",
+      "bbt": "-1.79%",
+      "link": "https://www.okx.com/trade-swap/celo-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
