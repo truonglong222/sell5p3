@@ -1,12 +1,18 @@
 {
-  "lastScanAt": "2026-09-12T01:31:32.955Z",
+  "lastScanAt": "2026-09-12T01:36:06.108Z",
   "totalScanned": 208,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "7.62%",
-      "diffema30": "-5.79%",
+      "change24h": "7.17%",
+      "diffema30": "-5.72%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "BSB-USDT-SWAP",
+      "change24h": "8.25%",
+      "diffema30": "-0.01%",
       "validFor": "SHORT"
     }
   ],
