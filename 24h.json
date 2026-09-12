@@ -1,82 +1,94 @@
 {
-  "lastScanAt": "2026-09-12T03:56:07.330Z",
+  "lastScanAt": "2026-09-12T04:02:00.578Z",
   "totalScanned": 207,
   "passedEmaCount": 8,
   "passedEmaList": [
     {
       "symbol": "EDGE-USDT-SWAP",
-      "change24h": "7.39%",
-      "diffema30": "-1.26%",
+      "change24h": "7.37%",
+      "diffema30": "-1.33%",
       "validFor": "SHORT"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "53.37%",
-      "diffema30": "-3.41%",
+      "change24h": "55.41%",
+      "diffema30": "-4.03%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CNPY-USDT-SWAP",
-      "change24h": "8.76%",
-      "diffema30": "-1.46%",
+      "change24h": "8.15%",
+      "diffema30": "-1.45%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "19.51%",
-      "diffema30": "-1.14%",
+      "change24h": "20.22%",
+      "diffema30": "-1.25%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "BABY-USDT-SWAP",
+      "change24h": "7.17%",
+      "diffema30": "-0.07%",
       "validFor": "SHORT"
     },
     {
       "symbol": "TRUTH-USDT-SWAP",
-      "change24h": "10.38%",
-      "diffema30": "-0.19%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "SOPH-USDT-SWAP",
-      "change24h": "7.48%",
-      "diffema30": "-3.12%",
+      "change24h": "10.39%",
+      "diffema30": "-0.15%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BSB-USDT-SWAP",
-      "change24h": "7.50%",
-      "diffema30": "-0.59%",
+      "change24h": "7.31%",
+      "diffema30": "-0.56%",
       "validFor": "SHORT"
     },
     {
       "symbol": "HUMA-USDT-SWAP",
-      "change24h": "7.53%",
-      "diffema30": "-0.21%",
+      "change24h": "7.43%",
+      "diffema30": "-0.25%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 3,
   "matchedList": [
+    {
+      "symbol": "CNPY-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+8.15%",
+      "diffema30": "-1.45%",
+      "bbd": "4.53%",
+      "bbt": "0.02%",
+      "hbb15m": "0.0285",
+      "hbbPercent15m": "11.38%",
+      "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
+      "teleSent": true
+    },
     {
       "symbol": "TRUTH-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.38%",
-      "diffema30": "-0.19%",
-      "bbd": "0.86%",
-      "bbt": "-0.12%",
+      "change24h": "+10.39%",
+      "diffema30": "-0.15%",
+      "bbd": "0.73%",
+      "bbt": "-0.22%",
       "hbb15m": "0.0006",
-      "hbbPercent15m": "3.91%",
+      "hbbPercent15m": "3.93%",
       "link": "https://www.okx.com/trade-swap/truth-usdt-swap",
       "teleSent": false
     },
     {
-      "symbol": "BSB-USDT-SWAP",
+      "symbol": "HUMA-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+7.50%",
-      "diffema30": "-0.59%",
-      "bbd": "0.13%",
-      "bbt": "-0.47%",
-      "hbb15m": "0.0018",
-      "hbbPercent15m": "1.91%",
-      "link": "https://www.okx.com/trade-swap/bsb-usdt-swap",
-      "teleSent": false
+      "change24h": "+7.43%",
+      "diffema30": "-0.25%",
+      "bbd": "0.16%",
+      "bbt": "-0.46%",
+      "hbb15m": "0.0004",
+      "hbbPercent15m": "1.77%",
+      "link": "https://www.okx.com/trade-swap/huma-usdt-swap",
+      "teleSent": true
     }
   ]
 }
