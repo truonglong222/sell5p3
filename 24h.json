@@ -1,36 +1,36 @@
 {
-  "lastScanAt": "2026-09-12T11:01:55.808Z",
+  "lastScanAt": "2026-09-12T11:06:07.232Z",
   "totalScanned": 204,
   "passedEmaCount": 5,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "15.91%",
-      "diffema30": "0.51%",
+      "change24h": "16.71%",
+      "diffema30": "0.52%",
       "validFor": "SHORT"
     },
     {
       "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": "15.42%",
-      "diffema30": "1.69%",
+      "change24h": "17.25%",
+      "diffema30": "1.94%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-12.80%",
-      "diffema30": "-0.89%",
+      "change24h": "-12.99%",
+      "diffema30": "-0.88%",
       "validFor": "LONG"
     },
     {
       "symbol": "WLFI-USDT-SWAP",
-      "change24h": "14.05%",
-      "diffema30": "0.87%",
+      "change24h": "14.48%",
+      "diffema30": "0.82%",
       "validFor": "SHORT"
     },
     {
       "symbol": "BSB-USDT-SWAP",
-      "change24h": "10.03%",
-      "diffema30": "0.90%",
+      "change24h": "11.24%",
+      "diffema30": "0.94%",
       "validFor": "SHORT"
     }
   ],
@@ -39,22 +39,22 @@
     {
       "symbol": "OL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+15.91%",
-      "diffema30": "0.51%",
-      "bbd": "1.76%",
+      "change24h": "+16.71%",
+      "diffema30": "0.52%",
+      "bbd": "2.50%",
       "bbt": "0.02%",
       "hbb15m": "0.0002",
       "hbbPercent15m": "3.66%",
       "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "MUBARAK-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+15.42%",
-      "diffema30": "1.69%",
-      "bbd": "5.99%",
-      "bbt": "0.08%",
+      "change24h": "+17.25%",
+      "diffema30": "1.94%",
+      "bbd": "6.21%",
+      "bbt": "-0.08%",
       "hbb15m": "0.0017",
       "hbbPercent15m": "5.36%",
       "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap",
@@ -63,10 +63,10 @@
     {
       "symbol": "GPS-USDT-SWAP",
       "type": "LONG",
-      "change24h": "-12.80%",
-      "diffema30": "-0.89%",
-      "bbd": "0.03%",
-      "bbt": "-0.50%",
+      "change24h": "-12.99%",
+      "diffema30": "-0.88%",
+      "bbd": "0.20%",
+      "bbt": "-0.60%",
       "hbb15m": "0.0002",
       "hbbPercent15m": "2.03%",
       "link": "https://www.okx.com/trade-swap/gps-usdt-swap",
@@ -75,10 +75,10 @@
     {
       "symbol": "BSB-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+10.03%",
-      "diffema30": "0.90%",
-      "bbd": "0.77%",
-      "bbt": "-0.37%",
+      "change24h": "+11.24%",
+      "diffema30": "0.94%",
+      "bbd": "1.58%",
+      "bbt": "0.14%",
       "hbb15m": "0.0042",
       "hbbPercent15m": "4.31%",
       "link": "https://www.okx.com/trade-swap/bsb-usdt-swap",
