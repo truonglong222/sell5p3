@@ -1,76 +1,51 @@
 {
-  "lastScanAt": "2026-09-12T11:31:40.114Z",
+  "lastScanAt": "2026-09-12T11:36:04.605Z",
   "totalScanned": 203,
   "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "OL-USDT-SWAP",
-      "change24h": "16.33%",
-      "diffema30": "0.83%",
+      "change24h": "14.88%",
+      "diffema30": "0.74%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CP-USDT-SWAP",
-      "change24h": "11.81%",
-      "diffema30": "0.46%",
+      "change24h": "12.17%",
+      "diffema30": "0.63%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "20.99%",
-      "diffema30": "0.30%",
+      "change24h": "20.90%",
+      "diffema30": "0.37%",
       "validFor": "SHORT"
     },
     {
       "symbol": "GPS-USDT-SWAP",
-      "change24h": "-11.58%",
-      "diffema30": "-0.27%",
+      "change24h": "-11.46%",
+      "diffema30": "-0.20%",
       "validFor": "LONG"
     },
     {
       "symbol": "MINA-USDT-SWAP",
-      "change24h": "18.42%",
-      "diffema30": "0.69%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "MERL-USDT-SWAP",
-      "change24h": "10.87%",
-      "diffema30": "0.02%",
+      "change24h": "18.09%",
+      "diffema30": "0.87%",
       "validFor": "SHORT"
     },
     {
       "symbol": "WLFI-USDT-SWAP",
-      "change24h": "10.61%",
-      "diffema30": "0.57%",
+      "change24h": "10.03%",
+      "diffema30": "0.53%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "BSB-USDT-SWAP",
+      "change24h": "10.13%",
+      "diffema30": "0.72%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "OL-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+16.33%",
-      "diffema30": "0.83%",
-      "bbd": "2.24%",
-      "bbt": "-0.21%",
-      "hbb15m": "0.0002",
-      "hbbPercent15m": "2.97%",
-      "link": "https://www.okx.com/trade-swap/ol-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "MINA-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+18.42%",
-      "diffema30": "0.69%",
-      "bbd": "5.30%",
-      "bbt": "-0.33%",
-      "hbb15m": "0.0097",
-      "hbbPercent15m": "9.10%",
-      "link": "https://www.okx.com/trade-swap/mina-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
