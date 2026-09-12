@@ -207,11 +207,11 @@ async function main() {
 
       const diffema30 = ((ema1 - ema30) / ema30) * 100;
 
-      // LONG: bd24 < -10% VÀ -3% < diffema30 < 0%
-      const isTrendValidLong = coin.change24hVal < -10 && diffema30 > -3 && diffema30 < 0;
+      // LONG: bd24 < -10% VÀ -2% < diffema30 < 0%
+      const isTrendValidLong = coin.change24hVal < -10 && diffema30 > -2 && diffema30 < 0;
 
-      // SHORT: bd24 > 10% VÀ 0% < diffema30 < 3%
-      const isTrendValidShort = coin.change24hVal > 10 && diffema30 > 0 && diffema30 < 3;
+      // SHORT: bd24 > 10% VÀ 0% < diffema30 < 2%
+      const isTrendValidShort = coin.change24hVal > 10 && diffema30 > 0 && diffema30 < 2;
 
       if (!isTrendValidLong && !isTrendValidShort) {
         await sleep(80);
