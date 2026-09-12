@@ -1,68 +1,39 @@
 {
-  "lastScanAt": "2026-09-12T22:01:26.933Z",
+  "lastScanAt": "2026-09-12T22:17:40.676Z",
   "totalScanned": 179,
-  "passedEmaCount": 4,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "3.24%",
+      "change24h": "3.18%",
       "hbbPercent1h": "3.35%",
-      "diffema20_15m": "-1.06%",
+      "diffema20_15m": "-0.82%",
       "diffema40_1h": "7.94%",
       "validFor": "LONG"
     },
     {
-      "symbol": "SKY-USDT-SWAP",
-      "change24h": "3.48%",
-      "hbbPercent1h": "2.43%",
-      "diffema20_15m": "-0.59%",
-      "diffema40_1h": "4.70%",
-      "validFor": "LONG"
-    },
-    {
       "symbol": "CELO-USDT-SWAP",
-      "change24h": "6.50%",
+      "change24h": "6.21%",
       "hbbPercent1h": "4.64%",
-      "diffema20_15m": "-0.59%",
+      "diffema20_15m": "-0.55%",
       "diffema40_1h": "6.00%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "PEOPLE-USDT-SWAP",
-      "change24h": "2.26%",
-      "hbbPercent1h": "2.16%",
-      "diffema20_15m": "-0.67%",
-      "diffema40_1h": "4.26%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "CELO-USDT-SWAP",
       "type": "LONG",
-      "change24h": "+6.50%",
+      "change24h": "+6.21%",
       "hbb1h": "0.0037",
       "hbbPercent1h": "4.64%",
-      "diffema20_15m": "-0.59%",
+      "diffema20_15m": "-0.55%",
       "diffema40_1h": "6.00%",
-      "bbd": "0.24%",
-      "bbt": "-1.69%",
+      "bbd": "0.36%",
+      "bbt": "-1.55%",
       "link": "https://www.okx.com/trade-swap/celo-usdt-swap",
       "teleSent": false
-    },
-    {
-      "symbol": "PEOPLE-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "+2.26%",
-      "hbb1h": "0.0002",
-      "hbbPercent1h": "2.16%",
-      "diffema20_15m": "-0.67%",
-      "diffema40_1h": "4.26%",
-      "bbd": "0.22%",
-      "bbt": "-0.93%",
-      "link": "https://www.okx.com/trade-swap/people-usdt-swap",
-      "teleSent": true
     }
   ]
 }
