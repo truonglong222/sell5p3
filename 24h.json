@@ -1,25 +1,31 @@
 {
-  "lastScanAt": "2026-09-12T19:15:52.957Z",
+  "lastScanAt": "2026-09-12T19:31:03.154Z",
   "totalScanned": 181,
-  "passedEmaCount": 2,
+  "passedEmaCount": 1,
   "passedEmaList": [
     {
-      "symbol": "TRIA-USDT-SWAP",
-      "change24h": "3.88%",
-      "hbbPercent1h": "3.84%",
-      "diffema20_15m": "-0.51%",
-      "diffema40_1h": "6.03%",
-      "validFor": "LONG"
-    },
-    {
       "symbol": "SKY-USDT-SWAP",
-      "change24h": "4.03%",
+      "change24h": "3.33%",
       "hbbPercent1h": "4.04%",
-      "diffema20_15m": "-0.63%",
+      "diffema20_15m": "-0.73%",
       "diffema40_1h": "4.55%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "SKY-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+3.33%",
+      "hbb1h": "0.0025",
+      "hbbPercent1h": "4.04%",
+      "diffema20_15m": "-0.73%",
+      "diffema40_1h": "4.55%",
+      "bbd": "0.13%",
+      "bbt": "-1.46%",
+      "link": "https://www.okx.com/trade-swap/sky-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
