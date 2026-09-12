@@ -153,7 +153,7 @@ async function getCandles(symbol, bar = '15m', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (15M & 1H EMA40) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (HBB 1H < 5% & EMA40 1H) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -179,7 +179,7 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lọc sơ bộ bd24 trước để tiết kiệm số lần gọi API nến
+      // ================= BƯỚC 1: LỌC BD24 =================
       const isCandidateLong = coin.change24hVal > 2 && coin.change24hVal < 7;
       const isCandidateShort = coin.change24hVal > -7 && coin.change24hVal < -2;
 
@@ -187,7 +187,7 @@ async function main() {
         continue;
       }
 
-      // ================= BƯỚC 1: LẤY NẾN 15M & TÍNH DIFFEMA20 =================
+      // ================= BƯỚC 2: LẤY NẾN 15M & TÍNH DIFFEMA20 =================
       const candles15m = await getCandles(symbol, '15m', 100);
       if (!candles15m) {
         await sleep(80);
@@ -222,13 +222,31 @@ async function main() {
         continue;
       }
 
-      // ================= BƯỚC 2: LẤY NẾN 1H & TÍNH DIFFEMA40 =================
+      // ================= BƯỚC 3: LẤY NẾN 1H, TÍNH HBB 1H VÀ DIFFEMA40 1H =================
       const candles1h = await getCandles(symbol, '1H', 100);
       if (!candles1h) {
         await sleep(80);
         continue;
       }
 
+      // 3.1: Tính Hbb trên nến 1H và kiểm tra điều kiện Hbb < 5%
+      const closesBB1h = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const bb1h = calculateBollingerBands(closesBB1h, 20);
+
+      if (!bb1h || bb1h.middle <= 0) {
+        await sleep(80);
+        continue;
+      }
+
+      const hbb1h = bb1h.upper - bb1h.lower;
+      const hbbPercent1h = (hbb1h / bb1h.middle) * 100;
+
+      if (hbbPercent1h >= 5) {
+        await sleep(80);
+        continue;
+      }
+
+      // 3.2: Tính diffema40 trên nến 1H
       const closedCandles1h = candles1h.slice(1).reverse();
       const closedPrices1h = closedCandles1h.map((c) => parseFloat(c[4]));
 
@@ -248,10 +266,8 @@ async function main() {
 
       const diffema40_1h = ((ema1_1h - ema40_1h) / ema40_1h) * 100;
 
-      // LONG: diffema40 (1h) > 4%
+      // LONG: diffema40 (1h) > 4% | SHORT: diffema40 (1h) < -4%
       const isTrendValidLong = is15mLong && diffema40_1h > 4;
-
-      // SHORT: diffema40 (1h) < -4%
       const isTrendValidShort = is15mShort && diffema40_1h < -4;
 
       if (!isTrendValidLong && !isTrendValidShort) {
@@ -265,16 +281,17 @@ async function main() {
       scanResults.passedEma.push({
         symbol,
         change24h: coin.change24hVal.toFixed(2) + '%',
+        hbbPercent1h: hbbPercent1h.toFixed(2) + '%',
         diffema20_15m: diffema20_15m.toFixed(2) + '%',
         diffema40_1h: diffema40_1h.toFixed(2) + '%',
         validFor: isTrendValidLong ? 'LONG' : 'SHORT'
       });
 
-      // ================= BƯỚC 3: TÍNH BOLLINGER BANDS NẾN 1 TRÊN 15M =================
-      const closesBB1 = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bb1 = calculateBollingerBands(closesBB1, 20);
+      // ================= BƯỚC 4: TÍNH BB 15M ĐỂ XÉT ĐIỀU KIỆN ENTRY BBD/BBT =================
+      const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const bb15m = calculateBollingerBands(closesBB15m, 20);
 
-      if (!bb1 || bb1.lower <= 0 || bb1.upper <= 0) {
+      if (!bb15m || bb15m.lower <= 0 || bb15m.upper <= 0) {
         await sleep(80);
         continue;
       }
@@ -283,13 +300,9 @@ async function main() {
       const high0 = parseFloat(candle0[2]);
       const low0 = parseFloat(candle0[3]);
 
-      // bbd: % chênh lệch giữa giá thấp nhất nến 0 và dải dưới BB nến 1 (15m)
-      const bbd = ((low0 - bb1.lower) / bb1.lower) * 100;
+      const bbd = ((low0 - bb15m.lower) / bb15m.lower) * 100;
+      const bbt = ((high0 - bb15m.upper) / bb15m.upper) * 100;
 
-      // bbt: % chênh lệch giữa giá cao nhất nến 0 và dải trên BB nến 1 (15m)
-      const bbt = ((high0 - bb1.upper) / bb1.upper) * 100;
-
-      // Điều kiện Entry kết hợp
       const isLong = isTrendValidLong && bbd > -2 && bbd < 0.5;
       const isShort = isTrendValidShort && bbt > -0.5 && bbt < 2;
 
@@ -297,10 +310,6 @@ async function main() {
         await sleep(80);
         continue;
       }
-
-      // ================= BƯỚC 4: TÍNH HBB TRÊN 15M =================
-      const hbb = bb1.upper - bb1.lower;
-      const hbbPercent = bb1.middle > 0 ? (hbb / bb1.middle) * 100 : 0;
 
       const change24hStr = (coin.change24hVal >= 0 ? '+' : '') + coin.change24hVal.toFixed(2) + '%';
       const signalType = isLong ? 'LONG' : 'SHORT';
@@ -319,12 +328,12 @@ async function main() {
         symbol,
         type: signalType,
         change24h: change24hStr,
+        hbb1h: hbb1h.toFixed(4),
+        hbbPercent1h: hbbPercent1h.toFixed(2) + '%',
         diffema20_15m: diffema20_15m.toFixed(2) + '%',
         diffema40_1h: diffema40_1h.toFixed(2) + '%',
         bbd: bbd.toFixed(2) + '%',
         bbt: bbt.toFixed(2) + '%',
-        hbb15m: hbb.toFixed(4),
-        hbbPercent15m: hbbPercent.toFixed(2) + '%',
         link,
         teleSent: !isCooldown
       });
@@ -338,10 +347,10 @@ async function main() {
         const message =
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
+          `• <b>Hbb 1h (Độ rộng BB):</b> ${hbb1h.toFixed(4)} (${hbbPercent1h.toFixed(2)}%)\n` +
           `• <b>diffema20 (15m):</b> ${diffema20_15m.toFixed(2)}%\n` +
           `• <b>diffema40 (1h):</b> ${diffema40_1h.toFixed(2)}%\n` +
           `${entryDetail}\n` +
-          `• <b>Hbb 15m (Độ rộng BB):</b> ${hbb.toFixed(4)} (${hbbPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
 
         console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
@@ -367,9 +376,9 @@ async function main() {
 
     console.log('\n================== THỐNG KÊ CHI TIẾT ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount}`);
-    console.log(`2️⃣ Dữ liệu nến: Đã quét ${countValidCandles} cặp tiềm năng`);
-    console.log(`3️⃣ Khớp Xu hướng LONG (bd24 + diffema20_15m + diffema40_1h > 4%): ${countMatchedEmaLong} coin`);
-    console.log(`   Khớp Xu hướng SHORT (bd24 + diffema20_15m + diffema40_1h < -4%): ${countMatchedEmaShort} coin`);
+    console.log(`2️⃣ Dữ liệu nến: Đã quét ${countValidCandles} cặp có BD24 tiềm năng`);
+    console.log(`3️⃣ Khớp Xu hướng LONG (BD24 + EMA 15m + Hbb 1h < 5% + EMA40 1h > 4%): ${countMatchedEmaLong} coin`);
+    console.log(`   Khớp Xu hướng SHORT (BD24 + EMA 15m + Hbb 1h < 5% + EMA40 1h < -4%): ${countMatchedEmaShort} coin`);
     console.log(`4️⃣ Tín hiệu LONG hoàn chỉnh (khớp bbd): ${countMatchedLong} coin`);
     console.log(`5️⃣ Tín hiệu SHORT hoàn chỉnh (khớp bbt): ${countMatchedShort} coin`);
 
