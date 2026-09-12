@@ -1,48 +1,48 @@
 {
-  "lastScanAt": "2026-09-12T13:01:58.143Z",
+  "lastScanAt": "2026-09-12T13:06:16.562Z",
   "totalScanned": 197,
-  "passedEmaCount": 5,
+  "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "MUBARAK-USDT-SWAP",
-      "change24h": "10.62%",
-      "diffema30": "0.90%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "LIGHT-USDT-SWAP",
-      "change24h": "11.13%",
-      "diffema30": "1.04%",
-      "validFor": "SHORT"
-    },
-    {
-      "symbol": "CP-USDT-SWAP",
-      "change24h": "10.14%",
+      "change24h": "10.20%",
       "diffema30": "0.45%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "MERL-USDT-SWAP",
-      "change24h": "11.07%",
-      "diffema30": "0.62%",
+      "symbol": "LIGHT-USDT-SWAP",
+      "change24h": "11.28%",
+      "diffema30": "1.11%",
       "validFor": "SHORT"
     },
     {
-      "symbol": "BERA-USDT-SWAP",
-      "change24h": "10.43%",
-      "diffema30": "0.93%",
+      "symbol": "MERL-USDT-SWAP",
+      "change24h": "10.59%",
+      "diffema30": "0.70%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "LIGHT-USDT-SWAP",
+      "type": "SHORT",
+      "change24h": "+11.28%",
+      "diffema30": "1.11%",
+      "bbd": "0.84%",
+      "bbt": "-0.47%",
+      "hbb15m": "0.0036",
+      "hbbPercent15m": "2.21%",
+      "link": "https://www.okx.com/trade-swap/light-usdt-swap",
+      "teleSent": false
+    },
     {
       "symbol": "MERL-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+11.07%",
-      "diffema30": "0.62%",
-      "bbd": "1.97%",
-      "bbt": "0.37%",
+      "change24h": "+10.59%",
+      "diffema30": "0.70%",
+      "bbd": "2.21%",
+      "bbt": "-0.08%",
       "hbb15m": "0.0005",
       "hbbPercent15m": "2.25%",
       "link": "https://www.okx.com/trade-swap/merl-usdt-swap",
