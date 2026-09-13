@@ -154,7 +154,7 @@ async function getCandles(symbol, bar = '5m', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (TÍN HIỆU 5M - HBB 15M) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (-0.5% < diffema20 < 0.5%) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -211,9 +211,14 @@ async function main() {
       const diffema50 = ((ema1 - ema50) / ema50) * 100;
       const diffema20 = ((ema1 - ema20) / ema20) * 100;
 
-      // Điều kiện EMA: -1% < diffema20 < 1%
-      const isEma20Valid = diffema20 > -1 && diffema20 < 1;
+      // Điều kiện EMA cơ bản: -0.5% < diffema20 < 0.5%
+      const isEma20Valid = diffema20 > -0.5 && diffema20 < 0.5;
+
+      // Điều kiện kết hợp:
+      // LONG: bd24 < -10% VÀ diffema50 < -3% VÀ -0.5% < diffema20 < 0.5%
       const isEmaValidLong = coin.change24hVal < -10 && diffema50 < -3 && isEma20Valid;
+
+      // SHORT: bd24 > +10% VÀ diffema50 > 3% VÀ -0.5% < diffema20 < 0.5%
       const isEmaValidShort = coin.change24hVal > 10 && diffema50 > 3 && isEma20Valid;
 
       if (!isEmaValidLong && !isEmaValidShort) {
@@ -262,7 +267,6 @@ async function main() {
       let hbb15mPercent = 0;
 
       if (candles15m && candles15m.length >= 21) {
-        // Lấy 20 nến 15m đã đóng (từ nến index 1 đến 20)
         const closes15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
         const bb15m = calculateBollingerBands(closes15m, 20);
         if (bb15m && bb15m.middle > 0) {
@@ -338,7 +342,8 @@ async function main() {
     console.log('\n================== THỐNG KÊ CHI TIẾT (5M) ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount} | |bd24| > 10% = ${targetCoins.length}`);
     console.log(`2️⃣ Dữ liệu nến 5m: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Lọc EMA Long: ${countMatchedEmaLong} | Lọc EMA Short: ${countMatchedEmaShort}`);
+    console.log(`3️⃣ Lọc EMA Long (bd24 < -10% & diffema50 < -3% & |diffema20| < 0.5%): ${countMatchedEmaLong} coin`);
+    console.log(`   Lọc EMA Short (bd24 > +10% & diffema50 > 3% & |diffema20| < 0.5%): ${countMatchedEmaShort} coin`);
     console.log(`4️⃣ Tín hiệu LONG khớp: ${countMatchedLong} coin | SHORT khớp: ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
