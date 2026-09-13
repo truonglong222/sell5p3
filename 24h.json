@@ -1,30 +1,16 @@
 {
-  "lastScanAt": "2026-09-13T14:20:34.861Z",
-  "totalScanned": 12,
+  "lastScanAt": "2026-09-13T14:25:26.085Z",
+  "totalScanned": 11,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "ZIL-USDT-SWAP",
-      "change24h": "10.99%",
-      "diffema50": "3.64%",
-      "diffema20": "0.75%",
+      "change24h": "10.32%",
+      "diffema50": "3.42%",
+      "diffema20": "0.61%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "ZIL-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+10.99%",
-      "diffema50": "3.64%",
-      "diffema20": "0.75%",
-      "bbd": "0.79%",
-      "bbt": "-0.33%",
-      "hbb15m": "0.0002",
-      "hbb15mPercent": "5.76%",
-      "link": "https://www.okx.com/trade-swap/zil-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
