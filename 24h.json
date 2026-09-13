@@ -1,30 +1,8 @@
 {
-  "lastScanAt": "2026-09-13T10:45:35.060Z",
+  "lastScanAt": "2026-09-13T10:50:31.375Z",
   "totalScanned": 7,
-  "passedEmaCount": 1,
-  "passedEmaList": [
-    {
-      "symbol": "ETHFI-USDT-SWAP",
-      "change24h": "-11.42%",
-      "diffema50": "-3.01%",
-      "diffema20": "-0.86%",
-      "validFor": "LONG"
-    }
-  ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "ETHFI-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-11.42%",
-      "diffema50": "-3.01%",
-      "diffema20": "-0.86%",
-      "bbd": "-0.13%",
-      "bbt": "-3.85%",
-      "hbb15m": "0.0364",
-      "hbb15mPercent": "5.39%",
-      "link": "https://www.okx.com/trade-swap/ethfi-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "passedEmaCount": 0,
+  "passedEmaList": [],
+  "matchedCount": 0,
+  "matchedList": []
 }
