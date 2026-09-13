@@ -1,48 +1,31 @@
 {
-  "lastScanAt": "2026-09-13T04:40:30.705Z",
+  "lastScanAt": "2026-09-13T04:45:33.943Z",
   "totalMarketsScanned": 184,
-  "passedBd24Count": 3,
+  "passedBd24Count": 4,
   "passedBd24List": [
     {
       "symbol": "MET-USDT-SWAP",
-      "change24h": "+10.88%",
-      "lastPrice": 0.2476
+      "change24h": "+10.61%",
+      "lastPrice": 0.2481
     },
     {
       "symbol": "FLOCK-USDT-SWAP",
-      "change24h": "+35.68%",
-      "lastPrice": 0.07883
+      "change24h": "+35.25%",
+      "lastPrice": 0.07858
     },
     {
       "symbol": "ZRX-USDT-SWAP",
-      "change24h": "+11.04%",
-      "lastPrice": 0.11722
+      "change24h": "+11.43%",
+      "lastPrice": 0.1169
+    },
+    {
+      "symbol": "BSB-USDT-SWAP",
+      "change24h": "+10.52%",
+      "lastPrice": 0.10445
     }
   ],
-  "passedEmaCount": 1,
-  "passedEmaList": [
-    {
-      "symbol": "FLOCK-USDT-SWAP",
-      "change24h": "+35.68%",
-      "diffema30": "1.76%",
-      "diffema50": "-0.67%",
-      "validFor": "SHORT"
-    }
-  ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "FLOCK-USDT-SWAP",
-      "type": "SHORT",
-      "change24h": "+35.68%",
-      "diffema30": "1.76%",
-      "diffema50": "-0.67%",
-      "bbd": "6.78%",
-      "bbt": "-0.36%",
-      "hbb15m": "0.0054",
-      "hbbPercent15m": "7.14%",
-      "link": "https://www.okx.com/trade-swap/flock-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "passedEmaCount": 0,
+  "passedEmaList": [],
+  "matchedCount": 0,
+  "matchedList": []
 }
