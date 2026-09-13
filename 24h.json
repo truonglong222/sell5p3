@@ -1,28 +1,8 @@
 {
-  "lastScanAt": "2026-09-13T00:01:49.023Z",
+  "lastScanAt": "2026-09-13T00:16:19.945Z",
   "totalScanned": 177,
-  "passedEmaCount": 1,
-  "passedEmaList": [
-    {
-      "symbol": "GPS-USDT-SWAP",
-      "change24h": "-15.97%",
-      "diffema30": "-1.81%",
-      "validFor": "LONG"
-    }
-  ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "GPS-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-15.97%",
-      "diffema30": "-1.81%",
-      "bbd": "0.20%",
-      "bbt": "-1.80%",
-      "hbb15m": "0.0003",
-      "hbbPercent15m": "3.61%",
-      "link": "https://www.okx.com/trade-swap/gps-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "passedEmaCount": 0,
+  "passedEmaList": [],
+  "matchedCount": 0,
+  "matchedList": []
 }
