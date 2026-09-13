@@ -1,16 +1,24 @@
 {
-  "lastScanAt": "2026-09-13T07:25:25.613Z",
+  "lastScanAt": "2026-09-13T07:30:48.142Z",
   "totalMarketsScanned": 186,
   "passedBd24Count": 1,
   "passedBd24List": [
     {
       "symbol": "FLOCK-USDT-SWAP",
-      "change24h": "+37.33%",
-      "lastPrice": 0.07979
+      "change24h": "+36.94%",
+      "lastPrice": 0.07956
     }
   ],
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "FLOCK-USDT-SWAP",
+      "change24h": "+36.94%",
+      "diffema30": "1.80%",
+      "diffema50": "6.02%",
+      "validFor": "SHORT"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
