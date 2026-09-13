@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, '24h.json');
 
-// Cấu hình Cooldown: 4 TIẾNG
-const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
+// Cấu hình Cooldown: 2 TIẾNG
+const COOLDOWN_TIME = 2 * 60 * 60 * 1000;
 const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,7 +50,9 @@ function saveScanResults(results) {
   try {
     const outputData = {
       lastScanAt: new Date().toISOString(),
-      totalScanned: results.totalScanned,
+      totalMarketsScanned: results.totalMarketsScanned,
+      passedBd24Count: results.passedBd24.length,
+      passedBd24List: results.passedBd24,
       passedEmaCount: results.passedEma.length,
       passedEmaList: results.passedEma,
       matchedCount: results.matched.length,
@@ -160,8 +162,7 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: allTargetCoins } = await getFilteredMarkets();
 
-    // ================= TỐI ƯU: CHỈ LỌC COIN THỎA MÃN BD24 =================
-    // Long cần bd24 > 10%, Short cần bd24 > 15% => Chỉ cần quét các coin có bd24 > 10%
+    // Lọc các coin thỏa mãn bd24 > 10%
     const targetCoins = allTargetCoins.filter((coin) => coin.change24hVal > 10);
 
     console.log(
@@ -169,37 +170,39 @@ async function main() {
     );
 
     const scanResults = {
-      totalScanned: targetCoins.length,
+      totalMarketsScanned: allTargetCoins.length,
+      passedBd24: targetCoins.map((c) => ({
+        symbol: c.instId,
+        change24h: (c.change24hVal >= 0 ? '+' : '') + c.change24hVal.toFixed(2) + '%',
+        lastPrice: c.last
+      })),
       passedEma: [],
       matched: []
     };
 
     let countValidCandles = 0;
 
-    // Bộ đếm chi tiết từng điều kiện
     const stats = {
-      long_bd24: targetCoins.length, // Tất cả coin trong danh sách quét đều thỏa mãn bd24 > 10%
-      long_diffema30: 0,             // -3% < diffema30 < -0.5%
-      long_diffema50: 0,             // diffema50 > 2%
-      long_trendCombo: 0,            // Thỏa cả 3 điều kiện xu hướng Long
-      long_bbd: 0,                   // -2% < bbd < 0.5%
-      long_final: 0,                 // Khớp Long hoàn chỉnh
+      long_bd24: targetCoins.length,
+      long_diffema30: 0,
+      long_diffema50: 0,
+      long_trendCombo: 0,
+      long_bbd: 0,
+      long_final: 0,
 
-      short_bd24: 0,                 // bd24 > 15%
-      short_diffema30: 0,            // 0% < diffema30 < 2%
-      short_trendCombo: 0,           // Thỏa cả 2 điều kiện xu hướng Short
-      short_bbt: 0,                  // -0.5% < bbt < 2%
-      short_final: 0                 // Khớp Short hoàn chỉnh
+      short_bd24: 0,
+      short_diffema30: 0,
+      short_trendCombo: 0,
+      short_bbt: 0,
+      short_final: 0
     };
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Đếm số coin thỏa mãn bd24 > 15% cho Short
       const isShortBd24 = coin.change24hVal > 15;
       if (isShortBd24) stats.short_bd24++;
 
-      // Tải dữ liệu nến 5m
       const candles5m = await getCandles(symbol, '5m', 100);
       if (!candles5m || candles5m.length < 80) {
         await sleep(80);
@@ -246,9 +249,9 @@ async function main() {
       const bbt = ((high0 - bb1.upper) / bb1.upper) * 100;
 
       // ================= ĐÁNH GIÁ TỪNG ĐIỀU KIỆN ĐƠN LẺ =================
-      // Điều kiện LONG (bd24 > 10% đã chắc chắn đúng)
+      // Điều kiện LONG: bd24 > 10% VÀ -3% < diffema30 < -0.5% VÀ diffema50 > 0%
       const isLongDiff30 = diffema30 > -3 && diffema30 < -0.5;
-      const isLongDiff50 = diffema50 > 2;
+      const isLongDiff50 = diffema50 > 0;
       const isLongBbd = bbd > -2 && bbd < 0.5;
 
       if (isLongDiff30) stats.long_diffema30++;
@@ -258,7 +261,7 @@ async function main() {
       const isTrendValidLong = isLongDiff30 && isLongDiff50;
       if (isTrendValidLong) stats.long_trendCombo++;
 
-      // Điều kiện SHORT
+      // Điều kiện SHORT: bd24 > 15% VÀ 0% < diffema30 < 2%
       const isShortDiff30 = diffema30 > 0 && diffema30 < 2;
       const isShortBbt = bbt > -0.5 && bbt < 2;
 
@@ -275,7 +278,7 @@ async function main() {
       if (isTrendValidLong || isTrendValidShort) {
         scanResults.passedEma.push({
           symbol,
-          change24h: coin.change24hVal.toFixed(2) + '%',
+          change24h: (coin.change24hVal >= 0 ? '+' : '') + coin.change24hVal.toFixed(2) + '%',
           diffema30: diffema30.toFixed(2) + '%',
           diffema50: diffema50.toFixed(2) + '%',
           validFor: isTrendValidLong ? 'LONG' : 'SHORT'
@@ -366,13 +369,13 @@ async function main() {
 
     console.log('\n================== THỐNG KÊ CHI TIẾT TỪNG ĐIỀU KIỆN ==================');
     console.log(`📊 Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount}`);
-    console.log(`⚡ Tối ưu: Đã loại bỏ các coin có bd24 <= 10%, chỉ lấy nến cho ${targetCoins.length} coin.`);
+    console.log(`⚡ Tối ưu: Đã lưu ${targetCoins.length} coin thỏa bd24 > 10% vào ${RESULTS_FILE}`);
     console.log(`📥 Nến tải thành công: ${countValidCandles}/${targetCoins.length}\n`);
 
     console.log('🟢 --- CHI TIẾT PHỄU LỌC LONG ---');
     console.log(`   [1] bd24 > 10%:                      ${stats.long_bd24} coin`);
     console.log(`   [2] -3% < diffema30 < -0.5%:         ${stats.long_diffema30} coin`);
-    console.log(`   [3] diffema50 > 2%:                  ${stats.long_diffema50} coin`);
+    console.log(`   [3] diffema50 > 0%:                  ${stats.long_diffema50} coin`);
     console.log(`   👉 Kết hợp xu hướng ([1] + [2] + [3]): ${stats.long_trendCombo} coin`);
     console.log(`   [4] -2% < bbd < 0.5% (Entry):        ${stats.long_bbd} coin`);
     console.log(`   🎯 KHỚP LONG HOÀN CHỈNH:             ${stats.long_final} coin\n`);
