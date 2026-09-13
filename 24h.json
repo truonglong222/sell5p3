@@ -1,6 +1,24 @@
 {
-  "lastScanAt": "2026-09-13T02:05:24.485Z",
-  "totalScanned": 5,
+  "lastScanAt": "2026-09-13T02:10:28.749Z",
+  "totalMarketsScanned": 182,
+  "passedBd24Count": 3,
+  "passedBd24List": [
+    {
+      "symbol": "FLOCK-USDT-SWAP",
+      "change24h": "+28.55%",
+      "lastPrice": 0.07469
+    },
+    {
+      "symbol": "ZRX-USDT-SWAP",
+      "change24h": "+14.94%",
+      "lastPrice": 0.11655
+    },
+    {
+      "symbol": "BERA-USDT-SWAP",
+      "change24h": "+13.17%",
+      "lastPrice": 0.2062
+    }
+  ],
   "passedEmaCount": 0,
   "passedEmaList": [],
   "matchedCount": 0,
