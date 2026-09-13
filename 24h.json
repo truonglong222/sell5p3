@@ -1,29 +1,43 @@
 {
-  "lastScanAt": "2026-09-13T08:25:24.553Z",
+  "lastScanAt": "2026-09-13T08:30:46.517Z",
   "totalMarketsScanned": 187,
   "passedBd24Count": 2,
   "passedBd24List": [
     {
       "symbol": "FLOCK-USDT-SWAP",
-      "change24h": "+32.63%",
-      "lastPrice": 0.07706
+      "change24h": "+32.44%",
+      "lastPrice": 0.07695
     },
     {
       "symbol": "API3-USDT-SWAP",
-      "change24h": "+10.92%",
-      "lastPrice": 0.254
+      "change24h": "+11.80%",
+      "lastPrice": 0.2567
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "FLOCK-USDT-SWAP",
-      "change24h": "+32.63%",
-      "diffema30": "-1.42%",
-      "diffema50": "2.78%",
+      "change24h": "+32.44%",
+      "diffema30": "-1.40%",
+      "diffema50": "2.50%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "FLOCK-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "+32.44%",
+      "diffema30": "-1.40%",
+      "diffema50": "2.50%",
+      "bbd": "0.48%",
+      "bbt": "-4.71%",
+      "hbb15m": "0.0065",
+      "hbbPercent15m": "8.29%",
+      "link": "https://www.okx.com/trade-swap/flock-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
