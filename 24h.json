@@ -1,13 +1,20 @@
 {
-  "lastScanAt": "2026-09-13T20:01:00.560Z",
+  "lastScanAt": "2026-09-13T20:05:26.273Z",
   "totalScanned": 9,
-  "passedEmaCount": 1,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
+      "symbol": "FIL-USDT-SWAP",
+      "change24h": "23.06%",
+      "diffema50": "6.88%",
+      "diffema20": "0.35%",
+      "validFor": "SHORT"
+    },
+    {
       "symbol": "XTZ-USDT-SWAP",
-      "change24h": "13.41%",
-      "diffema50": "4.17%",
-      "diffema20": "-0.36%",
+      "change24h": "13.94%",
+      "diffema50": "4.26%",
+      "diffema20": "-0.33%",
       "validFor": "SHORT"
     }
   ],
@@ -16,15 +23,15 @@
     {
       "symbol": "XTZ-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+13.41%",
-      "diffema50": "4.17%",
-      "diffema20": "-0.36%",
-      "bbd": "2.69%",
-      "bbt": "0.48%",
+      "change24h": "+13.94%",
+      "diffema50": "4.26%",
+      "diffema20": "-0.33%",
+      "bbd": "2.57%",
+      "bbt": "-0.23%",
       "hbb15m": "0.0208",
       "hbb15mPercent": "7.20%",
       "link": "https://www.okx.com/trade-swap/xtz-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
