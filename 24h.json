@@ -1,23 +1,37 @@
 {
-  "lastScanAt": "2026-09-14T03:30:50.019Z",
-  "totalScanned": 5,
+  "lastScanAt": "2026-09-14T03:35:25.713Z",
+  "totalScanned": 8,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "USELESS-USDT-SWAP",
-      "change24h": "-11.20%",
-      "diffema50": "-3.33%",
-      "diffema20": "-0.17%",
+      "change24h": "-12.36%",
+      "diffema50": "-3.36%",
+      "diffema20": "-0.21%",
       "validFor": "LONG"
     },
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "-17.64%",
-      "diffema50": "-12.91%",
-      "diffema20": "-0.02%",
+      "change24h": "-18.19%",
+      "diffema50": "-12.64%",
+      "diffema20": "0.10%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "USELESS-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-12.36%",
+      "diffema50": "-3.36%",
+      "diffema20": "-0.21%",
+      "bbd": "-0.33%",
+      "bbt": "-2.78%",
+      "hbb15m": "0.0090",
+      "hbb15mPercent": "4.23%",
+      "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
