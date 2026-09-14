@@ -1,16 +1,30 @@
 {
-  "lastScanAt": "2026-09-14T14:50:33.371Z",
-  "totalScanned": 8,
+  "lastScanAt": "2026-09-14T14:55:25.108Z",
+  "totalScanned": 7,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "CNPY-USDT-SWAP",
-      "change24h": "14.67%",
-      "diffema50": "3.82%",
-      "diffema20": "0.14%",
+      "change24h": "18.17%",
+      "diffema50": "3.99%",
+      "diffema20": "0.24%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "CNPY-USDT-SWAP",
+      "type": "SHORT (5m)",
+      "change24h": "+18.17%",
+      "diffema50": "3.99%",
+      "diffema20": "0.24%",
+      "bbd": "-",
+      "bbt": "1.23%",
+      "hbb15m": "0.0209",
+      "hbb15mPercent": "8.31%",
+      "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
