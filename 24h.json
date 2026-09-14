@@ -1,13 +1,13 @@
 {
-  "lastScanAt": "2026-09-14T10:45:36.212Z",
+  "lastScanAt": "2026-09-14T10:50:32.628Z",
   "totalScanned": 8,
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "FIL-USDT-SWAP",
-      "change24h": "25.77%",
-      "diffema50": "3.12%",
-      "diffema20": "0.08%",
+      "change24h": "25.03%",
+      "diffema50": "3.01%",
+      "diffema20": "0.12%",
       "validFor": "SHORT"
     }
   ],
@@ -16,15 +16,15 @@
     {
       "symbol": "FIL-USDT-SWAP",
       "type": "SHORT (5m)",
-      "change24h": "+25.77%",
-      "diffema50": "3.12%",
-      "diffema20": "0.08%",
+      "change24h": "+25.03%",
+      "diffema50": "3.01%",
+      "diffema20": "0.12%",
       "bbd": "-",
-      "bbt": "1.71%",
+      "bbt": "-0.36%",
       "hbb15m": "0.0469",
       "hbb15mPercent": "4.68%",
       "link": "https://www.okx.com/trade-swap/fil-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
