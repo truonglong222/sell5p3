@@ -227,7 +227,7 @@ async function main() {
         diffema50 = ((ema1 - ema50) / ema50) * 100;
         diffema20 = ((ema1 - ema20) / ema20) * 100;
 
-        const isEma20Valid = diffema20 > -0.5 && diffema20 < 0.5;
+        const isEma20Valid = diffema20 > -1 && diffema20 < 1;
         isEmaValidLong = diffema50 < -3 && isEma20Valid;
 
         if (isEmaValidLong) {
