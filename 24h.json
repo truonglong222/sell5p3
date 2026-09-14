@@ -1,37 +1,23 @@
 {
-  "lastScanAt": "2026-09-14T01:25:23.866Z",
+  "lastScanAt": "2026-09-14T01:30:48.816Z",
   "totalScanned": 9,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "RIVER-USDT-SWAP",
-      "change24h": "-13.23%",
+      "change24h": "-13.11%",
       "diffema50": "-4.46%",
-      "diffema20": "-0.31%",
+      "diffema20": "-0.22%",
       "validFor": "LONG"
     },
     {
       "symbol": "CHIP-USDT-SWAP",
-      "change24h": "-14.64%",
-      "diffema50": "-4.61%",
-      "diffema20": "-0.49%",
+      "change24h": "-13.90%",
+      "diffema50": "-4.63%",
+      "diffema20": "-0.40%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "CHIP-USDT-SWAP",
-      "type": "LONG",
-      "change24h": "-14.64%",
-      "diffema50": "-4.61%",
-      "diffema20": "-0.49%",
-      "bbd": "0.11%",
-      "bbt": "-1.93%",
-      "hbb15m": "0.0036",
-      "hbb15mPercent": "8.62%",
-      "link": "https://www.okx.com/trade-swap/chip-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
