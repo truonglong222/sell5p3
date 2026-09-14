@@ -1,13 +1,20 @@
 {
-  "lastScanAt": "2026-09-14T03:20:29.900Z",
-  "totalScanned": 6,
-  "passedEmaCount": 1,
+  "lastScanAt": "2026-09-14T03:25:24.335Z",
+  "totalScanned": 7,
+  "passedEmaCount": 2,
   "passedEmaList": [
     {
+      "symbol": "USELESS-USDT-SWAP",
+      "change24h": "-11.12%",
+      "diffema50": "-3.38%",
+      "diffema20": "-0.35%",
+      "validFor": "LONG"
+    },
+    {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "-21.07%",
-      "diffema50": "-13.64%",
-      "diffema20": "-0.34%",
+      "change24h": "-19.74%",
+      "diffema50": "-13.29%",
+      "diffema20": "-0.17%",
       "validFor": "LONG"
     }
   ],
