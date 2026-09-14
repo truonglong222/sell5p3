@@ -1,23 +1,37 @@
 {
-  "lastScanAt": "2026-09-14T03:55:24.489Z",
+  "lastScanAt": "2026-09-14T04:01:03.619Z",
   "totalScanned": 7,
   "passedEmaCount": 2,
   "passedEmaList": [
     {
       "symbol": "LAB-USDT-SWAP",
-      "change24h": "-17.37%",
-      "diffema50": "-11.28%",
-      "diffema20": "-0.35%",
+      "change24h": "-17.16%",
+      "diffema50": "-10.74%",
+      "diffema20": "-0.31%",
       "validFor": "LONG"
     },
     {
       "symbol": "FIL-USDT-SWAP",
-      "change24h": "20.40%",
-      "diffema50": "3.60%",
-      "diffema20": "0.35%",
+      "change24h": "19.93%",
+      "diffema50": "3.41%",
+      "diffema20": "-0.00%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "LAB-USDT-SWAP",
+      "type": "LONG",
+      "change24h": "-17.16%",
+      "diffema50": "-10.74%",
+      "diffema20": "-0.31%",
+      "bbd": "-0.05%",
+      "bbt": "-2.56%",
+      "hbb15m": "0.0083",
+      "hbb15mPercent": "15.26%",
+      "link": "https://www.okx.com/trade-swap/lab-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
