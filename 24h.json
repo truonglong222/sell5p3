@@ -1,8 +1,16 @@
 {
-  "lastScanAt": "2026-09-14T01:15:36.736Z",
+  "lastScanAt": "2026-09-14T01:20:30.860Z",
   "totalScanned": 10,
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "RIVER-USDT-SWAP",
+      "change24h": "-13.35%",
+      "diffema50": "-4.43%",
+      "diffema20": "-0.45%",
+      "validFor": "LONG"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
