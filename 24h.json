@@ -1,40 +1,48 @@
 {
-  "lastScanAt": "2026-09-15T14:30:50.020Z",
+  "lastScanAt": "2026-09-15T14:35:24.329Z",
   "targetCoinsCount": 5,
   "targetCoinsList": [
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 1.0227,
-      "last": 0.8743,
-      "change24hVal": -14.51
+      "open24h": 1.0085,
+      "last": 0.8718,
+      "change24hVal": -13.55
     },
     {
       "instId": "UP-USDT-SWAP",
-      "open24h": 0.3573,
-      "last": 0.3119,
-      "change24hVal": -12.71
+      "open24h": 0.3562,
+      "last": 0.3112,
+      "change24hVal": -12.63
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.2559,
-      "last": 0.3321,
-      "change24hVal": 29.78
+      "open24h": 0.255,
+      "last": 0.337,
+      "change24hVal": 32.16
     },
     {
       "instId": "LA-USDT-SWAP",
-      "open24h": 0.07295,
-      "last": 0.06459,
-      "change24hVal": -11.46
+      "open24h": 0.07243,
+      "last": 0.06392,
+      "change24hVal": -11.75
     },
     {
-      "instId": "PONS-USDT-SWAP",
-      "open24h": 0.5764,
-      "last": 0.6493,
-      "change24hVal": 12.65
+      "instId": "BABY-USDT-SWAP",
+      "open24h": 0.012002,
+      "last": 0.010797,
+      "change24hVal": -10.04
     }
   ],
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "BABY-USDT-SWAP",
+      "change24h": "-10.04%",
+      "diffema50": "-",
+      "diffema20": "-0.59%",
+      "validFor": "LONG"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
