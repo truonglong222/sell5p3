@@ -1,52 +1,66 @@
 {
-  "lastScanAt": "2026-09-15T17:21:06.405Z",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-15T17:25:25.578Z",
+  "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.4055,
-      "last": 1.2212,
-      "change24hVal": -13.11
+      "open24h": 1.4018,
+      "last": 1.2185,
+      "change24hVal": -13.08
     },
     {
       "instId": "NES-USDT-SWAP",
-      "open24h": 0.1528,
-      "last": 0.1745,
-      "change24hVal": 14.2
+      "open24h": 0.1527,
+      "last": 0.174,
+      "change24hVal": 13.95
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 0.9576,
-      "last": 0.8516,
-      "change24hVal": -11.07
+      "open24h": 0.9612,
+      "last": 0.8509,
+      "change24hVal": -11.48
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.2915,
+      "open24h": 0.2919,
       "last": 0.334,
-      "change24hVal": 14.58
+      "change24hVal": 14.42
+    },
+    {
+      "instId": "MMT-USDT-SWAP",
+      "open24h": 0.1542,
+      "last": 0.1369,
+      "change24hVal": -11.22
     },
     {
       "instId": "LA-USDT-SWAP",
-      "open24h": 0.06946,
-      "last": 0.06238,
-      "change24hVal": -10.19
+      "open24h": 0.06977,
+      "last": 0.06247,
+      "change24hVal": -10.46
     },
     {
       "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.004123,
-      "last": 0.003681,
-      "change24hVal": -10.72
+      "open24h": 0.004125,
+      "last": 0.003678,
+      "change24hVal": -10.84
     },
     {
       "instId": "CHIP-USDT-SWAP",
-      "open24h": 0.04143,
-      "last": 0.03726,
-      "change24hVal": -10.07
+      "open24h": 0.04157,
+      "last": 0.03732,
+      "change24hVal": -10.22
     }
   ],
-  "passedEmaCount": 0,
-  "passedEmaList": [],
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "MMT-USDT-SWAP",
+      "change24h": "-11.22%",
+      "diffema50": "-",
+      "diffema20": "-0.09%",
+      "validFor": "LONG"
+    }
+  ],
   "matchedCount": 0,
   "matchedList": []
 }
