@@ -1,74 +1,52 @@
 {
-  "lastScanAt": "2026-09-15T18:10:30.899Z",
+  "lastScanAt": "2026-09-15T18:15:36.660Z",
   "targetCoinsCount": 7,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.4164,
-      "last": 1.2289,
-      "change24hVal": -13.24
-    },
-    {
-      "instId": "SENT-USDT-SWAP",
-      "open24h": 0.01664,
-      "last": 0.01486,
-      "change24hVal": -10.7
+      "open24h": 1.4095,
+      "last": 1.2294,
+      "change24hVal": -12.78
     },
     {
       "instId": "NES-USDT-SWAP",
-      "open24h": 0.1524,
-      "last": 0.1738,
-      "change24hVal": 14.04
+      "open24h": 0.1523,
+      "last": 0.1723,
+      "change24hVal": 13.13
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 0.9569,
-      "last": 0.8426,
-      "change24hVal": -11.94
+      "open24h": 0.964,
+      "last": 0.8418,
+      "change24hVal": -12.68
     },
     {
       "instId": "UP-USDT-SWAP",
-      "open24h": 0.3501,
-      "last": 0.3097,
-      "change24hVal": -11.54
+      "open24h": 0.3499,
+      "last": 0.307,
+      "change24hVal": -12.26
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.2859,
-      "last": 0.3372,
-      "change24hVal": 17.94
+      "open24h": 0.2875,
+      "last": 0.3351,
+      "change24hVal": 16.56
     },
     {
       "instId": "LA-USDT-SWAP",
-      "open24h": 0.07036,
-      "last": 0.06267,
-      "change24hVal": -10.93
+      "open24h": 0.07073,
+      "last": 0.06263,
+      "change24hVal": -11.45
+    },
+    {
+      "instId": "SOPH-USDT-SWAP",
+      "open24h": 0.00414,
+      "last": 0.00372,
+      "change24hVal": -10.14
     }
   ],
-  "passedEmaCount": 1,
-  "passedEmaList": [
-    {
-      "symbol": "SENT-USDT-SWAP",
-      "change24h": "-10.7%",
-      "diffema50": "-",
-      "diffema20": "0.45%",
-      "validFor": "LONG"
-    }
-  ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "SENT-USDT-SWAP",
-      "type": "LONG (15m)",
-      "change24h": "-10.70%",
-      "diffema50": "-",
-      "diffema20": "0.45%",
-      "bbd": "-0.54%",
-      "bbt": "-",
-      "hbb15m": "0.0004",
-      "hbb15mPercent": "2.47%",
-      "link": "https://www.okx.com/trade-swap/sent-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "passedEmaCount": 0,
+  "passedEmaList": [],
+  "matchedCount": 0,
+  "matchedList": []
 }
