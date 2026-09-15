@@ -1,75 +1,129 @@
 {
-  "lastScanAt": "2026-09-15T18:40:33.866Z",
-  "targetCoinsCount": 10,
+  "lastScanAt": "2026-09-15T18:45:37.718Z",
+  "targetCoinsCount": 19,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.3925,
-      "last": 1.2193,
-      "change24hVal": -12.44
+      "open24h": 1.3993,
+      "last": 1.2101,
+      "change24hVal": -13.52
     },
     {
       "instId": "SENT-USDT-SWAP",
-      "open24h": 0.01734,
-      "last": 0.01471,
-      "change24hVal": -15.17
+      "open24h": 0.01733,
+      "last": 0.01447,
+      "change24hVal": -16.5
+    },
+    {
+      "instId": "NES-USDT-SWAP",
+      "open24h": 0.1522,
+      "last": 0.1678,
+      "change24hVal": 10.25
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 0.9627,
-      "last": 0.8219,
-      "change24hVal": -14.63
+      "open24h": 0.9656,
+      "last": 0.8182,
+      "change24hVal": -15.27
     },
     {
       "instId": "CP-USDT-SWAP",
-      "open24h": 0.0132,
-      "last": 0.01173,
-      "change24hVal": -11.14
+      "open24h": 0.01325,
+      "last": 0.0117,
+      "change24hVal": -11.7
+    },
+    {
+      "instId": "OPN-USDT-SWAP",
+      "open24h": 0.04767,
+      "last": 0.04277,
+      "change24hVal": -10.28
     },
     {
       "instId": "FET-USDT-SWAP",
-      "open24h": 0.1708,
-      "last": 0.1529,
-      "change24hVal": -10.48
+      "open24h": 0.1721,
+      "last": 0.1518,
+      "change24hVal": -11.8
+    },
+    {
+      "instId": "ETHFI-USDT-SWAP",
+      "open24h": 0.6504,
+      "last": 0.5822,
+      "change24hVal": -10.49
     },
     {
       "instId": "UP-USDT-SWAP",
-      "open24h": 0.3502,
-      "last": 0.3075,
-      "change24hVal": -12.19
+      "open24h": 0.3508,
+      "last": 0.31,
+      "change24hVal": -11.63
+    },
+    {
+      "instId": "MET-USDT-SWAP",
+      "open24h": 0.2205,
+      "last": 0.1965,
+      "change24hVal": -10.88
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.2787,
-      "last": 0.3323,
-      "change24hVal": 19.23
+      "open24h": 0.2717,
+      "last": 0.3302,
+      "change24hVal": 21.53
+    },
+    {
+      "instId": "DYDX-USDT-SWAP",
+      "open24h": 0.11564,
+      "last": 0.10381,
+      "change24hVal": -10.23
     },
     {
       "instId": "LA-USDT-SWAP",
-      "open24h": 0.07042,
-      "last": 0.06192,
-      "change24hVal": -12.07
+      "open24h": 0.07045,
+      "last": 0.06185,
+      "change24hVal": -12.21
+    },
+    {
+      "instId": "IOTA-USDT-SWAP",
+      "open24h": 0.04388,
+      "last": 0.0393,
+      "change24hVal": -10.44
     },
     {
       "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.004115,
-      "last": 0.00365,
-      "change24hVal": -11.3
+      "open24h": 0.004121,
+      "last": 0.003591,
+      "change24hVal": -12.86
+    },
+    {
+      "instId": "ORDER-USDT-SWAP",
+      "open24h": 0.03549,
+      "last": 0.03183,
+      "change24hVal": -10.31
+    },
+    {
+      "instId": "TIA-USDT-SWAP",
+      "open24h": 0.3646,
+      "last": 0.3271,
+      "change24hVal": -10.29
     },
     {
       "instId": "CHIP-USDT-SWAP",
-      "open24h": 0.04207,
-      "last": 0.03739,
-      "change24hVal": -11.12
+      "open24h": 0.04224,
+      "last": 0.0372,
+      "change24hVal": -11.93
+    },
+    {
+      "instId": "XRP-USDT-SWAP",
+      "open24h": 1.4744,
+      "last": 1.3171,
+      "change24hVal": -10.67
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "SENT-USDT-SWAP",
-      "change24h": "-15.17%",
+      "change24h": "-16.5%",
       "diffema50": "-",
-      "diffema20": "0.03%",
+      "diffema20": "-0.38%",
       "validFor": "LONG"
     }
   ],
@@ -78,13 +132,13 @@
     {
       "symbol": "SENT-USDT-SWAP",
       "type": "LONG (15m)",
-      "change24h": "-15.17%",
+      "change24h": "-16.50%",
       "diffema50": "-",
-      "diffema20": "0.03%",
-      "bbd": "-1.87%",
+      "diffema20": "-0.38%",
+      "bbd": "-1.74%",
       "bbt": "-",
-      "hbb15m": "0.0004",
-      "hbb15mPercent": "2.98%",
+      "hbb15m": "0.0006",
+      "hbb15mPercent": "4.31%",
       "link": "https://www.okx.com/trade-swap/sent-usdt-swap",
       "teleSent": false
     }
