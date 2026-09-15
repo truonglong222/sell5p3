@@ -1,48 +1,42 @@
 {
-  "lastScanAt": "2026-09-15T16:55:22.914Z",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-15T17:01:04.068Z",
+  "targetCoinsCount": 6,
   "targetCoinsList": [
     {
+      "instId": "RAY-USDT-SWAP",
+      "open24h": 1.3859,
+      "last": 1.2221,
+      "change24hVal": -11.82
+    },
+    {
       "instId": "NES-USDT-SWAP",
-      "open24h": 0.1534,
-      "last": 0.1689,
-      "change24hVal": 10.1
+      "open24h": 0.153,
+      "last": 0.1694,
+      "change24hVal": 10.72
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 0.9677,
-      "last": 0.8633,
-      "change24hVal": -10.79
+      "open24h": 0.9692,
+      "last": 0.8585,
+      "change24hVal": -11.42
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.2935,
-      "last": 0.3343,
-      "change24hVal": 13.9
-    },
-    {
-      "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13722,
-      "last": 0.15194,
-      "change24hVal": 10.73
+      "open24h": 0.2932,
+      "last": 0.3348,
+      "change24hVal": 14.19
     },
     {
       "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.004145,
-      "last": 0.003698,
+      "open24h": 0.004136,
+      "last": 0.00369,
       "change24hVal": -10.78
     },
     {
-      "instId": "PONS-USDT-SWAP",
-      "open24h": 0.6093,
-      "last": 0.672,
-      "change24hVal": 10.29
-    },
-    {
       "instId": "CHIP-USDT-SWAP",
-      "open24h": 0.042,
-      "last": 0.03744,
-      "change24hVal": -10.86
+      "open24h": 0.04191,
+      "last": 0.03732,
+      "change24hVal": -10.95
     }
   ],
   "passedEmaCount": 0,
