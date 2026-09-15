@@ -50,7 +50,8 @@ function saveScanResults(results) {
   try {
     const outputData = {
       lastScanAt: new Date().toISOString(),
-      totalScanned: results.totalScanned,
+      targetCoinsCount: results.targetCoins.length,
+      targetCoinsList: results.targetCoins, // Lưu toàn bộ coin thỏa mãn |bd24| > 10%
       passedEmaCount: results.passedEma.length,
       passedEmaList: results.passedEma,
       matchedCount: results.matched.length,
@@ -120,7 +121,7 @@ async function getFilteredMarkets() {
           instId: item.instId,
           open24h,
           last: lastPrice,
-          change24hVal
+          change24hVal: parseFloat(change24hVal.toFixed(2))
         });
       }
     }
@@ -163,11 +164,20 @@ async function main() {
     // 1. Lọc Volume > 5M USDT và |bd24| > 10%
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 [Lọc] Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24| > 10%: ${targetCoins.length} coin`
+      `📊 [Lọc 24h] Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24| > 10%: ${targetCoins.length} coin`
     );
 
+    // Log chi tiết danh sách thỏa bd24
+    if (targetCoins.length > 0) {
+      console.log('📋 Danh sách coin thỏa điều kiện biến động 24h:');
+      targetCoins.forEach((c) => {
+        const type = c.change24hVal < -10 ? 'LONG Candidate' : 'SHORT Candidate';
+        console.log(`   - ${c.instId.padEnd(18)}: ${c.change24hVal > 0 ? '+' : ''}${c.change24hVal}% -> [${type}]`);
+      });
+    }
+
     const scanResults = {
-      totalScanned: targetCoins.length,
+      targetCoins,
       passedEma: [],
       matched: []
     };
@@ -180,17 +190,13 @@ async function main() {
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
-
-      // Phân luồng nến theo điều kiện bd24h:
-      // bd24 < -10% -> Xét LONG trên nến 15m (cần ít nhất 80 nến để tính EMA50)
-      // bd24 > +10% -> Xét SHORT trên nến 5m
       const isCandidateLong = coin.change24hVal < -10;
       const isCandidateShort = coin.change24hVal > 10;
 
       let isEmaValidLong = false;
       let isEmaValidShort = false;
-      let diffema50 = 0;
-      let diffema20 = 0;
+      let diffema50Str = '-';
+      let diffema20Str = '-';
       let bbd = 0;
       let bbt = 0;
 
@@ -200,7 +206,7 @@ async function main() {
       if (isCandidateLong) {
         // ================= XÉT LONG TRÊN NẾN 15M =================
         candles15m = await getCandles(symbol, '15m', 100);
-        if (!candles15m || candles15m.length < 80) {
+        if (!candles15m || candles15m.length < 50) {
           await sleep(80);
           continue;
         }
@@ -210,33 +216,33 @@ async function main() {
         const closedPrices15m = closedCandles15m.map((c) => parseFloat(c[4]));
 
         const emaSeries15m = calculateEMAArray(closedPrices15m, 20);
-        if (emaSeries15m.length < 50) {
+        if (emaSeries15m.length < 20) {
           await sleep(80);
           continue;
         }
 
         const ema1 = emaSeries15m[emaSeries15m.length - 1];
         const ema20 = emaSeries15m[emaSeries15m.length - 20];
-        const ema50 = emaSeries15m[emaSeries15m.length - 50];
 
-        if (!ema20 || ema20 <= 0 || !ema50 || ema50 <= 0) {
+        if (!ema20 || ema20 <= 0) {
           await sleep(80);
           continue;
         }
 
-        diffema50 = ((ema1 - ema50) / ema50) * 100;
-        diffema20 = ((ema1 - ema20) / ema20) * 100;
+        const diffema20 = ((ema1 - ema20) / ema20) * 100;
+        diffema20Str = diffema20.toFixed(2) + '%';
 
-        const isEma20Valid = diffema20 > -1 && diffema20 < 1;
-        isEmaValidLong = diffema50 < -3 && isEma20Valid;
+        // ĐÃ BỎ diffema50: Chỉ xét diffema20 trong khoảng (-1%, 1%)
+        isEmaValidLong = diffema20 > -1 && diffema20 < 1;
 
         if (isEmaValidLong) {
           countMatchedEmaLong++;
+          console.log(` [EMA Thỏa - LONG 15m] ${symbol.padEnd(16)} | diffema20: ${diffema20Str}`);
           scanResults.passedEma.push({
             symbol,
-            change24h: coin.change24hVal.toFixed(2) + '%',
-            diffema50: diffema50.toFixed(2) + '%',
-            diffema20: diffema20.toFixed(2) + '%',
+            change24h: coin.change24hVal + '%',
+            diffema50: '-',
+            diffema20: diffema20Str,
             validFor: 'LONG'
           });
 
@@ -247,7 +253,7 @@ async function main() {
           if (bb15m && bb15m.lower > 0) {
             const candle0 = candles15m[0];
             const low0 = parseFloat(candle0[3]);
-            bbd = ((low0 - bb1.lower || low0 - bb15m.lower) / bb15m.lower) * 100;
+            bbd = ((low0 - bb15m.lower) / bb15m.lower) * 100;
           }
         }
       } else if (isCandidateShort) {
@@ -277,19 +283,22 @@ async function main() {
           continue;
         }
 
-        diffema50 = ((ema1 - ema50) / ema50) * 100;
-        diffema20 = ((ema1 - ema20) / ema20) * 100;
+        const diffema50 = ((ema1 - ema50) / ema50) * 100;
+        const diffema20 = ((ema1 - ema20) / ema20) * 100;
+        diffema50Str = diffema50.toFixed(2) + '%';
+        diffema20Str = diffema20.toFixed(2) + '%';
 
         const isEma20Valid = diffema20 > -0.5 && diffema20 < 0.5;
         isEmaValidShort = diffema50 > 3 && isEma20Valid;
 
         if (isEmaValidShort) {
           countMatchedEmaShort++;
+          console.log(` [EMA Thỏa - SHORT 5m] ${symbol.padEnd(16)} | diffema50: ${diffema50Str} | diffema20: ${diffema20Str}`);
           scanResults.passedEma.push({
             symbol,
-            change24h: coin.change24hVal.toFixed(2) + '%',
-            diffema50: diffema50.toFixed(2) + '%',
-            diffema20: diffema20.toFixed(2) + '%',
+            change24h: '+' + coin.change24hVal + '%',
+            diffema50: diffema50Str,
+            diffema20: diffema20Str,
             validFor: 'SHORT'
           });
 
@@ -314,11 +323,12 @@ async function main() {
         continue;
       }
 
+      console.log(`🎯 [Khớp ENTRY ${isLong ? 'LONG' : 'SHORT'}] ${symbol} | bbd/bbt: ${isLong ? bbd.toFixed(2) + '%' : bbt.toFixed(2) + '%'}`);
+
       // ================= BƯỚC 4: TÍNH HBB 15M (BỔ TRỢ HIỂN THỊ) =================
       let hbb15m = 0;
       let hbb15mPercent = 0;
 
-      // Nếu đã lấy 15m ở trên thì tái sử dụng, nếu chưa thì fetch thêm
       if (!candles15m) {
         candles15m = await getCandles(symbol, '15m', 30);
       }
@@ -351,8 +361,8 @@ async function main() {
         symbol,
         type: `${signalType} (${timeframe})`,
         change24h: change24hStr,
-        diffema50: diffema50.toFixed(2) + '%',
-        diffema20: diffema20.toFixed(2) + '%',
+        diffema50: diffema50Str,
+        diffema20: diffema20Str,
         bbd: isLong ? bbd.toFixed(2) + '%' : '-',
         bbt: isShort ? bbt.toFixed(2) + '%' : '-',
         hbb15m: hbb15m.toFixed(4),
@@ -368,11 +378,14 @@ async function main() {
           ? `• <b>bbd:</b> ${bbd.toFixed(2)}% (so với Lower BB 15m)`
           : `• <b>bbt:</b> ${bbt.toFixed(2)}% (so với Upper BB 5m)`;
 
+        const emaDetail = isLong
+          ? `• <b>diffema20 (${timeframe}):</b> ${diffema20Str}\n`
+          : `• <b>diffema50 (${timeframe}):</b> ${diffema50Str}\n• <b>diffema20 (${timeframe}):</b> ${diffema20Str}\n`;
+
         const message =
           `${icon} <b>TÍN HIỆU ${signalType} (${timeframe}): ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
-          `• <b>diffema50 (${timeframe}):</b> ${diffema50.toFixed(2)}%\n` +
-          `• <b>diffema20 (${timeframe}):</b> ${diffema20.toFixed(2)}%\n` +
+          `${emaDetail}` +
           `${entryDetail}\n` +
           `• <b>Hbb (15m):</b> ${hbb15m.toFixed(4)} (${hbb15mPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -409,7 +422,7 @@ async function main() {
     if (scanResults.matched.length > 0) {
       console.table(scanResults.matched);
     } else {
-      console.log('Không có coin nào thỏa mãn điều kiện.');
+      console.log('Không có coin nào khớp toàn bộ điều kiện vào lệnh.');
     }
     console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
     console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
