@@ -51,7 +51,7 @@ function saveScanResults(results) {
     const outputData = {
       lastScanAt: new Date().toISOString(),
       targetCoinsCount: results.targetCoins.length,
-      targetCoinsList: results.targetCoins, // Lưu toàn bộ coin thỏa mãn |bd24| > 10%
+      targetCoinsList: results.targetCoins,
       passedEmaCount: results.passedEma.length,
       passedEmaList: results.passedEma,
       matchedCount: results.matched.length,
@@ -167,7 +167,6 @@ async function main() {
       `📊 [Lọc 24h] Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24| > 10%: ${targetCoins.length} coin`
     );
 
-    // Log chi tiết danh sách thỏa bd24
     if (targetCoins.length > 0) {
       console.log('📋 Danh sách coin thỏa điều kiện biến động 24h:');
       targetCoins.forEach((c) => {
@@ -197,6 +196,8 @@ async function main() {
       let isEmaValidShort = false;
       let diffema50Str = '-';
       let diffema20Str = '-';
+      let diffema30Str = '-';
+      let diffema10Str = '-';
       let bbd = 0;
       let bbt = 0;
 
@@ -206,7 +207,7 @@ async function main() {
       if (isCandidateLong) {
         // ================= XÉT LONG TRÊN NẾN 15M =================
         candles15m = await getCandles(symbol, '15m', 100);
-        if (!candles15m || candles15m.length < 50) {
+        if (!candles15m || candles15m.length < 60) {
           await sleep(80);
           continue;
         }
@@ -215,34 +216,40 @@ async function main() {
         const closedCandles15m = candles15m.slice(1).reverse();
         const closedPrices15m = closedCandles15m.map((c) => parseFloat(c[4]));
 
+        // Tính EMA period 20 trên nến 15m
         const emaSeries15m = calculateEMAArray(closedPrices15m, 20);
-        if (emaSeries15m.length < 20) {
+        if (emaSeries15m.length < 30) {
           await sleep(80);
           continue;
         }
 
         const ema1 = emaSeries15m[emaSeries15m.length - 1];
-        const ema20 = emaSeries15m[emaSeries15m.length - 20];
+        const ema10 = emaSeries15m[emaSeries15m.length - 10];
+        const ema30 = emaSeries15m[emaSeries15m.length - 30];
 
-        if (!ema20 || ema20 <= 0) {
+        if (!ema10 || ema10 <= 0 || !ema30 || ema30 <= 0) {
           await sleep(80);
           continue;
         }
 
-        const diffema20 = ((ema1 - ema20) / ema20) * 100;
-        diffema20Str = diffema20.toFixed(2) + '%';
+        const diffema30 = ((ema1 - ema30) / ema30) * 100;
+        const diffema10 = ((ema1 - ema10) / ema10) * 100;
+        diffema30Str = diffema30.toFixed(2) + '%';
+        diffema10Str = diffema10.toFixed(2) + '%';
 
-        // ĐÃ BỎ diffema50: Chỉ xét diffema20 trong khoảng (-1%, 1%)
-        isEmaValidLong = diffema20 > -1 && diffema20 < 1;
+        // Điều kiện: -2% < diffema30 < 0% VÀ -2% < diffema10 < -1%
+        const isEma30Valid = diffema30 > -2 && diffema30 < 0;
+        const isEma10Valid = diffema10 > -2 && diffema10 < -1;
+        isEmaValidLong = isEma30Valid && isEma10Valid;
 
         if (isEmaValidLong) {
           countMatchedEmaLong++;
-          console.log(` [EMA Thỏa - LONG 15m] ${symbol.padEnd(16)} | diffema20: ${diffema20Str}`);
+          console.log(` [EMA Thỏa - LONG 15m] ${symbol.padEnd(16)} | diffema30: ${diffema30Str} | diffema10: ${diffema10Str}`);
           scanResults.passedEma.push({
             symbol,
             change24h: coin.change24hVal + '%',
-            diffema50: '-',
-            diffema20: diffema20Str,
+            diffema30: diffema30Str,
+            diffema10: diffema10Str,
             validFor: 'LONG'
           });
 
@@ -314,8 +321,9 @@ async function main() {
         }
       }
 
-      // Xét điều kiện Entry
-      const isLong = isEmaValidLong && bbd > -2 && bbd < 0.5;
+      // Điều kiện Entry
+      // LONG: EMA hợp lệ và -3% < bbd < -0.5%
+      const isLong = isEmaValidLong && bbd > -3 && bbd < -0.5;
       const isShort = isEmaValidShort && bbt > -0.5 && bbt < 2;
 
       if (!isLong && !isShort) {
@@ -361,8 +369,10 @@ async function main() {
         symbol,
         type: `${signalType} (${timeframe})`,
         change24h: change24hStr,
-        diffema50: diffema50Str,
-        diffema20: diffema20Str,
+        diffema50: isShort ? diffema50Str : '-',
+        diffema20: isShort ? diffema20Str : '-',
+        diffema30: isLong ? diffema30Str : '-',
+        diffema10: isLong ? diffema10Str : '-',
         bbd: isLong ? bbd.toFixed(2) + '%' : '-',
         bbt: isShort ? bbt.toFixed(2) + '%' : '-',
         hbb15m: hbb15m.toFixed(4),
@@ -379,7 +389,7 @@ async function main() {
           : `• <b>bbt:</b> ${bbt.toFixed(2)}% (so với Upper BB 5m)`;
 
         const emaDetail = isLong
-          ? `• <b>diffema20 (${timeframe}):</b> ${diffema20Str}\n`
+          ? `• <b>diffema30 (${timeframe}):</b> ${diffema30Str}\n• <b>diffema10 (${timeframe}):</b> ${diffema10Str}\n`
           : `• <b>diffema50 (${timeframe}):</b> ${diffema50Str}\n• <b>diffema20 (${timeframe}):</b> ${diffema20Str}\n`;
 
         const message =
