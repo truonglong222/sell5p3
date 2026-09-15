@@ -1,58 +1,80 @@
 {
-  "lastScanAt": "2026-09-15T18:20:30.305Z",
+  "lastScanAt": "2026-09-15T18:25:25.930Z",
   "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.4132,
-      "last": 1.2242,
-      "change24hVal": -13.37
+      "open24h": 1.4092,
+      "last": 1.218,
+      "change24hVal": -13.57
+    },
+    {
+      "instId": "SENT-USDT-SWAP",
+      "open24h": 0.01641,
+      "last": 0.01476,
+      "change24hVal": -10.05
     },
     {
       "instId": "NES-USDT-SWAP",
-      "open24h": 0.1519,
-      "last": 0.1726,
-      "change24hVal": 13.63
+      "open24h": 0.152,
+      "last": 0.1729,
+      "change24hVal": 13.75
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 0.9627,
-      "last": 0.8317,
-      "change24hVal": -13.61
+      "open24h": 0.9645,
+      "last": 0.8303,
+      "change24hVal": -13.91
     },
     {
       "instId": "UP-USDT-SWAP",
       "open24h": 0.35,
-      "last": 0.3027,
-      "change24hVal": -13.51
+      "last": 0.3078,
+      "change24hVal": -12.06
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.2887,
-      "last": 0.3346,
-      "change24hVal": 15.9
+      "open24h": 0.2878,
+      "last": 0.3315,
+      "change24hVal": 15.18
     },
     {
       "instId": "LA-USDT-SWAP",
-      "open24h": 0.07077,
-      "last": 0.06281,
-      "change24hVal": -11.25
+      "open24h": 0.07067,
+      "last": 0.06263,
+      "change24hVal": -11.38
     },
     {
       "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.004133,
-      "last": 0.003701,
-      "change24hVal": -10.45
-    },
-    {
-      "instId": "CHIP-USDT-SWAP",
-      "open24h": 0.0419,
-      "last": 0.0376,
-      "change24hVal": -10.26
+      "open24h": 0.004126,
+      "last": 0.003696,
+      "change24hVal": -10.42
     }
   ],
-  "passedEmaCount": 0,
-  "passedEmaList": [],
-  "matchedCount": 0,
-  "matchedList": []
+  "passedEmaCount": 1,
+  "passedEmaList": [
+    {
+      "symbol": "SENT-USDT-SWAP",
+      "change24h": "-10.05%",
+      "diffema50": "-",
+      "diffema20": "0.22%",
+      "validFor": "LONG"
+    }
+  ],
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "SENT-USDT-SWAP",
+      "type": "LONG (15m)",
+      "change24h": "-10.05%",
+      "diffema50": "-",
+      "diffema20": "0.22%",
+      "bbd": "-0.96%",
+      "bbt": "-",
+      "hbb15m": "0.0004",
+      "hbb15mPercent": "2.82%",
+      "link": "https://www.okx.com/trade-swap/sent-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
