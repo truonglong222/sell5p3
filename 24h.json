@@ -1,68 +1,54 @@
 {
-  "lastScanAt": "2026-09-15T16:40:31.230Z",
+  "lastScanAt": "2026-09-15T16:45:33.036Z",
   "targetCoinsCount": 6,
   "targetCoinsList": [
     {
-      "instId": "NES-USDT-SWAP",
-      "open24h": 0.1523,
-      "last": 0.1677,
-      "change24hVal": 10.11
-    },
-    {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 0.9631,
-      "last": 0.8632,
-      "change24hVal": -10.37
+      "open24h": 0.9639,
+      "last": 0.8627,
+      "change24hVal": -10.5
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3004,
-      "last": 0.3372,
-      "change24hVal": 12.25
+      "open24h": 0.303,
+      "last": 0.3341,
+      "change24hVal": 10.26
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13583,
-      "last": 0.154,
-      "change24hVal": 13.38
+      "open24h": 0.13608,
+      "last": 0.15493,
+      "change24hVal": 13.85
     },
     {
       "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.004138,
-      "last": 0.00369,
-      "change24hVal": -10.83
+      "open24h": 0.004142,
+      "last": 0.003682,
+      "change24hVal": -11.11
     },
     {
       "instId": "PONS-USDT-SWAP",
-      "open24h": 0.6031,
-      "last": 0.6697,
-      "change24hVal": 11.04
+      "open24h": 0.6046,
+      "last": 0.6679,
+      "change24hVal": 10.47
+    },
+    {
+      "instId": "CHIP-USDT-SWAP",
+      "open24h": 0.04179,
+      "last": 0.03747,
+      "change24hVal": -10.34
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "CNPY-USDT-SWAP",
-      "change24h": "+12.25%",
-      "diffema50": "7.55%",
-      "diffema20": "-0.11%",
+      "change24h": "+10.26%",
+      "diffema50": "7.11%",
+      "diffema20": "0.16%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "CNPY-USDT-SWAP",
-      "type": "SHORT (5m)",
-      "change24h": "+12.25%",
-      "diffema50": "7.55%",
-      "diffema20": "-0.11%",
-      "bbd": "-",
-      "bbt": "0.23%",
-      "hbb15m": "0.0411",
-      "hbb15mPercent": "12.62%",
-      "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
