@@ -1,6 +1,44 @@
 {
-  "lastScanAt": "2026-09-15T12:50:33.239Z",
-  "totalScanned": 7,
+  "lastScanAt": "2026-09-15T12:55:25.049Z",
+  "targetCoinsCount": 6,
+  "targetCoinsList": [
+    {
+      "instId": "AEON-USDT-SWAP",
+      "open24h": 0.04787,
+      "last": 0.05409,
+      "change24hVal": 12.99
+    },
+    {
+      "instId": "FIL-USDT-SWAP",
+      "open24h": 0.9977,
+      "last": 0.8787,
+      "change24hVal": -11.93
+    },
+    {
+      "instId": "UP-USDT-SWAP",
+      "open24h": 0.3613,
+      "last": 0.3134,
+      "change24hVal": -13.26
+    },
+    {
+      "instId": "CNPY-USDT-SWAP",
+      "open24h": 0.2581,
+      "last": 0.3247,
+      "change24hVal": 25.8
+    },
+    {
+      "instId": "INIT-USDT-SWAP",
+      "open24h": 0.06383,
+      "last": 0.07149,
+      "change24hVal": 12
+    },
+    {
+      "instId": "PONS-USDT-SWAP",
+      "open24h": 0.5402,
+      "last": 0.6911,
+      "change24hVal": 27.93
+    }
+  ],
   "passedEmaCount": 0,
   "passedEmaList": [],
   "matchedCount": 0,
