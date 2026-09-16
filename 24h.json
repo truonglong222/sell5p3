@@ -1,60 +1,66 @@
 {
-  "lastScanAt": "2026-09-16T01:20:30.130Z",
-  "targetCoinsCount": 9,
+  "lastScanAt": "2026-09-16T01:25:24.229Z",
+  "targetCoinsCount": 10,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.3935,
-      "last": 1.236,
-      "change24hVal": -11.3
+      "open24h": 1.4015,
+      "last": 1.237,
+      "change24hVal": -11.74
+    },
+    {
+      "instId": "JUP-USDT-SWAP",
+      "open24h": 0.2392,
+      "last": 0.2151,
+      "change24hVal": -10.08
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 0.9071,
-      "last": 0.8044,
-      "change24hVal": -11.32
+      "open24h": 0.9104,
+      "last": 0.808,
+      "change24hVal": -11.25
     },
     {
       "instId": "UP-USDT-SWAP",
-      "open24h": 0.3532,
-      "last": 0.3012,
-      "change24hVal": -14.72
+      "open24h": 0.3567,
+      "last": 0.302,
+      "change24hVal": -15.34
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3144,
-      "last": 0.3596,
-      "change24hVal": 14.38
+      "open24h": 0.3138,
+      "last": 0.3625,
+      "change24hVal": 15.52
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1539,
-      "last": 0.1331,
-      "change24hVal": -13.52
+      "open24h": 0.154,
+      "last": 0.1336,
+      "change24hVal": -13.25
     },
     {
       "instId": "STX-USDT-SWAP",
-      "open24h": 0.2648,
-      "last": 0.2376,
-      "change24hVal": -10.27
+      "open24h": 0.2665,
+      "last": 0.239,
+      "change24hVal": -10.32
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13397,
-      "last": 0.15067,
-      "change24hVal": 12.47
+      "open24h": 0.13441,
+      "last": 0.15083,
+      "change24hVal": 12.22
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.06697,
-      "last": 0.05656,
-      "change24hVal": -15.54
+      "open24h": 0.06683,
+      "last": 0.05722,
+      "change24hVal": -14.38
     },
     {
       "instId": "CHIP-USDT-SWAP",
-      "open24h": 0.04191,
-      "last": 0.037,
-      "change24hVal": -11.72
+      "open24h": 0.04211,
+      "last": 0.03703,
+      "change24hVal": -12.06
     }
   ],
   "passedEmaCount": 0,
