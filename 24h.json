@@ -1,54 +1,78 @@
 {
-  "lastScanAt": "2026-09-16T03:30:48.403Z",
-  "targetCoinsCount": 8,
+  "lastScanAt": "2026-09-16T03:35:23.018Z",
+  "targetCoinsCount": 12,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09788,
-      "last": 0.08599,
-      "change24hVal": -12.15
+      "open24h": 0.09795,
+      "last": 0.0862,
+      "change24hVal": -12
+    },
+    {
+      "instId": "JUP-USDT-SWAP",
+      "open24h": 0.2372,
+      "last": 0.2134,
+      "change24hVal": -10.03
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.1991,
-      "last": 0.22541,
-      "change24hVal": 13.21
+      "open24h": 0.20016,
+      "last": 0.22465,
+      "change24hVal": 12.24
     },
     {
       "instId": "UP-USDT-SWAP",
-      "open24h": 0.3466,
-      "last": 0.3018,
-      "change24hVal": -12.93
+      "open24h": 0.3478,
+      "last": 0.3075,
+      "change24hVal": -11.59
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.314,
-      "last": 0.3631,
-      "change24hVal": 15.64
+      "open24h": 0.316,
+      "last": 0.364,
+      "change24hVal": 15.19
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1524,
-      "last": 0.132,
-      "change24hVal": -13.39
+      "open24h": 0.1527,
+      "last": 0.1318,
+      "change24hVal": -13.69
+    },
+    {
+      "instId": "ZIL-USDT-SWAP",
+      "open24h": 0.003202,
+      "last": 0.00286,
+      "change24hVal": -10.68
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13287,
-      "last": 0.15291,
-      "change24hVal": 15.08
+      "open24h": 0.13327,
+      "last": 0.15276,
+      "change24hVal": 14.62
+    },
+    {
+      "instId": "CRV-USDT-SWAP",
+      "open24h": 0.3499,
+      "last": 0.3138,
+      "change24hVal": -10.32
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.03565,
-      "last": 0.03171,
-      "change24hVal": -11.05
+      "open24h": 0.03569,
+      "last": 0.03165,
+      "change24hVal": -11.32
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.06344,
-      "last": 0.0554,
-      "change24hVal": -12.67
+      "open24h": 0.06413,
+      "last": 0.05547,
+      "change24hVal": -13.5
+    },
+    {
+      "instId": "CHIP-USDT-SWAP",
+      "open24h": 0.04204,
+      "last": 0.03779,
+      "change24hVal": -10.11
     }
   ],
   "passedEmaCount": 0,
