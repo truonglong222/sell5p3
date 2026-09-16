@@ -1,346 +1,107 @@
 {
-  "lastScanAt": "2026-09-16T23:21:11.326Z",
-  "matchedCoinsCount": 34,
-  "matchedCoins": [
+  "lastScanAt": "2026-09-16T23:25:24.338Z",
+  "targetCoinsCount": 8,
+  "targetCoinsList": [
     {
-      "symbol": "ZBT-USDT-SWAP",
-      "volCcy24h": 10297604,
-      "hbb1": 1.5058,
-      "diffema10": 0.127,
-      "diffema20": 0.2654,
-      "changeCandle1": 0.49,
-      "y": 0.3265,
-      "link": "https://www.okx.com/trade-swap/zbt-usdt-swap"
+      "instId": "RAY-USDT-SWAP",
+      "open24h": 1.2402,
+      "last": 1.3753,
+      "change24hVal": 10.89
     },
     {
-      "symbol": "AIXBT-USDT-SWAP",
-      "volCcy24h": 36979830,
-      "hbb1": 0.9862,
-      "diffema10": 0.0806,
-      "diffema20": 0.4189,
-      "changeCandle1": 0.38,
-      "y": 0.381,
-      "link": "https://www.okx.com/trade-swap/aixbt-usdt-swap"
+      "instId": "LIT-USDT-SWAP",
+      "open24h": 4.0618,
+      "last": 4.6257,
+      "change24hVal": 13.88
     },
     {
-      "symbol": "ACH-USDT-SWAP",
-      "volCcy24h": 98332700,
-      "hbb1": 1.4203,
-      "diffema10": 0.1548,
-      "diffema20": 0.3547,
-      "changeCandle1": 0.14,
-      "y": 0.0991,
-      "link": "https://www.okx.com/trade-swap/ach-usdt-swap"
+      "instId": "IOST-USDT-SWAP",
+      "open24h": 0.0007209,
+      "last": 0.0008089,
+      "change24hVal": 12.21
     },
     {
-      "symbol": "PLUME-USDT-SWAP",
-      "volCcy24h": 41911360,
-      "hbb1": 2.443,
-      "diffema10": 0.3023,
-      "diffema20": 0.4983,
-      "changeCandle1": 0.5,
-      "y": 0.2051,
-      "link": "https://www.okx.com/trade-swap/plume-usdt-swap"
+      "instId": "ONE-USDT-SWAP",
+      "open24h": 0.0006543,
+      "last": 0.0007986,
+      "change24hVal": 22.05
     },
     {
-      "symbol": "SENT-USDT-SWAP",
-      "volCcy24h": 109894900,
-      "hbb1": 1.2463,
-      "diffema10": -0.2037,
-      "diffema20": -0.4025,
-      "changeCandle1": 0.13,
-      "y": 0.1071,
-      "link": "https://www.okx.com/trade-swap/sent-usdt-swap"
+      "instId": "CASHCAT-USDT-SWAP",
+      "open24h": 0.1601,
+      "last": 0.1814,
+      "change24hVal": 13.3
     },
     {
-      "symbol": "ALLO-USDT-SWAP",
-      "volCcy24h": 16021050,
-      "hbb1": 1.7877,
-      "diffema10": -0.347,
-      "diffema20": -0.1275,
-      "changeCandle1": 0.72,
-      "y": 0.4047,
-      "link": "https://www.okx.com/trade-swap/allo-usdt-swap"
+      "instId": "NEAR-USDT-SWAP",
+      "open24h": 2.338,
+      "last": 2.614,
+      "change24hVal": 11.8
     },
     {
-      "symbol": "GALA-USDT-SWAP",
-      "volCcy24h": 1207192090,
-      "hbb1": 2.4337,
-      "diffema10": 0.3308,
-      "diffema20": 0.3537,
-      "changeCandle1": 0.57,
-      "y": 0.2326,
-      "link": "https://www.okx.com/trade-swap/gala-usdt-swap"
+      "instId": "ARB-USDT-SWAP",
+      "open24h": 0.15119,
+      "last": 0.16723,
+      "change24hVal": 10.61
     },
     {
-      "symbol": "UB-USDT-SWAP",
-      "volCcy24h": 22276900,
-      "hbb1": 1.1064,
-      "diffema10": 0.0093,
-      "diffema20": 0.1637,
-      "changeCandle1": -0.37,
-      "y": -0.3364,
-      "link": "https://www.okx.com/trade-swap/ub-usdt-swap"
-    },
-    {
-      "symbol": "OFC-USDT-SWAP",
-      "volCcy24h": 49008000,
-      "hbb1": 3.7353,
-      "diffema10": 0.3061,
-      "diffema20": -0.3916,
-      "changeCandle1": 0.26,
-      "y": 0.0707,
-      "link": "https://www.okx.com/trade-swap/ofc-usdt-swap"
-    },
-    {
-      "symbol": "NES-USDT-SWAP",
-      "volCcy24h": 21297420,
-      "hbb1": 3.0609,
-      "diffema10": -0.3689,
-      "diffema20": 0.1401,
-      "changeCandle1": 0.44,
-      "y": 0.1422,
-      "link": "https://www.okx.com/trade-swap/nes-usdt-swap"
-    },
-    {
-      "symbol": "PYTH-USDT-SWAP",
-      "volCcy24h": 27468370,
-      "hbb1": 2.2593,
-      "diffema10": -0.2299,
-      "diffema20": 0.0022,
-      "changeCandle1": 0.33,
-      "y": 0.1453,
-      "link": "https://www.okx.com/trade-swap/pyth-usdt-swap"
-    },
-    {
-      "symbol": "MAGIC-USDT-SWAP",
-      "volCcy24h": 10176931,
-      "hbb1": 0.9425,
-      "diffema10": 0.1087,
-      "diffema20": 0.3768,
-      "changeCandle1": 0.19,
-      "y": 0.2059,
-      "link": "https://www.okx.com/trade-swap/magic-usdt-swap"
-    },
-    {
-      "symbol": "USELESS-USDT-SWAP",
-      "volCcy24h": 470698760,
-      "hbb1": 5.6896,
-      "diffema10": 0.0269,
-      "diffema20": -0.4785,
-      "changeCandle1": -0.49,
-      "y": -0.0869,
-      "link": "https://www.okx.com/trade-swap/useless-usdt-swap"
-    },
-    {
-      "symbol": "ETHFI-USDT-SWAP",
-      "volCcy24h": 10264713,
-      "hbb1": 2.1533,
-      "diffema10": 0.1281,
-      "diffema20": 0.1745,
-      "changeCandle1": 0.05,
-      "y": 0.0239,
-      "link": "https://www.okx.com/trade-swap/ethfi-usdt-swap"
-    },
-    {
-      "symbol": "RESOLV-USDT-SWAP",
-      "volCcy24h": 44057440,
-      "hbb1": 1.5198,
-      "diffema10": -0.0307,
-      "diffema20": 0.0849,
-      "changeCandle1": 0.26,
-      "y": 0.1681,
-      "link": "https://www.okx.com/trade-swap/resolv-usdt-swap"
-    },
-    {
-      "symbol": "FLOW-USDT-SWAP",
-      "volCcy24h": 16398790,
-      "hbb1": 1.2839,
-      "diffema10": 0.1129,
-      "diffema20": 0.4966,
-      "changeCandle1": 0.08,
-      "y": 0.0597,
-      "link": "https://www.okx.com/trade-swap/flow-usdt-swap"
-    },
-    {
-      "symbol": "APR-USDT-SWAP",
-      "volCcy24h": 12021220,
-      "hbb1": 2.3056,
-      "diffema10": 0.0066,
-      "diffema20": -0.3607,
-      "changeCandle1": 0.91,
-      "y": 0.393,
-      "link": "https://www.okx.com/trade-swap/apr-usdt-swap"
-    },
-    {
-      "symbol": "PARTI-USDT-SWAP",
-      "volCcy24h": 19322110,
-      "hbb1": 2.2051,
-      "diffema10": -0.0604,
-      "diffema20": 0.4513,
-      "changeCandle1": 0.29,
-      "y": 0.1298,
-      "link": "https://www.okx.com/trade-swap/parti-usdt-swap"
-    },
-    {
-      "symbol": "HBAR-USDT-SWAP",
-      "volCcy24h": 104891570,
-      "hbb1": 1.6996,
-      "diffema10": -0.1736,
-      "diffema20": 0.1696,
-      "changeCandle1": 0.23,
-      "y": 0.1376,
-      "link": "https://www.okx.com/trade-swap/hbar-usdt-swap"
-    },
-    {
-      "symbol": "ENJ-USDT-SWAP",
-      "volCcy24h": 23495580,
-      "hbb1": 1.8753,
-      "diffema10": 0.3387,
-      "diffema20": 0.3583,
-      "changeCandle1": 0.37,
-      "y": 0.1977,
-      "link": "https://www.okx.com/trade-swap/enj-usdt-swap"
-    },
-    {
-      "symbol": "FOGO-USDT-SWAP",
-      "volCcy24h": 91372330,
-      "hbb1": 2.3727,
-      "diffema10": 0.3616,
-      "diffema20": 0.1373,
-      "changeCandle1": -0.27,
-      "y": -0.1141,
-      "link": "https://www.okx.com/trade-swap/fogo-usdt-swap"
-    },
-    {
-      "symbol": "FLOCK-USDT-SWAP",
-      "volCcy24h": 153537800,
-      "hbb1": 1.4216,
-      "diffema10": 0.068,
-      "diffema20": -0.025,
-      "changeCandle1": -0.53,
-      "y": -0.3749,
-      "link": "https://www.okx.com/trade-swap/flock-usdt-swap"
-    },
-    {
-      "symbol": "MERL-USDT-SWAP",
-      "volCcy24h": 178353483,
-      "hbb1": 2.786,
-      "diffema10": 0.0615,
-      "diffema20": 0.0408,
-      "changeCandle1": -1.71,
-      "y": -0.6126,
-      "link": "https://www.okx.com/trade-swap/merl-usdt-swap"
-    },
-    {
-      "symbol": "TRX-USDT-SWAP",
-      "volCcy24h": 21636350,
-      "hbb1": 0.3343,
-      "diffema10": 0.0009,
-      "diffema20": 0.0481,
-      "changeCandle1": 0,
-      "y": -0.0089,
-      "link": "https://www.okx.com/trade-swap/trx-usdt-swap"
-    },
-    {
-      "symbol": "BEAT-USDT-SWAP",
-      "volCcy24h": 112861665,
-      "hbb1": 2.3731,
-      "diffema10": 0.3979,
-      "diffema20": 0.2051,
-      "changeCandle1": 0.12,
-      "y": 0.0518,
-      "link": "https://www.okx.com/trade-swap/beat-usdt-swap"
-    },
-    {
-      "symbol": "BABY-USDT-SWAP",
-      "volCcy24h": 37269340,
-      "hbb1": 1.6121,
-      "diffema10": 0.2018,
-      "diffema20": 0.2161,
-      "changeCandle1": 0.13,
-      "y": 0.0826,
-      "link": "https://www.okx.com/trade-swap/baby-usdt-swap"
-    },
-    {
-      "symbol": "EDEN-USDT-SWAP",
-      "volCcy24h": 22464330,
-      "hbb1": 0.7304,
-      "diffema10": 0.041,
-      "diffema20": 0.202,
-      "changeCandle1": 0.07,
-      "y": 0.09,
-      "link": "https://www.okx.com/trade-swap/eden-usdt-swap"
-    },
-    {
-      "symbol": "FARTCOIN-USDT-SWAP",
-      "volCcy24h": 40071445,
-      "hbb1": 2.3373,
-      "diffema10": -0.1665,
-      "diffema20": 0.4356,
-      "changeCandle1": 0.45,
-      "y": 0.1911,
-      "link": "https://www.okx.com/trade-swap/fartcoin-usdt-swap"
-    },
-    {
-      "symbol": "WLFI-USDT-SWAP",
-      "volCcy24h": 82083450,
-      "hbb1": 1.1734,
-      "diffema10": 0.2978,
-      "diffema20": 0.2515,
-      "changeCandle1": 0.23,
-      "y": 0.1931,
-      "link": "https://www.okx.com/trade-swap/wlfi-usdt-swap"
-    },
-    {
-      "symbol": "2Z-USDT-SWAP",
-      "volCcy24h": 17327020,
-      "hbb1": 1.1902,
-      "diffema10": 0.0908,
-      "diffema20": 0.1588,
-      "changeCandle1": 0.46,
-      "y": 0.3874,
-      "link": "https://www.okx.com/trade-swap/2z-usdt-swap"
-    },
-    {
-      "symbol": "AI-USDT-SWAP",
-      "volCcy24h": 51864300,
-      "hbb1": 1.2876,
-      "diffema10": 0.0508,
-      "diffema20": 0.1851,
-      "changeCandle1": 0.44,
-      "y": 0.3408,
-      "link": "https://www.okx.com/trade-swap/ai-usdt-swap"
-    },
-    {
-      "symbol": "HOME-USDT-SWAP",
-      "volCcy24h": 594435100,
-      "hbb1": 2.2229,
-      "diffema10": 0.2972,
-      "diffema20": 0.0486,
-      "changeCandle1": 0.06,
-      "y": 0.0252,
-      "link": "https://www.okx.com/trade-swap/home-usdt-swap"
-    },
-    {
-      "symbol": "BSB-USDT-SWAP",
-      "volCcy24h": 19949880,
-      "hbb1": 1.9853,
-      "diffema10": 0.2706,
-      "diffema20": -0.004,
-      "changeCandle1": 0.08,
-      "y": 0.039,
-      "link": "https://www.okx.com/trade-swap/bsb-usdt-swap"
-    },
-    {
-      "symbol": "EIGEN-USDT-SWAP",
-      "volCcy24h": 15883980,
-      "hbb1": 1.7523,
-      "diffema10": 0.0399,
-      "diffema20": 0.3059,
-      "changeCandle1": 0.16,
-      "y": 0.0907,
-      "link": "https://www.okx.com/trade-swap/eigen-usdt-swap"
+      "instId": "DGAI-USDT-SWAP",
+      "open24h": 0.7615,
+      "last": 0.9153,
+      "change24hVal": 20.2
     }
-  ]
+  ],
+  "passedEmaCount": 8,
+  "passedEmaList": [
+    {
+      "symbol": "RAY-USDT-SWAP",
+      "change24h": "+10.89%",
+      "diffema20": "2.08%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "LIT-USDT-SWAP",
+      "change24h": "+13.88%",
+      "diffema20": "4.14%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "IOST-USDT-SWAP",
+      "change24h": "+12.21%",
+      "diffema20": "-0.84%",
+      "validFor": "SHORT"
+    },
+    {
+      "symbol": "ONE-USDT-SWAP",
+      "change24h": "+22.05%",
+      "diffema20": "3.55%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "CASHCAT-USDT-SWAP",
+      "change24h": "+13.3%",
+      "diffema20": "6.88%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "NEAR-USDT-SWAP",
+      "change24h": "+11.8%",
+      "diffema20": "3.52%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "ARB-USDT-SWAP",
+      "change24h": "+10.61%",
+      "diffema20": "2.35%",
+      "validFor": "LONG"
+    },
+    {
+      "symbol": "DGAI-USDT-SWAP",
+      "change24h": "+20.2%",
+      "diffema20": "2.18%",
+      "validFor": "LONG"
+    }
+  ],
+  "matchedCount": 0,
+  "matchedList": []
 }
