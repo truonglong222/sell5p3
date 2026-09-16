@@ -1,66 +1,58 @@
 {
-  "lastScanAt": "2026-09-16T04:25:21.824Z",
+  "lastScanAt": "2026-09-16T04:30:46.445Z",
   "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09781,
-      "last": 0.0872,
-      "change24hVal": -10.85
+      "open24h": 0.09762,
+      "last": 0.08686,
+      "change24hVal": -11.02
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.2,
-      "last": 0.22773,
-      "change24hVal": 13.86
+      "open24h": 0.19872,
+      "last": 0.22924,
+      "change24hVal": 15.36
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3052,
-      "last": 0.3694,
-      "change24hVal": 21.04
+      "open24h": 0.308,
+      "last": 0.3699,
+      "change24hVal": 20.1
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1529,
-      "last": 0.132,
-      "change24hVal": -13.67
+      "open24h": 0.1526,
+      "last": 0.1316,
+      "change24hVal": -13.76
     },
     {
       "instId": "ZIL-USDT-SWAP",
-      "open24h": 0.003253,
-      "last": 0.002853,
-      "change24hVal": -12.3
+      "open24h": 0.003209,
+      "last": 0.002847,
+      "change24hVal": -11.28
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13251,
-      "last": 0.15495,
-      "change24hVal": 16.93
+      "open24h": 0.13255,
+      "last": 0.15645,
+      "change24hVal": 18.03
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.353,
-      "last": 0.3149,
-      "change24hVal": -10.79
+      "open24h": 0.3539,
+      "last": 0.3144,
+      "change24hVal": -11.16
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.03572,
-      "last": 0.03173,
-      "change24hVal": -11.17
+      "open24h": 0.03573,
+      "last": 0.03167,
+      "change24hVal": -11.36
     }
   ],
-  "passedEmaCount": 1,
-  "passedEmaList": [
-    {
-      "symbol": "ORDER-USDT-SWAP",
-      "change24h": "-11.17%",
-      "diffema30": "-1.93%",
-      "diffema10": "-1.02%",
-      "validFor": "LONG"
-    }
-  ],
+  "passedEmaCount": 0,
+  "passedEmaList": [],
   "matchedCount": 0,
   "matchedList": []
 }
