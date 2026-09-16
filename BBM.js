@@ -61,7 +61,7 @@ function saveScanResults(results) {
 
 // ------------------- HÀM TÍNH TOÁN KỸ THUẬT -------------------
 
-// Tính Bollinger Bands cơ bản (mặc định chu kỳ 20, độ lệch chuẩn 2)
+// Tính Bollinger Bands cơ bản (chu kỳ 20, độ lệch chuẩn 2)
 function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
@@ -75,11 +75,25 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// Tính % Hbb = ((Upper - Lower) / Middle) * 100 tại một vị trí nến kết thúc
-function getHbbPercentAt(pricesUpToIndex, period = 20) {
-  const bb = calculateBollingerBands(pricesUpToIndex, period);
-  if (!bb || bb.middle <= 0) return null;
-  return ((bb.upper - bb.lower) / bb.middle) * 100;
+// Tính mảng EMA (mặc định period = 20)
+function calculateEMAArray(prices, period = 20) {
+  if (prices.length < period) return [];
+  const k = 2 / (period + 1);
+  const emaArray = [];
+
+  let initialSma = 0;
+  for (let i = 0; i < period; i++) {
+    initialSma += prices[i];
+  }
+  let prevEma = initialSma / period;
+  emaArray.push(prevEma);
+
+  for (let i = period; i < prices.length; i++) {
+    const currentEma = prices[i] * k + prevEma * (1 - k);
+    emaArray.push(currentEma);
+    prevEma = currentEma;
+  }
+  return emaArray;
 }
 
 // ------------------- LỌC THỊ TRƯỜNG (VOLUME > 10M) -------------------
@@ -111,7 +125,7 @@ async function getFilteredMarkets() {
 
 // ------------------- LẤY DỮ LIỆU NẾN -------------------
 
-async function getCandles(symbol, bar = '15m', limit = 60) {
+async function getCandles(symbol, bar = '15m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
@@ -127,7 +141,7 @@ async function getCandles(symbol, bar = '15m', limit = 60) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (HBB SQUEEZE STRATEGY) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (EMA TREND & HBB STRATEGY) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -137,23 +151,21 @@ async function main() {
     const { allSwapsCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(`📊 [Lọc 24h] Tổng USDT Swap: ${allSwapsCount} | Vol > 10M USDT: ${targetCoins.length} coin`);
 
-    const passedXConditions = [];
+    const passedDiffConditions = [];
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Cần tối thiểu 20 + 20 = 40 nến đóng để tính BB cho nến số 20
-      const candles15m = await getCandles(symbol, '15m', 60);
-      if (!candles15m || candles15m.length < 45) {
+      // Cần tối thiểu 20 nến tính SMA ban đầu + 20 nến lùi = 40+ nến
+      const candles15m = await getCandles(symbol, '15m', 100);
+      if (!candles15m || candles15m.length < 50) {
         await sleep(80);
         continue;
       }
 
-      // OKX trả về nến mới nhất ở index 0 (nến chưa đóng).
+      // OKX trả về nến mới nhất tại index 0 (nến đang chạy).
       // slice(1) loại bỏ nến đang chạy:
       // index 0 của closedCandles = Nến số 1 (đã đóng gần nhất)
-      // index 9 = Nến số 10
-      // index 19 = Nến số 20
       const closedCandles = candles15m.slice(1);
       const candle1 = closedCandles[0];
       const open1 = parseFloat(candle1[1]);
@@ -164,38 +176,56 @@ async function main() {
         continue;
       }
 
-      // Đảo chiều mảng giá đóng cửa để index tăng dần theo thời gian (cũ -> mới)
-      // closedCandles[0] ứng với phần tử cuối cùng của closedPricesAsc
+      // Đảo chiều mảng giá đóng cửa theo thứ tự thời gian cũ -> mới
       const closedPricesAsc = closedCandles.map((c) => parseFloat(c[4])).reverse();
-      const len = closedPricesAsc.length;
 
-      // Nến số 1: toàn bộ mảng (đến len)
-      // Nến số 10: lùi 9 nến so với nến 1 (đến len - 9)
-      // Nến số 20: lùi 19 nến so với nến 1 (đến len - 19)
-      const hbb1 = getHbbPercentAt(closedPricesAsc.slice(0, len), 20);
-      const hbb10 = getHbbPercentAt(closedPricesAsc.slice(0, len - 9), 20);
-      const hbb20 = getHbbPercentAt(closedPricesAsc.slice(0, len - 19), 20);
-
-      if (hbb1 === null || hbb10 === null || hbb20 === null || hbb1 === 0) {
+      // Tính chuỗi EMA 20
+      const emaSeries = calculateEMAArray(closedPricesAsc, 20);
+      if (emaSeries.length < 20) {
         await sleep(80);
         continue;
       }
 
-      // x10 = Hbb nến 1 - Hbb nến 10
-      // x20 = Hbb nến 1 - Hbb nến 20
-      const x10 = hbb1 - hbb10;
-      const x20 = hbb1 - hbb20;
+      // Nến số 1 là giá trị cuối cùng trong mảng EMA
+      // Nến số 10 lùi 9 bước, nến số 20 lùi 19 bước
+      const ema1 = emaSeries[emaSeries.length - 1];
+      const ema10 = emaSeries[emaSeries.length - 10];
+      const ema20 = emaSeries[emaSeries.length - 20];
 
-      // Điều kiện lọc: -1% < x10 < 1% VÀ -1% < x20 < 1%
-      const isSatisfiedX = x10 > -1 && x10 < 1 && x20 > -1 && x20 < 1;
+      if (!ema1 || !ema10 || !ema20 || ema10 <= 0 || ema20 <= 0) {
+        await sleep(80);
+        continue;
+      }
 
-      if (!isSatisfiedX) {
+      // Tính chênh lệch % EMA
+      const diffema10 = ((ema1 - ema10) / ema10) * 100;
+      const diffema20 = ((ema1 - ema20) / ema20) * 100;
+
+      // Điều kiện lọc: -1% < diffema10 < 1% VÀ -1% < diffema20 < 1%
+      const isSatisfiedDiff = diffema10 > -1 && diffema10 < 1 && diffema20 > -1 && diffema20 < 1;
+
+      if (!isSatisfiedDiff) {
+        await sleep(80);
+        continue;
+      }
+
+      // Tính Hbb nến số 1 = ((Upper - Lower) / Middle) * 100 (chu kỳ 20 nến đóng gần nhất)
+      const closesForBb1 = closedPricesAsc.slice(-20);
+      const bb1 = calculateBollingerBands(closesForBb1, 20);
+      if (!bb1 || bb1.middle <= 0) {
+        await sleep(80);
+        continue;
+      }
+
+      const hbb1 = ((bb1.upper - bb1.lower) / bb1.middle) * 100;
+      if (hbb1 <= 0) {
         await sleep(80);
         continue;
       }
 
       // Biến động nến 15m số 1 (%)
       const changeCandle1 = ((close1 - open1) / open1) * 100;
+
       // y = Biến động nến 1 / Hbb nến 1
       const y = changeCandle1 / hbb1;
 
@@ -206,16 +236,18 @@ async function main() {
         symbol,
         volCcy24h: coin.volCcy24h,
         hbb1: parseFloat(hbb1.toFixed(4)),
-        x10: parseFloat(x10.toFixed(4)),
-        x20: parseFloat(x20.toFixed(4)),
+        diffema10: parseFloat(diffema10.toFixed(4)),
+        diffema20: parseFloat(diffema20.toFixed(4)),
         changeCandle1: parseFloat(changeCandle1.toFixed(2)),
         y: parseFloat(y.toFixed(4)),
         link
       };
 
-      // Đưa vào danh sách thoả mãn để lưu vào 24h.json
-      passedXConditions.push(coinResult);
-      console.log(`✅ [Thỏa x10, x20] ${symbol.padEnd(16)} | x10: ${x10.toFixed(2)}% | x20: ${x20.toFixed(2)}% | y: ${y.toFixed(2)} | Hbb1: ${hbb1.toFixed(2)}%`);
+      // Thêm vào danh sách thoả mãn điều kiện lưu 24h.json
+      passedDiffConditions.push(coinResult);
+      console.log(
+        `✅ [Thỏa diffema] ${symbol.padEnd(16)} | diffema10: ${diffema10.toFixed(2)}% | diffema20: ${diffema20.toFixed(2)}% | y: ${y.toFixed(2)} | Hbb1: ${hbb1.toFixed(2)}%`
+      );
 
       // Xét điều kiện gửi tín hiệu: y > 0.5 (LONG) hoặc y < -0.5 (SHORT)
       const isLong = y > 0.5;
@@ -234,8 +266,8 @@ async function main() {
           const message =
             `${icon} <b>TÍN HIỆU ${signalType} (15m): ${coinName}</b>\n\n` +
             `• <b>Hbb nến 1:</b> ${hbb1.toFixed(2)}%\n` +
-            `• <b>x10:</b> ${x10.toFixed(2)}%\n` +
-            `• <b>x20:</b> ${x20.toFixed(2)}%\n` +
+            `• <b>diffema10:</b> ${diffema10.toFixed(2)}%\n` +
+            `• <b>diffema20:</b> ${diffema20.toFixed(2)}%\n` +
             `• <b>y:</b> ${y.toFixed(2)}\n` +
             `• <b>Biến động nến 1:</b> ${changeCandle1 > 0 ? '+' : ''}${changeCandle1.toFixed(2)}%\n` +
             `• <a href="${link}">Link OKX</a>`;
@@ -260,14 +292,14 @@ async function main() {
       await sleep(80);
     }
 
-    // 2. Lưu các coin thỏa điều kiện vào file 24h.json
-    saveScanResults(passedXConditions);
+    // 2. Lưu danh sách vào file 24h.json
+    saveScanResults(passedDiffConditions);
     if (hasNewAlert) saveSentLog(sentLog);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
-    console.log(`📁 Đã lưu ${passedXConditions.length} coin thỏa điều kiện vào ${RESULTS_FILE}`);
-    if (passedXConditions.length > 0) {
-      console.table(passedXConditions);
+    console.log(`📁 Đã lưu ${passedDiffConditions.length} coin thỏa điều kiện vào ${RESULTS_FILE}`);
+    if (passedDiffConditions.length > 0) {
+      console.table(passedDiffConditions);
     }
     console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
   } catch (err) {
