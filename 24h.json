@@ -1,48 +1,60 @@
 {
-  "lastScanAt": "2026-09-16T04:50:29.798Z",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-16T04:55:22.136Z",
+  "targetCoinsCount": 9,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09795,
-      "last": 0.08691,
-      "change24hVal": -11.27
+      "open24h": 0.0979,
+      "last": 0.08663,
+      "change24hVal": -11.51
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.20542,
-      "last": 0.22756,
-      "change24hVal": 10.78
+      "open24h": 0.20548,
+      "last": 0.22673,
+      "change24hVal": 10.34
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3087,
-      "last": 0.3751,
-      "change24hVal": 21.51
+      "open24h": 0.3076,
+      "last": 0.3741,
+      "change24hVal": 21.62
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1529,
-      "last": 0.1312,
-      "change24hVal": -14.19
+      "open24h": 0.1528,
+      "last": 0.131,
+      "change24hVal": -14.27
+    },
+    {
+      "instId": "ICX-USDT-SWAP",
+      "open24h": 0.01163,
+      "last": 0.01045,
+      "change24hVal": -10.15
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13276,
-      "last": 0.15657,
-      "change24hVal": 17.93
+      "open24h": 0.13277,
+      "last": 0.15516,
+      "change24hVal": 16.86
+    },
+    {
+      "instId": "IOTA-USDT-SWAP",
+      "open24h": 0.04328,
+      "last": 0.03895,
+      "change24hVal": -10
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3536,
-      "last": 0.3135,
-      "change24hVal": -11.34
+      "open24h": 0.3537,
+      "last": 0.3134,
+      "change24hVal": -11.39
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.03591,
-      "last": 0.03161,
-      "change24hVal": -11.97
+      "open24h": 0.03593,
+      "last": 0.03157,
+      "change24hVal": -12.13
     }
   ],
   "passedEmaCount": 0,
