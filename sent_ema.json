@@ -1,7 +1,4 @@
 {
-  "WLFI-USDT-SWAP": {
-    "longAlert": 1789573532992
-  },
   "MEGA-USDT-SWAP": {
     "longAlert": 1789575333645,
     "shortAlert": 1789580731415
@@ -61,6 +58,7 @@
     "longAlert": 1789584331970
   },
   "PLUME-USDT-SWAP": {
+    "longAlert": 1789587932309,
     "shortAlert": 1789587044458
   },
   "JTO-USDT-SWAP": {
@@ -68,5 +66,11 @@
   },
   "AZTEC-USDT-SWAP": {
     "shortAlert": 1789587044458
+  },
+  "FLOW-USDT-SWAP": {
+    "longAlert": 1789587932309
+  },
+  "CFX-USDT-SWAP": {
+    "longAlert": 1789587932309
   }
 }
