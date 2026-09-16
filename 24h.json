@@ -1,45 +1,51 @@
 {
-  "lastScanAt": "2026-09-16T10:30:47.939Z",
-  "targetCoinsCount": 5,
+  "lastScanAt": "2026-09-16T10:35:22.334Z",
+  "targetCoinsCount": 6,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09627,
-      "last": 0.08405,
-      "change24hVal": -12.69
+      "open24h": 0.09606,
+      "last": 0.08355,
+      "change24hVal": -13.02
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.20259,
-      "last": 0.23607,
-      "change24hVal": 16.53
+      "open24h": 0.20367,
+      "last": 0.2349,
+      "change24hVal": 15.33
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3093,
-      "last": 0.3648,
-      "change24hVal": 17.94
+      "open24h": 0.3091,
+      "last": 0.3699,
+      "change24hVal": 19.67
     },
     {
       "instId": "MMT-USDT-SWAP",
       "open24h": 0.1511,
-      "last": 0.1296,
-      "change24hVal": -14.23
+      "last": 0.1301,
+      "change24hVal": -13.9
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13413,
-      "last": 0.15858,
-      "change24hVal": 18.23
+      "open24h": 0.13463,
+      "last": 0.1589,
+      "change24hVal": 18.03
+    },
+    {
+      "instId": "CHIP-USDT-SWAP",
+      "open24h": 0.04079,
+      "last": 0.03668,
+      "change24hVal": -10.08
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "USELESS-USDT-SWAP",
-      "change24h": "+16.53%",
-      "diffema50": "5.65%",
-      "diffema20": "0.17%",
+      "change24h": "+15.33%",
+      "diffema50": "5.34%",
+      "diffema20": "-0.33%",
       "validFor": "SHORT"
     }
   ],
