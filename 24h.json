@@ -1,61 +1,61 @@
 {
-  "lastScanAt": "2026-09-16T04:05:22.919Z",
+  "lastScanAt": "2026-09-16T04:10:30.316Z",
   "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09803,
-      "last": 0.08662,
-      "change24hVal": -11.64
+      "open24h": 0.09791,
+      "last": 0.08665,
+      "change24hVal": -11.5
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.19924,
-      "last": 0.22416,
-      "change24hVal": 12.51
+      "open24h": 0.19939,
+      "last": 0.22619,
+      "change24hVal": 13.44
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3057,
-      "last": 0.3652,
-      "change24hVal": 19.46
+      "open24h": 0.3052,
+      "last": 0.3665,
+      "change24hVal": 20.09
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.153,
-      "last": 0.1319,
-      "change24hVal": -13.79
+      "open24h": 0.1528,
+      "last": 0.1315,
+      "change24hVal": -13.94
     },
     {
       "instId": "ZIL-USDT-SWAP",
-      "open24h": 0.00326,
-      "last": 0.002849,
-      "change24hVal": -12.61
+      "open24h": 0.003225,
+      "last": 0.002856,
+      "change24hVal": -11.44
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13312,
-      "last": 0.15398,
-      "change24hVal": 15.67
+      "open24h": 0.13298,
+      "last": 0.15429,
+      "change24hVal": 16.02
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3519,
-      "last": 0.3146,
-      "change24hVal": -10.6
+      "open24h": 0.3528,
+      "last": 0.3137,
+      "change24hVal": -11.08
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.03577,
+      "open24h": 0.03576,
       "last": 0.03158,
-      "change24hVal": -11.71
+      "change24hVal": -11.69
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "ORDER-USDT-SWAP",
-      "change24h": "-11.71%",
+      "change24h": "-11.69%",
       "diffema30": "-1.95%",
       "diffema10": "-1.16%",
       "validFor": "LONG"
