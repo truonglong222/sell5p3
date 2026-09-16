@@ -1,67 +1,61 @@
 {
-  "lastScanAt": "2026-09-16T04:01:00.186Z",
-  "targetCoinsCount": 9,
+  "lastScanAt": "2026-09-16T04:05:22.919Z",
+  "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09802,
-      "last": 0.0865,
-      "change24hVal": -11.75
+      "open24h": 0.09803,
+      "last": 0.08662,
+      "change24hVal": -11.64
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.19864,
-      "last": 0.22349,
+      "open24h": 0.19924,
+      "last": 0.22416,
       "change24hVal": 12.51
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3046,
-      "last": 0.3649,
-      "change24hVal": 19.8
+      "open24h": 0.3057,
+      "last": 0.3652,
+      "change24hVal": 19.46
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1529,
-      "last": 0.1308,
-      "change24hVal": -14.45
+      "open24h": 0.153,
+      "last": 0.1319,
+      "change24hVal": -13.79
     },
     {
       "instId": "ZIL-USDT-SWAP",
-      "open24h": 0.003281,
-      "last": 0.002858,
-      "change24hVal": -12.89
+      "open24h": 0.00326,
+      "last": 0.002849,
+      "change24hVal": -12.61
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.1331,
-      "last": 0.153,
-      "change24hVal": 14.95
+      "open24h": 0.13312,
+      "last": 0.15398,
+      "change24hVal": 15.67
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3525,
-      "last": 0.3143,
-      "change24hVal": -10.84
+      "open24h": 0.3519,
+      "last": 0.3146,
+      "change24hVal": -10.6
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.03574,
-      "last": 0.03147,
-      "change24hVal": -11.95
-    },
-    {
-      "instId": "CAP-USDT-SWAP",
-      "open24h": 0.06426,
-      "last": 0.05545,
-      "change24hVal": -13.71
+      "open24h": 0.03577,
+      "last": 0.03158,
+      "change24hVal": -11.71
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "ORDER-USDT-SWAP",
-      "change24h": "-11.95%",
+      "change24h": "-11.71%",
       "diffema30": "-1.95%",
       "diffema10": "-1.16%",
       "validFor": "LONG"
