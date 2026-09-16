@@ -1,76 +1,856 @@
 {
-  "lastScanAt": "2026-09-16T14:01:07.026Z",
-  "targetCoinsCount": 11,
-  "targetCoinsList": [
+  "lastScanAt": "2026-09-16T14:06:11.612Z",
+  "matchedCoinsCount": 85,
+  "matchedCoins": [
     {
-      "instId": "PI-USDT-SWAP",
-      "open24h": 0.09563,
-      "last": 0.08208,
-      "change24hVal": -14.17
+      "symbol": "XLM-USDT-SWAP",
+      "volCcy24h": 206520820,
+      "hbb1": 1.4931,
+      "x10": -0.3886,
+      "x20": -0.9986,
+      "changeCandle1": -0.12,
+      "y": -0.0806,
+      "link": "https://www.okx.com/trade-swap/xlm-usdt-swap"
     },
     {
-      "instId": "XLM-USDT-SWAP",
-      "open24h": 0.19538,
-      "last": 0.17402,
-      "change24hVal": -10.93
+      "symbol": "NEIRO-USDT-SWAP",
+      "volCcy24h": 17279410000,
+      "hbb1": 2.8411,
+      "x10": 0.0755,
+      "x20": -0.025,
+      "changeCandle1": 0.17,
+      "y": 0.0582,
+      "link": "https://www.okx.com/trade-swap/neiro-usdt-swap"
     },
     {
-      "instId": "IOST-USDT-SWAP",
-      "open24h": 0.000766,
-      "last": 0.0008533,
-      "change24hVal": 11.4
+      "symbol": "OL-USDT-SWAP",
+      "volCcy24h": 139916200,
+      "hbb1": 2.0259,
+      "x10": 0.9634,
+      "x20": 0.7126,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/ol-usdt-swap"
     },
     {
-      "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.20507,
-      "last": 0.23685,
-      "change24hVal": 15.5
+      "symbol": "FLOKI-USDT-SWAP",
+      "volCcy24h": 41155300000,
+      "hbb1": 1.0612,
+      "x10": -0.1879,
+      "x20": -0.6983,
+      "changeCandle1": -0.22,
+      "y": -0.2041,
+      "link": "https://www.okx.com/trade-swap/floki-usdt-swap"
     },
     {
-      "instId": "FIL-USDT-SWAP",
-      "open24h": 0.8795,
-      "last": 0.7866,
-      "change24hVal": -10.56
+      "symbol": "MEME-USDT-SWAP",
+      "volCcy24h": 1313081200,
+      "hbb1": 1.4639,
+      "x10": 0.2608,
+      "x20": -0.4785,
+      "changeCandle1": -0.16,
+      "y": -0.1086,
+      "link": "https://www.okx.com/trade-swap/meme-usdt-swap"
     },
     {
-      "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3302,
-      "last": 0.3696,
-      "change24hVal": 11.93
+      "symbol": "DOGE-USDT-SWAP",
+      "volCcy24h": 4235917680,
+      "hbb1": 1.7363,
+      "x10": 0.3804,
+      "x20": -0.0275,
+      "changeCandle1": 0.09,
+      "y": 0.0509,
+      "link": "https://www.okx.com/trade-swap/doge-usdt-swap"
     },
     {
-      "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1529,
-      "last": 0.1284,
-      "change24hVal": -16.02
+      "symbol": "ZBT-USDT-SWAP",
+      "volCcy24h": 12137913,
+      "hbb1": 1.4122,
+      "x10": 0.2664,
+      "x20": -0.6917,
+      "changeCandle1": 0.03,
+      "y": 0.0188,
+      "link": "https://www.okx.com/trade-swap/zbt-usdt-swap"
     },
     {
-      "instId": "RAVE-USDT-SWAP",
-      "open24h": 0.1918,
-      "last": 0.1639,
-      "change24hVal": -14.55
+      "symbol": "SUI-USDT-SWAP",
+      "volCcy24h": 120769578,
+      "hbb1": 0.9971,
+      "x10": -0.7161,
+      "x20": -0.9653,
+      "changeCandle1": -0.04,
+      "y": -0.0436,
+      "link": "https://www.okx.com/trade-swap/sui-usdt-swap"
     },
     {
-      "instId": "ARB-USDT-SWAP",
-      "open24h": 0.14036,
-      "last": 0.16587,
-      "change24hVal": 18.17
+      "symbol": "ATH-USDT-SWAP",
+      "volCcy24h": 135656000,
+      "hbb1": 2.708,
+      "x10": -0.5689,
+      "x20": 0.4598,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/ath-usdt-swap"
     },
     {
-      "instId": "PONS-USDT-SWAP",
-      "open24h": 0.6536,
-      "last": 0.5602,
-      "change24hVal": -14.29
+      "symbol": "PEPE-USDT-SWAP",
+      "volCcy24h": 33350988000000,
+      "hbb1": 1.2069,
+      "x10": -0.2893,
+      "x20": -0.953,
+      "changeCandle1": -0.56,
+      "y": -0.4676,
+      "link": "https://www.okx.com/trade-swap/pepe-usdt-swap"
     },
     {
-      "instId": "DGAI-USDT-SWAP",
-      "open24h": 0.7502,
-      "last": 0.8564,
-      "change24hVal": 14.16
+      "symbol": "ACH-USDT-SWAP",
+      "volCcy24h": 151872600,
+      "hbb1": 1.6797,
+      "x10": 0.323,
+      "x20": -0.5107,
+      "changeCandle1": 0.2,
+      "y": 0.1192,
+      "link": "https://www.okx.com/trade-swap/ach-usdt-swap"
+    },
+    {
+      "symbol": "RE-USDT-SWAP",
+      "volCcy24h": 13751200,
+      "hbb1": 2.8886,
+      "x10": 0.5428,
+      "x20": 0.662,
+      "changeCandle1": 0.33,
+      "y": 0.115,
+      "link": "https://www.okx.com/trade-swap/re-usdt-swap"
+    },
+    {
+      "symbol": "PLUME-USDT-SWAP",
+      "volCcy24h": 70002120,
+      "hbb1": 1.6962,
+      "x10": 0.3498,
+      "x20": -0.9423,
+      "changeCandle1": -0.12,
+      "y": -0.0727,
+      "link": "https://www.okx.com/trade-swap/plume-usdt-swap"
+    },
+    {
+      "symbol": "YGG-USDT-SWAP",
+      "volCcy24h": 30023190,
+      "hbb1": 1.288,
+      "x10": -0.0696,
+      "x20": -0.8067,
+      "changeCandle1": -0.14,
+      "y": -0.1074,
+      "link": "https://www.okx.com/trade-swap/ygg-usdt-swap"
+    },
+    {
+      "symbol": "ZK-USDT-SWAP",
+      "volCcy24h": 114425540,
+      "hbb1": 2.3123,
+      "x10": -0.6481,
+      "x20": -0.247,
+      "changeCandle1": 0.14,
+      "y": 0.0586,
+      "link": "https://www.okx.com/trade-swap/zk-usdt-swap"
+    },
+    {
+      "symbol": "HMSTR-USDT-SWAP",
+      "volCcy24h": 4222911900,
+      "hbb1": 1.8284,
+      "x10": 0.4,
+      "x20": 0.8347,
+      "changeCandle1": -0.13,
+      "y": -0.0707,
+      "link": "https://www.okx.com/trade-swap/hmstr-usdt-swap"
+    },
+    {
+      "symbol": "ADA-USDT-SWAP",
+      "volCcy24h": 296907930,
+      "hbb1": 1.8488,
+      "x10": 0.2196,
+      "x20": -0.3832,
+      "changeCandle1": -0.21,
+      "y": -0.1124,
+      "link": "https://www.okx.com/trade-swap/ada-usdt-swap"
+    },
+    {
+      "symbol": "GALA-USDT-SWAP",
+      "volCcy24h": 1245301640,
+      "hbb1": 1.8474,
+      "x10": 0.0516,
+      "x20": -0.8407,
+      "changeCandle1": -0.25,
+      "y": -0.1356,
+      "link": "https://www.okx.com/trade-swap/gala-usdt-swap"
+    },
+    {
+      "symbol": "BONK-USDT-SWAP",
+      "volCcy24h": 1249459400000,
+      "hbb1": 1.9076,
+      "x10": 0.5654,
+      "x20": -0.1198,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/bonk-usdt-swap"
+    },
+    {
+      "symbol": "BICO-USDT-SWAP",
+      "volCcy24h": 155818775,
+      "hbb1": 1.9652,
+      "x10": 0.5213,
+      "x20": 0.6163,
+      "changeCandle1": -0.16,
+      "y": -0.0834,
+      "link": "https://www.okx.com/trade-swap/bico-usdt-swap"
+    },
+    {
+      "symbol": "BRETT-USDT-SWAP",
+      "volCcy24h": 34821100,
+      "hbb1": 1.6325,
+      "x10": -0.8389,
+      "x20": -0.4523,
+      "changeCandle1": 0.04,
+      "y": 0.0261,
+      "link": "https://www.okx.com/trade-swap/brett-usdt-swap"
+    },
+    {
+      "symbol": "SOL-USDT-SWAP",
+      "volCcy24h": 11517849.1,
+      "hbb1": 1.1364,
+      "x10": -0.1752,
+      "x20": 0.197,
+      "changeCandle1": -0.08,
+      "y": -0.0724,
+      "link": "https://www.okx.com/trade-swap/sol-usdt-swap"
+    },
+    {
+      "symbol": "DOOD-USDT-SWAP",
+      "volCcy24h": 451547000,
+      "hbb1": 1.461,
+      "x10": 0.3617,
+      "x20": -0.9501,
+      "changeCandle1": 0.26,
+      "y": 0.1776,
+      "link": "https://www.okx.com/trade-swap/dood-usdt-swap"
+    },
+    {
+      "symbol": "WLD-USDT-SWAP",
+      "volCcy24h": 174619015,
+      "hbb1": 1.8519,
+      "x10": -0.8429,
+      "x20": 0.4165,
+      "changeCandle1": -0.19,
+      "y": -0.1032,
+      "link": "https://www.okx.com/trade-swap/wld-usdt-swap"
+    },
+    {
+      "symbol": "AEON-USDT-SWAP",
+      "volCcy24h": 72449860,
+      "hbb1": 2.8052,
+      "x10": 0.0082,
+      "x20": 0.3891,
+      "changeCandle1": 0.35,
+      "y": 0.1239,
+      "link": "https://www.okx.com/trade-swap/aeon-usdt-swap"
+    },
+    {
+      "symbol": "MAGIC-USDT-SWAP",
+      "volCcy24h": 12155166,
+      "hbb1": 1.0544,
+      "x10": 0.0606,
+      "x20": 0.2153,
+      "changeCandle1": 0.07,
+      "y": 0.0688,
+      "link": "https://www.okx.com/trade-swap/magic-usdt-swap"
+    },
+    {
+      "symbol": "MUBARAK-USDT-SWAP",
+      "volCcy24h": 102542400,
+      "hbb1": 2.9859,
+      "x10": -0.3678,
+      "x20": 0.5556,
+      "changeCandle1": 0.19,
+      "y": 0.062,
+      "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap"
+    },
+    {
+      "symbol": "ONDO-USDT-SWAP",
+      "volCcy24h": 84807900,
+      "hbb1": 1.4626,
+      "x10": -0.0998,
+      "x20": -0.5324,
+      "changeCandle1": 0.21,
+      "y": 0.1457,
+      "link": "https://www.okx.com/trade-swap/ondo-usdt-swap"
+    },
+    {
+      "symbol": "ASTER-USDT-SWAP",
+      "volCcy24h": 11301119,
+      "hbb1": 2.1556,
+      "x10": 0.4363,
+      "x20": -0.3353,
+      "changeCandle1": -0.07,
+      "y": -0.0341,
+      "link": "https://www.okx.com/trade-swap/aster-usdt-swap"
+    },
+    {
+      "symbol": "SAHARA-USDT-SWAP",
+      "volCcy24h": 175924350,
+      "hbb1": 1.7682,
+      "x10": -0.1226,
+      "x20": -0.5071,
+      "changeCandle1": -0.22,
+      "y": -0.125,
+      "link": "https://www.okx.com/trade-swap/sahara-usdt-swap"
+    },
+    {
+      "symbol": "MON-USDT-SWAP",
+      "volCcy24h": 360410500,
+      "hbb1": 2.4221,
+      "x10": 0.1138,
+      "x20": 0.4732,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/mon-usdt-swap"
+    },
+    {
+      "symbol": "RSR-USDT-SWAP",
+      "volCcy24h": 221252100,
+      "hbb1": 2.3952,
+      "x10": 0.1868,
+      "x20": -0.2921,
+      "changeCandle1": -0.38,
+      "y": -0.1571,
+      "link": "https://www.okx.com/trade-swap/rsr-usdt-swap"
+    },
+    {
+      "symbol": "KAITO-USDT-SWAP",
+      "volCcy24h": 18668595,
+      "hbb1": 1.0776,
+      "x10": 0.0392,
+      "x20": -0.3629,
+      "changeCandle1": 0.25,
+      "y": 0.2303,
+      "link": "https://www.okx.com/trade-swap/kaito-usdt-swap"
+    },
+    {
+      "symbol": "GRT-USDT-SWAP",
+      "volCcy24h": 23838240,
+      "hbb1": 2.0287,
+      "x10": -0.7207,
+      "x20": 0.4752,
+      "changeCandle1": -0.12,
+      "y": -0.0571,
+      "link": "https://www.okx.com/trade-swap/grt-usdt-swap"
+    },
+    {
+      "symbol": "KMNO-USDT-SWAP",
+      "volCcy24h": 12340200,
+      "hbb1": 1.7463,
+      "x10": 0.1356,
+      "x20": 0.5709,
+      "changeCandle1": -0.16,
+      "y": -0.0921,
+      "link": "https://www.okx.com/trade-swap/kmno-usdt-swap"
+    },
+    {
+      "symbol": "OPN-USDT-SWAP",
+      "volCcy24h": 42051850,
+      "hbb1": 2.1754,
+      "x10": -0.2942,
+      "x20": 0.471,
+      "changeCandle1": 0.26,
+      "y": 0.1173,
+      "link": "https://www.okx.com/trade-swap/opn-usdt-swap"
+    },
+    {
+      "symbol": "ONE-USDT-SWAP",
+      "volCcy24h": 902666600,
+      "hbb1": 2.0576,
+      "x10": -0.6538,
+      "x20": 0.8094,
+      "changeCandle1": -0.23,
+      "y": -0.1136,
+      "link": "https://www.okx.com/trade-swap/one-usdt-swap"
+    },
+    {
+      "symbol": "NIGHT-USDT-SWAP",
+      "volCcy24h": 27302700,
+      "hbb1": 1.2057,
+      "x10": -0.0544,
+      "x20": -0.2463,
+      "changeCandle1": -0.01,
+      "y": -0.0084,
+      "link": "https://www.okx.com/trade-swap/night-usdt-swap"
+    },
+    {
+      "symbol": "PENGU-USDT-SWAP",
+      "volCcy24h": 1942635000,
+      "hbb1": 1.9264,
+      "x10": -0.0948,
+      "x20": 0.1422,
+      "changeCandle1": -0.09,
+      "y": -0.0459,
+      "link": "https://www.okx.com/trade-swap/pengu-usdt-swap"
+    },
+    {
+      "symbol": "RESOLV-USDT-SWAP",
+      "volCcy24h": 80199200,
+      "hbb1": 1.5911,
+      "x10": -0.1955,
+      "x20": 0.4974,
+      "changeCandle1": 0.13,
+      "y": 0.0795,
+      "link": "https://www.okx.com/trade-swap/resolv-usdt-swap"
+    },
+    {
+      "symbol": "SAND-USDT-SWAP",
+      "volCcy24h": 87584220,
+      "hbb1": 1.1872,
+      "x10": -0.2728,
+      "x20": -0.3739,
+      "changeCandle1": -0.27,
+      "y": -0.2286,
+      "link": "https://www.okx.com/trade-swap/sand-usdt-swap"
+    },
+    {
+      "symbol": "SLX-USDT-SWAP",
+      "volCcy24h": 55569430,
+      "hbb1": 1.2526,
+      "x10": 0.0275,
+      "x20": -0.3011,
+      "changeCandle1": 0.26,
+      "y": 0.2038,
+      "link": "https://www.okx.com/trade-swap/slx-usdt-swap"
+    },
+    {
+      "symbol": "ZORA-USDT-SWAP",
+      "volCcy24h": 283465920,
+      "hbb1": 2.4577,
+      "x10": -0.5666,
+      "x20": 0.5701,
+      "changeCandle1": -0.52,
+      "y": -0.2132,
+      "link": "https://www.okx.com/trade-swap/zora-usdt-swap"
+    },
+    {
+      "symbol": "PARTI-USDT-SWAP",
+      "volCcy24h": 27633670,
+      "hbb1": 2.822,
+      "x10": 0.7727,
+      "x20": 0.0661,
+      "changeCandle1": -0.19,
+      "y": -0.0674,
+      "link": "https://www.okx.com/trade-swap/parti-usdt-swap"
+    },
+    {
+      "symbol": "GPS-USDT-SWAP",
+      "volCcy24h": 137267590,
+      "hbb1": 2.4564,
+      "x10": 0.684,
+      "x20": 0.1749,
+      "changeCandle1": 0.17,
+      "y": 0.069,
+      "link": "https://www.okx.com/trade-swap/gps-usdt-swap"
+    },
+    {
+      "symbol": "CRO-USDT-SWAP",
+      "volCcy24h": 23198710,
+      "hbb1": 1.7133,
+      "x10": -0.7958,
+      "x20": -0.6065,
+      "changeCandle1": -0.04,
+      "y": -0.0211,
+      "link": "https://www.okx.com/trade-swap/cro-usdt-swap"
+    },
+    {
+      "symbol": "STRK-USDT-SWAP",
+      "volCcy24h": 181239296,
+      "hbb1": 2.0539,
+      "x10": -0.2222,
+      "x20": 0.0574,
+      "changeCandle1": 0.38,
+      "y": 0.1826,
+      "link": "https://www.okx.com/trade-swap/strk-usdt-swap"
+    },
+    {
+      "symbol": "ENJ-USDT-SWAP",
+      "volCcy24h": 27654770,
+      "hbb1": 1.337,
+      "x10": -0.2437,
+      "x20": 0.6397,
+      "changeCandle1": -0.04,
+      "y": -0.0307,
+      "link": "https://www.okx.com/trade-swap/enj-usdt-swap"
+    },
+    {
+      "symbol": "ACT-USDT-SWAP",
+      "volCcy24h": 78490693,
+      "hbb1": 2.0184,
+      "x10": -0.5064,
+      "x20": -0.8152,
+      "changeCandle1": -0.43,
+      "y": -0.2116,
+      "link": "https://www.okx.com/trade-swap/act-usdt-swap"
+    },
+    {
+      "symbol": "MOODENG-USDT-SWAP",
+      "volCcy24h": 40136950,
+      "hbb1": 1.5334,
+      "x10": -0.5876,
+      "x20": -0.8871,
+      "changeCandle1": 0.03,
+      "y": 0.0174,
+      "link": "https://www.okx.com/trade-swap/moodeng-usdt-swap"
+    },
+    {
+      "symbol": "SHIB-USDT-SWAP",
+      "volCcy24h": 2820587500000,
+      "hbb1": 2.2978,
+      "x10": 0.6813,
+      "x20": -0.4597,
+      "changeCandle1": -0.31,
+      "y": -0.1354,
+      "link": "https://www.okx.com/trade-swap/shib-usdt-swap"
+    },
+    {
+      "symbol": "MINA-USDT-SWAP",
+      "volCcy24h": 41137607,
+      "hbb1": 3.2445,
+      "x10": 0.2985,
+      "x20": -0.4045,
+      "changeCandle1": 0.18,
+      "y": 0.0553,
+      "link": "https://www.okx.com/trade-swap/mina-usdt-swap"
+    },
+    {
+      "symbol": "LINEA-USDT-SWAP",
+      "volCcy24h": 319655400,
+      "hbb1": 1.8003,
+      "x10": -0.3425,
+      "x20": 0.8156,
+      "changeCandle1": -0.12,
+      "y": -0.0682,
+      "link": "https://www.okx.com/trade-swap/linea-usdt-swap"
+    },
+    {
+      "symbol": "DYDX-USDT-SWAP",
+      "volCcy24h": 18916831,
+      "hbb1": 1.5287,
+      "x10": 0.2763,
+      "x20": -0.1139,
+      "changeCandle1": -0.06,
+      "y": -0.0376,
+      "link": "https://www.okx.com/trade-swap/dydx-usdt-swap"
+    },
+    {
+      "symbol": "CHZ-USDT-SWAP",
+      "volCcy24h": 159944100,
+      "hbb1": 1.5516,
+      "x10": -0.4364,
+      "x20": 0.0604,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/chz-usdt-swap"
+    },
+    {
+      "symbol": "ZAMA-USDT-SWAP",
+      "volCcy24h": 48738350,
+      "hbb1": 1.909,
+      "x10": 0.4011,
+      "x20": -0.2871,
+      "changeCandle1": 0.02,
+      "y": 0.0113,
+      "link": "https://www.okx.com/trade-swap/zama-usdt-swap"
+    },
+    {
+      "symbol": "LUNA-USDT-SWAP",
+      "volCcy24h": 10289688,
+      "hbb1": 1.0523,
+      "x10": -0.5671,
+      "x20": -0.4295,
+      "changeCandle1": -0.16,
+      "y": -0.1528,
+      "link": "https://www.okx.com/trade-swap/luna-usdt-swap"
+    },
+    {
+      "symbol": "TRX-USDT-SWAP",
+      "volCcy24h": 38035580,
+      "hbb1": 0.291,
+      "x10": 0.0185,
+      "x20": -0.0838,
+      "changeCandle1": -0.04,
+      "y": -0.1233,
+      "link": "https://www.okx.com/trade-swap/trx-usdt-swap"
+    },
+    {
+      "symbol": "EDEN-USDT-SWAP",
+      "volCcy24h": 44410686,
+      "hbb1": 1.6211,
+      "x10": -0.5416,
+      "x20": -0.2221,
+      "changeCandle1": 0.2,
+      "y": 0.1211,
+      "link": "https://www.okx.com/trade-swap/eden-usdt-swap"
+    },
+    {
+      "symbol": "LDO-USDT-SWAP",
+      "volCcy24h": 12996745,
+      "hbb1": 1.8973,
+      "x10": -0.115,
+      "x20": -0.8926,
+      "changeCandle1": -0.27,
+      "y": -0.1433,
+      "link": "https://www.okx.com/trade-swap/ldo-usdt-swap"
+    },
+    {
+      "symbol": "FARTCOIN-USDT-SWAP",
+      "volCcy24h": 47559645,
+      "hbb1": 1.4372,
+      "x10": 0.0545,
+      "x20": 0.1056,
+      "changeCandle1": -0.22,
+      "y": -0.1533,
+      "link": "https://www.okx.com/trade-swap/fartcoin-usdt-swap"
+    },
+    {
+      "symbol": "WLFI-USDT-SWAP",
+      "volCcy24h": 113974940,
+      "hbb1": 0.2047,
+      "x10": -0.0378,
+      "x20": -0.6223,
+      "changeCandle1": -0.07,
+      "y": -0.3431,
+      "link": "https://www.okx.com/trade-swap/wlfi-usdt-swap"
+    },
+    {
+      "symbol": "IOTA-USDT-SWAP",
+      "volCcy24h": 32822010,
+      "hbb1": 3.0636,
+      "x10": 0.5944,
+      "x20": -0.0943,
+      "changeCandle1": -0.26,
+      "y": -0.0861,
+      "link": "https://www.okx.com/trade-swap/iota-usdt-swap"
+    },
+    {
+      "symbol": "RVN-USDT-SWAP",
+      "volCcy24h": 528345680,
+      "hbb1": 2.4287,
+      "x10": -0.1607,
+      "x20": -0.033,
+      "changeCandle1": 0.05,
+      "y": 0.0201,
+      "link": "https://www.okx.com/trade-swap/rvn-usdt-swap"
+    },
+    {
+      "symbol": "CFX-USDT-SWAP",
+      "volCcy24h": 73331400,
+      "hbb1": 1.3689,
+      "x10": -0.3353,
+      "x20": -0.7777,
+      "changeCandle1": -0.16,
+      "y": -0.1154,
+      "link": "https://www.okx.com/trade-swap/cfx-usdt-swap"
+    },
+    {
+      "symbol": "AI-USDT-SWAP",
+      "volCcy24h": 95460500,
+      "hbb1": 2.2957,
+      "x10": 0.6266,
+      "x20": 0.006,
+      "changeCandle1": 0.11,
+      "y": 0.0476,
+      "link": "https://www.okx.com/trade-swap/ai-usdt-swap"
+    },
+    {
+      "symbol": "MEW-USDT-SWAP",
+      "volCcy24h": 1077576000,
+      "hbb1": 1.0394,
+      "x10": -0.4799,
+      "x20": -0.522,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/mew-usdt-swap"
+    },
+    {
+      "symbol": "ROBO-USDT-SWAP",
+      "volCcy24h": 190519100,
+      "hbb1": 1.386,
+      "x10": 0.0559,
+      "x20": -0.6672,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/robo-usdt-swap"
+    },
+    {
+      "symbol": "XPL-USDT-SWAP",
+      "volCcy24h": 238520410,
+      "hbb1": 1.9207,
+      "x10": -0.0794,
+      "x20": 0.4761,
+      "changeCandle1": -0.16,
+      "y": -0.0834,
+      "link": "https://www.okx.com/trade-swap/xpl-usdt-swap"
+    },
+    {
+      "symbol": "CC-USDT-SWAP",
+      "volCcy24h": 18500990,
+      "hbb1": 1.1699,
+      "x10": 0.5546,
+      "x20": -0.8176,
+      "changeCandle1": -0.22,
+      "y": -0.1863,
+      "link": "https://www.okx.com/trade-swap/cc-usdt-swap"
+    },
+    {
+      "symbol": "KAT-USDT-SWAP",
+      "volCcy24h": 554547600,
+      "hbb1": 2.2783,
+      "x10": 0.2312,
+      "x20": 0.5057,
+      "changeCandle1": -0.14,
+      "y": -0.0625,
+      "link": "https://www.okx.com/trade-swap/kat-usdt-swap"
+    },
+    {
+      "symbol": "JTO-USDT-SWAP",
+      "volCcy24h": 15703108,
+      "hbb1": 2.8385,
+      "x10": -0.5668,
+      "x20": -0.2613,
+      "changeCandle1": 0.05,
+      "y": 0.0175,
+      "link": "https://www.okx.com/trade-swap/jto-usdt-swap"
+    },
+    {
+      "symbol": "TIA-USDT-SWAP",
+      "volCcy24h": 13954455,
+      "hbb1": 1.8415,
+      "x10": -0.7638,
+      "x20": -0.1841,
+      "changeCandle1": -0.36,
+      "y": -0.1978,
+      "link": "https://www.okx.com/trade-swap/tia-usdt-swap"
+    },
+    {
+      "symbol": "CAP-USDT-SWAP",
+      "volCcy24h": 602541000,
+      "hbb1": 7.8634,
+      "x10": 0.2834,
+      "x20": -0.4503,
+      "changeCandle1": -0.83,
+      "y": -0.1054,
+      "link": "https://www.okx.com/trade-swap/cap-usdt-swap"
+    },
+    {
+      "symbol": "BIO-USDT-SWAP",
+      "volCcy24h": 65400745,
+      "hbb1": 1.5144,
+      "x10": -0.3972,
+      "x20": -0.6268,
+      "changeCandle1": -0.2,
+      "y": -0.1332,
+      "link": "https://www.okx.com/trade-swap/bio-usdt-swap"
+    },
+    {
+      "symbol": "CORE-USDT-SWAP",
+      "volCcy24h": 67832429,
+      "hbb1": 1.2101,
+      "x10": -0.2641,
+      "x20": -0.4922,
+      "changeCandle1": 0.33,
+      "y": 0.2744,
+      "link": "https://www.okx.com/trade-swap/core-usdt-swap"
+    },
+    {
+      "symbol": "MOVE-USDT-SWAP",
+      "volCcy24h": 102883480,
+      "hbb1": 0.9887,
+      "x10": -0.1216,
+      "x20": -0.8856,
+      "changeCandle1": 0.05,
+      "y": 0.0536,
+      "link": "https://www.okx.com/trade-swap/move-usdt-swap"
+    },
+    {
+      "symbol": "BSB-USDT-SWAP",
+      "volCcy24h": 25174170,
+      "hbb1": 1.4944,
+      "x10": 0.2581,
+      "x20": -0.8559,
+      "changeCandle1": 0.7,
+      "y": 0.4686,
+      "link": "https://www.okx.com/trade-swap/bsb-usdt-swap"
+    },
+    {
+      "symbol": "AZTEC-USDT-SWAP",
+      "volCcy24h": 16619800,
+      "hbb1": 1.6591,
+      "x10": -0.0448,
+      "x20": -0.6333,
+      "changeCandle1": 0.08,
+      "y": 0.048,
+      "link": "https://www.okx.com/trade-swap/aztec-usdt-swap"
+    },
+    {
+      "symbol": "AEVO-USDT-SWAP",
+      "volCcy24h": 24425698,
+      "hbb1": 1.2608,
+      "x10": 0.0597,
+      "x20": -0.9234,
+      "changeCandle1": -0.1,
+      "y": -0.077,
+      "link": "https://www.okx.com/trade-swap/aevo-usdt-swap"
+    },
+    {
+      "symbol": "BERA-USDT-SWAP",
+      "volCcy24h": 10277213.3,
+      "hbb1": 2.0879,
+      "x10": 0.5875,
+      "x20": -0.3437,
+      "changeCandle1": 0,
+      "y": 0,
+      "link": "https://www.okx.com/trade-swap/bera-usdt-swap"
+    },
+    {
+      "symbol": "WOO-USDT-SWAP",
+      "volCcy24h": 27283930,
+      "hbb1": 1.5346,
+      "x10": 0.1367,
+      "x20": -0.7725,
+      "changeCandle1": -0.1,
+      "y": -0.0636,
+      "link": "https://www.okx.com/trade-swap/woo-usdt-swap"
+    },
+    {
+      "symbol": "EIGEN-USDT-SWAP",
+      "volCcy24h": 33431801,
+      "hbb1": 3.9991,
+      "x10": 0.0631,
+      "x20": 0.8214,
+      "changeCandle1": -0.53,
+      "y": -0.1313,
+      "link": "https://www.okx.com/trade-swap/eigen-usdt-swap"
+    },
+    {
+      "symbol": "GMT-USDT-SWAP",
+      "volCcy24h": 66605303,
+      "hbb1": 2.5208,
+      "x10": 0.8354,
+      "x20": 0.0448,
+      "changeCandle1": -0.01,
+      "y": -0.0057,
+      "link": "https://www.okx.com/trade-swap/gmt-usdt-swap"
+    },
+    {
+      "symbol": "XRP-USDT-SWAP",
+      "volCcy24h": 613913103,
+      "hbb1": 1.814,
+      "x10": 0.3466,
+      "x20": -0.5928,
+      "changeCandle1": -0.18,
+      "y": -0.0993,
+      "link": "https://www.okx.com/trade-swap/xrp-usdt-swap"
     }
-  ],
-  "passedEmaCount": 0,
-  "passedEmaList": [],
-  "matchedCount": 0,
-  "matchedList": []
+  ]
 }
