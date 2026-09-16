@@ -1,83 +1,66 @@
 {
-  "lastScanAt": "2026-09-16T06:25:26.217Z",
+  "lastScanAt": "2026-09-16T06:30:49.249Z",
   "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09746,
-      "last": 0.0866,
-      "change24hVal": -11.14
+      "open24h": 0.09741,
+      "last": 0.08636,
+      "change24hVal": -11.34
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.20069,
-      "last": 0.23035,
-      "change24hVal": 14.78
+      "open24h": 0.20086,
+      "last": 0.22966,
+      "change24hVal": 14.34
     },
     {
       "instId": "CNPY-USDT-SWAP",
       "open24h": 0.3018,
-      "last": 0.3629,
-      "change24hVal": 20.25
+      "last": 0.3658,
+      "change24hVal": 21.21
     },
     {
       "instId": "ZORA-USDT-SWAP",
-      "open24h": 0.00821,
-      "last": 0.007276,
-      "change24hVal": -11.38
+      "open24h": 0.0082,
+      "last": 0.007254,
+      "change24hVal": -11.54
     },
     {
       "instId": "MMT-USDT-SWAP",
       "open24h": 0.1515,
-      "last": 0.1302,
-      "change24hVal": -14.06
+      "last": 0.1304,
+      "change24hVal": -13.93
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13352,
-      "last": 0.15174,
-      "change24hVal": 13.65
+      "open24h": 0.1332,
+      "last": 0.15186,
+      "change24hVal": 14.01
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3536,
-      "last": 0.3137,
-      "change24hVal": -11.28
+      "open24h": 0.3525,
+      "last": 0.3133,
+      "change24hVal": -11.12
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.0354,
-      "last": 0.03134,
-      "change24hVal": -11.47
+      "open24h": 0.03529,
+      "last": 0.03133,
+      "change24hVal": -11.22
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "USELESS-USDT-SWAP",
-      "change24h": "+14.78%",
-      "diffema50": "3.50%",
-      "diffema20": "0.28%",
+      "change24h": "+14.34%",
+      "diffema50": "3.42%",
+      "diffema20": "0.36%",
       "validFor": "SHORT"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "USELESS-USDT-SWAP",
-      "type": "SHORT (5m)",
-      "change24h": "+14.78%",
-      "diffema50": "3.50%",
-      "diffema20": "0.28%",
-      "diffema10_5m": "-",
-      "diffema30": "-",
-      "diffema10": "-",
-      "bbd": "-",
-      "bbt": "-0.26%",
-      "hbb15m": "0.0147",
-      "hbb15mPercent": "6.59%",
-      "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
