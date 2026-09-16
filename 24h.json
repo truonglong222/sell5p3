@@ -1,63 +1,63 @@
 {
-  "lastScanAt": "2026-09-16T04:10:30.316Z",
+  "lastScanAt": "2026-09-16T04:15:34.278Z",
   "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09791,
-      "last": 0.08665,
-      "change24hVal": -11.5
+      "open24h": 0.09778,
+      "last": 0.08662,
+      "change24hVal": -11.41
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.19939,
-      "last": 0.22619,
-      "change24hVal": 13.44
+      "open24h": 0.19962,
+      "last": 0.22608,
+      "change24hVal": 13.26
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3052,
-      "last": 0.3665,
-      "change24hVal": 20.09
+      "open24h": 0.3051,
+      "last": 0.3705,
+      "change24hVal": 21.44
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1528,
-      "last": 0.1315,
-      "change24hVal": -13.94
+      "open24h": 0.1527,
+      "last": 0.1313,
+      "change24hVal": -14.01
     },
     {
       "instId": "ZIL-USDT-SWAP",
-      "open24h": 0.003225,
-      "last": 0.002856,
-      "change24hVal": -11.44
+      "open24h": 0.003222,
+      "last": 0.002845,
+      "change24hVal": -11.7
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13298,
-      "last": 0.15429,
-      "change24hVal": 16.02
+      "open24h": 0.13339,
+      "last": 0.15353,
+      "change24hVal": 15.1
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3528,
-      "last": 0.3137,
-      "change24hVal": -11.08
+      "open24h": 0.3531,
+      "last": 0.3139,
+      "change24hVal": -11.1
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.03576,
-      "last": 0.03158,
-      "change24hVal": -11.69
+      "open24h": 0.03585,
+      "last": 0.03164,
+      "change24hVal": -11.74
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "ORDER-USDT-SWAP",
-      "change24h": "-11.69%",
-      "diffema30": "-1.95%",
-      "diffema10": "-1.16%",
+      "change24h": "-11.74%",
+      "diffema30": "-1.93%",
+      "diffema10": "-1.02%",
       "validFor": "LONG"
     }
   ],
