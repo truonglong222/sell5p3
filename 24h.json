@@ -1,60 +1,66 @@
 {
-  "lastScanAt": "2026-09-16T07:20:30.493Z",
-  "targetCoinsCount": 9,
+  "lastScanAt": "2026-09-16T07:25:24.314Z",
+  "targetCoinsCount": 10,
   "targetCoinsList": [
     {
       "instId": "PI-USDT-SWAP",
-      "open24h": 0.09737,
-      "last": 0.08566,
-      "change24hVal": -12.03
+      "open24h": 0.09728,
+      "last": 0.08538,
+      "change24hVal": -12.23
     },
     {
       "instId": "H-USDT-SWAP",
-      "open24h": 0.08084,
-      "last": 0.08965,
-      "change24hVal": 10.9
+      "open24h": 0.0808,
+      "last": 0.08992,
+      "change24hVal": 11.29
+    },
+    {
+      "instId": "OFC-USDT-SWAP",
+      "open24h": 0.007711,
+      "last": 0.006922,
+      "change24hVal": -10.23
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.20057,
-      "last": 0.23522,
-      "change24hVal": 17.28
+      "open24h": 0.2003,
+      "last": 0.23752,
+      "change24hVal": 18.58
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3036,
-      "last": 0.3611,
-      "change24hVal": 18.94
+      "open24h": 0.3047,
+      "last": 0.359,
+      "change24hVal": 17.82
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1516,
-      "last": 0.1297,
-      "change24hVal": -14.45
+      "open24h": 0.1518,
+      "last": 0.1301,
+      "change24hVal": -14.3
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.13373,
-      "last": 0.15268,
-      "change24hVal": 14.17
+      "open24h": 0.13374,
+      "last": 0.15457,
+      "change24hVal": 15.57
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3513,
-      "last": 0.3118,
-      "change24hVal": -11.24
+      "open24h": 0.3524,
+      "last": 0.312,
+      "change24hVal": -11.46
     },
     {
       "instId": "ORDER-USDT-SWAP",
-      "open24h": 0.03521,
-      "last": 0.03135,
-      "change24hVal": -10.96
+      "open24h": 0.03529,
+      "last": 0.03133,
+      "change24hVal": -11.22
     },
     {
       "instId": "CHIP-USDT-SWAP",
       "open24h": 0.0412,
-      "last": 0.03684,
-      "change24hVal": -10.58
+      "last": 0.03699,
+      "change24hVal": -10.22
     }
   ],
   "passedEmaCount": 0,
