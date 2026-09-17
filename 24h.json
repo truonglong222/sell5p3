@@ -1,111 +1,123 @@
 {
-  "lastScanAt": "2026-09-17T12:25:30.778Z",
-  "targetCoinsCount": 14,
+  "lastScanAt": "2026-09-17T12:30:53.544Z",
+  "targetCoinsCount": 16,
   "targetCoinsList": [
     {
       "instId": "UNI-USDT-SWAP",
-      "open24h": 6.252,
-      "last": 6.917,
-      "change24hVal": 10.64
+      "open24h": 6.245,
+      "last": 6.92,
+      "change24hVal": 10.81
     },
     {
       "instId": "LIT-USDT-SWAP",
-      "open24h": 4.2702,
-      "last": 4.9219,
-      "change24hVal": 15.26
+      "open24h": 4.2723,
+      "last": 4.9188,
+      "change24hVal": 15.13
+    },
+    {
+      "instId": "PUMP-USDT-SWAP",
+      "open24h": 0.003598,
+      "last": 0.003967,
+      "change24hVal": 10.26
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.23201,
-      "last": 0.26077,
-      "change24hVal": 12.4
+      "open24h": 0.23277,
+      "last": 0.25852,
+      "change24hVal": 11.06
+    },
+    {
+      "instId": "0G-USDT-SWAP",
+      "open24h": 0.1842,
+      "last": 0.2028,
+      "change24hVal": 10.1
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.02496,
-      "last": 0.02788,
-      "change24hVal": 11.7
+      "open24h": 0.02494,
+      "last": 0.02798,
+      "change24hVal": 12.19
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0006412,
-      "last": 0.0010697,
-      "change24hVal": 66.83
+      "open24h": 0.0006396,
+      "last": 0.0010661,
+      "change24hVal": 66.68
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1605,
-      "last": 0.2036,
-      "change24hVal": 26.85
+      "open24h": 0.1603,
+      "last": 0.2045,
+      "change24hVal": 27.57
     },
     {
       "instId": "MMT-USDT-SWAP",
-      "open24h": 0.1303,
-      "last": 0.1436,
-      "change24hVal": 10.21
+      "open24h": 0.13,
+      "last": 0.1438,
+      "change24hVal": 10.62
     },
     {
       "instId": "NEAR-USDT-SWAP",
-      "open24h": 2.456,
-      "last": 2.88,
-      "change24hVal": 17.26
+      "open24h": 2.457,
+      "last": 2.887,
+      "change24hVal": 17.5
     },
     {
       "instId": "MINA-USDT-SWAP",
-      "open24h": 0.08289,
-      "last": 0.09428,
-      "change24hVal": 13.74
+      "open24h": 0.0829,
+      "last": 0.09354,
+      "change24hVal": 12.83
     },
     {
       "instId": "EDEN-USDT-SWAP",
-      "open24h": 0.04587,
-      "last": 0.05089,
-      "change24hVal": 10.94
+      "open24h": 0.04581,
+      "last": 0.05133,
+      "change24hVal": 12.05
     },
     {
       "instId": "PONS-USDT-SWAP",
-      "open24h": 0.574,
-      "last": 0.6377,
-      "change24hVal": 11.1
+      "open24h": 0.5748,
+      "last": 0.6333,
+      "change24hVal": 10.18
     },
     {
       "instId": "CC-USDT-SWAP",
-      "open24h": 0.09112,
-      "last": 0.10041,
-      "change24hVal": 10.2
+      "open24h": 0.09119,
+      "last": 0.10045,
+      "change24hVal": 10.15
     },
     {
       "instId": "DGAI-USDT-SWAP",
-      "open24h": 0.79,
-      "last": 0.9394,
-      "change24hVal": 18.91
+      "open24h": 0.7879,
+      "last": 0.9426,
+      "change24hVal": 19.63
     },
     {
       "instId": "PEOPLE-USDT-SWAP",
-      "open24h": 0.00732,
-      "last": 0.00809,
-      "change24hVal": 10.52
+      "open24h": 0.007318,
+      "last": 0.008081,
+      "change24hVal": 10.43
     }
   ],
   "passedEmaCount": 3,
   "passedEmaList": [
     {
       "symbol": "ONE-USDT-SWAP",
-      "change24h": "+66.83%",
-      "diffema20_15m": "-1.16%",
-      "diffema10_5m": "0.13%"
+      "change24h": "+66.68%",
+      "diffema20_15m": "-1.97%",
+      "diffema10_5m": "0.48%"
     },
     {
       "symbol": "PONS-USDT-SWAP",
-      "change24h": "+11.1%",
-      "diffema20_15m": "0.97%",
-      "diffema10_5m": "-0.12%"
+      "change24h": "+10.18%",
+      "diffema20_15m": "0.43%",
+      "diffema10_5m": "0.00%"
     },
     {
       "symbol": "PEOPLE-USDT-SWAP",
-      "change24h": "+10.52%",
-      "diffema20_15m": "1.39%",
-      "diffema10_5m": "0.06%"
+      "change24h": "+10.43%",
+      "diffema20_15m": "1.29%",
+      "diffema10_5m": "-0.01%"
     }
   ],
   "matchedCount": 0,
