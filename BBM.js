@@ -153,7 +153,7 @@ async function getCandles(symbol, bar = '15m', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (diffema10 & diffema30 5m, BB 15m & Hbb > 3%) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -170,20 +170,29 @@ async function main() {
     };
 
     let countValidCandles = 0;
+
+    // Biến đếm thống kê từng điều kiện độc lập
+    let countDiffEma10 = 0;
+    let countDiffEma30Long = 0;
+    let countDiffEma30Short = 0;
+    let countHbb = 0;
+    let countBbd = 0;
+    let countBbt = 0;
+
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy 100 nến 15m (tính Bollinger Bands)
+      // 1. Lấy nến 15m
       const candles15m = await getCandles(symbol, '15m', 100);
       if (!candles15m || candles15m.length < 30) {
         await sleep(80);
         continue;
       }
 
-      // Lấy 120 nến 5m (đảm bảo đủ ít nhất 30 điểm EMA)
+      // 2. Lấy nến 5m
       const candles5m = await getCandles(symbol, '5m', 120);
       if (!candles5m || candles5m.length < 60) {
         await sleep(80);
@@ -191,7 +200,7 @@ async function main() {
       }
       countValidCandles++;
 
-      // --- TÍNH diffema10 & diffema30 TRÊN NẾN 5m ---
+      // --- TÍNH TOÁN DIFFEMA TRÊN NẾN 5m ---
       const closedCandles5m = candles5m.slice(1).reverse();
       const closedPrices5m = closedCandles5m.map((c) => parseFloat(c[4]));
       const emaSeries5m = calculateEMAArray(closedPrices5m, 10);
@@ -213,17 +222,7 @@ async function main() {
       const diffema10_5m = ((ema1_5m - ema10_5m) / ema10_5m) * 100;
       const diffema30_5m = ((ema1_5m - ema30_5m) / ema30_5m) * 100;
 
-      // Điều kiện chung: -0.5% < diffema10 (5m) < 0.5%
-      const isDiffEma10Valid = diffema10_5m > -0.5 && diffema10_5m < 0.5;
-      if (!isDiffEma10Valid) {
-        await sleep(80);
-        continue;
-      }
-
-      const diffema10Str = diffema10_5m.toFixed(2) + '%';
-      const diffema30Str = diffema30_5m.toFixed(2) + '%';
-
-      // --- TÍNH BOLLINGER BANDS 15m & Hbb ---
+      // --- TÍNH TOÁN BOLLINGER BANDS 15m ---
       const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb15m = calculateBollingerBands(closesBB15m, 20);
 
@@ -234,12 +233,6 @@ async function main() {
 
       const hbb15m = bb15m.upper - bb15m.lower;
       const hbb15mPercent = (hbb15m / bb15m.middle) * 100;
-
-      // Điều kiện: Hbb nến 15m > 3%
-      if (hbb15mPercent <= 3) {
-        await sleep(80);
-        continue;
-      }
 
       const candle0_15m = candles15m[0];
       const low0 = parseFloat(candle0_15m[3]);
@@ -254,12 +247,24 @@ async function main() {
         bbt = ((high0 - bb15m.upper) / bb15m.upper) * 100;
       }
 
-      // --- KIỂM TRA ĐIỀU KIỆN LONG / SHORT ---
-      // LONG: diffema30 < -2.5% VÀ -2% < bbd < -0.5%
-      const isLong = diffema30_5m < -2.5 && bbd > -2 && bbd < -0.5;
+      // --- ĐÁNH GIÁ VÀ ĐẾM TỪNG ĐIỀU KIỆN ĐỘC LẬP ---
+      const passDiffEma10 = diffema10_5m > -0.5 && diffema10_5m < 0.5;
+      const passDiffEma30Long = diffema30_5m < -2.5;
+      const passDiffEma30Short = diffema30_5m > 2.5;
+      const passHbb = hbb15mPercent > 3;
+      const passBbd = bbd > -2 && bbd < -0.5;
+      const passBbt = bbt > 0.5 && bbt < 2;
 
-      // SHORT: diffema30 > 2.5% VÀ 0.5% < bbt < 2%
-      const isShort = diffema30_5m > 2.5 && bbt > 0.5 && bbt < 2;
+      if (passDiffEma10) countDiffEma10++;
+      if (passDiffEma30Long) countDiffEma30Long++;
+      if (passDiffEma30Short) countDiffEma30Short++;
+      if (passHbb) countHbb++;
+      if (passBbd) countBbd++;
+      if (passBbt) countBbt++;
+
+      // --- TÍN HIỆU TỔNG HỢP ---
+      const isLong = passDiffEma10 && passDiffEma30Long && passHbb && passBbd;
+      const isShort = passDiffEma10 && passDiffEma30Short && passHbb && passBbt;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -267,11 +272,14 @@ async function main() {
       }
 
       const signalType = isLong ? 'LONG' : 'SHORT';
+      const diffema10Str = diffema10_5m.toFixed(2) + '%';
+      const diffema30Str = diffema30_5m.toFixed(2) + '%';
+      const change24hStr = `+${coin.change24hVal.toFixed(2)}%`;
+
       console.log(
         `🎯 [Khớp ENTRY ${signalType}] ${symbol} | diffema10: ${diffema10Str} | diffema30: ${diffema30Str} | Hbb: ${hbb15mPercent.toFixed(2)}% | ${isLong ? `bbd: ${bbd.toFixed(2)}%` : `bbt: ${bbt.toFixed(2)}%`}`
       );
 
-      const change24hStr = `+${coin.change24hVal.toFixed(2)}%`;
       if (isLong) countMatchedLong++;
       if (isShort) countMatchedShort++;
 
@@ -334,12 +342,21 @@ async function main() {
 
     saveScanResults(scanResults);
 
-    console.log('\n================== THỐNG KÊ CHI TIẾT ==================');
-    console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount} | bd24h > 10% = ${targetCoins.length}`);
-    console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Tín hiệu khớp: LONG = ${countMatchedLong} coin | SHORT = ${countMatchedShort} coin`);
+    console.log('\n================== THỐNG KÊ CHI TIẾT TỪNG ĐIỀU KIỆN ==================');
+    console.log(`1️⃣ Tổng nến tải thành công: ${countValidCandles}/${targetCoins.length} coin`);
+    console.log('----------------------------------------------------------------------');
+    console.table([
+      { 'Điều kiện': 'diffema10 (-0.5% ~ 0.5%)', 'Số coin thoả': countDiffEma10 },
+      { 'Điều kiện': 'diffema30 < -2.5% (Long)', 'Số coin thoả': countDiffEma30Long },
+      { 'Điều kiện': 'diffema30 > 2.5% (Short)', 'Số coin thoả': countDiffEma30Short },
+      { 'Điều kiện': 'Hbb 15m > 3%', 'Số coin thoả': countHbb },
+      { 'Điều kiện': 'bbd (-2% ~ -0.5%) [Long]', 'Số coin thoả': countBbd },
+      { 'Điều kiện': 'bbt (0.5% ~ 2%) [Short]', 'Số coin thoả': countBbt }
+    ]);
+    console.log('----------------------------------------------------------------------');
+    console.log(`🎯 TÍN HIỆU ĐỦ TẤT CẢ ĐIỀU KIỆN: LONG = ${countMatchedLong} coin | SHORT = ${countMatchedShort} coin`);
 
-    console.log('\n================== KẾT QUẢ QUÉT ==================');
+    console.log('\n================== KẾT QUẢ KHỚP TOÀN BỘ ==================');
     if (scanResults.matched.length > 0) {
       console.table(scanResults.matched);
     } else {
