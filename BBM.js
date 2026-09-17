@@ -52,8 +52,6 @@ function saveScanResults(results) {
       lastScanAt: new Date().toISOString(),
       targetCoinsCount: results.targetCoins.length,
       targetCoinsList: results.targetCoins,
-      passedEmaCount: results.passedEma.length,
-      passedEmaList: results.passedEma,
       matchedCount: results.matched.length,
       matchedList: results.matched
     };
@@ -78,7 +76,7 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-function calculateEMAArray(prices, period = 20) {
+function calculateEMAArray(prices, period = 10) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
   const emaArray = [];
@@ -155,7 +153,7 @@ async function getCandles(symbol, bar = '15m', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (15m/5m: LONG/SHORT) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (diffema10 & diffema30 5m, BB 15m & Hbb > 3%) ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -168,114 +166,100 @@ async function main() {
 
     const scanResults = {
       targetCoins,
-      passedEma: [],
       matched: []
     };
 
     let countValidCandles = 0;
-    let countMatchedEma = 0;
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // 1. Lấy dữ liệu nến 15m
+      // Lấy 100 nến 15m (tính Bollinger Bands)
       const candles15m = await getCandles(symbol, '15m', 100);
-      if (!candles15m || candles15m.length < 50) {
+      if (!candles15m || candles15m.length < 30) {
         await sleep(80);
         continue;
       }
 
-      // 2. Lấy dữ liệu nến 5m
-      const candles5m = await getCandles(symbol, '5m', 100);
-      if (!candles5m || candles5m.length < 50) {
+      // Lấy 120 nến 5m (đảm bảo đủ ít nhất 30 điểm EMA)
+      const candles5m = await getCandles(symbol, '5m', 120);
+      if (!candles5m || candles5m.length < 60) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
-      // --- TÍNH diffema20 TRÊN NẾN 15m ---
-      const closedCandles15m = candles15m.slice(1).reverse();
-      const closedPrices15m = closedCandles15m.map((c) => parseFloat(c[4]));
-      const emaSeries15m = calculateEMAArray(closedPrices15m, 20);
-      if (emaSeries15m.length < 20) {
-        await sleep(80);
-        continue;
-      }
-
-      const ema1_15m = emaSeries15m[emaSeries15m.length - 1];
-      const ema20_15m = emaSeries15m[emaSeries15m.length - 20];
-      if (!ema20_15m || ema20_15m <= 0) {
-        await sleep(80);
-        continue;
-      }
-
-      const diffema20_15m = ((ema1_15m - ema20_15m) / ema20_15m) * 100;
-
-      // --- TÍNH diffema10 TRÊN NẾN 5m ---
+      // --- TÍNH diffema10 & diffema30 TRÊN NẾN 5m ---
       const closedCandles5m = candles5m.slice(1).reverse();
       const closedPrices5m = closedCandles5m.map((c) => parseFloat(c[4]));
       const emaSeries5m = calculateEMAArray(closedPrices5m, 10);
-      if (emaSeries5m.length < 10) {
+
+      if (emaSeries5m.length < 30) {
         await sleep(80);
         continue;
       }
 
       const ema1_5m = emaSeries5m[emaSeries5m.length - 1];
       const ema10_5m = emaSeries5m[emaSeries5m.length - 10];
-      if (!ema10_5m || ema10_5m <= 0) {
+      const ema30_5m = emaSeries5m[emaSeries5m.length - 30];
+
+      if (!ema10_5m || ema10_5m <= 0 || !ema30_5m || ema30_5m <= 0) {
         await sleep(80);
         continue;
       }
 
       const diffema10_5m = ((ema1_5m - ema10_5m) / ema10_5m) * 100;
+      const diffema30_5m = ((ema1_5m - ema30_5m) / ema30_5m) * 100;
 
-      // --- KIỂM TRA ĐIỀU KIỆN EMA ---
-      // Điều kiện 1: -2% < diffema20 (15m) < 2%
-      const isEma15mValid = diffema20_15m > -2 && diffema20_15m < 2;
-      // Điều kiện 2: -0.5% < diffema10 (5m) < 0.5%
-      const isEma5mValid = diffema10_5m > -0.5 && diffema10_5m < 0.5;
-
-      if (!isEma15mValid || !isEma5mValid) {
+      // Điều kiện chung: -0.5% < diffema10 (5m) < 0.5%
+      const isDiffEma10Valid = diffema10_5m > -0.5 && diffema10_5m < 0.5;
+      if (!isDiffEma10Valid) {
         await sleep(80);
         continue;
       }
 
-      countMatchedEma++;
-      const diffema20Str = diffema20_15m.toFixed(2) + '%';
       const diffema10Str = diffema10_5m.toFixed(2) + '%';
+      const diffema30Str = diffema30_5m.toFixed(2) + '%';
 
-      scanResults.passedEma.push({
-        symbol,
-        change24h: `+${coin.change24hVal}%`,
-        diffema20_15m: diffema20Str,
-        diffema10_5m: diffema10Str
-      });
-
-      // --- TÍNH BOLLINGER BANDS 15m ---
+      // --- TÍNH BOLLINGER BANDS 15m & Hbb ---
       const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb15m = calculateBollingerBands(closesBB15m, 20);
 
-      let bbd = 0;
-      let bbt = 0;
-
-      if (bb15m) {
-        const candle0 = candles15m[0];
-        const low0 = parseFloat(candle0[3]);
-        const high0 = parseFloat(candle0[2]);
-
-        if (bb15m.lower > 0) {
-          bbd = ((low0 - bb15m.lower) / bb15m.lower) * 100;
-        }
-        if (bb15m.upper > 0) {
-          bbt = ((high0 - bb15m.upper) / bb15m.upper) * 100;
-        }
+      if (!bb15m || bb15m.middle <= 0) {
+        await sleep(80);
+        continue;
       }
 
-      // --- KIỂM TRA TÍN HIỆU LONG / SHORT ---
-      const isLong = bbd > -3 && bbd < -0.5;
-      const isShort = bbt > -0.5 && bbt < 2;
+      const hbb15m = bb15m.upper - bb15m.lower;
+      const hbb15mPercent = (hbb15m / bb15m.middle) * 100;
+
+      // Điều kiện: Hbb nến 15m > 3%
+      if (hbb15mPercent <= 3) {
+        await sleep(80);
+        continue;
+      }
+
+      const candle0_15m = candles15m[0];
+      const low0 = parseFloat(candle0_15m[3]);
+      const high0 = parseFloat(candle0_15m[2]);
+
+      let bbd = 0;
+      let bbt = 0;
+      if (bb15m.lower > 0) {
+        bbd = ((low0 - bb15m.lower) / bb15m.lower) * 100;
+      }
+      if (bb15m.upper > 0) {
+        bbt = ((high0 - bb15m.upper) / bb15m.upper) * 100;
+      }
+
+      // --- KIỂM TRA ĐIỀU KIỆN LONG / SHORT ---
+      // LONG: diffema30 < -2.5% VÀ -2% < bbd < -0.5%
+      const isLong = diffema30_5m < -2.5 && bbd > -2 && bbd < -0.5;
+
+      // SHORT: diffema30 > 2.5% VÀ 0.5% < bbt < 2%
+      const isShort = diffema30_5m > 2.5 && bbt > 0.5 && bbt < 2;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -284,15 +268,8 @@ async function main() {
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       console.log(
-        `🎯 [Khớp ENTRY ${signalType}] ${symbol} | diffema20 (15m): ${diffema20Str} | diffema10 (5m): ${diffema10Str} | ${isLong ? `bbd: ${bbd.toFixed(2)}%` : `bbt: ${bbt.toFixed(2)}%`}`
+        `🎯 [Khớp ENTRY ${signalType}] ${symbol} | diffema10: ${diffema10Str} | diffema30: ${diffema30Str} | Hbb: ${hbb15mPercent.toFixed(2)}% | ${isLong ? `bbd: ${bbd.toFixed(2)}%` : `bbt: ${bbt.toFixed(2)}%`}`
       );
-
-      let hbb15m = 0;
-      let hbb15mPercent = 0;
-      if (bb15m && bb15m.middle > 0) {
-        hbb15m = bb15m.upper - bb15m.lower;
-        hbb15mPercent = (hbb15m / bb15m.middle) * 100;
-      }
 
       const change24hStr = `+${coin.change24hVal.toFixed(2)}%`;
       if (isLong) countMatchedLong++;
@@ -310,8 +287,8 @@ async function main() {
         symbol,
         type: signalType,
         change24h: change24hStr,
-        diffema20_15m: diffema20Str,
         diffema10_5m: diffema10Str,
+        diffema30_5m: diffema30Str,
         bbd: isLong ? bbd.toFixed(2) + '%' : '-',
         bbt: isShort ? bbt.toFixed(2) + '%' : '-',
         hbb15m: hbb15m.toFixed(4),
@@ -330,8 +307,8 @@ async function main() {
         const message =
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
-          `• <b>diffema20 (15m):</b> ${diffema20Str}\n` +
           `• <b>diffema10 (5m):</b> ${diffema10Str}\n` +
+          `• <b>diffema30 (5m):</b> ${diffema30Str}\n` +
           `${entryDetail}\n` +
           `• <b>Hbb (15m):</b> ${hbb15m.toFixed(4)} (${hbb15mPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -360,8 +337,7 @@ async function main() {
     console.log('\n================== THỐNG KÊ CHI TIẾT ==================');
     console.log(`1️⃣ Thị trường: Tổng Swap = ${allSwapsCount} | Vol > 5M = ${volPassedCount} | bd24h > 10% = ${targetCoins.length}`);
     console.log(`2️⃣ Dữ liệu nến: Tải thành công = ${countValidCandles}/${targetCoins.length}`);
-    console.log(`3️⃣ Khớp điều kiện EMA (15m & 5m): ${countMatchedEma} coin`);
-    console.log(`4️⃣ Tín hiệu khớp: LONG = ${countMatchedLong} coin | SHORT = ${countMatchedShort} coin`);
+    console.log(`3️⃣ Tín hiệu khớp: LONG = ${countMatchedLong} coin | SHORT = ${countMatchedShort} coin`);
 
     console.log('\n================== KẾT QUẢ QUÉT ==================');
     if (scanResults.matched.length > 0) {
