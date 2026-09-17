@@ -1,111 +1,87 @@
 {
-  "lastScanAt": "2026-09-17T01:05:24.532Z",
-  "targetCoinsCount": 9,
+  "lastScanAt": "2026-09-17T01:10:28.696Z",
+  "targetCoinsCount": 7,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.2325,
-      "last": 1.4378,
-      "change24hVal": 16.66
+      "open24h": 1.2333,
+      "last": 1.4371,
+      "change24hVal": 16.52
     },
     {
       "instId": "LIT-USDT-SWAP",
-      "open24h": 4.0454,
-      "last": 4.737,
-      "change24hVal": 17.1
+      "open24h": 4.0593,
+      "last": 4.7226,
+      "change24hVal": 16.34
     },
     {
       "instId": "IOST-USDT-SWAP",
-      "open24h": 0.0007304,
-      "last": 0.0008414,
-      "change24hVal": 15.2
+      "open24h": 0.0007291,
+      "last": 0.0008372,
+      "change24hVal": 14.83
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.000649,
-      "last": 0.0009216,
-      "change24hVal": 42
+      "open24h": 0.0006502,
+      "last": 0.000939,
+      "change24hVal": 44.42
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1583,
-      "last": 0.1833,
-      "change24hVal": 15.79
+      "open24h": 0.1584,
+      "last": 0.1851,
+      "change24hVal": 16.86
     },
     {
       "instId": "NEAR-USDT-SWAP",
-      "open24h": 2.338,
-      "last": 2.658,
-      "change24hVal": 13.69
-    },
-    {
-      "instId": "DOT-USDT-SWAP",
-      "open24h": 0.9378,
-      "last": 1.0359,
-      "change24hVal": 10.46
-    },
-    {
-      "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.003661,
-      "last": 0.004086,
-      "change24hVal": 11.61
+      "open24h": 2.344,
+      "last": 2.659,
+      "change24hVal": 13.44
     },
     {
       "instId": "DGAI-USDT-SWAP",
-      "open24h": 0.7608,
-      "last": 0.9178,
+      "open24h": 0.7611,
+      "last": 0.9182,
       "change24hVal": 20.64
     }
   ],
-  "passedEmaCount": 9,
+  "passedEmaCount": 7,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "+16.66%",
+      "change24h": "+16.52%",
       "diffema20": "1.67%",
       "validFor": "LONG"
     },
     {
       "symbol": "LIT-USDT-SWAP",
-      "change24h": "+17.1%",
+      "change24h": "+16.34%",
       "diffema20": "4.09%",
       "validFor": "LONG"
     },
     {
       "symbol": "IOST-USDT-SWAP",
-      "change24h": "+15.2%",
+      "change24h": "+14.83%",
       "diffema20": "-1.21%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ONE-USDT-SWAP",
-      "change24h": "+42%",
+      "change24h": "+44.42%",
       "diffema20": "24.29%",
       "validFor": "LONG"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "+15.79%",
+      "change24h": "+16.86%",
       "diffema20": "11.09%",
       "validFor": "LONG"
     },
     {
       "symbol": "NEAR-USDT-SWAP",
-      "change24h": "+13.69%",
+      "change24h": "+13.44%",
       "diffema20": "4.13%",
       "validFor": "LONG"
-    },
-    {
-      "symbol": "DOT-USDT-SWAP",
-      "change24h": "+10.46%",
-      "diffema20": "2.97%",
-      "validFor": "LONG"
-    },
-    {
-      "symbol": "SOPH-USDT-SWAP",
-      "change24h": "+11.61%",
-      "diffema20": "-1.32%",
-      "validFor": "SHORT"
     },
     {
       "symbol": "DGAI-USDT-SWAP",
@@ -114,30 +90,18 @@
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
     {
       "symbol": "IOST-USDT-SWAP",
       "type": "SHORT (15m)",
-      "change24h": "+15.20%",
+      "change24h": "+14.83%",
       "diffema20": "-1.21%",
       "bbd": "-",
-      "bbt": "-0.00%",
+      "bbt": "0.65%",
       "hbb15m": "0.0000",
       "hbb15mPercent": "5.36%",
       "link": "https://www.okx.com/trade-swap/iost-usdt-swap",
-      "teleSent": true
-    },
-    {
-      "symbol": "SOPH-USDT-SWAP",
-      "type": "SHORT (15m)",
-      "change24h": "+11.61%",
-      "diffema20": "-1.32%",
-      "bbd": "-",
-      "bbt": "0.04%",
-      "hbb15m": "0.0002",
-      "hbb15mPercent": "5.30%",
-      "link": "https://www.okx.com/trade-swap/soph-usdt-swap",
       "teleSent": false
     }
   ]
