@@ -1,117 +1,105 @@
 {
-  "lastScanAt": "2026-09-17T09:15:40.197Z",
-  "targetCoinsCount": 17,
+  "lastScanAt": "2026-09-17T09:20:33.660Z",
+  "targetCoinsCount": 15,
   "targetCoinsList": [
     {
       "instId": "EDGE-USDT-SWAP",
-      "open24h": 0.6073,
-      "last": 0.6734,
-      "change24hVal": 10.88
+      "open24h": 0.6022,
+      "last": 0.675,
+      "change24hVal": 12.09
     },
     {
       "instId": "UNI-USDT-SWAP",
-      "open24h": 6.263,
-      "last": 6.933,
-      "change24hVal": 10.7
+      "open24h": 6.267,
+      "last": 6.92,
+      "change24hVal": 10.42
     },
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.3087,
-      "last": 1.4735,
-      "change24hVal": 12.59
+      "open24h": 1.3232,
+      "last": 1.464,
+      "change24hVal": 10.64
     },
     {
       "instId": "LIT-USDT-SWAP",
-      "open24h": 4.2887,
-      "last": 4.9696,
-      "change24hVal": 15.88
-    },
-    {
-      "instId": "PUMP-USDT-SWAP",
-      "open24h": 0.003523,
-      "last": 0.003899,
-      "change24hVal": 10.67
-    },
-    {
-      "instId": "ASTER-USDT-SWAP",
-      "open24h": 0.6699,
-      "last": 0.7407,
-      "change24hVal": 10.57
+      "open24h": 4.2982,
+      "last": 4.9339,
+      "change24hVal": 14.79
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.2456,
-      "last": 0.27657,
-      "change24hVal": 12.61
+      "open24h": 0.24401,
+      "last": 0.2753,
+      "change24hVal": 12.82
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.1831,
-      "last": 0.2061,
-      "change24hVal": 12.56
+      "open24h": 0.1832,
+      "last": 0.2075,
+      "change24hVal": 13.26
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0006421,
-      "last": 0.0010141,
-      "change24hVal": 57.93
+      "open24h": 0.0006435,
+      "last": 0.0009966,
+      "change24hVal": 54.87
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1544,
-      "last": 0.2073,
-      "change24hVal": 34.26
+      "open24h": 0.1555,
+      "last": 0.2054,
+      "change24hVal": 32.09
     },
     {
       "instId": "NEAR-USDT-SWAP",
-      "open24h": 2.378,
-      "last": 2.791,
-      "change24hVal": 17.37
+      "open24h": 2.401,
+      "last": 2.815,
+      "change24hVal": 17.24
     },
     {
       "instId": "MOODENG-USDT-SWAP",
-      "open24h": 0.03737,
-      "last": 0.04151,
-      "change24hVal": 11.08
+      "open24h": 0.03743,
+      "last": 0.04118,
+      "change24hVal": 10.02
     },
     {
       "instId": "MINA-USDT-SWAP",
-      "open24h": 0.0817,
-      "last": 0.09305,
-      "change24hVal": 13.89
+      "open24h": 0.08184,
+      "last": 0.09328,
+      "change24hVal": 13.98
     },
     {
       "instId": "PONS-USDT-SWAP",
-      "open24h": 0.5866,
-      "last": 0.6556,
-      "change24hVal": 11.76
+      "open24h": 0.5906,
+      "last": 0.6591,
+      "change24hVal": 11.6
     },
     {
       "instId": "CC-USDT-SWAP",
-      "open24h": 0.09094,
-      "last": 0.1022,
-      "change24hVal": 12.38
+      "open24h": 0.09104,
+      "last": 0.10276,
+      "change24hVal": 12.87
     },
     {
       "instId": "BOME-USDT-SWAP",
-      "open24h": 0.0008684,
-      "last": 0.0009558,
-      "change24hVal": 10.06
+      "open24h": 0.0008695,
+      "last": 0.0009576,
+      "change24hVal": 10.13
     },
     {
       "instId": "DGAI-USDT-SWAP",
-      "open24h": 0.7625,
-      "last": 0.93,
-      "change24hVal": 21.97
+      "open24h": 0.763,
+      "last": 0.9284,
+      "change24hVal": 21.68
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "DGAI-USDT-SWAP",
-      "change24h": "+21.97%",
+      "change24h": "+21.68%",
       "diffema20_15m": "0.49%",
-      "diffema10_5m": "0.29%"
+      "diffema10_5m": "0.31%"
     }
   ],
   "matchedCount": 1,
@@ -119,11 +107,11 @@
     {
       "symbol": "DGAI-USDT-SWAP",
       "type": "SHORT",
-      "change24h": "+21.97%",
+      "change24h": "+21.68%",
       "diffema20_15m": "0.49%",
-      "diffema10_5m": "0.29%",
+      "diffema10_5m": "0.31%",
       "bbd": "-",
-      "bbt": "0.07%",
+      "bbt": "0.20%",
       "hbb15m": "0.0101",
       "hbb15mPercent": "1.09%",
       "link": "https://www.okx.com/trade-swap/dgai-usdt-swap",
