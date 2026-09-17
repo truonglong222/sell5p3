@@ -1,132 +1,119 @@
 {
-  "lastScanAt": "2026-09-17T00:55:24.679Z",
+  "lastScanAt": "2026-09-17T01:01:00.643Z",
   "targetCoinsCount": 9,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.237,
-      "last": 1.4156,
-      "change24hVal": 14.44
+      "open24h": 1.241,
+      "last": 1.4141,
+      "change24hVal": 13.95
     },
     {
       "instId": "LIT-USDT-SWAP",
-      "open24h": 4.0236,
-      "last": 4.739,
-      "change24hVal": 17.78
+      "open24h": 4.0494,
+      "last": 4.732,
+      "change24hVal": 16.86
     },
     {
       "instId": "IOST-USDT-SWAP",
-      "open24h": 0.0007341,
-      "last": 0.0008285,
-      "change24hVal": 12.86
+      "open24h": 0.000732,
+      "last": 0.0008311,
+      "change24hVal": 13.54
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0006515,
-      "last": 0.000928,
+      "open24h": 0.0006511,
+      "last": 0.0009274,
       "change24hVal": 42.44
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1561,
-      "last": 0.1843,
-      "change24hVal": 18.07
+      "open24h": 0.1581,
+      "last": 0.1822,
+      "change24hVal": 15.24
     },
     {
       "instId": "NEAR-USDT-SWAP",
-      "open24h": 2.347,
-      "last": 2.675,
-      "change24hVal": 13.98
+      "open24h": 2.351,
+      "last": 2.661,
+      "change24hVal": 13.19
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.14897,
-      "last": 0.16528,
-      "change24hVal": 10.95
+      "open24h": 0.14971,
+      "last": 0.16516,
+      "change24hVal": 10.32
     },
     {
       "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.00361,
-      "last": 0.004062,
-      "change24hVal": 12.52
+      "open24h": 0.003634,
+      "last": 0.004059,
+      "change24hVal": 11.7
     },
     {
       "instId": "DGAI-USDT-SWAP",
-      "open24h": 0.761,
-      "last": 0.9213,
-      "change24hVal": 21.06
+      "open24h": 0.7615,
+      "last": 0.9182,
+      "change24hVal": 20.58
     }
   ],
   "passedEmaCount": 9,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "+14.44%",
-      "diffema20": "1.60%",
+      "change24h": "+13.95%",
+      "diffema20": "1.67%",
       "validFor": "LONG"
     },
     {
       "symbol": "LIT-USDT-SWAP",
-      "change24h": "+17.78%",
-      "diffema20": "3.81%",
+      "change24h": "+16.86%",
+      "diffema20": "4.09%",
       "validFor": "LONG"
     },
     {
       "symbol": "IOST-USDT-SWAP",
-      "change24h": "+12.86%",
-      "diffema20": "-1.18%",
+      "change24h": "+13.54%",
+      "diffema20": "-1.21%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ONE-USDT-SWAP",
       "change24h": "+42.44%",
-      "diffema20": "22.25%",
+      "diffema20": "24.29%",
       "validFor": "LONG"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "+18.07%",
-      "diffema20": "10.72%",
+      "change24h": "+15.24%",
+      "diffema20": "11.09%",
       "validFor": "LONG"
     },
     {
       "symbol": "NEAR-USDT-SWAP",
-      "change24h": "+13.98%",
-      "diffema20": "3.95%",
+      "change24h": "+13.19%",
+      "diffema20": "4.13%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARB-USDT-SWAP",
-      "change24h": "+10.95%",
-      "diffema20": "3.29%",
+      "change24h": "+10.32%",
+      "diffema20": "3.25%",
       "validFor": "LONG"
     },
     {
       "symbol": "SOPH-USDT-SWAP",
-      "change24h": "+12.52%",
-      "diffema20": "-1.44%",
+      "change24h": "+11.7%",
+      "diffema20": "-1.32%",
       "validFor": "SHORT"
     },
     {
       "symbol": "DGAI-USDT-SWAP",
-      "change24h": "+21.06%",
-      "diffema20": "1.66%",
+      "change24h": "+20.58%",
+      "diffema20": "1.53%",
       "validFor": "LONG"
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "SOPH-USDT-SWAP",
-      "type": "SHORT (15m)",
-      "change24h": "+12.52%",
-      "diffema20": "-1.44%",
-      "bbd": "-",
-      "bbt": "-0.18%",
-      "hbb15m": "0.0002",
-      "hbb15mPercent": "5.94%",
-      "link": "https://www.okx.com/trade-swap/soph-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
