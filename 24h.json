@@ -1,75 +1,81 @@
 {
-  "lastScanAt": "2026-09-17T11:35:28.491Z",
-  "targetCoinsCount": 10,
+  "lastScanAt": "2026-09-17T11:40:32.610Z",
+  "targetCoinsCount": 11,
   "targetCoinsList": [
     {
       "instId": "LIT-USDT-SWAP",
-      "open24h": 4.3237,
-      "last": 4.9094,
-      "change24hVal": 13.55
+      "open24h": 4.3265,
+      "last": 4.8702,
+      "change24hVal": 12.57
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.23415,
-      "last": 0.2678,
-      "change24hVal": 14.37
+      "open24h": 0.23679,
+      "last": 0.26395,
+      "change24hVal": 11.47
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.1851,
-      "last": 0.2038,
-      "change24hVal": 10.1
+      "open24h": 0.1847,
+      "last": 0.2032,
+      "change24hVal": 10.02
+    },
+    {
+      "instId": "KMNO-USDT-SWAP",
+      "open24h": 0.02505,
+      "last": 0.02767,
+      "change24hVal": 10.46
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0006475,
-      "last": 0.0010589,
-      "change24hVal": 63.54
+      "open24h": 0.0006469,
+      "last": 0.0010531,
+      "change24hVal": 62.79
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.16,
-      "last": 0.2,
-      "change24hVal": 25
+      "open24h": 0.1601,
+      "last": 0.1992,
+      "change24hVal": 24.42
     },
     {
       "instId": "NEAR-USDT-SWAP",
-      "open24h": 2.452,
-      "last": 2.828,
-      "change24hVal": 15.33
+      "open24h": 2.446,
+      "last": 2.824,
+      "change24hVal": 15.45
     },
     {
       "instId": "MINA-USDT-SWAP",
-      "open24h": 0.08176,
-      "last": 0.09296,
-      "change24hVal": 13.7
+      "open24h": 0.08188,
+      "last": 0.09313,
+      "change24hVal": 13.74
     },
     {
       "instId": "EDEN-USDT-SWAP",
-      "open24h": 0.04567,
-      "last": 0.05079,
-      "change24hVal": 11.21
+      "open24h": 0.04565,
+      "last": 0.05075,
+      "change24hVal": 11.17
     },
     {
       "instId": "CC-USDT-SWAP",
       "open24h": 0.09097,
-      "last": 0.10031,
-      "change24hVal": 10.27
+      "last": 0.10025,
+      "change24hVal": 10.2
     },
     {
       "instId": "DGAI-USDT-SWAP",
-      "open24h": 0.788,
-      "last": 0.9191,
-      "change24hVal": 16.64
+      "open24h": 0.7873,
+      "last": 0.918,
+      "change24hVal": 16.6
     }
   ],
   "passedEmaCount": 1,
   "passedEmaList": [
     {
       "symbol": "DGAI-USDT-SWAP",
-      "change24h": "+16.64%",
+      "change24h": "+16.6%",
       "diffema20_15m": "0.16%",
-      "diffema10_5m": "-0.00%"
+      "diffema10_5m": "-0.08%"
     }
   ],
   "matchedCount": 0,
