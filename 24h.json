@@ -1,139 +1,139 @@
 {
-  "lastScanAt": "2026-09-17T00:20:32.982Z",
+  "lastScanAt": "2026-09-17T00:25:24.509Z",
   "targetCoinsCount": 11,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.2373,
-      "last": 1.4138,
-      "change24hVal": 14.26
+      "open24h": 1.2358,
+      "last": 1.406,
+      "change24hVal": 13.77
     },
     {
       "instId": "LIT-USDT-SWAP",
-      "open24h": 4.0099,
-      "last": 4.6315,
-      "change24hVal": 15.5
+      "open24h": 4.0446,
+      "last": 4.625,
+      "change24hVal": 14.35
     },
     {
       "instId": "IOST-USDT-SWAP",
-      "open24h": 0.0007299,
-      "last": 0.000809,
-      "change24hVal": 10.84
+      "open24h": 0.0007328,
+      "last": 0.0008136,
+      "change24hVal": 11.03
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0006584,
-      "last": 0.0009359,
-      "change24hVal": 42.15
+      "open24h": 0.0006598,
+      "last": 0.0009342,
+      "change24hVal": 41.59
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1602,
-      "last": 0.1865,
-      "change24hVal": 16.42
+      "open24h": 0.1607,
+      "last": 0.184,
+      "change24hVal": 14.5
     },
     {
       "instId": "NEAR-USDT-SWAP",
-      "open24h": 2.34,
-      "last": 2.662,
-      "change24hVal": 13.76
+      "open24h": 2.341,
+      "last": 2.671,
+      "change24hVal": 14.1
     },
     {
       "instId": "ARB-USDT-SWAP",
-      "open24h": 0.15097,
-      "last": 0.16901,
-      "change24hVal": 11.95
+      "open24h": 0.15058,
+      "last": 0.16786,
+      "change24hVal": 11.48
     },
     {
       "instId": "LA-USDT-SWAP",
-      "open24h": 0.0616,
-      "last": 0.06816,
-      "change24hVal": 10.65
+      "open24h": 0.06154,
+      "last": 0.06824,
+      "change24hVal": 10.89
     },
     {
       "instId": "SOPH-USDT-SWAP",
-      "open24h": 0.003627,
-      "last": 0.004006,
-      "change24hVal": 10.45
+      "open24h": 0.003632,
+      "last": 0.004024,
+      "change24hVal": 10.79
     },
     {
       "instId": "CC-USDT-SWAP",
-      "open24h": 0.09115,
-      "last": 0.10223,
-      "change24hVal": 12.16
+      "open24h": 0.09081,
+      "last": 0.10218,
+      "change24hVal": 12.52
     },
     {
       "instId": "DGAI-USDT-SWAP",
-      "open24h": 0.7614,
-      "last": 0.9236,
-      "change24hVal": 21.3
+      "open24h": 0.7613,
+      "last": 0.9245,
+      "change24hVal": 21.44
     }
   ],
   "passedEmaCount": 11,
   "passedEmaList": [
     {
       "symbol": "RAY-USDT-SWAP",
-      "change24h": "+14.26%",
+      "change24h": "+13.77%",
       "diffema20": "1.40%",
       "validFor": "LONG"
     },
     {
       "symbol": "LIT-USDT-SWAP",
-      "change24h": "+15.5%",
+      "change24h": "+14.35%",
       "diffema20": "3.83%",
       "validFor": "LONG"
     },
     {
       "symbol": "IOST-USDT-SWAP",
-      "change24h": "+10.84%",
+      "change24h": "+11.03%",
       "diffema20": "-1.02%",
       "validFor": "SHORT"
     },
     {
       "symbol": "ONE-USDT-SWAP",
-      "change24h": "+42.15%",
+      "change24h": "+41.59%",
       "diffema20": "14.99%",
       "validFor": "LONG"
     },
     {
       "symbol": "CASHCAT-USDT-SWAP",
-      "change24h": "+16.42%",
+      "change24h": "+14.5%",
       "diffema20": "9.60%",
       "validFor": "LONG"
     },
     {
       "symbol": "NEAR-USDT-SWAP",
-      "change24h": "+13.76%",
+      "change24h": "+14.1%",
       "diffema20": "3.64%",
       "validFor": "LONG"
     },
     {
       "symbol": "ARB-USDT-SWAP",
-      "change24h": "+11.95%",
+      "change24h": "+11.48%",
       "diffema20": "3.03%",
       "validFor": "LONG"
     },
     {
       "symbol": "LA-USDT-SWAP",
-      "change24h": "+10.65%",
+      "change24h": "+10.89%",
       "diffema20": "1.57%",
       "validFor": "LONG"
     },
     {
       "symbol": "SOPH-USDT-SWAP",
-      "change24h": "+10.45%",
+      "change24h": "+10.79%",
       "diffema20": "-1.13%",
       "validFor": "SHORT"
     },
     {
       "symbol": "CC-USDT-SWAP",
-      "change24h": "+12.16%",
+      "change24h": "+12.52%",
       "diffema20": "4.73%",
       "validFor": "LONG"
     },
     {
       "symbol": "DGAI-USDT-SWAP",
-      "change24h": "+21.3%",
+      "change24h": "+21.44%",
       "diffema20": "1.80%",
       "validFor": "LONG"
     }
