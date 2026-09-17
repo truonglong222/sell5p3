@@ -76,7 +76,8 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-function calculateEMAArray(prices, period = 10) {
+// Tính mảng EMA (mặc định period = 20)
+function calculateEMAArray(prices, period = 20) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
   const emaArray = [];
@@ -192,35 +193,37 @@ async function main() {
         continue;
       }
 
-      // 2. Lấy nến 5m
-      const candles5m = await getCandles(symbol, '5m', 120);
-      if (!candles5m || candles5m.length < 60) {
+      // 2. Lấy 140 nến 5m (đảm bảo đủ 20 nến tính SMA ban đầu + ít nhất 30 điểm EMA20 phía sau)
+      const candles5m = await getCandles(symbol, '5m', 140);
+      if (!candles5m || candles5m.length < 70) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
-      // --- TÍNH TOÁN DIFFEMA TRÊN NẾN 5m ---
+      // --- TÍNH TOÁN EMA20 TRÊN NẾN 5m ---
       const closedCandles5m = candles5m.slice(1).reverse();
       const closedPrices5m = closedCandles5m.map((c) => parseFloat(c[4]));
-      const emaSeries5m = calculateEMAArray(closedPrices5m, 10);
+      const emaSeries5m = calculateEMAArray(closedPrices5m, 20); // Dùng chu kỳ EMA 20
 
       if (emaSeries5m.length < 30) {
         await sleep(80);
         continue;
       }
 
-      const ema1_5m = emaSeries5m[emaSeries5m.length - 1];
-      const ema10_5m = emaSeries5m[emaSeries5m.length - 10];
-      const ema30_5m = emaSeries5m[emaSeries5m.length - 30];
+      // Lấy giá trị EMA20 tại nến số 1, nến số 10 và nến số 30
+      const ema20_n1 = emaSeries5m[emaSeries5m.length - 1];
+      const ema20_n10 = emaSeries5m[emaSeries5m.length - 10];
+      const ema20_n30 = emaSeries5m[emaSeries5m.length - 30];
 
-      if (!ema10_5m || ema10_5m <= 0 || !ema30_5m || ema30_5m <= 0) {
+      if (!ema20_n10 || ema20_n10 <= 0 || !ema20_n30 || ema20_n30 <= 0) {
         await sleep(80);
         continue;
       }
 
-      const diffema10_5m = ((ema1_5m - ema10_5m) / ema10_5m) * 100;
-      const diffema30_5m = ((ema1_5m - ema30_5m) / ema30_5m) * 100;
+      // Chênh lệch % giữa EMA20 nến 1 so với nến 10 và nến 30
+      const diffema10_5m = ((ema20_n1 - ema20_n10) / ema20_n10) * 100;
+      const diffema30_5m = ((ema20_n1 - ema20_n30) / ema20_n30) * 100;
 
       // --- TÍNH TOÁN BOLLINGER BANDS 15m ---
       const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
@@ -247,7 +250,7 @@ async function main() {
         bbt = ((high0 - bb15m.upper) / bb15m.upper) * 100;
       }
 
-      // --- ĐÁNH GIÁ VÀ ĐẾM TỪNG ĐIỀU KIỆN ĐỘC LẬP ---
+      // --- ĐÁNH GIÁ TỪNG ĐIỀU KIỆN ĐỘC LẬP ---
       const passDiffEma10 = diffema10_5m > -0.5 && diffema10_5m < 0.5;
       const passDiffEma30Long = diffema30_5m < -2.5;
       const passDiffEma30Short = diffema30_5m > 2.5;
@@ -277,7 +280,7 @@ async function main() {
       const change24hStr = `+${coin.change24hVal.toFixed(2)}%`;
 
       console.log(
-        `🎯 [Khớp ENTRY ${signalType}] ${symbol} | diffema10: ${diffema10Str} | diffema30: ${diffema30Str} | Hbb: ${hbb15mPercent.toFixed(2)}% | ${isLong ? `bbd: ${bbd.toFixed(2)}%` : `bbt: ${bbt.toFixed(2)}%`}`
+        `🎯 [Khớp ENTRY ${signalType}] ${symbol} | diffema10 (EMA20): ${diffema10Str} | diffema30 (EMA20): ${diffema30Str} | Hbb: ${hbb15mPercent.toFixed(2)}% | ${isLong ? `bbd: ${bbd.toFixed(2)}%` : `bbt: ${bbt.toFixed(2)}%`}`
       );
 
       if (isLong) countMatchedLong++;
@@ -315,8 +318,8 @@ async function main() {
         const message =
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Biến động 24h:</b> ${change24hStr}\n` +
-          `• <b>diffema10 (5m):</b> ${diffema10Str}\n` +
-          `• <b>diffema30 (5m):</b> ${diffema30Str}\n` +
+          `• <b>diffema10 (EMA20 5m):</b> ${diffema10Str}\n` +
+          `• <b>diffema30 (EMA20 5m):</b> ${diffema30Str}\n` +
           `${entryDetail}\n` +
           `• <b>Hbb (15m):</b> ${hbb15m.toFixed(4)} (${hbb15mPercent.toFixed(2)}%)\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -346,7 +349,7 @@ async function main() {
     console.log(`1️⃣ Tổng nến tải thành công: ${countValidCandles}/${targetCoins.length} coin`);
     console.log('----------------------------------------------------------------------');
     console.table([
-      { 'Điều kiện': 'diffema10 (-0.5% ~ 0.5%)', 'Số coin thoả': countDiffEma10 },
+      { 'Điều kiện': 'diffema10 (EMA20 nến 1 vs 10: -0.5% ~ 0.5%)', 'Số coin thoả': countDiffEma10 },
       { 'Điều kiện': 'diffema30 < -2.5% (Long)', 'Số coin thoả': countDiffEma30Long },
       { 'Điều kiện': 'diffema30 > 2.5% (Short)', 'Số coin thoả': countDiffEma30Short },
       { 'Điều kiện': 'Hbb 15m > 3%', 'Số coin thoả': countHbb },
