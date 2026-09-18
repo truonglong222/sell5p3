@@ -114,7 +114,6 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-      // Lọc các coin có biến động mạnh: > 5% (tăng) hoặc < -5% (giảm)
       if (change24hVal > 5 || change24hVal < -5) {
         filteredCoins.push({
           instId: item.instId,
@@ -172,7 +171,7 @@ async function main() {
 
     let countValidCandles = 0;
 
-    // Đếm từng điều kiện độc lập
+    // Đếm độc lập từng điều kiện
     let countBd24Long = 0;
     let countDiffEma40Long = 0;
     let countBbdLong = 0;
@@ -198,20 +197,22 @@ async function main() {
       const high0 = parseFloat(candle0[2]);
       const low0 = parseFloat(candle0[3]);
 
-      // 40 nến đã đóng gần nhất: từ index 1 đến 40
-      const last40ClosedCandles = candles5m.slice(1, 41);
-
-      // --- 1. BOLLINGER BANDS TRÊN NẾN 5m ---
+      // --- 1. BOLLINGER BANDS (20) TRÊN NẾN 5m SỐ 1 VỪA ĐÓNG (candles5m[1..20]) ---
       const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb5m = calculateBollingerBands(closesBB5m, 20);
 
-      if (!bb5m || bb5m.lower <= 0 || bb5m.upper <= 0) {
+      if (!bb5m || bb5m.lower <= 0 || bb5m.upper <= 0 || bb5m.middle <= 0) {
         await sleep(80);
         continue;
       }
 
+      // bbd: % chênh lệch giá thấp nhất nến hiện tại với BB dưới
       const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
+      // bbt: % chênh lệch giá cao nhất nến hiện tại với BB trên
       const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
+
+      // Hbb: Độ rộng dải Bollinger Band nến số 1 tính theo %
+      const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
 
       // --- 2. EMA20 VÀ diffema40 TRÊN NẾN 5m ---
       const allClosedCandles = candles5m.slice(1).reverse();
@@ -238,8 +239,7 @@ async function main() {
       const passDiffEma40Long = diffema40 > 3;
       const passBbdLong = bbd < 0;
 
-      // Điều kiện Short: bd24h < -5% (hoặc < 5%), diffema40 < -3%, bbt > 0
-      const passBd24Short = coin.change24hVal < -5; 
+      const passBd24Short = coin.change24hVal < -5;
       const passDiffEma40Short = diffema40 < -3;
       const passBbtShort = bbt > 0;
 
@@ -260,17 +260,10 @@ async function main() {
         continue;
       }
 
-      // --- 3. TÍNH x (BIẾN ĐỘNG % CAO - THẤP TRONG 40 NẾN VỪA ĐÓNG) ---
-      const highs40 = last40ClosedCandles.map((c) => parseFloat(c[2]));
-      const lows40 = last40ClosedCandles.map((c) => parseFloat(c[3]));
-      const maxHigh40 = Math.max(...highs40);
-      const minLow40 = Math.min(...lows40);
-      const xVal = ((maxHigh40 - minLow40) / minLow40) * 100;
-
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
       const diffema40Str = `${diffema40 > 0 ? '+' : ''}${diffema40.toFixed(2)}%`;
-      const xStr = `${xVal.toFixed(2)}%`;
+      const hbbStr = `${hbbPercent.toFixed(2)}%`;
 
       if (isLong) countMatchedLong++;
       if (isShort) countMatchedShort++;
@@ -286,19 +279,19 @@ async function main() {
       scanResults.matched.push({
         symbol,
         type: signalType,
-        x: xStr,
+        Hbb: hbbStr,
         diffema40: diffema40Str,
         bd24h: change24hStr,
         link,
         teleSent: !isCooldown
       });
 
-      // Gửi Telegram
+      // Gửi Telegram thay x bằng Hbb
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const message =
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
-          `• <b>x:</b> ${xStr}\n` +
+          `• <b>Hbb (5m):</b> ${hbbStr}\n` +
           `• <b>diffema40:</b> ${diffema40Str}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <a href="${link}">Link OKX</a>`;
