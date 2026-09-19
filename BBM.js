@@ -172,6 +172,8 @@ async function main() {
     let countValidCandles = 0;
 
     // Đếm độc lập từng điều kiện
+    let countHbbFilter = 0;
+
     let countBd24Long = 0;
     let countDiffEma40Long = 0;
     let countBbdLong = 0;
@@ -234,13 +236,17 @@ async function main() {
 
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
+      // Điều kiện lọc chung Hbb > 3%
+      const passHbb = hbbPercent > 3;
+      if (passHbb) countHbbFilter++;
+
       // Đánh giá từng điều kiện
       const passBd24Long = coin.change24hVal > 5;
       const passDiffEma40Long = diffema40 > 3;
       const passBbdLong = bbd < 0;
 
       const passBd24Short = coin.change24hVal < -5;
-      const passDiffEma40Short = diffema40 < -3;
+      const passDiffEma40Short = diffema40 < -2; // Cập nhật: diffema40 < -2%
       const passBbtShort = bbt > 0;
 
       if (passBd24Long) countBd24Long++;
@@ -251,9 +257,9 @@ async function main() {
       if (passDiffEma40Short) countDiffEma40Short++;
       if (passBbtShort) countBbtShort++;
 
-      // Tín hiệu kết hợp
-      const isLong = passBd24Long && passDiffEma40Long && passBbdLong;
-      const isShort = passBd24Short && passDiffEma40Short && passBbtShort;
+      // Tín hiệu kết hợp (có thêm điều kiện passHbb)
+      const isLong = passHbb && passBd24Long && passDiffEma40Long && passBbdLong;
+      const isShort = passHbb && passBd24Short && passDiffEma40Short && passBbtShort;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -320,11 +326,12 @@ async function main() {
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
+      { 'Điều kiện': 'Hbb > 3% (Bộ lọc chung)', 'Số lượng': countHbbFilter },
       { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
       { 'Điều kiện': 'diffema40 > 3% (Long)', 'Số lượng': countDiffEma40Long },
       { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
       { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
-      { 'Điều kiện': 'diffema40 < -3% (Short)', 'Số lượng': countDiffEma40Short },
+      { 'Điều kiện': 'diffema40 < -2% (Short)', 'Số lượng': countDiffEma40Short },
       { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
       { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
