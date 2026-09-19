@@ -177,10 +177,12 @@ async function main() {
     let countBd24Long = 0;
     let countDiffEma40Long = 0;
     let countBbdLong = 0;
+    let countBd5Long = 0;
 
     let countBd24Short = 0;
     let countDiffEma40Short = 0;
     let countBbtShort = 0;
+    let countBd5Short = 0;
 
     let countMatchedLong = 0;
     let countMatchedShort = 0;
@@ -195,9 +197,15 @@ async function main() {
       }
       countValidCandles++;
 
-      const candle0 = candles5m[0];
-      const high0 = parseFloat(candle0[2]);
-      const low0 = parseFloat(candle0[3]);
+      // Dữ liệu nến số 1 vừa đóng [ts, open, high, low, close, ...]
+      const candle1 = candles5m[1];
+      const open1 = parseFloat(candle1[1]);
+      const high1 = parseFloat(candle1[2]);
+      const low1 = parseFloat(candle1[3]);
+      const close1 = parseFloat(candle1[4]);
+
+      // Biến động nến 5m vừa đóng (bd5)
+      const bd5 = open1 > 0 ? ((close1 - open1) / open1) * 100 : 0;
 
       // --- 1. BOLLINGER BANDS (20) TRÊN NẾN 5m SỐ 1 VỪA ĐÓNG (candles5m[1..20]) ---
       const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
@@ -208,10 +216,10 @@ async function main() {
         continue;
       }
 
-      // bbd: % chênh lệch giá thấp nhất nến hiện tại với BB dưới
-      const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
-      // bbt: % chênh lệch giá cao nhất nến hiện tại với BB trên
-      const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
+      // bbd: % chênh lệch giá thấp nhất của NẾN SỐ 1 VỪA ĐÓNG với BB dưới
+      const bbd = ((low1 - bb5m.lower) / bb5m.lower) * 100;
+      // bbt: % chênh lệch giá cao nhất của NẾN SỐ 1 VỪA ĐÓNG với BB trên
+      const bbt = ((high1 - bb5m.upper) / bb5m.upper) * 100;
 
       // Hbb: Độ rộng dải Bollinger Band nến số 1 tính theo %
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
@@ -244,22 +252,26 @@ async function main() {
       const passBd24Long = coin.change24hVal > 5;
       const passDiffEma40Long = diffema40 > 3;
       const passBbdLong = bbd < 0;
+      const passBd5Long = bd5 > -1;
 
       const passBd24Short = coin.change24hVal < -5;
-      const passDiffEma40Short = diffema40 < -2; // Cập nhật: diffema40 < -2%
+      const passDiffEma40Short = diffema40 < -2;
       const passBbtShort = bbt > 0;
+      const passBd5Short = bd5 < 1;
 
       if (passBd24Long) countBd24Long++;
       if (passDiffEma40Long) countDiffEma40Long++;
       if (passBbdLong) countBbdLong++;
+      if (passBd5Long) countBd5Long++;
 
       if (passBd24Short) countBd24Short++;
       if (passDiffEma40Short) countDiffEma40Short++;
       if (passBbtShort) countBbtShort++;
+      if (passBd5Short) countBd5Short++;
 
-      // Tín hiệu kết hợp (có thêm điều kiện passHbb)
-      const isLong = passHbb && passBd24Long && passDiffEma40Long && passBbdLong;
-      const isShort = passHbb && passBd24Short && passDiffEma40Short && passBbtShort;
+      // Tín hiệu kết hợp
+      const isLong = passHbb && passBd24Long && passDiffEma40Long && passBbdLong && passBd5Long;
+      const isShort = passHbb && passBd24Short && passDiffEma40Short && passBbtShort && passBd5Short;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -270,6 +282,7 @@ async function main() {
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
       const diffema40Str = `${diffema40 > 0 ? '+' : ''}${diffema40.toFixed(2)}%`;
       const hbbStr = `${hbbPercent.toFixed(2)}%`;
+      const bd5Str = `${bd5 > 0 ? '+' : ''}${bd5.toFixed(2)}%`;
 
       if (isLong) countMatchedLong++;
       if (isShort) countMatchedShort++;
@@ -288,16 +301,18 @@ async function main() {
         Hbb: hbbStr,
         diffema40: diffema40Str,
         bd24h: change24hStr,
+        bd5: bd5Str,
         link,
         teleSent: !isCooldown
       });
 
-      // Gửi Telegram thay x bằng Hbb
+      // Gửi Telegram
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const message =
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Hbb (5m):</b> ${hbbStr}\n` +
+          `• <b>bd5 (nến vừa đóng):</b> ${bd5Str}\n` +
           `• <b>diffema40:</b> ${diffema40Str}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -322,7 +337,7 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    // Bảng thống kê ngắn gọn
+    // Bảng thống kê chi tiết
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
@@ -330,9 +345,11 @@ async function main() {
       { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
       { 'Điều kiện': 'diffema40 > 3% (Long)', 'Số lượng': countDiffEma40Long },
       { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
+      { 'Điều kiện': 'bd5 > -1% (Long)', 'Số lượng': countBd5Long },
       { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
       { 'Điều kiện': 'diffema40 < -2% (Short)', 'Số lượng': countDiffEma40Short },
       { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
+      { 'Điều kiện': 'bd5 < 1% (Short)', 'Số lượng': countBd5Short },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
       { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
     ]);
