@@ -115,9 +115,9 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
 
-      // Long cần > 10%, Short cần trong khoảng (-5%, 10%)
+      // Long: bd24h > 10%, Short: bd24h < -5%
       const isEligibleLong = change24hVal > 10;
-      const isEligibleShort = change24hVal > -5 && change24hVal < 10;
+      const isEligibleShort = change24hVal < -5;
 
       if (isEligibleLong || isEligibleShort) {
         filteredCoins.push({
@@ -259,7 +259,7 @@ async function main() {
       const passBbdLong = bbd < 0;
       const passBd5Long = bd5 > -1;
 
-      const passBd24Short = coin.change24hVal > -5 && coin.change24hVal < 10;
+      const passBd24Short = coin.change24hVal < -5;
       const passDiffEma40Short = diffema40 < -2;
       const passBbtShort = bbt > 0;
       const passBd5Short = bd5 < 1;
@@ -351,7 +351,7 @@ async function main() {
       { 'Điều kiện': 'diffema40 > 3% (Long)', 'Số lượng': countDiffEma40Long },
       { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
       { 'Điều kiện': 'bd5 > -1% (Long)', 'Số lượng': countBd5Long },
-      { 'Điều kiện': '-5% < bd24h < 10% (Short)', 'Số lượng': countBd24Short },
+      { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
       { 'Điều kiện': 'diffema40 < -2% (Short)', 'Số lượng': countDiffEma40Short },
       { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
       { 'Điều kiện': 'bd5 < 1% (Short)', 'Số lượng': countBd5Short },
