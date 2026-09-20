@@ -96,7 +96,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & |bd24h| > 5%) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & THỎA ĐIỀU KIỆN 24H) -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -114,7 +114,12 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-      if (change24hVal > 5 || change24hVal < -5) {
+
+      // Long cần > 10%, Short cần trong khoảng (-5%, 10%)
+      const isEligibleLong = change24hVal > 10;
+      const isEligibleShort = change24hVal > -5 && change24hVal < 10;
+
+      if (isEligibleLong || isEligibleShort) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -161,7 +166,7 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
+      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa điều kiện bd24h: ${targetCoins.length} coin`
     );
 
     const scanResults = {
@@ -249,12 +254,12 @@ async function main() {
       if (passHbb) countHbbFilter++;
 
       // Đánh giá từng điều kiện
-      const passBd24Long = coin.change24hVal > 5;
+      const passBd24Long = coin.change24hVal > 10;
       const passDiffEma40Long = diffema40 > 3;
       const passBbdLong = bbd < 0;
       const passBd5Long = bd5 > -1;
 
-      const passBd24Short = coin.change24hVal < -5;
+      const passBd24Short = coin.change24hVal > -5 && coin.change24hVal < 10;
       const passDiffEma40Short = diffema40 < -2;
       const passBbtShort = bbt > 0;
       const passBd5Short = bd5 < 1;
@@ -342,11 +347,11 @@ async function main() {
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
       { 'Điều kiện': 'Hbb > 3% (Bộ lọc chung)', 'Số lượng': countHbbFilter },
-      { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
+      { 'Điều kiện': 'bd24h > 10% (Long)', 'Số lượng': countBd24Long },
       { 'Điều kiện': 'diffema40 > 3% (Long)', 'Số lượng': countDiffEma40Long },
       { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
       { 'Điều kiện': 'bd5 > -1% (Long)', 'Số lượng': countBd5Long },
-      { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
+      { 'Điều kiện': '-5% < bd24h < 10% (Short)', 'Số lượng': countBd24Short },
       { 'Điều kiện': 'diffema40 < -2% (Short)', 'Số lượng': countDiffEma40Short },
       { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
       { 'Điều kiện': 'bd5 < 1% (Short)', 'Số lượng': countBd5Short },
