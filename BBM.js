@@ -260,7 +260,7 @@ async function main() {
       const passBd5Long = bd5 > -1;
 
       const passBd24Short = coin.change24hVal < -5;
-      const passDiffEma40Short = diffema40 < -2;
+      const passDiffEma40Short = diffema40 < -3;
       const passBbtShort = bbt > 0;
       const passBd5Short = bd5 < 1;
 
