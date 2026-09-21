@@ -1,124 +1,136 @@
 {
-  "lastScanAt": "2026-09-21T17:55:27.635Z",
-  "targetCoinsCount": 17,
+  "lastScanAt": "2026-09-21T18:01:07.061Z",
+  "targetCoinsCount": 19,
   "targetCoinsList": [
     {
       "instId": "DOGE-USDT-SWAP",
-      "open24h": 0.08694,
-      "last": 0.09713,
+      "open24h": 0.08692,
+      "last": 0.09711,
       "change24hVal": 11.72
     },
     {
       "instId": "SUI-USDT-SWAP",
-      "open24h": 0.8956,
-      "last": 0.9941,
-      "change24hVal": 11
+      "open24h": 0.8946,
+      "last": 0.9956,
+      "change24hVal": 11.29
     },
     {
       "instId": "PEPE-USDT-SWAP",
-      "open24h": 0.00000397,
-      "last": 0.000004887,
-      "change24hVal": 23.1
+      "open24h": 0.000003982,
+      "last": 0.000004901,
+      "change24hVal": 23.08
     },
     {
       "instId": "SATS-USDT-SWAP",
-      "open24h": 1.1144e-8,
+      "open24h": 1.1166e-8,
       "last": 1.2503e-8,
-      "change24hVal": 12.19
+      "change24hVal": 11.97
     },
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.032497,
-      "last": 0.044191,
-      "change24hVal": 35.98
+      "open24h": 0.032625,
+      "last": 0.044206,
+      "change24hVal": 35.5
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.24657,
-      "last": 0.28371,
-      "change24hVal": 15.06
+      "open24h": 0.24693,
+      "last": 0.28534,
+      "change24hVal": 15.56
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.03145,
-      "last": 0.03476,
-      "change24hVal": 10.52
+      "open24h": 0.03129,
+      "last": 0.03488,
+      "change24hVal": 11.47
     },
     {
       "instId": "FET-USDT-SWAP",
-      "open24h": 0.1774,
-      "last": 0.198,
-      "change24hVal": 11.61
+      "open24h": 0.1778,
+      "last": 0.1971,
+      "change24hVal": 10.85
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0041548,
-      "last": 0.0053238,
-      "change24hVal": 28.14
+      "open24h": 0.0041436,
+      "last": 0.0052566,
+      "change24hVal": 26.86
     },
     {
       "instId": "ZETA-USDT-SWAP",
-      "open24h": 0.03858,
-      "last": 0.05936,
-      "change24hVal": 53.86
+      "open24h": 0.03861,
+      "last": 0.05901,
+      "change24hVal": 52.84
     },
     {
       "instId": "WIF-USDT-SWAP",
-      "open24h": 0.2043,
-      "last": 0.2366,
-      "change24hVal": 15.81
+      "open24h": 0.2044,
+      "last": 0.239,
+      "change24hVal": 16.93
     },
     {
       "instId": "MINA-USDT-SWAP",
-      "open24h": 0.1087,
-      "last": 0.11979,
-      "change24hVal": 10.2
+      "open24h": 0.1091,
+      "last": 0.12011,
+      "change24hVal": 10.09
     },
     {
       "instId": "EDEN-USDT-SWAP",
-      "open24h": 0.05179,
-      "last": 0.05961,
-      "change24hVal": 15.1
+      "open24h": 0.05192,
+      "last": 0.05983,
+      "change24hVal": 15.23
     },
     {
       "instId": "FARTCOIN-USDT-SWAP",
-      "open24h": 0.1672,
-      "last": 0.1872,
-      "change24hVal": 11.96
+      "open24h": 0.1676,
+      "last": 0.1888,
+      "change24hVal": 12.65
+    },
+    {
+      "instId": "BOME-USDT-SWAP",
+      "open24h": 0.0009376,
+      "last": 0.0010366,
+      "change24hVal": 10.56
     },
     {
       "instId": "PIEVERSE-USDT-SWAP",
-      "open24h": 1.5617,
-      "last": 1.8296,
-      "change24hVal": 17.15
+      "open24h": 1.5711,
+      "last": 1.8345,
+      "change24hVal": 16.77
     },
     {
       "instId": "SEI-USDT-SWAP",
-      "open24h": 0.05087,
-      "last": 0.05878,
-      "change24hVal": 15.55
+      "open24h": 0.05103,
+      "last": 0.05869,
+      "change24hVal": 15.01
+    },
+    {
+      "instId": "DGAI-USDT-SWAP",
+      "open24h": 0.9518,
+      "last": 1.0509,
+      "change24hVal": 10.41
     },
     {
       "instId": "OPG-USDT-SWAP",
-      "open24h": 0.11671,
-      "last": 0.13037,
-      "change24hVal": 11.7
+      "open24h": 0.11726,
+      "last": 0.13027,
+      "change24hVal": 11.1
     }
   ],
   "matchedCount": 1,
   "matchedList": [
     {
-      "symbol": "FARTCOIN-USDT-SWAP",
+      "symbol": "USELESS-USDT-SWAP",
       "type": "LONG",
-      "Hbb": "6.24%",
-      "bd5": "-0.69%",
-      "xRatio": "-0.111",
-      "diffema20_5m": "+0.03%",
-      "diffema40": "+5.39%",
-      "diffema20_15m": "+5.17%",
-      "bd24h": "+11.96%",
-      "link": "https://www.okx.com/trade-swap/fartcoin-usdt-swap",
-      "teleSent": false
+      "Hbb": "4.18%",
+      "bd5": "+0.90%",
+      "xRatio": "-0.206",
+      "diffema20_5m": "+1.24%",
+      "diffema40": "+3.88%",
+      "diffema20_15m": "+3.22%",
+      "bd24h": "+15.56%",
+      "link": "https://www.okx.com/trade-swap/useless-usdt-swap",
+      "teleSent": true
     }
   ]
 }
