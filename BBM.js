@@ -96,7 +96,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & THỎA ĐIỀU KIỆN 24H) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & BD24H > 10%) -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -115,10 +115,8 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
 
-      const isEligibleLong = change24hVal > 10;
-      const isEligibleShort = change24hVal < -5;
-
-      if (isEligibleLong || isEligibleShort) {
+      // Cả Long và Short hiện tại đều yêu cầu bd24h > 10%
+      if (change24hVal > 10) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -221,7 +219,7 @@ async function main() {
       const bbd = ((low1 - bb5m.lower) / bb5m.lower) * 100;
       const bbt = ((high1 - bb5m.upper) / bb5m.upper) * 100;
 
-      // 3. EMA20 và diffema40 trên khung 5m
+      // 3. EMA20, diffema40 và diffema20 trên khung 5m
       const allClosedCandles = candles5m.slice(1).reverse();
       const closedPrices = allClosedCandles.map((c) => parseFloat(c[4]));
       const emaSeries5m = calculateEMAArray(closedPrices, 20);
@@ -232,18 +230,21 @@ async function main() {
       }
 
       const ema20_n1 = emaSeries5m[emaSeries5m.length - 1];
+      const ema20_n20 = emaSeries5m[emaSeries5m.length - 20];
       const ema20_n40 = emaSeries5m[emaSeries5m.length - 40];
 
-      if (!ema20_n40 || ema20_n40 <= 0) {
+      if (!ema20_n40 || ema20_n40 <= 0 || !ema20_n20 || ema20_n20 <= 0) {
         await sleep(80);
         continue;
       }
 
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
+      const diffema20_5m = ((ema20_n1 - ema20_n20) / ema20_n20) * 100;
 
       // 4. Kiểm tra điều kiện sơ bộ
       const passPreLong = coin.change24hVal > 10 && diffema40 > 3 && bbd < 0 && bd5 > -1;
-      const passPreShort = coin.change24hVal < -5 && diffema40 < -3 && bbt > 0 && bd5 < 1;
+      // Điều kiện Short mới: bd24 > 10%, diffema40 > 3%, bbt > 0, bd5 < 1
+      const passPreShort = coin.change24hVal > 10 && diffema40 > 3 && bbt > 0 && bd5 < 1;
 
       if (passPreLong) countPreLong++;
       if (passPreShort) countPreShort++;
@@ -286,9 +287,9 @@ async function main() {
 
       const x = targetBd5 / targetHbb;
 
-      // 6. Kiểm tra tín hiệu khớp hoàn toàn
+      // 6. Kiểm tra tín hiệu khớp hoàn toàn (Short thêm điều kiện diffema20 < 1%)
       const isLong = passPreLong && x > -0.5;
-      const isShort = passPreShort && x < 0.5;
+      const isShort = passPreShort && x < 0.5 && diffema20_5m < 1;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -318,6 +319,7 @@ async function main() {
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
       const diffema40Str = `${diffema40 > 0 ? '+' : ''}${diffema40.toFixed(2)}%`;
+      const diffema20_5mStr = `${diffema20_5m > 0 ? '+' : ''}${diffema20_5m.toFixed(2)}%`;
       const hbbStr = `${hbbPercent.toFixed(2)}%`;
       const bd5Str = `${bd5 > 0 ? '+' : ''}${bd5.toFixed(2)}%`;
       const xRatioStr = x.toFixed(3);
@@ -339,6 +341,7 @@ async function main() {
         Hbb: hbbStr,
         bd5: bd5Str,
         xRatio: xRatioStr,
+        diffema20_5m: diffema20_5mStr,
         diffema40: diffema40Str,
         diffema20_15m: diffema20_15mStr,
         bd24h: change24hStr,
@@ -346,7 +349,7 @@ async function main() {
         teleSent: !isCooldown
       });
 
-      // Gửi Telegram ngắn gọn, không chứa ghi chú trong ngoặc
+      // Gửi Telegram ngắn gọn
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const message =
@@ -354,6 +357,7 @@ async function main() {
           `• <b>Hbb:</b> ${hbbStr}\n` +
           `• <b>bd5:</b> ${bd5Str}\n` +
           `• <b>x:</b> ${xRatioStr}\n` +
+          `• <b>diffema20 (5m):</b> ${diffema20_5mStr}\n` +
           `• <b>diffema40:</b> ${diffema40Str}\n` +
           `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
@@ -386,7 +390,7 @@ async function main() {
       { 'Điều kiện': 'Đạt sơ bộ Long (trước x)', 'Số lượng': countPreLong },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG (x > -0.5)', 'Số lượng': countMatchedLong },
       { 'Điều kiện': 'Đạt sơ bộ Short (trước x)', 'Số lượng': countPreShort },
-      { 'Điều kiện': 'KHỚP TẤT CẢ SHORT (x < 0.5)', 'Số lượng': countMatchedShort }
+      { 'Điều kiện': 'KHỚP TẤT CẢ SHORT (x < 0.5 & diffema20 < 1%)', 'Số lượng': countMatchedShort }
     ]);
 
     if (scanResults.matched.length > 0) {
