@@ -115,7 +115,6 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
 
-      // Long: bd24h > 10%, Short: bd24h < -5%
       const isEligibleLong = change24hVal > 10;
       const isEligibleShort = change24hVal < -5;
 
@@ -211,18 +210,18 @@ async function main() {
         continue;
       }
 
-      // Hbb: Độ rộng dải Bollinger Band nến số 1 (%)
+      // Hbb
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
       if (hbbPercent <= 3) {
         await sleep(80);
-        continue; // Loại sớm nếu không đạt Hbb > 3%
+        continue;
       }
       countHbbFilter++;
 
       const bbd = ((low1 - bb5m.lower) / bb5m.lower) * 100;
       const bbt = ((high1 - bb5m.upper) / bb5m.upper) * 100;
 
-      // 3. Tính EMA20 và diffema40
+      // 3. EMA20 và diffema40 trên khung 5m
       const allClosedCandles = candles5m.slice(1).reverse();
       const closedPrices = allClosedCandles.map((c) => parseFloat(c[4]));
       const emaSeries5m = calculateEMAArray(closedPrices, 20);
@@ -242,20 +241,19 @@ async function main() {
 
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
-      // 4. Kiểm tra các điều kiện cơ bản trước khi tính x
+      // 4. Kiểm tra điều kiện sơ bộ
       const passPreLong = coin.change24hVal > 10 && diffema40 > 3 && bbd < 0 && bd5 > -1;
       const passPreShort = coin.change24hVal < -5 && diffema40 < -3 && bbt > 0 && bd5 < 1;
 
       if (passPreLong) countPreLong++;
       if (passPreShort) countPreShort++;
 
-      // Nếu không thỏa mãn sơ bộ bất kỳ hướng nào -> Bỏ qua, KHÔNG tính x
       if (!passPreLong && !passPreShort) {
         await sleep(80);
         continue;
       }
 
-      // 5. CHỈ TÍNH x KHI ĐÃ ĐẠT TẤT CẢ TIÊU CHÍ TRÊN
+      // 5. Tính tỷ lệ x
       let maxAbsBd5 = -1;
       let targetIndex = 1;
       let targetBd5 = 0;
@@ -288,13 +286,33 @@ async function main() {
 
       const x = targetBd5 / targetHbb;
 
-      // 6. Quyết định tín hiệu cuối cùng
+      // 6. Kiểm tra tín hiệu khớp hoàn toàn
       const isLong = passPreLong && x > -0.5;
       const isShort = passPreShort && x < 0.5;
 
       if (!isLong && !isShort) {
         await sleep(80);
         continue;
+      }
+
+      // 7. LẤY NẾN 15M VÀ TÍNH DIFFEMA20 (CHỈ GỌI KHI ĐÃ THỎA HẾT ĐIỀU KIỆN)
+      await sleep(60);
+      let diffema20_15mStr = 'N/A';
+      const candles15m = await getCandles(symbol, '15m', 60);
+
+      if (candles15m && candles15m.length >= 45) {
+        const closed15m = candles15m.slice(1).reverse().map((c) => parseFloat(c[4]));
+        const emaSeries15m = calculateEMAArray(closed15m, 20);
+
+        if (emaSeries15m.length >= 20) {
+          const ema15m_n1 = emaSeries15m[emaSeries15m.length - 1];
+          const ema15m_n20 = emaSeries15m[emaSeries15m.length - 20];
+
+          if (ema15m_n20 > 0) {
+            const diff15mVal = ((ema15m_n1 - ema15m_n20) / ema15m_n20) * 100;
+            diffema20_15mStr = `${diff15mVal > 0 ? '+' : ''}${diff15mVal.toFixed(2)}%`;
+          }
+        }
       }
 
       const signalType = isLong ? 'LONG' : 'SHORT';
@@ -322,22 +340,24 @@ async function main() {
         bd5: bd5Str,
         xRatio: xRatioStr,
         diffema40: diffema40Str,
+        diffema20_15m: diffema20_15mStr,
         bd24h: change24hStr,
         link,
         teleSent: !isCooldown
       });
 
-      // Gửi Telegram
+      // Gửi Telegram ngắn gọn, không chứa ghi chú trong ngoặc
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const message =
-          `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
-          `• <b>Hbb (5m):</b> ${hbbStr}\n` +
-          `• <b>bd5 (nến vừa đóng):</b> ${bd5Str}\n` +
-          `• <b>Tỉ lệ x (bd5_max / Hbb):</b> ${xRatioStr}\n` +
+          `${icon} <b>${signalType}: ${coinName}</b>\n` +
+          `• <b>Hbb:</b> ${hbbStr}\n` +
+          `• <b>bd5:</b> ${bd5Str}\n` +
+          `• <b>x:</b> ${xRatioStr}\n` +
           `• <b>diffema40:</b> ${diffema40Str}\n` +
+          `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
-          `• <a href="${link}">Link OKX</a>`;
+          `• <a href="${link}">OKX</a>`;
 
         console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
         await axios
@@ -359,7 +379,6 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    // Bảng thống kê chi tiết
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
