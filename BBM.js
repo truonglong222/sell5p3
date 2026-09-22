@@ -210,7 +210,7 @@ async function main() {
 
       // Hbb
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
-      if (hbbPercent <= 3) {
+      if (hbbPercent <= 4) {
         await sleep(80);
         continue;
       }
