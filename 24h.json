@@ -1,68 +1,82 @@
 {
-  "lastScanAt": "2026-09-22T11:40:30.776Z",
+  "lastScanAt": "2026-09-22T11:45:33.200Z",
   "targetCoinsCount": 10,
   "targetCoinsList": [
     {
-      "instId": "KITE-USDT-SWAP",
-      "open24h": 0.12024,
-      "last": 0.13239,
-      "change24hVal": 10.1
-    },
-    {
       "instId": "PEPE-USDT-SWAP",
       "open24h": 0.000004241,
-      "last": 0.000004958,
-      "change24hVal": 16.91
+      "last": 0.000004971,
+      "change24hVal": 17.21
+    },
+    {
+      "instId": "AKE-USDT-SWAP",
+      "open24h": 0.04723,
+      "last": 0.05273,
+      "change24hVal": 11.65
     },
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.04473,
-      "last": 0.063911,
-      "change24hVal": 42.88
+      "open24h": 0.04575,
+      "last": 0.064184,
+      "change24hVal": 40.29
     },
     {
       "instId": "USELESS-USDT-SWAP",
-      "open24h": 0.27789,
-      "last": 0.30758,
-      "change24hVal": 10.68
+      "open24h": 0.27616,
+      "last": 0.31069,
+      "change24hVal": 12.5
     },
     {
       "instId": "RLS-USDT-SWAP",
-      "open24h": 0.002272,
-      "last": 0.002854,
-      "change24hVal": 25.62
+      "open24h": 0.002269,
+      "last": 0.002885,
+      "change24hVal": 27.15
     },
     {
       "instId": "GRASS-USDT-SWAP",
-      "open24h": 0.3751,
-      "last": 0.4451,
-      "change24hVal": 18.66
+      "open24h": 0.3731,
+      "last": 0.4473,
+      "change24hVal": 19.89
     },
     {
       "instId": "S-USDT-SWAP",
-      "open24h": 0.04007,
-      "last": 0.04448,
-      "change24hVal": 11.01
+      "open24h": 0.03998,
+      "last": 0.04434,
+      "change24hVal": 10.91
     },
     {
       "instId": "WIF-USDT-SWAP",
-      "open24h": 0.217,
-      "last": 0.2557,
-      "change24hVal": 17.83
+      "open24h": 0.2171,
+      "last": 0.2555,
+      "change24hVal": 17.69
     },
     {
       "instId": "FLOCK-USDT-SWAP",
-      "open24h": 0.07504,
-      "last": 0.08686,
-      "change24hVal": 15.75
+      "open24h": 0.07514,
+      "last": 0.08392,
+      "change24hVal": 11.68
     },
     {
       "instId": "FARTCOIN-USDT-SWAP",
-      "open24h": 0.1825,
-      "last": 0.2031,
-      "change24hVal": 11.29
+      "open24h": 0.182,
+      "last": 0.2024,
+      "change24hVal": 11.21
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RLS-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "6.19%",
+      "bd5": "0.00%",
+      "xRatio": "-0.289",
+      "diffema20_5m": "+0.46%",
+      "diffema40": "+4.46%",
+      "diffema20_15m": "+9.53%",
+      "bd24h": "+27.15%",
+      "link": "https://www.okx.com/trade-swap/rls-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
