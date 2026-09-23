@@ -115,7 +115,7 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
 
-      // Giữ bd24h > 7% (cho Long) hoặc bd24h > 10% (cho Short)
+      // Giữ bd24h > 7% cho cả Long và Short
       if (change24hVal > 7) {
         filteredCoins.push({
           instId: item.instId,
@@ -208,7 +208,8 @@ async function main() {
       const diff15mVal = ((ema15m_n1 - ema15m_n20) / ema15m_n20) * 100;
 
       const isPotentialLong = diff15mVal > 5;
-      const isPotentialShort = coin.change24hVal > 10 && diff15mVal > 5;
+      // Điều kiện Short: bd24h > 7% và diffema20 (15m) > 5%
+      const isPotentialShort = coin.change24hVal > 7 && diff15mVal > 5;
 
       if (!isPotentialLong && !isPotentialShort) {
         await sleep(80);
@@ -226,17 +227,15 @@ async function main() {
 
       const closed5m = candles5m.slice(1).reverse().map((c) => parseFloat(c[4]));
 
-      // 1. Tính diffema20 trên khung nến 5m
+      // 1. Tính diffema20 trên khung nến 5m (giữ lại để hiển thị dữ liệu)
       const emaSeries5m = calculateEMAArray(closed5m, 20);
       let diff5mVal = 0;
-      let passEma5mForShort = false;
 
       if (emaSeries5m.length >= 20) {
         const ema5m_n1 = emaSeries5m[emaSeries5m.length - 1];
         const ema5m_n20 = emaSeries5m[emaSeries5m.length - 20];
         if (ema5m_n20 > 0) {
           diff5mVal = ((ema5m_n1 - ema5m_n20) / ema5m_n20) * 100;
-          passEma5mForShort = diff5mVal < 1;
         }
       }
 
@@ -289,8 +288,8 @@ async function main() {
       // 5. Kiểm tra điều kiện sơ bộ
       // Long: bbd < 0.3% và bd5 > -1
       const passPreLong = isPotentialLong && bbd < 0.3 && bd5 > -1;
-      // Short: diffema20 5m < 1%, diffema10 5m < 0.5%, bbm > -0.3% (đã bỏ bbt) và bd5 < 1
-      const passPreShort = isPotentialShort && passEma5mForShort && passEma10_5mForShort && bbm > -0.3 && bd5 < 1;
+      // Short: diffema10 5m < 0.5%, bbm > -0.3% và bd5 < 1 (Đã bỏ diffema20_5m < 1%)
+      const passPreShort = isPotentialShort && passEma10_5mForShort && bbm > -0.3 && bd5 < 1;
 
       if (!passPreLong && !passPreShort) {
         await sleep(80);
@@ -413,7 +412,7 @@ async function main() {
       { 'Giai đoạn': '1. Đạt diffema20 15m (>5%)', 'Số lượng': count15mQualified },
       { 'Giai đoạn': '2. Đạt Hbb > 4% (trên 5m)', 'Số lượng': countHbbFilter },
       { 'Giai đoạn': '3. KHỚP TẤT CẢ LONG (bbd<0.3%, bd5>-1%, x>-0.4)', 'Số lượng': countMatchedLong },
-      { 'Giai đoạn': '4. KHỚP TẤT CẢ SHORT (ema5m<1%, ema10<0.5%, bbm>-0.3%, bd5<1%, x<-0.4)', 'Số lượng': countMatchedShort }
+      { 'Giai đoạn': '4. KHỚP TẤT CẢ SHORT (bd24h>7%, ema10<0.5%, bbm>-0.3%, bd5<1%, x<-0.4)', 'Số lượng': countMatchedShort }
     ]);
 
     if (scanResults.matched.length > 0) {
