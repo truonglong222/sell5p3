@@ -207,9 +207,7 @@ async function main() {
 
       const diff15mVal = ((ema15m_n1 - ema15m_n20) / ema15m_n20) * 100;
 
-      // Đổi điều kiện diff15mVal > 5
       const isPotentialLong = diff15mVal > 5;
-      // Điều kiện Short: bd24h > 10% VÀ diffema20 (15m) > 5%
       const isPotentialShort = coin.change24hVal > 10 && diff15mVal > 5;
 
       if (!isPotentialLong && !isPotentialShort) {
@@ -226,10 +224,10 @@ async function main() {
         continue;
       }
 
-      // 1. Tính diffema20 trên khung nến 5m
       const closed5m = candles5m.slice(1).reverse().map((c) => parseFloat(c[4]));
+
+      // 1. Tính diffema20 trên khung nến 5m
       const emaSeries5m = calculateEMAArray(closed5m, 20);
-      
       let diff5mVal = 0;
       let passEma5mForShort = false;
 
@@ -242,16 +240,32 @@ async function main() {
         }
       }
 
-      // 2. Dữ liệu nến 5m số 1 vừa đóng
+      // 2. Tính diffema10 trên khung nến 5m
+      const ema10Series5m = calculateEMAArray(closed5m, 10);
+      let diff5mEma10Val = 0;
+      let passEma10_5mForShort = false;
+
+      if (ema10Series5m.length >= 10) {
+        const ema10_n1 = ema10Series5m[ema10Series5m.length - 1];
+        const ema10_n10 = ema10Series5m[ema10Series5m.length - 10];
+        if (ema10_n10 > 0) {
+          diff5mEma10Val = ((ema10_n1 - ema10_n10) / ema10_n10) * 100;
+          passEma10_5mForShort = diff5mEma10Val < 0.5;
+        }
+      }
+
+      // 3. Dữ liệu nến 5m: nến số 0 (đang chạy) và nến số 1 (vừa đóng)
+      const candle0 = candles5m[0];
+      const high0 = parseFloat(candle0[2]); // High của nến 5m hiện tại
+
       const candle1 = candles5m[1];
       const open1 = parseFloat(candle1[1]);
-      const high1 = parseFloat(candle1[2]);
       const low1 = parseFloat(candle1[3]);
       const close1 = parseFloat(candle1[4]);
 
       const bd5 = open1 > 0 ? ((close1 - open1) / open1) * 100 : 0;
 
-      // 3. Bollinger Bands nến số 1
+      // 4. Bollinger Bands nến số 1
       const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb5m = calculateBollingerBands(closesBB5m, 20);
 
@@ -267,19 +281,23 @@ async function main() {
       }
       countHbbFilter++;
 
+      // bbd so sánh Low nến 1 với Lower BB
       const bbd = ((low1 - bb5m.lower) / bb5m.lower) * 100;
-      const bbt = ((high1 - bb5m.upper) / bb5m.upper) * 100;
+      // bbm so sánh High nến 0 (hiện tại) với Middle BB nến 1 vừa đóng
+      const bbm = ((high0 - bb5m.middle) / bb5m.middle) * 100;
 
-      // 4. Kiểm tra điều kiện sơ bộ
-      const passPreLong = isPotentialLong && bbd < 0 && bd5 > -1;
-      const passPreShort = isPotentialShort && passEma5mForShort && bbt > 0 && bd5 < 1;
+      // 5. Kiểm tra điều kiện sơ bộ
+      // Long: bbd < 0.3% và bd5 > -1
+      const passPreLong = isPotentialLong && bbd < 0.3 && bd5 > -1;
+      // Short: diffema20 5m < 1%, diffema10 5m < 0.5%, bbm > -0.3% (đã bỏ bbt) và bd5 < 1
+      const passPreShort = isPotentialShort && passEma5mForShort && passEma10_5mForShort && bbm > -0.3 && bd5 < 1;
 
       if (!passPreLong && !passPreShort) {
         await sleep(80);
         continue;
       }
 
-      // 5. Tính tỷ lệ x trên 5 cây nến gần nhất
+      // 6. Tính tỷ lệ x trên 5 cây nến gần nhất
       let maxAbsBd5 = -1;
       let targetIndex = 1;
       let targetBd5 = 0;
@@ -312,9 +330,9 @@ async function main() {
 
       const x = targetBd5 / targetHbb;
 
-      // 6. Khớp hoàn chỉnh
-      const isLong = passPreLong && x > -0.5;
-      const isShort = passPreShort && x < 0.5;
+      // 7. Khớp hoàn chỉnh: Long khi x > -0.4, Short khi x < -0.4
+      const isLong = passPreLong && x > -0.4;
+      const isShort = passPreShort && x < -0.4;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -325,6 +343,7 @@ async function main() {
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
       const diffema20_15mStr = `${diff15mVal > 0 ? '+' : ''}${diff15mVal.toFixed(2)}%`;
       const diffema20_5mStr = `${diff5mVal > 0 ? '+' : ''}${diff5mVal.toFixed(2)}%`;
+      const diffema10_5mStr = `${diff5mEma10Val > 0 ? '+' : ''}${diff5mEma10Val.toFixed(2)}%`;
       const hbbStr = `${hbbPercent.toFixed(2)}%`;
       const bd5Str = `${bd5 > 0 ? '+' : ''}${bd5.toFixed(2)}%`;
       const xRatioStr = x.toFixed(3);
@@ -343,27 +362,29 @@ async function main() {
       scanResults.matched.push({
         symbol,
         type: signalType,
-        Hbb: hbbStr,
-        bd5: bd5Str,
         xRatio: xRatioStr,
+        Hbb: hbbStr,
         diffema20_15m: diffema20_15mStr,
         diffema20_5m: diffema20_5mStr,
+        diffema10_5m: diffema10_5mStr,
+        bd5: bd5Str,
         bd24h: change24hStr,
         link,
         teleSent: !isCooldown
       });
 
-      // Gửi Telegram
+      // Gửi Telegram (Thứ tự: x -> Hbb -> diffema20 -> diffema10 -> bd5)
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const message =
           `${icon} <b>${signalType}: ${coinName}</b>\n` +
-          `• <b>bd24h:</b> ${change24hStr}\n` +
+          `• <b>x:</b> ${xRatioStr}\n` +
+          `• <b>Hbb:</b> ${hbbStr}\n` +
           `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
           (isShort ? `• <b>diffema20 (5m):</b> ${diffema20_5mStr}\n` : '') +
-          `• <b>Hbb:</b> ${hbbStr}\n` +
+          (isShort ? `• <b>diffema10 (5m):</b> ${diffema10_5mStr}\n` : '') +
           `• <b>bd5:</b> ${bd5Str}\n` +
-          `• <b>x:</b> ${xRatioStr}\n` +
+          `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <a href="${link}">OKX</a>`;
 
         console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
@@ -391,8 +412,8 @@ async function main() {
     console.table([
       { 'Giai đoạn': '1. Đạt diffema20 15m (>5%)', 'Số lượng': count15mQualified },
       { 'Giai đoạn': '2. Đạt Hbb > 4% (trên 5m)', 'Số lượng': countHbbFilter },
-      { 'Giai đoạn': '3. KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
-      { 'Giai đoạn': '4. KHỚP TẤT CẢ SHORT (bd24h>10%, ema15m>5%, ema5m<1%, bbt>0, bd5<1, x<0.5)', 'Số lượng': countMatchedShort }
+      { 'Giai đoạn': '3. KHỚP TẤT CẢ LONG (bbd<0.3%, bd5>-1%, x>-0.4)', 'Số lượng': countMatchedLong },
+      { 'Giai đoạn': '4. KHỚP TẤT CẢ SHORT (ema5m<1%, ema10<0.5%, bbm>-0.3%, bd5<1%, x<-0.4)', 'Số lượng': countMatchedShort }
     ]);
 
     if (scanResults.matched.length > 0) {
