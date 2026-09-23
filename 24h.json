@@ -1,104 +1,165 @@
 {
-  "lastScanAt": "2026-09-23T14:30:55.326Z",
-  "targetCoinsCount": 16,
+  "lastScanAt": "2026-09-23T14:35:31.976Z",
+  "targetCoinsCount": 24,
   "targetCoinsList": [
     {
-      "instId": "LIT-USDT-SWAP",
-      "open24h": 4.6922,
-      "last": 5.2323,
-      "change24hVal": 11.51
-    },
-    {
-      "instId": "SENT-USDT-SWAP",
-      "open24h": 0.01933,
-      "last": 0.02243,
-      "change24hVal": 16.04
-    },
-    {
-      "instId": "ALLO-USDT-SWAP",
-      "open24h": 0.25915,
-      "last": 0.34634,
-      "change24hVal": 33.64
-    },
-    {
-      "instId": "GRT-USDT-SWAP",
-      "open24h": 0.02402,
-      "last": 0.02588,
-      "change24hVal": 7.74
-    },
-    {
-      "instId": "0G-USDT-SWAP",
-      "open24h": 0.2314,
-      "last": 0.2481,
+      "instId": "UNI-USDT-SWAP",
+      "open24h": 8.792,
+      "last": 9.427,
       "change24hVal": 7.22
     },
     {
+      "instId": "RAY-USDT-SWAP",
+      "open24h": 1.7676,
+      "last": 1.9139,
+      "change24hVal": 8.28
+    },
+    {
+      "instId": "SNX-USDT-SWAP",
+      "open24h": 0.2321,
+      "last": 0.2505,
+      "change24hVal": 7.93
+    },
+    {
+      "instId": "LIT-USDT-SWAP",
+      "open24h": 4.6628,
+      "last": 5.3716,
+      "change24hVal": 15.2
+    },
+    {
+      "instId": "PLUME-USDT-SWAP",
+      "open24h": 0.014557,
+      "last": 0.015609,
+      "change24hVal": 7.23
+    },
+    {
+      "instId": "SENT-USDT-SWAP",
+      "open24h": 0.0191,
+      "last": 0.02278,
+      "change24hVal": 19.27
+    },
+    {
+      "instId": "ALLO-USDT-SWAP",
+      "open24h": 0.25682,
+      "last": 0.35082,
+      "change24hVal": 36.6
+    },
+    {
+      "instId": "GRT-USDT-SWAP",
+      "open24h": 0.02362,
+      "last": 0.02613,
+      "change24hVal": 10.63
+    },
+    {
+      "instId": "0G-USDT-SWAP",
+      "open24h": 0.2297,
+      "last": 0.2529,
+      "change24hVal": 10.1
+    },
+    {
       "instId": "GRASS-USDT-SWAP",
-      "open24h": 0.4222,
-      "last": 0.4524,
-      "change24hVal": 7.15
+      "open24h": 0.4194,
+      "last": 0.4603,
+      "change24hVal": 9.75
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.03221,
-      "last": 0.03666,
-      "change24hVal": 13.82
+      "open24h": 0.03207,
+      "last": 0.03722,
+      "change24hVal": 16.06
     },
     {
       "instId": "PENGU-USDT-SWAP",
-      "open24h": 0.008965,
-      "last": 0.009753,
-      "change24hVal": 8.79
+      "open24h": 0.008792,
+      "last": 0.009889,
+      "change24hVal": 12.48
     },
     {
       "instId": "MET-USDT-SWAP",
-      "open24h": 0.2894,
-      "last": 0.3717,
-      "change24hVal": 28.44
+      "open24h": 0.2875,
+      "last": 0.3761,
+      "change24hVal": 30.82
+    },
+    {
+      "instId": "SLX-USDT-SWAP",
+      "open24h": 0.06674,
+      "last": 0.07177,
+      "change24hVal": 7.54
     },
     {
       "instId": "GPS-USDT-SWAP",
-      "open24h": 0.011485,
-      "last": 0.012584,
-      "change24hVal": 9.57
+      "open24h": 0.011433,
+      "last": 0.012691,
+      "change24hVal": 11
     },
     {
       "instId": "ZRO-USDT-SWAP",
-      "open24h": 1.2303,
-      "last": 1.454,
-      "change24hVal": 18.18
+      "open24h": 1.2123,
+      "last": 1.4998,
+      "change24hVal": 23.72
+    },
+    {
+      "instId": "ARB-USDT-SWAP",
+      "open24h": 0.2113,
+      "last": 0.22718,
+      "change24hVal": 7.52
+    },
+    {
+      "instId": "ZAMA-USDT-SWAP",
+      "open24h": 0.08864,
+      "last": 0.09605,
+      "change24hVal": 8.36
+    },
+    {
+      "instId": "MERL-USDT-SWAP",
+      "open24h": 0.02864,
+      "last": 0.03105,
+      "change24hVal": 8.41
     },
     {
       "instId": "PONS-USDT-SWAP",
-      "open24h": 0.6095,
-      "last": 0.6565,
-      "change24hVal": 7.71
+      "open24h": 0.6048,
+      "last": 0.671,
+      "change24hVal": 10.95
     },
     {
       "instId": "TIA-USDT-SWAP",
-      "open24h": 0.4427,
-      "last": 0.478,
-      "change24hVal": 7.97
+      "open24h": 0.4372,
+      "last": 0.4867,
+      "change24hVal": 11.32
     },
     {
       "instId": "SKY-USDT-SWAP",
-      "open24h": 0.06732,
-      "last": 0.07288,
-      "change24hVal": 8.26
+      "open24h": 0.06682,
+      "last": 0.07461,
+      "change24hVal": 11.66
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.04526,
-      "last": 0.04867,
-      "change24hVal": 7.53
+      "open24h": 0.04503,
+      "last": 0.04909,
+      "change24hVal": 9.02
     },
     {
       "instId": "CORE-USDT-SWAP",
-      "open24h": 0.02166,
-      "last": 0.02347,
-      "change24hVal": 8.36
+      "open24h": 0.02138,
+      "last": 0.02379,
+      "change24hVal": 11.27
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RAY-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "7.17%",
+      "bd5": "+1.47%",
+      "xRatio": "-0.228",
+      "diffema20_15m": "+5.10%",
+      "diffema20_5m": "+1.34%",
+      "bd24h": "+8.28%",
+      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
