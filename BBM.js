@@ -115,7 +115,7 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
 
-      // Giữ bd24h > 7% (cho Long) hoặc bd24h > 10% (cho Short mới)
+      // Giữ bd24h > 7% (cho Long) hoặc bd24h > 10% (cho Short)
       if (change24hVal > 7) {
         filteredCoins.push({
           instId: item.instId,
@@ -207,9 +207,10 @@ async function main() {
 
       const diff15mVal = ((ema15m_n1 - ema15m_n20) / ema15m_n20) * 100;
 
-      const isPotentialLong = diff15mVal > 7;
-      // Điều kiện Short: bd24h > 10% VÀ diffema20 (15m) > 7%
-      const isPotentialShort = coin.change24hVal > 10 && diff15mVal > 7;
+      // Đổi điều kiện diff15mVal > 5
+      const isPotentialLong = diff15mVal > 5;
+      // Điều kiện Short: bd24h > 10% VÀ diffema20 (15m) > 5%
+      const isPotentialShort = coin.change24hVal > 10 && diff15mVal > 5;
 
       if (!isPotentialLong && !isPotentialShort) {
         await sleep(80);
@@ -388,10 +389,10 @@ async function main() {
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
     console.log(`Số coin tải nến 15m thành công: ${countValid15m}/${targetCoins.length}`);
     console.table([
-      { 'Giai đoạn': '1. Đạt diffema20 15m (>7%)', 'Số lượng': count15mQualified },
+      { 'Giai đoạn': '1. Đạt diffema20 15m (>5%)', 'Số lượng': count15mQualified },
       { 'Giai đoạn': '2. Đạt Hbb > 4% (trên 5m)', 'Số lượng': countHbbFilter },
       { 'Giai đoạn': '3. KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
-      { 'Giai đoạn': '4. KHỚP TẤT CẢ SHORT (bd24h>10%, ema15m>7%, ema5m<1%, bbt>0, bd5<1, x<0.5)', 'Số lượng': countMatchedShort }
+      { 'Giai đoạn': '4. KHỚP TẤT CẢ SHORT (bd24h>10%, ema15m>5%, ema5m<1%, bbt>0, bd5<1, x<0.5)', 'Số lượng': countMatchedShort }
     ]);
 
     if (scanResults.matched.length > 0) {
