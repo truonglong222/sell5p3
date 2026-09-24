@@ -1,12 +1,24 @@
 {
-  "lastScanAt": "2026-09-24T04:30:48.435Z",
-  "targetCoinsCount": 1,
+  "lastScanAt": "2026-09-24T04:35:24.029Z",
+  "targetCoinsCount": 3,
   "targetCoinsList": [
     {
+      "instId": "ACU-USDT-SWAP",
+      "open24h": 0.1203,
+      "last": 0.12943,
+      "change24hVal": 7.59
+    },
+    {
+      "instId": "RAY-USDT-SWAP",
+      "open24h": 1.8398,
+      "last": 1.9721,
+      "change24hVal": 7.19
+    },
+    {
       "instId": "ZRO-USDT-SWAP",
-      "open24h": 1.4171,
-      "last": 1.5272,
-      "change24hVal": 7.77
+      "open24h": 1.42,
+      "last": 1.5198,
+      "change24hVal": 7.03
     }
   ],
   "matchedCount": 0,
