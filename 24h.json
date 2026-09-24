@@ -1,50 +1,58 @@
 {
-  "lastScanAt": "2026-09-24T08:25:26.666Z",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-24T08:30:52.311Z",
+  "targetCoinsCount": 6,
   "targetCoinsList": [
     {
-      "instId": "ACU-USDT-SWAP",
-      "open24h": 0.12141,
-      "last": 0.12798,
-      "change24hVal": 5.41
+      "instId": "RAY-USDT-SWAP",
+      "open24h": 1.8085,
+      "last": 2.0711,
+      "change24hVal": 14.52
     },
     {
-      "instId": "RAY-USDT-SWAP",
-      "open24h": 1.8087,
-      "last": 2.0799,
-      "change24hVal": 14.99
+      "instId": "PLUME-USDT-SWAP",
+      "open24h": 0.016416,
+      "last": 0.017271,
+      "change24hVal": 5.21
     },
     {
       "instId": "AKE-USDT-SWAP",
-      "open24h": 0.04198,
-      "last": 0.04615,
-      "change24hVal": 9.93
+      "open24h": 0.0418,
+      "last": 0.04555,
+      "change24hVal": 8.97
     },
     {
       "instId": "UP-USDT-SWAP",
-      "open24h": 0.3106,
-      "last": 0.3398,
-      "change24hVal": 9.4
+      "open24h": 0.3108,
+      "last": 0.3381,
+      "change24hVal": 8.78
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.4065,
-      "last": 0.4382,
-      "change24hVal": 7.8
+      "open24h": 0.4019,
+      "last": 0.4372,
+      "change24hVal": 8.78
     },
     {
       "instId": "ARX-USDT-SWAP",
-      "open24h": 0.2238,
-      "last": 0.2375,
-      "change24hVal": 6.12
-    },
-    {
-      "instId": "ZRO-USDT-SWAP",
-      "open24h": 1.4465,
-      "last": 1.5204,
-      "change24hVal": 5.11
+      "open24h": 0.2231,
+      "last": 0.2381,
+      "change24hVal": 6.72
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "RAY-USDT-SWAP",
+      "type": "LONG",
+      "xRatio": "-0.384",
+      "Hbb": "4.34%",
+      "diffema20_15m": "+4.13%",
+      "diffema20_5m": "+0.87%",
+      "diffema10_5m": "-1.37%",
+      "bd5": "-0.55%",
+      "bd24h": "+14.52%",
+      "link": "https://www.okx.com/trade-swap/ray-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
