@@ -129,7 +129,7 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
 
-      // Lọc ban đầu: bd24 > 5% hoặc bd24 < -5%
+      // Lọc bd24h > 5% HOẶC bd24h < -5%
       if (change24hVal > THRESHOLD_CHANGE_24H || change24hVal < -THRESHOLD_CHANGE_24H) {
         filteredCoins.push({
           instId: item.instId,
@@ -177,8 +177,34 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
 
-    const countBd24Long = targetCoins.filter((c) => c.change24hVal > THRESHOLD_CHANGE_24H).length;
+    const coinsUp24h = targetCoins.filter((c) => c.change24hVal > THRESHOLD_CHANGE_24H);
+    const countBd24Long = coinsUp24h.length;
     const countBd24Short = targetCoins.filter((c) => c.change24hVal < -THRESHOLD_CHANGE_24H).length;
+
+    // ================= TÍNH UD DỰA TRÊN TẤT CẢ COIN CÓ bd24h > 5% =================
+    console.log(`\n⏳ Đang lấy nến 4H vừa đóng của ${coinsUp24h.length} coin (bd24h > 5%) để tính ud...`);
+    let totalUpCandles4h = 0;
+    let totalDownCandles4h = 0;
+
+    for (const c of coinsUp24h) {
+      const candles4h = await getCandles(c.instId, '4H', 3);
+      if (candles4h && candles4h.length >= 2) {
+        // Nến 0 đang chạy, nến 1 là nến 4H vừa đóng
+        const open4h = parseFloat(candles4h[1][1]);
+        const close4h = parseFloat(candles4h[1][4]);
+
+        if (close4h > open4h) {
+          totalUpCandles4h++;
+        } else if (close4h < open4h) {
+          totalDownCandles4h++;
+        }
+      }
+      await sleep(60);
+    }
+
+    const ud = totalUpCandles4h - totalDownCandles4h;
+    const udStr = `${ud > 0 ? '+' : ''}${ud}`;
+    console.log(`✅ Kết quả tính ud: Tăng = ${totalUpCandles4h}, Giảm = ${totalDownCandles4h} => ud = ${udStr}\n`);
 
     let countCandlesOk = 0;
 
@@ -204,29 +230,10 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // ================= BƯỚC 1: TÍNH UD TỪ NẾN 4H VỪA ĐÓNG (KHÔNG DÙNG LÀM ĐIỀU KIỆN LỌC) =================
-      const candles4h = await getCandles(symbol, '4H', 5);
-      let ud = 0;
-      if (candles4h && candles4h.length >= 2) {
-        // Nến 0 đang chạy, nến 1 là nến 4H vừa đóng
-        const c4h_open = parseFloat(candles4h[1][1]);
-        const c4h_close = parseFloat(candles4h[1][4]);
-
-        let upCandles4h = 0;
-        let downCandles4h = 0;
-
-        if (c4h_close > c4h_open) upCandles4h = 1;
-        else if (c4h_close < c4h_open) downCandles4h = 1;
-
-        ud = upCandles4h - downCandles4h;
-      }
-
       const isPotentialLong = coin.change24hVal > THRESHOLD_CHANGE_24H;
       const isPotentialShort = coin.change24hVal < -THRESHOLD_CHANGE_24H;
 
-      await sleep(60);
-
-      // ================= BƯỚC 2: KIỂM TRA NẾN 15M =================
+      // ================= KIỂM TRA NẾN 15M =================
       const candles15m = await getCandles(symbol, '15m', 100);
       if (!candles15m || candles15m.length < 85) {
         await sleep(80);
@@ -367,7 +374,6 @@ async function main() {
       const diffema15Str = `${diffema15Val > 0 ? '+' : ''}${diffema15Val.toFixed(2)}%`;
       const hbbStr = `${finalHbbPercent.toFixed(2)}%`;
       const xRatioStr = x.toFixed(3);
-      const udStr = `${ud > 0 ? '+' : ''}${ud}`;
 
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -428,6 +434,7 @@ async function main() {
     console.log(`- Tổng số cặp USDT-SWAP: ${allSwapsCount}`);
     console.log(`- Thỏa mãn Vol 24h > 5M: ${volPassedCount}`);
     console.log(`- Thỏa mãn |bd24h| > 5%: ${targetCoins.length} (Tải đủ nến 15m: ${countCandlesOk})`);
+    console.log(`- Chỉ số ud thị trường (từ coin bd24h > 5%): ${udStr}`);
 
     console.log('\n[TIẾN TRÌNH LỌC LONG]');
     console.log(`  1. Thỏa bd24h > 5%: ${countBd24Long}`);
