@@ -1,24 +1,48 @@
 {
-  "lastScanAt": "2026-09-24T11:20:31.307Z",
-  "targetCoinsCount": 3,
+  "lastScanAt": "2026-09-24T11:25:24.159Z",
+  "targetCoinsCount": 7,
   "targetCoinsList": [
     {
       "instId": "ACU-USDT-SWAP",
-      "open24h": 0.12301,
-      "last": 0.13135,
-      "change24hVal": 6.78
+      "open24h": 0.1232,
+      "last": 0.13058,
+      "change24hVal": 5.99
+    },
+    {
+      "instId": "H-USDT-SWAP",
+      "open24h": 0.06051,
+      "last": 0.06459,
+      "change24hVal": 6.74
+    },
+    {
+      "instId": "STABLE-USDT-SWAP",
+      "open24h": 0.02518,
+      "last": 0.0265,
+      "change24hVal": 5.24
+    },
+    {
+      "instId": "UP-USDT-SWAP",
+      "open24h": 0.3112,
+      "last": 0.327,
+      "change24hVal": 5.08
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3997,
-      "last": 0.4525,
-      "change24hVal": 13.21
+      "open24h": 0.3988,
+      "last": 0.4503,
+      "change24hVal": 12.91
     },
     {
       "instId": "ARX-USDT-SWAP",
-      "open24h": 0.2154,
-      "last": 0.2469,
-      "change24hVal": 14.62
+      "open24h": 0.2132,
+      "last": 0.2479,
+      "change24hVal": 16.28
+    },
+    {
+      "instId": "EDEN-USDT-SWAP",
+      "open24h": 0.06094,
+      "last": 0.06464,
+      "change24hVal": 6.07
     }
   ],
   "matchedCount": 0,
