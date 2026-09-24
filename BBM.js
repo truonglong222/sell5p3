@@ -183,7 +183,6 @@ async function main() {
     let countCandlesOk = 0;
 
     // Đếm Long
-    let countLongUd = 0;
     let countLongDiffEma40 = 0;
     let countLongDiffEma15 = 0;
     let countLongBd15 = 0;
@@ -191,7 +190,6 @@ async function main() {
     let countLongMatched = 0;
 
     // Đếm Short
-    let countShortUd = 0;
     let countShortDiffEma40 = 0;
     let countShortDiffEma15 = 0;
     let countShortBd15 = 0;
@@ -206,35 +204,25 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // ================= BƯỚC 1: TÍNH UD TỪ NẾN 4H VỪA ĐÓNG =================
+      // ================= BƯỚC 1: TÍNH UD TỪ NẾN 4H VỪA ĐÓNG (KHÔNG DÙNG LÀM ĐIỀU KIỆN LỌC) =================
       const candles4h = await getCandles(symbol, '4H', 5);
-      if (!candles4h || candles4h.length < 2) {
-        await sleep(80);
-        continue;
+      let ud = 0;
+      if (candles4h && candles4h.length >= 2) {
+        // Nến 0 đang chạy, nến 1 là nến 4H vừa đóng
+        const c4h_open = parseFloat(candles4h[1][1]);
+        const c4h_close = parseFloat(candles4h[1][4]);
+
+        let upCandles4h = 0;
+        let downCandles4h = 0;
+
+        if (c4h_close > c4h_open) upCandles4h = 1;
+        else if (c4h_close < c4h_open) downCandles4h = 1;
+
+        ud = upCandles4h - downCandles4h;
       }
 
-      // Nến 0 đang chạy, nến 1 là nến 4H vừa đóng
-      const c4h_open = parseFloat(candles4h[1][1]);
-      const c4h_close = parseFloat(candles4h[1][4]);
-
-      let upCandles4h = 0;
-      let downCandles4h = 0;
-
-      if (c4h_close > c4h_open) upCandles4h = 1;
-      else if (c4h_close < c4h_open) downCandles4h = 1;
-
-      const ud = upCandles4h - downCandles4h;
-
-      const isPotentialLong = coin.change24hVal > THRESHOLD_CHANGE_24H && ud > 0;
-      const isPotentialShort = coin.change24hVal < -THRESHOLD_CHANGE_24H && ud < 0;
-
-      if (!isPotentialLong && !isPotentialShort) {
-        await sleep(80);
-        continue;
-      }
-
-      if (isPotentialLong) countLongUd++;
-      if (isPotentialShort) countShortUd++;
+      const isPotentialLong = coin.change24hVal > THRESHOLD_CHANGE_24H;
+      const isPotentialShort = coin.change24hVal < -THRESHOLD_CHANGE_24H;
 
       await sleep(60);
 
@@ -443,21 +431,19 @@ async function main() {
 
     console.log('\n[TIẾN TRÌNH LỌC LONG]');
     console.log(`  1. Thỏa bd24h > 5%: ${countBd24Long}`);
-    console.log(`  2. Thỏa ud > 0: ${countLongUd}`);
-    console.log(`  3. Thỏa diffema40 > 5%: ${countLongDiffEma40}`);
-    console.log(`  4. Thỏa diffema15 trong khoảng [-1%, 1%]: ${countLongDiffEma15}`);
-    console.log(`  5. Thỏa bd15 > -2%: ${countLongBd15}`);
-    console.log(`  6. Thỏa bbd < 0.5%: ${countLongBbd}`);
-    console.log(`  7. Khớp hoàn tất (x > -0.4): ${countLongMatched}`);
+    console.log(`  2. Thỏa diffema40 > 5%: ${countLongDiffEma40}`);
+    console.log(`  3. Thỏa diffema15 trong khoảng [-1%, 1%]: ${countLongDiffEma15}`);
+    console.log(`  4. Thỏa bd15 > -2%: ${countLongBd15}`);
+    console.log(`  5. Thỏa bbd < 0.5%: ${countLongBbd}`);
+    console.log(`  6. Khớp hoàn tất (x > -0.4): ${countLongMatched}`);
 
     console.log('\n[TIẾN TRÌNH LỌC SHORT]');
     console.log(`  1. Thỏa bd24h < -5%: ${countBd24Short}`);
-    console.log(`  2. Thỏa ud < 0: ${countShortUd}`);
-    console.log(`  3. Thỏa diffema40 < -3%: ${countShortDiffEma40}`);
-    console.log(`  4. Thỏa diffema15 trong khoảng [-1%, 1%]: ${countShortDiffEma15}`);
-    console.log(`  5. Thỏa bd15 < 2%: ${countShortBd15}`);
-    console.log(`  6. Thỏa bbt > -0.5%: ${countShortBbt}`);
-    console.log(`  7. Khớp hoàn tất (x < 0.4): ${countShortMatched}`);
+    console.log(`  2. Thỏa diffema40 < -3%: ${countShortDiffEma40}`);
+    console.log(`  3. Thỏa diffema15 trong khoảng [-1%, 1%]: ${countShortDiffEma15}`);
+    console.log(`  4. Thỏa bd15 < 2%: ${countShortBd15}`);
+    console.log(`  5. Thỏa bbt > -0.5%: ${countShortBbt}`);
+    console.log(`  6. Khớp hoàn tất (x < 0.4): ${countShortMatched}`);
 
     if (scanResults.matched.length > 0) {
       console.log('\nDanh sách khớp tín hiệu:');
