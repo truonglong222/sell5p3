@@ -1,30 +1,36 @@
 {
-  "lastScanAt": "2026-09-24T10:10:32.460Z",
-  "targetCoinsCount": 4,
+  "lastScanAt": "2026-09-24T10:15:34.011Z",
+  "targetCoinsCount": 5,
   "targetCoinsList": [
     {
       "instId": "ACU-USDT-SWAP",
-      "open24h": 0.12178,
-      "last": 0.12912,
-      "change24hVal": 6.03
+      "open24h": 0.12175,
+      "last": 0.12934,
+      "change24hVal": 6.23
     },
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.8489,
-      "last": 1.9515,
-      "change24hVal": 5.55
+      "open24h": 1.8501,
+      "last": 1.9522,
+      "change24hVal": 5.52
+    },
+    {
+      "instId": "PLUME-USDT-SWAP",
+      "open24h": 0.016541,
+      "last": 0.017441,
+      "change24hVal": 5.44
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.3995,
-      "last": 0.4435,
-      "change24hVal": 11.01
+      "open24h": 0.3983,
+      "last": 0.439,
+      "change24hVal": 10.22
     },
     {
       "instId": "ARX-USDT-SWAP",
       "open24h": 0.2163,
-      "last": 0.245,
-      "change24hVal": 13.27
+      "last": 0.246,
+      "change24hVal": 13.73
     }
   ],
   "matchedCount": 1,
@@ -32,15 +38,15 @@
     {
       "symbol": "CNPY-USDT-SWAP",
       "type": "LONG",
-      "xRatio": "0.194",
-      "Hbb": "7.90%",
-      "diffema20_15m": "+4.02%",
-      "diffema20_5m": "+4.66%",
-      "diffema10_5m": "-1.07%",
-      "bd5": "-0.67%",
-      "bd24h": "+11.01%",
+      "xRatio": "-0.127",
+      "Hbb": "7.63%",
+      "diffema20_15m": "+4.19%",
+      "diffema20_5m": "+4.14%",
+      "diffema10_5m": "-1.95%",
+      "bd5": "-0.97%",
+      "bd24h": "+10.22%",
       "link": "https://www.okx.com/trade-swap/cnpy-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
