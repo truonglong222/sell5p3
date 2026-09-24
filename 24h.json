@@ -1,24 +1,42 @@
 {
-  "lastScanAt": "2026-09-24T06:45:32.731Z",
-  "targetCoinsCount": 3,
+  "lastScanAt": "2026-09-24T06:50:31.134Z",
+  "targetCoinsCount": 6,
   "targetCoinsList": [
     {
+      "instId": "ACU-USDT-SWAP",
+      "open24h": 0.12139,
+      "last": 0.12899,
+      "change24hVal": 6.26
+    },
+    {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.8181,
-      "last": 2.1099,
-      "change24hVal": 16.05
+      "open24h": 1.8078,
+      "last": 2.1043,
+      "change24hVal": 16.4
+    },
+    {
+      "instId": "UP-USDT-SWAP",
+      "open24h": 0.3104,
+      "last": 0.3353,
+      "change24hVal": 8.02
     },
     {
       "instId": "ARX-USDT-SWAP",
-      "open24h": 0.2192,
-      "last": 0.2365,
-      "change24hVal": 7.89
+      "open24h": 0.2194,
+      "last": 0.2361,
+      "change24hVal": 7.61
     },
     {
       "instId": "ZRO-USDT-SWAP",
-      "open24h": 1.4404,
-      "last": 1.5625,
-      "change24hVal": 8.48
+      "open24h": 1.4386,
+      "last": 1.5545,
+      "change24hVal": 8.06
+    },
+    {
+      "instId": "BOME-USDT-SWAP",
+      "open24h": 0.0011374,
+      "last": 0.0012142,
+      "change24hVal": 6.75
     }
   ],
   "matchedCount": 0,
