@@ -16,6 +16,7 @@ const RESULTS_FILE = path.join(__dirname, '24h.json');
 const COOLDOWN_TIME = 2 * 60 * 60 * 1000; // 2 tiếng
 const MIN_VOL_CCY24H = 5_000_000;         // Volume 24h > 5 triệu USDT
 const THRESHOLD_CHANGE_24H = 5;           // bd24h > 5% hoặc < -5%
+const MIN_HBB_PERCENT = 3;                // Hbb > 3%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -211,12 +212,14 @@ async function main() {
     // Đếm Long
     let countLongDiffEma30 = 0;
     let countLongBd15 = 0;
+    let countLongHbb = 0;
     let countLongBbd = 0;
     let countLongMatched = 0;
 
     // Đếm Short
     let countShortDiffEma30 = 0;
     let countShortBd15 = 0;
+    let countShortHbb = 0;
     let countShortBbt = 0;
     let countShortMatched = 0;
 
@@ -278,7 +281,7 @@ async function main() {
       if (passLongBd15) countLongBd15++;
       if (passShortBd15) countShortBd15++;
 
-      // 3. Bollinger Bands tại nến 1
+      // 3. Bollinger Bands tại nến 1 & Kiểm tra Hbb > 3%
       const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb15m = calculateBollingerBands(closesBB15m, 20);
 
@@ -287,6 +290,16 @@ async function main() {
         continue;
       }
 
+      const hbbPercent = ((bb15m.upper - bb15m.lower) / bb15m.middle) * 100;
+      if (hbbPercent <= MIN_HBB_PERCENT) {
+        await sleep(80);
+        continue;
+      }
+
+      if (passLongBd15) countLongHbb++;
+      if (passShortBd15) countShortHbb++;
+
+      // 4. Kiểm tra bbd (Long) và bbt (Short)
       const bbd = ((low1 - bb15m.lower) / bb15m.lower) * 100;
       const bbt = ((high1 - bb15m.upper) / bb15m.upper) * 100;
 
@@ -300,7 +313,7 @@ async function main() {
       if (passLongBbd) countLongBbd++;
       if (passShortBbt) countShortBbt++;
 
-      // 4. Tính tỷ lệ x trên 5 cây nến gần nhất (15m)
+      // 5. Tính tỷ lệ x trên 5 cây nến gần nhất (15m)
       let maxAbsBd15 = -1;
       let targetIndex = 1;
       let targetBd15 = 0;
@@ -334,7 +347,7 @@ async function main() {
 
       const x = targetBd15 / targetHbb;
 
-      // 5. Khớp tín hiệu hoàn tất
+      // 6. Khớp tín hiệu hoàn tất
       const isLong = passLongBbd && x > -0.4;
       const isShort = passShortBbt && x < 0.4;
 
@@ -346,11 +359,10 @@ async function main() {
       if (isLong) countLongMatched++;
       if (isShort) countShortMatched++;
 
-      const finalHbbPercent = ((bb15m.upper - bb15m.lower) / bb15m.middle) * 100;
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
       const diffema30Str = `${diffema30Val > 0 ? '+' : ''}${diffema30Val.toFixed(2)}%`;
-      const hbbStr = `${finalHbbPercent.toFixed(2)}%`;
+      const hbbStr = `${hbbPercent.toFixed(2)}%`;
       const xRatioStr = x.toFixed(3);
 
       const coinName = symbol.replace('-USDT-SWAP', '');
@@ -416,15 +428,17 @@ async function main() {
     console.log(`  1. Thỏa bd24h > 5%: ${countBd24Long}`);
     console.log(`  2. Thỏa diffema30 trong khoảng [-1%, 1%]: ${countLongDiffEma30}`);
     console.log(`  3. Thỏa bd15 > -2%: ${countLongBd15}`);
-    console.log(`  4. Thỏa bbd < 0.5%: ${countLongBbd}`);
-    console.log(`  5. Khớp hoàn tất (x > -0.4): ${countLongMatched}`);
+    console.log(`  4. Thỏa Hbb > 3%: ${countLongHbb}`);
+    console.log(`  5. Thỏa bbd < 0.5%: ${countLongBbd}`);
+    console.log(`  6. Khớp hoàn tất (x > -0.4): ${countLongMatched}`);
 
     console.log('\n[TIẾN TRÌNH LỌC SHORT]');
     console.log(`  1. Thỏa bd24h < -5%: ${countBd24Short}`);
     console.log(`  2. Thỏa diffema30 trong khoảng [-1%, 1%]: ${countShortDiffEma30}`);
     console.log(`  3. Thỏa bd15 < 2%: ${countShortBd15}`);
-    console.log(`  4. Thỏa bbt > -0.5%: ${countShortBbt}`);
-    console.log(`  5. Khớp hoàn tất (x < 0.4): ${countShortMatched}`);
+    console.log(`  4. Thỏa Hbb > 3%: ${countShortHbb}`);
+    console.log(`  5. Thỏa bbt > -0.5%: ${countShortBbt}`);
+    console.log(`  6. Khớp hoàn tất (x < 0.4): ${countShortMatched}`);
 
     if (scanResults.matched.length > 0) {
       console.log('\nDanh sách khớp tín hiệu:');
