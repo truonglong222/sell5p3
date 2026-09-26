@@ -1,48 +1,54 @@
 {
-  "lastScanAt": "2026-09-26T18:20:33.685Z",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-26T18:25:22.055Z",
+  "targetCoinsCount": 8,
   "targetCoinsList": [
     {
+      "instId": "KITE-USDT-SWAP",
+      "open24h": 0.13318,
+      "last": 0.14663,
+      "change24hVal": 10.1
+    },
+    {
       "instId": "WLD-USDT-SWAP",
-      "open24h": 0.4637,
-      "last": 0.5405,
-      "change24hVal": 16.56
+      "open24h": 0.4625,
+      "last": 0.5422,
+      "change24hVal": 17.23
     },
     {
       "instId": "FIL-USDT-SWAP",
       "open24h": 1.0294,
-      "last": 1.1612,
-      "change24hVal": 12.8
+      "last": 1.1603,
+      "change24hVal": 12.72
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.04132,
-      "last": 0.04996,
-      "change24hVal": 20.91
+      "open24h": 0.04079,
+      "last": 0.05013,
+      "change24hVal": 22.9
     },
     {
       "instId": "BEAT-USDT-SWAP",
-      "open24h": 0.09265,
-      "last": 0.10463,
-      "change24hVal": 12.93
+      "open24h": 0.09244,
+      "last": 0.10459,
+      "change24hVal": 13.14
     },
     {
       "instId": "2Z-USDT-SWAP",
-      "open24h": 0.05859,
-      "last": 0.07006,
-      "change24hVal": 19.58
+      "open24h": 0.05888,
+      "last": 0.06995,
+      "change24hVal": 18.8
     },
     {
       "instId": "JTO-USDT-SWAP",
-      "open24h": 0.5385,
-      "last": 0.6037,
-      "change24hVal": 12.11
+      "open24h": 0.538,
+      "last": 0.6024,
+      "change24hVal": 11.97
     },
     {
       "instId": "EIGEN-USDT-SWAP",
-      "open24h": 0.2492,
+      "open24h": 0.25,
       "last": 0.2791,
-      "change24hVal": 12
+      "change24hVal": 11.64
     }
   ],
   "matchedCount": 0,
