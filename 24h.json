@@ -1,74 +1,88 @@
 {
-  "lastScanAt": "2026-09-26T12:45:33.166Z",
+  "lastScanAt": "2026-09-26T12:50:29.534Z",
   "targetCoinsCount": 11,
   "targetCoinsList": [
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.045076,
-      "last": 0.0581,
-      "change24hVal": 28.89
+      "open24h": 0.044333,
+      "last": 0.05798,
+      "change24hVal": 30.78
     },
     {
       "instId": "ENA-USDT-SWAP",
-      "open24h": 0.24249,
-      "last": 0.27944,
-      "change24hVal": 15.24
+      "open24h": 0.2432,
+      "last": 0.2808,
+      "change24hVal": 15.46
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.04151,
-      "last": 0.04646,
-      "change24hVal": 11.92
+      "open24h": 0.04181,
+      "last": 0.04669,
+      "change24hVal": 11.67
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0018001,
-      "last": 0.0022817,
-      "change24hVal": 26.75
+      "open24h": 0.0017974,
+      "last": 0.0022702,
+      "change24hVal": 26.3
     },
     {
       "instId": "RESOLV-USDT-SWAP",
-      "open24h": 0.01865,
-      "last": 0.02112,
-      "change24hVal": 13.24
+      "open24h": 0.01868,
+      "last": 0.02105,
+      "change24hVal": 12.69
     },
     {
       "instId": "AERO-USDT-SWAP",
-      "open24h": 0.7847,
-      "last": 0.915,
-      "change24hVal": 16.61
+      "open24h": 0.7848,
+      "last": 0.9141,
+      "change24hVal": 16.48
     },
     {
       "instId": "BEAT-USDT-SWAP",
-      "open24h": 0.09157,
-      "last": 0.10494,
+      "open24h": 0.09156,
+      "last": 0.10493,
       "change24hVal": 14.6
     },
     {
       "instId": "JELLYJELLY-USDT-SWAP",
-      "open24h": 0.0569,
-      "last": 0.06785,
-      "change24hVal": 19.24
+      "open24h": 0.05699,
+      "last": 0.06708,
+      "change24hVal": 17.7
     },
     {
       "instId": "2Z-USDT-SWAP",
-      "open24h": 0.05572,
-      "last": 0.07116,
-      "change24hVal": 27.71
+      "open24h": 0.05582,
+      "last": 0.07068,
+      "change24hVal": 26.62
     },
     {
       "instId": "CC-USDT-SWAP",
-      "open24h": 0.12274,
-      "last": 0.1358,
-      "change24hVal": 10.64
+      "open24h": 0.12233,
+      "last": 0.13631,
+      "change24hVal": 11.43
     },
     {
       "instId": "OPG-USDT-SWAP",
-      "open24h": 0.12689,
-      "last": 0.14513,
-      "change24hVal": 14.37
+      "open24h": 0.12715,
+      "last": 0.1463,
+      "change24hVal": 15.06
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "JELLYJELLY-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "6.81%",
+      "bd5": "-0.95%",
+      "xRatio": "-0.202",
+      "diffema20_5m": "-0.48%",
+      "diffema40": "+5.25%",
+      "diffema20_15m": "+10.55%",
+      "bd24h": "+17.70%",
+      "link": "https://www.okx.com/trade-swap/jellyjelly-usdt-swap",
+      "teleSent": false
+    }
+  ]
 }
