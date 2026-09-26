@@ -1,56 +1,76 @@
 {
-  "lastScanAt": "2026-09-26T18:45:31.413Z",
-  "targetCoinsCount": 8,
+  "lastScanAt": "2026-09-26T18:50:30.583Z",
+  "targetCoinsCount": 9,
   "targetCoinsList": [
     {
       "instId": "KITE-USDT-SWAP",
-      "open24h": 0.1328,
-      "last": 0.14624,
-      "change24hVal": 10.12
+      "open24h": 0.13266,
+      "last": 0.14628,
+      "change24hVal": 10.27
+    },
+    {
+      "instId": "GRAM-USDT-SWAP",
+      "open24h": 1.432,
+      "last": 1.577,
+      "change24hVal": 10.13
     },
     {
       "instId": "WLD-USDT-SWAP",
-      "open24h": 0.4612,
-      "last": 0.5317,
-      "change24hVal": 15.29
+      "open24h": 0.4605,
+      "last": 0.5333,
+      "change24hVal": 15.81
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 1.0281,
-      "last": 1.1559,
-      "change24hVal": 12.43
+      "open24h": 1.0264,
+      "last": 1.1605,
+      "change24hVal": 13.07
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.04103,
-      "last": 0.05011,
-      "change24hVal": 22.13
+      "open24h": 0.04104,
+      "last": 0.04992,
+      "change24hVal": 21.64
     },
     {
       "instId": "BEAT-USDT-SWAP",
-      "open24h": 0.0925,
-      "last": 0.10421,
-      "change24hVal": 12.66
+      "open24h": 0.09245,
+      "last": 0.10389,
+      "change24hVal": 12.37
     },
     {
       "instId": "2Z-USDT-SWAP",
-      "open24h": 0.05861,
-      "last": 0.06956,
-      "change24hVal": 18.68
+      "open24h": 0.05857,
+      "last": 0.06919,
+      "change24hVal": 18.13
     },
     {
       "instId": "JTO-USDT-SWAP",
-      "open24h": 0.5406,
-      "last": 0.5968,
-      "change24hVal": 10.4
+      "open24h": 0.5417,
+      "last": 0.5964,
+      "change24hVal": 10.1
     },
     {
       "instId": "EIGEN-USDT-SWAP",
-      "open24h": 0.2495,
+      "open24h": 0.2498,
       "last": 0.2753,
-      "change24hVal": 10.34
+      "change24hVal": 10.21
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "WLD-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.13%",
+      "bd5": "+0.13%",
+      "xRatio": "-0.290",
+      "diffema20_5m": "+0.71%",
+      "diffema40": "+4.38%",
+      "diffema20_15m": "+8.50%",
+      "bd24h": "+15.81%",
+      "link": "https://www.okx.com/trade-swap/wld-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
