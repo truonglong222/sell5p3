@@ -87,7 +87,7 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-function calculateEMAArray(prices, period = 15) {
+function calculateEMAArray(prices, period = 20) {
   const len = prices.length;
   if (len < period) return [];
 
@@ -242,18 +242,18 @@ async function main() {
 
       const closed5m = candles5m.slice(1).reverse().map((c) => parseFloat(c[4]));
 
-      // 1. Tính diffema15 trên nến 5m
-      const ema15Series = calculateEMAArray(closed5m, 15);
-      if (ema15Series.length < 15) {
+      // 1. Tính diffema15: Chênh lệch % giữa EMA20 nến 1 và nến 15
+      const ema20Series = calculateEMAArray(closed5m, 20);
+      if (ema20Series.length < 15) {
         await sleep(80);
         continue;
       }
-      const ema15_n1 = ema15Series[ema15Series.length - 1];
-      const ema15_n15 = ema15Series[ema15Series.length - 15];
-      const diffema15Val = calcDiffPct(ema15_n1, ema15_n15);
+      const ema20_n1 = ema20Series[ema20Series.length - 1];   // EMA20 tại nến 1
+      const ema20_n15 = ema20Series[ema20Series.length - 15]; // EMA20 tại nến 15 (cách nến 1 đúng 14 khoảng)
+      const diffema15Val = calcDiffPct(ema20_n1, ema20_n15);
 
-      // Điều kiện lọc diffema15 trong khoảng (-0.3%, +0.3%)
-      const passDiffEma15 = diffema15Val > -0.3 && diffema15Val < 0.3;
+      // Điều kiện lọc diffema15 trong khoảng (-0.5%, +0.5%)
+      const passDiffEma15 = diffema15Val > -0.5 && diffema15Val < 0.5;
       if (!passDiffEma15) {
         await sleep(80);
         continue;
@@ -429,7 +429,7 @@ async function main() {
 
     console.log('\n[TIẾN TRÌNH LỌC LONG]');
     console.log(`  1. Thỏa bd24h > 5%: ${countBd24}`);
-    console.log(`  2. Thỏa diffema15 trong khoảng (-0.3%, 0.3%): ${countLongDiffEma15}`);
+    console.log(`  2. Thỏa diffema15 trong khoảng (-0.5%, 0.5%): ${countLongDiffEma15}`);
     console.log(`  3. Thỏa bd5 > -2%: ${countLongBd5}`);
     console.log(`  4. Thỏa Hbb > 3%: ${countLongHbb}`);
     console.log(`  5. Thỏa bbd < 0.5%: ${countLongBbd}`);
@@ -437,7 +437,7 @@ async function main() {
 
     console.log('\n[TIẾN TRÌNH LỌC SHORT]');
     console.log(`  1. Thỏa bd24h > 5%: ${countBd24}`);
-    console.log(`  2. Thỏa diffema15 trong khoảng (-0.3%, 0.3%): ${countShortDiffEma15}`);
+    console.log(`  2. Thỏa diffema15 trong khoảng (-0.5%, 0.5%): ${countShortDiffEma15}`);
     console.log(`  3. Thỏa bd5 < 2%: ${countShortBd5}`);
     console.log(`  4. Thỏa Hbb > 3%: ${countShortHbb}`);
     console.log(`  5. Thỏa bbt > -0.5%: ${countShortBbt}`);
