@@ -1,60 +1,72 @@
 {
-  "lastScanAt": "2026-09-26T17:20:30.443Z",
-  "targetCoinsCount": 9,
+  "lastScanAt": "2026-09-26T17:25:24.550Z",
+  "targetCoinsCount": 11,
   "targetCoinsList": [
     {
       "instId": "KITE-USDT-SWAP",
-      "open24h": 0.13065,
-      "last": 0.14617,
-      "change24hVal": 11.88
+      "open24h": 0.13067,
+      "last": 0.14474,
+      "change24hVal": 10.77
     },
     {
       "instId": "GALA-USDT-SWAP",
-      "open24h": 0.002109,
-      "last": 0.002341,
-      "change24hVal": 11
+      "open24h": 0.002115,
+      "last": 0.002366,
+      "change24hVal": 11.87
     },
     {
       "instId": "WLD-USDT-SWAP",
-      "open24h": 0.462,
-      "last": 0.5311,
-      "change24hVal": 14.96
+      "open24h": 0.4606,
+      "last": 0.5323,
+      "change24hVal": 15.57
+    },
+    {
+      "instId": "MUBARAK-USDT-SWAP",
+      "open24h": 0.05223,
+      "last": 0.058444,
+      "change24hVal": 11.9
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 1.0237,
-      "last": 1.1733,
-      "change24hVal": 14.61
+      "open24h": 1.0219,
+      "last": 1.169,
+      "change24hVal": 14.39
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.04216,
-      "last": 0.04917,
-      "change24hVal": 16.63
+      "open24h": 0.04202,
+      "last": 0.0496,
+      "change24hVal": 18.04
+    },
+    {
+      "instId": "DYDX-USDT-SWAP",
+      "open24h": 0.13353,
+      "last": 0.14695,
+      "change24hVal": 10.05
     },
     {
       "instId": "BEAT-USDT-SWAP",
       "open24h": 0.09205,
-      "last": 0.10951,
-      "change24hVal": 18.97
+      "last": 0.10897,
+      "change24hVal": 18.38
     },
     {
       "instId": "2Z-USDT-SWAP",
-      "open24h": 0.05856,
-      "last": 0.06856,
-      "change24hVal": 17.08
+      "open24h": 0.05843,
+      "last": 0.06927,
+      "change24hVal": 18.55
     },
     {
       "instId": "JTO-USDT-SWAP",
-      "open24h": 0.5411,
-      "last": 0.6018,
-      "change24hVal": 11.22
+      "open24h": 0.5383,
+      "last": 0.6045,
+      "change24hVal": 12.3
     },
     {
       "instId": "EIGEN-USDT-SWAP",
-      "open24h": 0.2465,
-      "last": 0.2777,
-      "change24hVal": 12.66
+      "open24h": 0.2459,
+      "last": 0.2784,
+      "change24hVal": 13.22
     }
   ],
   "matchedCount": 2,
@@ -62,26 +74,26 @@
     {
       "symbol": "FIL-USDT-SWAP",
       "type": "LONG",
-      "Hbb": "4.86%",
-      "bd5": "-0.51%",
+      "Hbb": "5.46%",
+      "bd5": "-0.34%",
       "xRatio": "-0.402",
-      "diffema20_5m": "+2.58%",
-      "diffema40": "+10.06%",
+      "diffema20_5m": "+2.17%",
+      "diffema40": "+9.70%",
       "diffema20_15m": "+7.19%",
-      "bd24h": "+14.61%",
+      "bd24h": "+14.39%",
       "link": "https://www.okx.com/trade-swap/fil-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "BEAT-USDT-SWAP",
       "type": "LONG",
-      "Hbb": "5.25%",
-      "bd5": "+0.37%",
+      "Hbb": "5.57%",
+      "bd5": "-0.55%",
       "xRatio": "-0.302",
-      "diffema20_5m": "-0.11%",
-      "diffema40": "+5.86%",
+      "diffema20_5m": "-0.53%",
+      "diffema40": "+5.44%",
       "diffema20_15m": "+7.09%",
-      "bd24h": "+18.97%",
+      "bd24h": "+18.38%",
       "link": "https://www.okx.com/trade-swap/beat-usdt-swap",
       "teleSent": false
     }
