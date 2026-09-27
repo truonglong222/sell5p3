@@ -1,7 +1,134 @@
 {
-  "lastScanAt": "2026-09-27T02:20:37.050Z",
-  "targetCoinsCount": 0,
-  "targetCoinsList": [],
-  "matchedCount": 0,
-  "matchedList": []
+  "lastScanAt": "2026-09-27T02:25:33.431Z",
+  "targetCoinsCount": 19,
+  "targetCoinsList": [
+    {
+      "instId": "W-USDT-SWAP",
+      "open24h": 0.012247,
+      "last": 0.013355,
+      "change24hVal": 9.05
+    },
+    {
+      "instId": "KITE-USDT-SWAP",
+      "open24h": 0.13761,
+      "last": 0.15328,
+      "change24hVal": 11.39
+    },
+    {
+      "instId": "TRIA-USDT-SWAP",
+      "open24h": 0.004172,
+      "last": 0.004498,
+      "change24hVal": 7.81
+    },
+    {
+      "instId": "GRAM-USDT-SWAP",
+      "open24h": 1.449,
+      "last": 1.596,
+      "change24hVal": 10.14
+    },
+    {
+      "instId": "GALA-USDT-SWAP",
+      "open24h": 0.002159,
+      "last": 0.002273,
+      "change24hVal": 5.28
+    },
+    {
+      "instId": "WLD-USDT-SWAP",
+      "open24h": 0.4883,
+      "last": 0.5252,
+      "change24hVal": 7.56
+    },
+    {
+      "instId": "PYTH-USDT-SWAP",
+      "open24h": 0.07394,
+      "last": 0.08295,
+      "change24hVal": 12.19
+    },
+    {
+      "instId": "FIL-USDT-SWAP",
+      "open24h": 1.04,
+      "last": 1.1383,
+      "change24hVal": 9.45
+    },
+    {
+      "instId": "GRASS-USDT-SWAP",
+      "open24h": 0.5185,
+      "last": 0.5716,
+      "change24hVal": 10.24
+    },
+    {
+      "instId": "KMNO-USDT-SWAP",
+      "open24h": 0.04179,
+      "last": 0.04753,
+      "change24hVal": 13.74
+    },
+    {
+      "instId": "FLOW-USDT-SWAP",
+      "open24h": 0.03098,
+      "last": 0.03284,
+      "change24hVal": 6
+    },
+    {
+      "instId": "CNPY-USDT-SWAP",
+      "open24h": 0.4039,
+      "last": 0.4277,
+      "change24hVal": 5.89
+    },
+    {
+      "instId": "SOON-USDT-SWAP",
+      "open24h": 0.2026,
+      "last": 0.2446,
+      "change24hVal": 20.73
+    },
+    {
+      "instId": "GPS-USDT-SWAP",
+      "open24h": 0.011306,
+      "last": 0.011987,
+      "change24hVal": 6.02
+    },
+    {
+      "instId": "DYDX-USDT-SWAP",
+      "open24h": 0.13476,
+      "last": 0.14285,
+      "change24hVal": 6
+    },
+    {
+      "instId": "BABY-USDT-SWAP",
+      "open24h": 0.013368,
+      "last": 0.014438,
+      "change24hVal": 8
+    },
+    {
+      "instId": "2Z-USDT-SWAP",
+      "open24h": 0.05809,
+      "last": 0.07041,
+      "change24hVal": 21.21
+    },
+    {
+      "instId": "JTO-USDT-SWAP",
+      "open24h": 0.5668,
+      "last": 0.6196,
+      "change24hVal": 9.32
+    },
+    {
+      "instId": "HUMA-USDT-SWAP",
+      "open24h": 0.02686,
+      "last": 0.02879,
+      "change24hVal": 7.19
+    }
+  ],
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "2Z-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "4.45%",
+      "xRatio": "0.249",
+      "ud": "+3",
+      "diffema15": "+0.39%",
+      "bd24h": "+21.21%",
+      "link": "https://www.okx.com/trade-swap/2z-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
