@@ -175,10 +175,12 @@ async function main() {
     let countBd24Long = 0;
     let countDiffEma40Long = 0;
     let countBbdLong = 0;
+    let countHbbLong = 0;
 
     let countBd24Short = 0;
     let countDiffEma40Short = 0;
     let countBbtShort = 0;
+    let countHbbShort = 0;
 
     let countMatchedLong = 0;
     let countMatchedShort = 0;
@@ -235,8 +237,10 @@ async function main() {
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
       // Đánh giá từng điều kiện
+      const passHbb = hbbPercent > 2; // Điều kiện chung Hbb > 2%
+
       const passBd24Long = coin.change24hVal > 5;
-      const passDiffEma40Long = diffema40 > 3;
+      const passDiffEma40Long = diffema40 > 4; // Cập nhật > 4%
       const passBbdLong = bbd < 0;
 
       const passBd24Short = coin.change24hVal < -5;
@@ -246,14 +250,16 @@ async function main() {
       if (passBd24Long) countBd24Long++;
       if (passDiffEma40Long) countDiffEma40Long++;
       if (passBbdLong) countBbdLong++;
+      if (passBd24Long && passHbb) countHbbLong++;
 
       if (passBd24Short) countBd24Short++;
       if (passDiffEma40Short) countDiffEma40Short++;
       if (passBbtShort) countBbtShort++;
+      if (passBd24Short && passHbb) countHbbShort++;
 
-      // Tín hiệu kết hợp
-      const isLong = passBd24Long && passDiffEma40Long && passBbdLong;
-      const isShort = passBd24Short && passDiffEma40Short && passBbtShort;
+      // Tín hiệu kết hợp (bao gồm Hbb > 2%)
+      const isLong = passBd24Long && passDiffEma40Long && passBbdLong && passHbb;
+      const isShort = passBd24Short && passDiffEma40Short && passBbtShort && passHbb;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -286,7 +292,6 @@ async function main() {
         teleSent: !isCooldown
       });
 
-      // Gửi Telegram thay x bằng Hbb
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const message =
@@ -321,11 +326,13 @@ async function main() {
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
       { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
-      { 'Điều kiện': 'diffema40 > 3% (Long)', 'Số lượng': countDiffEma40Long },
+      { 'Điều kiện': 'diffema40 > 4% (Long)', 'Số lượng': countDiffEma40Long },
       { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
+      { 'Điều kiện': 'Hbb > 2% (Long)', 'Số lượng': countHbbLong },
       { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
       { 'Điều kiện': 'diffema40 < -3% (Short)', 'Số lượng': countDiffEma40Short },
       { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
+      { 'Điều kiện': 'Hbb > 2% (Short)', 'Số lượng': countHbbShort },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
       { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
     ]);
