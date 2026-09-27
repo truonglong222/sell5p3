@@ -1,125 +1,132 @@
 {
-  "lastScanAt": "2026-09-27T01:05:30.048Z",
-  "targetCoinsCount": 16,
+  "lastScanAt": "2026-09-27T01:10:35.252Z",
+  "targetCoinsCount": 19,
   "targetCoinsList": [
     {
+      "instId": "EDGE-USDT-SWAP",
+      "open24h": 0.5714,
+      "last": 0.601,
+      "change24hVal": 5.18
+    },
+    {
       "instId": "W-USDT-SWAP",
-      "open24h": 0.012249,
-      "last": 0.013645,
-      "change24hVal": 11.4
+      "open24h": 0.012242,
+      "last": 0.013426,
+      "change24hVal": 9.67
+    },
+    {
+      "instId": "PUMP-USDT-SWAP",
+      "open24h": 0.00417,
+      "last": 0.004394,
+      "change24hVal": 5.37
     },
     {
       "instId": "KITE-USDT-SWAP",
-      "open24h": 0.13537,
-      "last": 0.15061,
-      "change24hVal": 11.26
+      "open24h": 0.1349,
+      "last": 0.15193,
+      "change24hVal": 12.62
     },
     {
       "instId": "TRIA-USDT-SWAP",
-      "open24h": 0.004189,
-      "last": 0.004433,
-      "change24hVal": 5.82
+      "open24h": 0.004183,
+      "last": 0.004427,
+      "change24hVal": 5.83
     },
     {
       "instId": "GRAM-USDT-SWAP",
-      "open24h": 1.447,
-      "last": 1.601,
-      "change24hVal": 10.64
+      "open24h": 1.446,
+      "last": 1.622,
+      "change24hVal": 12.17
     },
     {
       "instId": "WLD-USDT-SWAP",
-      "open24h": 0.4937,
-      "last": 0.5195,
-      "change24hVal": 5.23
+      "open24h": 0.4922,
+      "last": 0.522,
+      "change24hVal": 6.05
     },
     {
       "instId": "PYTH-USDT-SWAP",
-      "open24h": 0.07306,
-      "last": 0.08189,
-      "change24hVal": 12.09
+      "open24h": 0.07305,
+      "last": 0.08207,
+      "change24hVal": 12.35
     },
     {
       "instId": "FIL-USDT-SWAP",
-      "open24h": 1.0504,
-      "last": 1.1236,
-      "change24hVal": 6.97
+      "open24h": 1.05,
+      "last": 1.1261,
+      "change24hVal": 7.25
     },
     {
       "instId": "GRASS-USDT-SWAP",
-      "open24h": 0.5167,
-      "last": 0.5781,
-      "change24hVal": 11.88
+      "open24h": 0.5126,
+      "last": 0.5793,
+      "change24hVal": 13.01
     },
     {
       "instId": "KMNO-USDT-SWAP",
-      "open24h": 0.04121,
-      "last": 0.04765,
-      "change24hVal": 15.63
+      "open24h": 0.04117,
+      "last": 0.04771,
+      "change24hVal": 15.89
     },
     {
       "instId": "CNPY-USDT-SWAP",
-      "open24h": 0.4001,
-      "last": 0.4233,
-      "change24hVal": 5.8
+      "open24h": 0.3991,
+      "last": 0.4262,
+      "change24hVal": 6.79
     },
     {
       "instId": "SOON-USDT-SWAP",
-      "open24h": 0.2024,
-      "last": 0.2396,
-      "change24hVal": 18.38
+      "open24h": 0.2022,
+      "last": 0.2397,
+      "change24hVal": 18.55
+    },
+    {
+      "instId": "GPS-USDT-SWAP",
+      "open24h": 0.011344,
+      "last": 0.01197,
+      "change24hVal": 5.52
     },
     {
       "instId": "AERO-USDT-SWAP",
-      "open24h": 0.8295,
-      "last": 0.8751,
-      "change24hVal": 5.5
+      "open24h": 0.8344,
+      "last": 0.8769,
+      "change24hVal": 5.09
     },
     {
       "instId": "DYDX-USDT-SWAP",
-      "open24h": 0.13465,
-      "last": 0.14302,
-      "change24hVal": 6.22
+      "open24h": 0.13449,
+      "last": 0.14483,
+      "change24hVal": 7.69
     },
     {
       "instId": "2Z-USDT-SWAP",
-      "open24h": 0.05753,
-      "last": 0.06811,
-      "change24hVal": 18.39
+      "open24h": 0.05744,
+      "last": 0.06838,
+      "change24hVal": 19.05
     },
     {
       "instId": "JTO-USDT-SWAP",
-      "open24h": 0.5678,
-      "last": 0.597,
-      "change24hVal": 5.14
+      "open24h": 0.5665,
+      "last": 0.6051,
+      "change24hVal": 6.81
     },
     {
       "instId": "HUMA-USDT-SWAP",
-      "open24h": 0.02696,
-      "last": 0.0287,
-      "change24hVal": 6.45
+      "open24h": 0.02692,
+      "last": 0.02854,
+      "change24hVal": 6.02
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "TRIA-USDT-SWAP",
-      "type": "LONG",
-      "Hbb": "4.20%",
-      "xRatio": "-0.290",
-      "ud": "+2",
-      "diffema15": "+0.07%",
-      "bd24h": "+5.82%",
-      "link": "https://www.okx.com/trade-swap/tria-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "SOON-USDT-SWAP",
       "type": "SHORT",
-      "Hbb": "6.53%",
+      "Hbb": "7.03%",
       "xRatio": "0.225",
-      "ud": "+2",
-      "diffema15": "+0.01%",
-      "bd24h": "+18.38%",
+      "ud": "+1",
+      "diffema15": "+0.40%",
+      "bd24h": "+18.55%",
       "link": "https://www.okx.com/trade-swap/soon-usdt-swap",
       "teleSent": false
     }
