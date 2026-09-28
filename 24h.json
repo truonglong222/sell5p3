@@ -1,125 +1,98 @@
 {
-  "lastScanAt": "2026-09-28T16:31:00.151Z",
-  "ud4h": "+9",
-  "targetCoinsCount": 13,
+  "lastScanAt": "2026-09-28T16:35:33.694Z",
+  "ud4h": "+7",
+  "targetCoinsCount": 11,
   "targetCoinsList": [
     {
-      "instId": "XLM-USDT-SWAP",
-      "open24h": 0.21552,
-      "last": 0.22689,
-      "change24hVal": 5.28,
-      "hbb5m": 6.4
-    },
-    {
       "instId": "PUMP-USDT-SWAP",
-      "open24h": 0.004907,
-      "last": 0.005512,
-      "change24hVal": 12.33,
-      "hbb5m": 10.44
+      "open24h": 0.004903,
+      "last": 0.005387,
+      "change24hVal": 9.87,
+      "hbb5m": 10.9
     },
     {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11718,
-      "last": 0.13625,
-      "change24hVal": 16.27,
-      "hbb5m": 7.44
+      "open24h": 0.11704,
+      "last": 0.13622,
+      "change24hVal": 16.39,
+      "hbb5m": 7.04
     },
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.05422,
-      "last": 0.061407,
-      "change24hVal": 13.26,
-      "hbb5m": 4.49
+      "open24h": 0.054174,
+      "last": 0.061269,
+      "change24hVal": 13.1,
+      "hbb5m": 4.61
     },
     {
       "instId": "MON-USDT-SWAP",
-      "open24h": 0.02623,
-      "last": 0.02958,
-      "change24hVal": 12.77,
-      "hbb5m": 11.25
-    },
-    {
-      "instId": "NIGHT-USDT-SWAP",
-      "open24h": 0.026713,
-      "last": 0.028075,
-      "change24hVal": 5.1,
-      "hbb5m": 4.01
+      "open24h": 0.02627,
+      "last": 0.02937,
+      "change24hVal": 11.8,
+      "hbb5m": 11.07
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1708,
-      "last": 0.1852,
-      "change24hVal": 8.43,
-      "hbb5m": 5.87
+      "open24h": 0.1715,
+      "last": 0.1842,
+      "change24hVal": 7.41,
+      "hbb5m": 6.26
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09329,
-      "last": 0.12757,
-      "change24hVal": 36.75,
-      "hbb5m": 12.53
+      "open24h": 0.09327,
+      "last": 0.12688,
+      "change24hVal": 36.04,
+      "hbb5m": 12.74
     },
     {
       "instId": "IOTA-USDT-SWAP",
       "open24h": 0.04995,
-      "last": 0.05472,
-      "change24hVal": 9.55,
-      "hbb5m": 5.51
+      "last": 0.05449,
+      "change24hVal": 9.09,
+      "hbb5m": 5.12
     },
     {
       "instId": "LINK-USDT-SWAP",
-      "open24h": 14.105,
-      "last": 15.038,
-      "change24hVal": 6.61,
-      "hbb5m": 6.95
+      "open24h": 14.098,
+      "last": 15.157,
+      "change24hVal": 7.51,
+      "hbb5m": 8.13
     },
     {
       "instId": "CAP-USDT-SWAP",
       "open24h": 0.05332,
-      "last": 0.05668,
-      "change24hVal": 6.3,
-      "hbb5m": 3.83
+      "last": 0.05655,
+      "change24hVal": 6.06,
+      "hbb5m": 4.02
     },
     {
       "instId": "SEI-USDT-SWAP",
-      "open24h": 0.07391,
-      "last": 0.07953,
-      "change24hVal": 7.6,
-      "hbb5m": 3.67
+      "open24h": 0.07387,
+      "last": 0.07972,
+      "change24hVal": 7.92,
+      "hbb5m": 4.21
     },
     {
       "instId": "AZTEC-USDT-SWAP",
-      "open24h": 0.01699,
-      "last": 0.02005,
-      "change24hVal": 18.01,
-      "hbb5m": 8.87
+      "open24h": 0.01727,
+      "last": 0.01999,
+      "change24hVal": 15.75,
+      "hbb5m": 9.51
     }
   ],
-  "matchedCount": 2,
+  "matchedCount": 1,
   "matchedList": [
-    {
-      "symbol": "CAP-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb5m": "3.83%",
-      "bd24h": "+6.30%",
-      "x": "3.09",
-      "diffema20_15m": "1.17%",
-      "diffema20_5m": "0.31%",
-      "bbd5m": "3.72%",
-      "bbt5m": "0.01%",
-      "link": "https://www.okx.com/trade-swap/cap-usdt-swap",
-      "teleSent": false
-    },
     {
       "symbol": "SEI-USDT-SWAP",
       "type": "SHORT",
-      "Hbb5m": "3.67%",
-      "bd24h": "+7.60%",
+      "Hbb5m": "4.21%",
+      "bd24h": "+7.92%",
       "x": "2.93",
       "diffema20_15m": "-1.70%",
-      "diffema20_5m": "-0.38%",
-      "bbd5m": "4.11%",
-      "bbt5m": "0.70%",
+      "diffema20_5m": "-0.04%",
+      "bbd5m": "4.58%",
+      "bbt5m": "0.52%",
       "link": "https://www.okx.com/trade-swap/sei-usdt-swap",
       "teleSent": false
     }
