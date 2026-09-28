@@ -1,35 +1,42 @@
 {
-  "lastScanAt": "2026-09-28T20:05:26.682Z",
-  "ud4h": "0",
-  "targetCoinsCount": 4,
+  "lastScanAt": "2026-09-28T20:10:33.792Z",
+  "ud4h": "+1",
+  "targetCoinsCount": 5,
   "targetCoinsList": [
     {
+      "instId": "XLM-USDT-SWAP",
+      "open24h": 0.21728,
+      "last": 0.22933,
+      "change24hVal": 5.55,
+      "hbb5m": 3.48
+    },
+    {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11907,
-      "last": 0.13139,
-      "change24hVal": 10.35,
-      "hbb5m": 4.7
+      "open24h": 0.11913,
+      "last": 0.13158,
+      "change24hVal": 10.45,
+      "hbb5m": 4.18
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
       "open24h": 0.1744,
-      "last": 0.1854,
-      "change24hVal": 6.31,
-      "hbb5m": 4.66
+      "last": 0.187,
+      "change24hVal": 7.22,
+      "hbb5m": 4.72
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09513,
-      "last": 0.11973,
-      "change24hVal": 25.86,
-      "hbb5m": 6.73
+      "open24h": 0.09538,
+      "last": 0.12017,
+      "change24hVal": 25.99,
+      "hbb5m": 7.63
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.08016,
-      "last": 0.08963,
-      "change24hVal": 11.81,
-      "hbb5m": 7.01
+      "open24h": 0.0801,
+      "last": 0.08983,
+      "change24hVal": 12.15,
+      "hbb5m": 6.59
     }
   ],
   "matchedCount": 0,
