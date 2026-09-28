@@ -1,72 +1,79 @@
 {
-  "lastScanAt": "2026-09-28T14:55:30.036Z",
-  "ud4h": "+1",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-28T15:01:16.431Z",
+  "ud4h": "+4",
+  "targetCoinsCount": 10,
   "targetCoinsList": [
     {
       "instId": "PUMP-USDT-SWAP",
       "open24h": 0.004743,
-      "last": 0.004983,
-      "change24hVal": 5.06,
-      "hbb5m": 8.1
+      "last": 0.005037,
+      "change24hVal": 6.2,
+      "hbb5m": 8.57
     },
     {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11671,
-      "last": 0.12785,
-      "change24hVal": 9.55,
-      "hbb5m": 6.5
+      "open24h": 0.11616,
+      "last": 0.12933,
+      "change24hVal": 11.34,
+      "hbb5m": 6.87
     },
     {
       "instId": "MON-USDT-SWAP",
-      "open24h": 0.02636,
-      "last": 0.02793,
-      "change24hVal": 5.96,
-      "hbb5m": 6.51
+      "open24h": 0.02613,
+      "last": 0.0281,
+      "change24hVal": 7.54,
+      "hbb5m": 6.58
     },
     {
       "instId": "GRT-USDT-SWAP",
-      "open24h": 0.02831,
-      "last": 0.03089,
-      "change24hVal": 9.11,
-      "hbb5m": 6.38
+      "open24h": 0.02825,
+      "last": 0.03116,
+      "change24hVal": 10.3,
+      "hbb5m": 6.44
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0023338,
-      "last": 0.0024811,
-      "change24hVal": 6.31,
-      "hbb5m": 5.78
+      "open24h": 0.0023277,
+      "last": 0.002496,
+      "change24hVal": 7.23,
+      "hbb5m": 5.44
+    },
+    {
+      "instId": "CASHCAT-USDT-SWAP",
+      "open24h": 0.1731,
+      "last": 0.1821,
+      "change24hVal": 5.2,
+      "hbb5m": 5.34
     },
     {
       "instId": "SOON-USDT-SWAP",
-      "open24h": 0.2892,
-      "last": 0.3147,
-      "change24hVal": 8.82,
-      "hbb5m": 4.21
+      "open24h": 0.2902,
+      "last": 0.3193,
+      "change24hVal": 10.03,
+      "hbb5m": 4.37
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09342,
-      "last": 0.1175,
-      "change24hVal": 25.78,
-      "hbb5m": 4.15
+      "open24h": 0.09307,
+      "last": 0.11912,
+      "change24hVal": 27.99,
+      "hbb5m": 4.27
+    },
+    {
+      "instId": "IOTA-USDT-SWAP",
+      "open24h": 0.0498,
+      "last": 0.05295,
+      "change24hVal": 6.33,
+      "hbb5m": 3.92
+    },
+    {
+      "instId": "SEI-USDT-SWAP",
+      "open24h": 0.07299,
+      "last": 0.07706,
+      "change24hVal": 5.58,
+      "hbb5m": 5.89
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "ALGO-USDT-SWAP",
-      "type": "LONG",
-      "Hbb5m": "6.50%",
-      "bd24h": "+9.55%",
-      "x": "1.25",
-      "diffema20_15m": "8.00%",
-      "diffema20_5m": "1.02%",
-      "bbd5m": "-0.43%",
-      "bbt5m": "-6.39%",
-      "link": "https://www.okx.com/trade-swap/algo-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
