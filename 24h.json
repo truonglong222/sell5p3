@@ -1,56 +1,63 @@
 {
-  "lastScanAt": "2026-09-28T14:20:38.107Z",
-  "ud4h": "+1",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-28T14:25:35.297Z",
+  "ud4h": "+2",
+  "targetCoinsCount": 8,
   "targetCoinsList": [
     {
+      "instId": "PUMP-USDT-SWAP",
+      "open24h": 0.004717,
+      "last": 0.005144,
+      "change24hVal": 9.05,
+      "hbb5m": 3.15
+    },
+    {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11637,
-      "last": 0.13327,
-      "change24hVal": 14.52,
-      "hbb5m": 6.27
+      "open24h": 0.11625,
+      "last": 0.1337,
+      "change24hVal": 15.01,
+      "hbb5m": 6.03
     },
     {
       "instId": "GRT-USDT-SWAP",
-      "open24h": 0.02813,
-      "last": 0.03134,
-      "change24hVal": 11.41,
-      "hbb5m": 4.86
+      "open24h": 0.02801,
+      "last": 0.03142,
+      "change24hVal": 12.17,
+      "hbb5m": 4.97
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0022661,
-      "last": 0.002499,
-      "change24hVal": 10.28,
-      "hbb5m": 3.89
+      "open24h": 0.0023167,
+      "last": 0.0025083,
+      "change24hVal": 8.27,
+      "hbb5m": 4.09
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1756,
-      "last": 0.1852,
-      "change24hVal": 5.47,
-      "hbb5m": 3.36
+      "open24h": 0.1757,
+      "last": 0.1881,
+      "change24hVal": 7.06,
+      "hbb5m": 3.05
     },
     {
       "instId": "SOON-USDT-SWAP",
-      "open24h": 0.2896,
-      "last": 0.3103,
-      "change24hVal": 7.15,
-      "hbb5m": 6.4
+      "open24h": 0.2912,
+      "last": 0.3142,
+      "change24hVal": 7.9,
+      "hbb5m": 5.97
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09376,
-      "last": 0.11942,
-      "change24hVal": 27.37,
-      "hbb5m": 4.4
+      "open24h": 0.09373,
+      "last": 0.12034,
+      "change24hVal": 28.39,
+      "hbb5m": 4.42
     },
     {
       "instId": "SEI-USDT-SWAP",
-      "open24h": 0.07327,
-      "last": 0.0778,
-      "change24hVal": 6.18,
-      "hbb5m": 4.78
+      "open24h": 0.07298,
+      "last": 0.07849,
+      "change24hVal": 7.55,
+      "hbb5m": 4.87
     }
   ],
   "matchedCount": 0,
