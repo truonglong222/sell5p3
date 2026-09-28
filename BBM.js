@@ -50,6 +50,7 @@ function saveScanResults(results) {
   try {
     const outputData = {
       lastScanAt: new Date().toISOString(),
+      ud4h: results.ud4h,
       targetCoinsCount: results.targetCoins.length,
       targetCoinsList: results.targetCoins,
       matchedCount: results.matched.length,
@@ -164,7 +165,35 @@ async function main() {
       `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
     );
 
+    // --- TÍNH CHỈ SỐ UD TOÀN TẬP COIN ĐÃ LỌC ---
+    // ud = tổng số coin có nến 4h vừa đóng tăng - tổng số coin có nến 4h vừa đóng giảm
+    console.log(`⏳ Đang tải nến 4H tính chỉ số ud cho ${targetCoins.length} coin...`);
+    let totalUp4hCoins = 0;
+    let totalDown4hCoins = 0;
+
+    for (const coin of targetCoins) {
+      // limit=2: candles[0] là nến đang chạy, candles[1] là nến vừa đóng
+      const candles4h = await getCandles(coin.instId, '4H', 2);
+      if (candles4h && candles4h.length >= 2) {
+        const closedCandle = candles4h[1];
+        const openPrice = parseFloat(closedCandle[1]);
+        const closePrice = parseFloat(closedCandle[4]);
+
+        if (closePrice > openPrice) {
+          totalUp4hCoins++;
+        } else if (closePrice < openPrice) {
+          totalDown4hCoins++;
+        }
+      }
+      await sleep(60); // Giảm tải rate-limit OKX
+    }
+
+    const marketUD = totalUp4hCoins - totalDown4hCoins;
+    const marketUDStr = marketUD > 0 ? `+${marketUD}` : `${marketUD}`;
+    console.log(`📈 Kết quả ud (4H): ${marketUDStr} (Tăng: ${totalUp4hCoins} | Giảm: ${totalDown4hCoins})\n`);
+
     const scanResults = {
+      ud4h: marketUDStr,
       targetCoins,
       matched: []
     };
@@ -199,7 +228,7 @@ async function main() {
       const high0 = parseFloat(candle0[2]);
       const low0 = parseFloat(candle0[3]);
 
-      // --- 1. BOLLINGER BANDS (20) TRÊN NẾN 5m SỐ 1 VỪA ĐÓNG (candles5m[1..20]) ---
+      // --- 1. BOLLINGER BANDS (20) TRÊN NẾN 5m SỐ 1 VỪA ĐÓNG ---
       const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb5m = calculateBollingerBands(closesBB5m, 20);
 
@@ -237,10 +266,10 @@ async function main() {
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
       // Đánh giá từng điều kiện
-      const passHbb = hbbPercent > 2; // Điều kiện chung Hbb > 2%
+      const passHbb = hbbPercent > 2;
 
       const passBd24Long = coin.change24hVal > 5;
-      const passDiffEma40Long = diffema40 > 4; // Cập nhật > 4%
+      const passDiffEma40Long = diffema40 > 4;
       const passBbdLong = bbd < 0;
 
       const passBd24Short = coin.change24hVal < -5;
@@ -257,7 +286,7 @@ async function main() {
       if (passBbtShort) countBbtShort++;
       if (passBd24Short && passHbb) countHbbShort++;
 
-      // Tín hiệu kết hợp (bao gồm Hbb > 2%)
+      // Tín hiệu kết hợp
       const isLong = passBd24Long && passDiffEma40Long && passBbdLong && passHbb;
       const isShort = passBd24Short && passDiffEma40Short && passBbtShort && passHbb;
 
@@ -294,7 +323,9 @@ async function main() {
 
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
+        // Đặt ud lên đầu tiên của tin nhắn Telegram
         const message =
+          `<b>ud (4H): ${marketUDStr}</b>\n` +
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Hbb (5m):</b> ${hbbStr}\n` +
           `• <b>diffema40:</b> ${diffema40Str}\n` +
@@ -323,6 +354,7 @@ async function main() {
 
     // Bảng thống kê ngắn gọn
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
+    console.log(`Chỉ số thị trường ud (4H): ${marketUDStr}`);
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
       { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
