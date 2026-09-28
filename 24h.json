@@ -1,56 +1,63 @@
 {
-  "lastScanAt": "2026-09-28T15:20:34.741Z",
-  "ud4h": "+3",
-  "targetCoinsCount": 7,
+  "lastScanAt": "2026-09-28T15:25:31.075Z",
+  "ud4h": "+4",
+  "targetCoinsCount": 8,
   "targetCoinsList": [
     {
+      "instId": "PUMP-USDT-SWAP",
+      "open24h": 0.004777,
+      "last": 0.005073,
+      "change24hVal": 6.2,
+      "hbb5m": 8.4
+    },
+    {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11641,
-      "last": 0.13007,
-      "change24hVal": 11.73,
-      "hbb5m": 7.28
+      "open24h": 0.1163,
+      "last": 0.13043,
+      "change24hVal": 12.15,
+      "hbb5m": 7.2
     },
     {
       "instId": "MON-USDT-SWAP",
-      "open24h": 0.02595,
-      "last": 0.02787,
-      "change24hVal": 7.4,
-      "hbb5m": 6.81
+      "open24h": 0.02593,
+      "last": 0.02809,
+      "change24hVal": 8.33,
+      "hbb5m": 6.57
     },
     {
       "instId": "GRT-USDT-SWAP",
-      "open24h": 0.02841,
-      "last": 0.03079,
-      "change24hVal": 8.38,
-      "hbb5m": 6.12
+      "open24h": 0.02833,
+      "last": 0.03077,
+      "change24hVal": 8.61,
+      "hbb5m": 5.59
     },
     {
       "instId": "SOON-USDT-SWAP",
-      "open24h": 0.292,
-      "last": 0.3459,
-      "change24hVal": 18.46,
-      "hbb5m": 9.58
+      "open24h": 0.2913,
+      "last": 0.3458,
+      "change24hVal": 18.71,
+      "hbb5m": 13.93
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09335,
-      "last": 0.11594,
-      "change24hVal": 24.2,
-      "hbb5m": 4.64
-    },
-    {
-      "instId": "INIT-USDT-SWAP",
-      "open24h": 0.08921,
-      "last": 0.0939,
-      "change24hVal": 5.26,
-      "hbb5m": 5.7
+      "open24h": 0.09323,
+      "last": 0.11715,
+      "change24hVal": 25.66,
+      "hbb5m": 4.46
     },
     {
       "instId": "IOTA-USDT-SWAP",
-      "open24h": 0.04981,
-      "last": 0.05293,
-      "change24hVal": 6.26,
-      "hbb5m": 4.06
+      "open24h": 0.04967,
+      "last": 0.05333,
+      "change24hVal": 7.37,
+      "hbb5m": 3.93
+    },
+    {
+      "instId": "SEI-USDT-SWAP",
+      "open24h": 0.07297,
+      "last": 0.07715,
+      "change24hVal": 5.73,
+      "hbb5m": 4.3
     }
   ],
   "matchedCount": 0,
