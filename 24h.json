@@ -1,42 +1,56 @@
 {
-  "lastScanAt": "2026-09-28T22:35:28.445Z",
+  "lastScanAt": "2026-09-28T22:40:33.709Z",
   "ud4h": "+5",
-  "targetCoinsCount": 5,
+  "targetCoinsCount": 7,
   "targetCoinsList": [
     {
       "instId": "STABLE-USDT-SWAP",
-      "open24h": 0.02729,
-      "last": 0.02874,
-      "change24hVal": 5.31,
-      "hbb5m": 3.45
+      "open24h": 0.02733,
+      "last": 0.02888,
+      "change24hVal": 5.67,
+      "hbb5m": 3.32
+    },
+    {
+      "instId": "0G-USDT-SWAP",
+      "open24h": 0.2595,
+      "last": 0.2751,
+      "change24hVal": 6.01,
+      "hbb5m": 4.63
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1678,
-      "last": 0.177,
-      "change24hVal": 5.48,
-      "hbb5m": 3.42
+      "open24h": 0.1675,
+      "last": 0.178,
+      "change24hVal": 6.27,
+      "hbb5m": 3.16
+    },
+    {
+      "instId": "HBAR-USDT-SWAP",
+      "open24h": 0.09394,
+      "last": 0.12371,
+      "change24hVal": 31.69,
+      "hbb5m": 3.04
     },
     {
       "instId": "LINK-USDT-SWAP",
-      "open24h": 13.927,
-      "last": 15.025,
-      "change24hVal": 7.88,
-      "hbb5m": 3.37
+      "open24h": 13.95,
+      "last": 15.097,
+      "change24hVal": 8.22,
+      "hbb5m": 3.26
     },
     {
       "instId": "AZTEC-USDT-SWAP",
-      "open24h": 0.01753,
-      "last": 0.01871,
-      "change24hVal": 6.73,
-      "hbb5m": 7.86
+      "open24h": 0.01754,
+      "last": 0.01888,
+      "change24hVal": 7.64,
+      "hbb5m": 7.83
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.08003,
-      "last": 0.0898,
-      "change24hVal": 12.21,
-      "hbb5m": 8.07
+      "open24h": 0.08007,
+      "last": 0.08977,
+      "change24hVal": 12.11,
+      "hbb5m": 8.08
     }
   ],
   "matchedCount": 0,
