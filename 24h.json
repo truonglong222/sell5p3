@@ -1,49 +1,49 @@
 {
-  "lastScanAt": "2026-09-28T15:45:40.666Z",
+  "lastScanAt": "2026-09-28T15:50:36.635Z",
   "ud4h": "+4",
   "targetCoinsCount": 6,
   "targetCoinsList": [
     {
       "instId": "PUMP-USDT-SWAP",
-      "open24h": 0.004788,
-      "last": 0.005112,
-      "change24hVal": 6.77,
-      "hbb5m": 6.62
+      "open24h": 0.004822,
+      "last": 0.005146,
+      "change24hVal": 6.72,
+      "hbb5m": 5.98
     },
     {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11657,
-      "last": 0.13316,
-      "change24hVal": 14.23,
-      "hbb5m": 5.59
+      "open24h": 0.11632,
+      "last": 0.13377,
+      "change24hVal": 15,
+      "hbb5m": 5.43
     },
     {
       "instId": "MON-USDT-SWAP",
-      "open24h": 0.02603,
-      "last": 0.02876,
-      "change24hVal": 10.49,
-      "hbb5m": 5.42
+      "open24h": 0.0261,
+      "last": 0.02891,
+      "change24hVal": 10.77,
+      "hbb5m": 5.26
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09306,
-      "last": 0.12313,
-      "change24hVal": 32.31,
-      "hbb5m": 5.63
+      "open24h": 0.09325,
+      "last": 0.12448,
+      "change24hVal": 33.49,
+      "hbb5m": 6.68
     },
     {
       "instId": "IOTA-USDT-SWAP",
-      "open24h": 0.04988,
-      "last": 0.05406,
-      "change24hVal": 8.38,
-      "hbb5m": 3.73
+      "open24h": 0.05,
+      "last": 0.05456,
+      "change24hVal": 9.12,
+      "hbb5m": 4
     },
     {
       "instId": "AZTEC-USDT-SWAP",
       "open24h": 0.01645,
-      "last": 0.01894,
-      "change24hVal": 15.14,
-      "hbb5m": 3.68
+      "last": 0.01903,
+      "change24hVal": 15.68,
+      "hbb5m": 3.93
     }
   ],
   "matchedCount": 2,
@@ -51,26 +51,26 @@
     {
       "symbol": "HBAR-USDT-SWAP",
       "type": "SHORT",
-      "Hbb5m": "5.63%",
-      "bd24h": "+32.31%",
+      "Hbb5m": "6.68%",
+      "bd24h": "+33.49%",
       "x": "2.39",
       "diffema20_15m": "9.33%",
-      "diffema20_5m": "-0.52%",
-      "bbd5m": "6.31%",
-      "bbt5m": "0.85%",
+      "diffema20_5m": "-0.16%",
+      "bbd5m": "7.76%",
+      "bbt5m": "1.46%",
       "link": "https://www.okx.com/trade-swap/hbar-usdt-swap",
       "teleSent": false
     },
     {
       "symbol": "AZTEC-USDT-SWAP",
       "type": "SHORT",
-      "Hbb5m": "3.68%",
-      "bd24h": "+15.14%",
+      "Hbb5m": "3.93%",
+      "bd24h": "+15.68%",
       "x": "11.21",
       "diffema20_15m": "0.31%",
-      "diffema20_5m": "1.48%",
-      "bbd5m": "3.48%",
-      "bbt5m": "0.16%",
+      "diffema20_5m": "1.59%",
+      "bbd5m": "3.74%",
+      "bbt5m": "0.22%",
       "link": "https://www.okx.com/trade-swap/aztec-usdt-swap",
       "teleSent": false
     }
