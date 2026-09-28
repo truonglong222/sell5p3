@@ -1,44 +1,37 @@
 {
-  "lastScanAt": "2026-09-28T21:35:26.077Z",
-  "ud4h": "-1",
-  "targetCoinsCount": 3,
+  "lastScanAt": "2026-09-28T21:40:30.752Z",
+  "ud4h": "-2",
+  "targetCoinsCount": 4,
   "targetCoinsList": [
     {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.1181,
-      "last": 0.13588,
-      "change24hVal": 15.06,
-      "hbb5m": 5.03
+      "open24h": 0.11781,
+      "last": 0.1349,
+      "change24hVal": 14.51,
+      "hbb5m": 4.57
+    },
+    {
+      "instId": "SOON-USDT-SWAP",
+      "open24h": 0.3288,
+      "last": 0.3468,
+      "change24hVal": 5.47,
+      "hbb5m": 4.53
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09467,
-      "last": 0.12458,
-      "change24hVal": 31.59,
-      "hbb5m": 4.97
+      "open24h": 0.09442,
+      "last": 0.12422,
+      "change24hVal": 31.56,
+      "hbb5m": 5.31
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.08024,
-      "last": 0.0927,
-      "change24hVal": 15.53,
-      "hbb5m": 3.11
+      "open24h": 0.08005,
+      "last": 0.09257,
+      "change24hVal": 15.64,
+      "hbb5m": 3.69
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "HBAR-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb5m": "4.97%",
-      "bd24h": "+31.59%",
-      "x": "4.86",
-      "diffema20_15m": "2.91%",
-      "diffema20_5m": "-2.43%",
-      "bbd5m": "4.97%",
-      "bbt5m": "0.27%",
-      "link": "https://www.okx.com/trade-swap/hbar-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
