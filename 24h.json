@@ -1,79 +1,65 @@
 {
-  "lastScanAt": "2026-09-28T23:20:35.064Z",
+  "lastScanAt": "2026-09-28T23:25:30.638Z",
   "ud4h": "+6",
   "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.052894,
-      "last": 0.06056,
-      "change24hVal": 14.49,
-      "hbb5m": 3.45
+      "open24h": 0.053124,
+      "last": 0.0602,
+      "change24hVal": 13.32,
+      "hbb5m": 3.49
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2608,
-      "last": 0.2904,
-      "change24hVal": 11.35,
-      "hbb5m": 8.72
+      "open24h": 0.2613,
+      "last": 0.2885,
+      "change24hVal": 10.41,
+      "hbb5m": 9.71
     },
     {
       "instId": "NIGHT-USDT-SWAP",
-      "open24h": 0.026983,
-      "last": 0.028401,
-      "change24hVal": 5.26,
-      "hbb5m": 3.81
+      "open24h": 0.026917,
+      "last": 0.028441,
+      "change24hVal": 5.66,
+      "hbb5m": 3.85
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1691,
-      "last": 0.1815,
-      "change24hVal": 7.33,
-      "hbb5m": 3.71
+      "open24h": 0.1687,
+      "last": 0.1822,
+      "change24hVal": 8,
+      "hbb5m": 4.05
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3516,
-      "last": 0.3759,
-      "change24hVal": 6.91,
-      "hbb5m": 4.97
+      "open24h": 0.3524,
+      "last": 0.3811,
+      "change24hVal": 8.14,
+      "hbb5m": 6.32
     },
     {
       "instId": "LINK-USDT-SWAP",
-      "open24h": 13.974,
-      "last": 15.391,
-      "change24hVal": 10.14,
-      "hbb5m": 3.11
+      "open24h": 13.982,
+      "last": 15.375,
+      "change24hVal": 9.96,
+      "hbb5m": 3.38
     },
     {
       "instId": "AZTEC-USDT-SWAP",
-      "open24h": 0.01774,
-      "last": 0.01903,
-      "change24hVal": 7.27,
-      "hbb5m": 4.34
+      "open24h": 0.01772,
+      "last": 0.01905,
+      "change24hVal": 7.51,
+      "hbb5m": 3.47
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.08036,
-      "last": 0.08995,
-      "change24hVal": 11.93,
-      "hbb5m": 8.86
+      "open24h": 0.08005,
+      "last": 0.08997,
+      "change24hVal": 12.39,
+      "hbb5m": 8.99
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "LINK-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb5m": "3.11%",
-      "bd24h": "+10.14%",
-      "x": "3.52",
-      "diffema20_15m": "2.02%",
-      "diffema20_5m": "-0.23%",
-      "bbd5m": "3.11%",
-      "bbt5m": "0.09%",
-      "link": "https://www.okx.com/trade-swap/link-usdt-swap",
-      "teleSent": true
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
