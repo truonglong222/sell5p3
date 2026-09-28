@@ -1,63 +1,70 @@
 {
-  "lastScanAt": "2026-09-28T23:30:52.649Z",
-  "ud4h": "+6",
-  "targetCoinsCount": 8,
+  "lastScanAt": "2026-09-28T23:35:30.892Z",
+  "ud4h": "+7",
+  "targetCoinsCount": 9,
   "targetCoinsList": [
     {
+      "instId": "SYRUP-USDT-SWAP",
+      "open24h": 0.2173,
+      "last": 0.2287,
+      "change24hVal": 5.25,
+      "hbb5m": 4.15
+    },
+    {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.05368,
-      "last": 0.060333,
-      "change24hVal": 12.39,
-      "hbb5m": 3.55
+      "open24h": 0.053573,
+      "last": 0.060135,
+      "change24hVal": 12.25,
+      "hbb5m": 3.35
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2607,
-      "last": 0.2883,
-      "change24hVal": 10.59,
-      "hbb5m": 10.3
+      "open24h": 0.2602,
+      "last": 0.2882,
+      "change24hVal": 10.76,
+      "hbb5m": 10.6
     },
     {
       "instId": "NIGHT-USDT-SWAP",
-      "open24h": 0.02697,
-      "last": 0.028417,
-      "change24hVal": 5.37,
-      "hbb5m": 3.92
+      "open24h": 0.026923,
+      "last": 0.028396,
+      "change24hVal": 5.47,
+      "hbb5m": 3.97
     },
     {
       "instId": "CASHCAT-USDT-SWAP",
-      "open24h": 0.1692,
-      "last": 0.1824,
-      "change24hVal": 7.8,
-      "hbb5m": 4.31
+      "open24h": 0.1702,
+      "last": 0.1812,
+      "change24hVal": 6.46,
+      "hbb5m": 4.36
     },
     {
       "instId": "CRV-USDT-SWAP",
       "open24h": 0.3522,
-      "last": 0.3834,
-      "change24hVal": 8.86,
-      "hbb5m": 7.48
+      "last": 0.3789,
+      "change24hVal": 7.58,
+      "hbb5m": 7.89
     },
     {
       "instId": "LINK-USDT-SWAP",
-      "open24h": 13.991,
+      "open24h": 13.961,
       "last": 15.416,
-      "change24hVal": 10.19,
-      "hbb5m": 3.65
+      "change24hVal": 10.42,
+      "hbb5m": 3.87
     },
     {
       "instId": "AZTEC-USDT-SWAP",
-      "open24h": 0.01794,
-      "last": 0.01913,
-      "change24hVal": 6.63,
-      "hbb5m": 3.21
+      "open24h": 0.01791,
+      "last": 0.01916,
+      "change24hVal": 6.98,
+      "hbb5m": 3.44
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.07996,
-      "last": 0.08999,
-      "change24hVal": 12.54,
-      "hbb5m": 9.09
+      "open24h": 0.08011,
+      "last": 0.09003,
+      "change24hVal": 12.38,
+      "hbb5m": 9.04
     }
   ],
   "matchedCount": 0,
