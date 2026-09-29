@@ -1,37 +1,65 @@
 {
-  "lastScanAt": "2026-09-29T02:35:31.680Z",
+  "lastScanAt": "2026-09-29T02:40:33.244Z",
   "ud4h": "+4",
-  "targetCoinsCount": 4,
+  "targetCoinsCount": 6,
   "targetCoinsList": [
     {
+      "instId": "SYRUP-USDT-SWAP",
+      "open24h": 0.2124,
+      "last": 0.2234,
+      "change24hVal": 5.18,
+      "hbb5m": 8.83
+    },
+    {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11841,
-      "last": 0.13197,
-      "change24hVal": 11.45,
-      "hbb5m": 3.13
+      "open24h": 0.11806,
+      "last": 0.13294,
+      "change24hVal": 12.6,
+      "hbb5m": 3.09
+    },
+    {
+      "instId": "MUBARAK-USDT-SWAP",
+      "open24h": 0.053741,
+      "last": 0.058525,
+      "change24hVal": 8.9,
+      "hbb5m": 3.31
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2601,
-      "last": 0.2754,
-      "change24hVal": 5.88,
-      "hbb5m": 6.85
+      "open24h": 0.2571,
+      "last": 0.2773,
+      "change24hVal": 7.86,
+      "hbb5m": 6.63
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09576,
-      "last": 0.11758,
-      "change24hVal": 22.79,
-      "hbb5m": 3.19
+      "open24h": 0.09525,
+      "last": 0.11815,
+      "change24hVal": 24.04,
+      "hbb5m": 3.2
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.07987,
-      "last": 0.0915,
-      "change24hVal": 14.56,
-      "hbb5m": 7.04
+      "open24h": 0.07983,
+      "last": 0.09136,
+      "change24hVal": 14.44,
+      "hbb5m": 6.85
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "MUBARAK-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb5m": "3.31%",
+      "bd24h": "+8.90%",
+      "x": "2.10",
+      "diffema20_15m": "-1.60%",
+      "diffema20_5m": "-1.10%",
+      "bbd5m": "3.53%",
+      "bbt5m": "0.59%",
+      "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
