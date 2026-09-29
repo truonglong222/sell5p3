@@ -1,44 +1,65 @@
 {
-  "lastScanAt": "2026-09-29T01:50:31.828Z",
-  "ud4h": "+3",
-  "targetCoinsCount": 5,
+  "lastScanAt": "2026-09-29T01:55:25.946Z",
+  "ud4h": "+4",
+  "targetCoinsCount": 6,
   "targetCoinsList": [
     {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.12033,
-      "last": 0.13363,
-      "change24hVal": 11.05,
-      "hbb5m": 3.45
+      "open24h": 0.11955,
+      "last": 0.13395,
+      "change24hVal": 12.05,
+      "hbb5m": 3.34
     },
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.053201,
-      "last": 0.057131,
-      "change24hVal": 7.39,
-      "hbb5m": 3.45
+      "open24h": 0.053465,
+      "last": 0.057346,
+      "change24hVal": 7.26,
+      "hbb5m": 3.41
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2611,
-      "last": 0.2871,
-      "change24hVal": 9.96,
-      "hbb5m": 11.58
+      "open24h": 0.2634,
+      "last": 0.2862,
+      "change24hVal": 8.66,
+      "hbb5m": 11.76
     },
     {
       "instId": "ARX-USDT-SWAP",
-      "open24h": 0.2364,
-      "last": 0.2509,
-      "change24hVal": 6.13,
-      "hbb5m": 4.84
+      "open24h": 0.2373,
+      "last": 0.2514,
+      "change24hVal": 5.94,
+      "hbb5m": 4.86
     },
     {
       "instId": "LINK-USDT-SWAP",
-      "open24h": 14.042,
-      "last": 15.225,
-      "change24hVal": 8.42,
+      "open24h": 14.059,
+      "last": 15.251,
+      "change24hVal": 8.48,
       "hbb5m": 4.18
+    },
+    {
+      "instId": "KII-USDT-SWAP",
+      "open24h": 0.07974,
+      "last": 0.09218,
+      "change24hVal": 15.6,
+      "hbb5m": 3.08
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "KII-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb5m": "3.08%",
+      "bd24h": "+15.60%",
+      "x": "4.22",
+      "diffema20_15m": "2.93%",
+      "diffema20_5m": "0.58%",
+      "bbd5m": "3.23%",
+      "bbt5m": "0.39%",
+      "link": "https://www.okx.com/trade-swap/kii-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
