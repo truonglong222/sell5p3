@@ -115,7 +115,8 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-      // Lấy các coin có biến động 24h > 5% (cho Long) hoặc < -5% (cho Short)
+      
+      // BƯỚC 1: Bảng dư 24h thỏa |bd24h| > 5% mới đưa vào danh sách lọc tiếp
       if (Math.abs(change24hVal) > 5) {
         filteredCoins.push({
           instId: item.instId,
@@ -161,6 +162,7 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
+    // BƯỚC 1: Lọc bd24h ngay từ bước gọi Tickers
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
       `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
@@ -199,25 +201,16 @@ async function main() {
 
     let countValidCandles = 0;
 
-    // Đếm độc lập từng điều kiện
-    let countDiffEma10Common = 0;
-
-    let countBd24Long = 0;
-    let countDiffEma40Long = 0;
-    let countBbdLong = 0;
-    let countHbbLong = 0;
-
-    let countBd24Short = 0;
-    let countDiffEma40Short = 0;
-    let countBbtShort = 0;
-    let countHbbShort = 0;
-
+    // Thống kê đếm từng bước lọc
+    let countPassedHbb = 0;
+    let countPassedDiffEma10 = 0;
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
+      // Lấy dữ liệu nến 5m
       const candles5m = await getCandles(symbol, '5m', 100);
       if (!candles5m || candles5m.length < 65) {
         await sleep(80);
@@ -229,7 +222,9 @@ async function main() {
       const high0 = parseFloat(candle0[2]);
       const low0 = parseFloat(candle0[3]);
 
-      // --- 1. BOLLINGER BANDS (20) TRÊN NẾN 5m SỐ 1 VỪA ĐÓNG ---
+      // ==========================================
+      // BƯỚC 2: Tính Hbb và kiểm tra Hbb > 2%
+      // ==========================================
       const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb5m = calculateBollingerBands(closesBB5m, 20);
 
@@ -238,12 +233,18 @@ async function main() {
         continue;
       }
 
-      const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
-      const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
-
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
 
-      // --- 2. EMA20, diffema10 VÀ diffema40 TRÊN NẾN 5m ---
+      // Loại bỏ ngay nếu Hbb <= 2% (Chưa tính EMA)
+      if (hbbPercent <= 2) {
+        await sleep(80);
+        continue;
+      }
+      countPassedHbb++;
+
+      // ==========================================
+      // BƯỚC 3: Thỏa Hbb > 2% mới tính diffema10 (-0.5% < diffema10 < 0.5%)
+      // ==========================================
       const allClosedCandles = candles5m.slice(1).reverse();
       const closedPrices = allClosedCandles.map((c) => parseFloat(c[4]));
       const emaSeries5m = calculateEMAArray(closedPrices, 20);
@@ -255,45 +256,37 @@ async function main() {
 
       const ema20_n1 = emaSeries5m[emaSeries5m.length - 1];
       const ema20_n10 = emaSeries5m[emaSeries5m.length - 10];
-      const ema20_n40 = emaSeries5m[emaSeries5m.length - 40];
 
-      if (!ema20_n40 || ema20_n40 <= 0 || !ema20_n10 || ema20_n10 <= 0) {
+      if (!ema20_n10 || ema20_n10 <= 0) {
         await sleep(80);
         continue;
       }
 
       const diffema10 = ((ema20_n1 - ema20_n10) / ema20_n10) * 100;
+
+      // Loại bỏ ngay nếu diffema10 nằm ngoài khoảng (-0.5%, 0.5%)
+      if (diffema10 <= -0.5 || diffema10 >= 0.5) {
+        await sleep(80);
+        continue;
+      }
+      countPassedDiffEma10++;
+
+      // ==========================================
+      // BƯỚC 4: Thỏa cả 3 bước trên mới tính các điều kiện còn lại
+      // ==========================================
+      const ema20_n40 = emaSeries5m[emaSeries5m.length - 40];
+      if (!ema20_n40 || ema20_n40 <= 0) {
+        await sleep(80);
+        continue;
+      }
+
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
+      const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
+      const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
 
-      // --- ĐÁNH GIÁ CÁC ĐIỀU KIỆN ---
-      const passDiffEma10 = diffema10 > -0.5 && diffema10 < 0.5; // Điều kiện chung
-      const passHbb = hbbPercent > 3;
-
-      // Điều kiện LONG
-      const passBd24Long = coin.change24hVal > 5;
-      const passDiffEma40Long = diffema40 < -2;
-      const passBbdLong = bbd < 0;
-
-      // Điều kiện SHORT
-      const passBd24Short = coin.change24hVal < -5;
-      const passDiffEma40Short = diffema40 > 2;
-      const passBbtShort = bbt > 0;
-
-      if (passDiffEma10) countDiffEma10Common++;
-
-      if (passBd24Long) countBd24Long++;
-      if (passDiffEma40Long) countDiffEma40Long++;
-      if (passBbdLong) countBbdLong++;
-      if (passBd24Long && passHbb) countHbbLong++;
-
-      if (passBd24Short) countBd24Short++;
-      if (passDiffEma40Short) countDiffEma40Short++;
-      if (passBbtShort) countBbtShort++;
-      if (passBd24Short && passHbb) countHbbShort++;
-
-      // Tín hiệu kết hợp
-      const isLong = passDiffEma10 && passBd24Long && passDiffEma40Long && passBbdLong && passHbb;
-      const isShort = passDiffEma10 && passBd24Short && passDiffEma40Short && passBbtShort && passHbb;
+      // Đánh giá tín hiệu Long / Short
+      const isLong = coin.change24hVal > 5 && diffema40 < -2 && bbd < 0;
+      const isShort = coin.change24hVal < -5 && diffema40 > 2 && bbt > 0;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -359,22 +352,16 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    // Bảng thống kê ngắn gọn
-    console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
+    // Bảng thống kê phễu lọc từng bước
+    console.log('\n--- THỐNG KÊ PHỄU LỌC TỐI ƯU ---');
     console.log(`Chỉ số thị trường ud (4H): ${marketUDStr}`);
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
-      { 'Điều kiện': '-0.5% < diffema10 < 0.5% (Chung)', 'Số lượng': countDiffEma10Common },
-      { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
-      { 'Điều kiện': 'diffema40 < -2% (Long)', 'Số lượng': countDiffEma40Long },
-      { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
-      { 'Điều kiện': 'Hbb > 3% (Long)', 'Số lượng': countHbbLong },
-      { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
-      { 'Điều kiện': 'diffema40 > 2% (Short)', 'Số lượng': countDiffEma40Short },
-      { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
-      { 'Điều kiện': 'Hbb > 3% (Short)', 'Số lượng': countHbbShort },
-      { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
-      { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
+      { 'Bước lọc': '1. Thỏa |bd24h| > 5%', 'Số lượng coin': targetCoins.length },
+      { 'Bước lọc': '2. Thỏa Hbb > 2%', 'Số lượng coin': countPassedHbb },
+      { 'Bước lọc': '3. Thỏa -0.5% < diffema10 < 0.5%', 'Số lượng coin': countPassedDiffEma10 },
+      { 'Bước lọc': '4. KHỚP ĐIỀU KIỆN LONG', 'Số lượng coin': countMatchedLong },
+      { 'Bước lọc': '4. KHỚP ĐIỀU KIỆN SHORT', 'Số lượng coin': countMatchedShort }
     ]);
 
     if (scanResults.matched.length > 0) {
