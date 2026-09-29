@@ -1,4 +1,4 @@
-Import axios from 'axios';
+import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -97,7 +97,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & |bd24h| > 5%) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & bd24h > 5%) -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -115,7 +115,8 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-      if (change24hVal > 5 || change24hVal < -5) {
+      // Đã đổi điều kiện: Chỉ lấy bd24h > 5% cho cả Long và Short
+      if (change24hVal > 5) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -162,17 +163,15 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
+      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa bd24h > 5%: ${targetCoins.length} coin`
     );
 
     // --- TÍNH CHỈ SỐ UD TOÀN TẬP COIN ĐÃ LỌC ---
-    // ud = tổng số coin có nến 4h vừa đóng tăng - tổng số coin có nến 4h vừa đóng giảm
     console.log(`⏳ Đang tải nến 4H tính chỉ số ud cho ${targetCoins.length} coin...`);
     let totalUp4hCoins = 0;
     let totalDown4hCoins = 0;
 
     for (const coin of targetCoins) {
-      // limit=2: candles[0] là nến đang chạy, candles[1] là nến vừa đóng
       const candles4h = await getCandles(coin.instId, '4H', 2);
       if (candles4h && candles4h.length >= 2) {
         const closedCandle = candles4h[1];
@@ -185,7 +184,7 @@ async function main() {
           totalDown4hCoins++;
         }
       }
-      await sleep(60); // Giảm tải rate-limit OKX
+      await sleep(60);
     }
 
     const marketUD = totalUp4hCoins - totalDown4hCoins;
@@ -237,12 +236,9 @@ async function main() {
         continue;
       }
 
-      // bbd: % chênh lệch giá thấp nhất nến hiện tại với BB dưới
       const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
-      // bbt: % chênh lệch giá cao nhất nến hiện tại với BB trên
       const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
 
-      // Hbb: Độ rộng dải Bollinger Band nến số 1 tính theo %
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
 
       // --- 2. EMA20 VÀ diffema40 TRÊN NẾN 5m ---
@@ -265,15 +261,15 @@ async function main() {
 
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
-      // Đánh giá từng điều kiện
-      const passHbb = hbbPercent > 2;
+      // Đánh giá từng điều kiện đã cập nhật
+      const passHbb = hbbPercent > 3; // Đã đổi: Hbb > 3%
 
       const passBd24Long = coin.change24hVal > 5;
       const passDiffEma40Long = diffema40 > 4;
       const passBbdLong = bbd < 0;
 
-      const passBd24Short = coin.change24hVal < -5;
-      const passDiffEma40Short = diffema40 < -3;
+      const passBd24Short = coin.change24hVal > 5; // Đã đổi: bd24h > 5% cho Short
+      const passDiffEma40Short = diffema40 < 4; // Đã đổi: diffema40 < 4% cho Short
       const passBbtShort = bbt > 0;
 
       if (passBd24Long) countBd24Long++;
@@ -323,7 +319,6 @@ async function main() {
 
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
-        // Đặt ud lên đầu tiên của tin nhắn Telegram
         const message =
           `<b>ud (4H): ${marketUDStr}</b>\n` +
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
@@ -360,11 +355,11 @@ async function main() {
       { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
       { 'Điều kiện': 'diffema40 > 4% (Long)', 'Số lượng': countDiffEma40Long },
       { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
-      { 'Điều kiện': 'Hbb > 2% (Long)', 'Số lượng': countHbbLong },
-      { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
-      { 'Điều kiện': 'diffema40 < -3% (Short)', 'Số lượng': countDiffEma40Short },
+      { 'Điều kiện': 'Hbb > 3% (Long)', 'Số lượng': countHbbLong },
+      { 'Điều kiện': 'bd24h > 5% (Short)', 'Số lượng': countBd24Short },
+      { 'Điều kiện': 'diffema40 < 4% (Short)', 'Số lượng': countDiffEma40Short },
       { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
-      { 'Điều kiện': 'Hbb > 2% (Short)', 'Số lượng': countHbbShort },
+      { 'Điều kiện': 'Hbb > 3% (Short)', 'Số lượng': countHbbShort },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
       { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
     ]);
