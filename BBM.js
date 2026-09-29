@@ -241,6 +241,7 @@ async function main() {
 
     // Biến đếm thống kê
     let countDiffEma20_15m_Long = 0;
+    let countDiffEma40_15m_Long = 0;
     let countX_Long = 0;
     let countBbmLong = 0;
 
@@ -291,21 +292,23 @@ async function main() {
       }
 
       // --- ĐÁNH GIÁ ĐIỀU KIỆN LỆNH LONG (15M) ---
-      // diffema20(15m) > 4%, x < 1.3, bbm(15m) < 0
+      // diffema20(15m) > 4%, diffema40(15m) > 6%, x < 1.5, bbm(15m) < 0
       const passDiffEma20_15m_Long = diffema20_15m !== null && diffema20_15m > 4;
-      const passX_Long = xVal !== null && xVal < 1.3;
+      const passDiffEma40_15m_Long = diffema40_15m !== null && diffema40_15m > 6;
+      const passX_Long = xVal !== null && xVal < 1.5;
       const passBbmLong = bbm15m < 0;
 
       if (passDiffEma20_15m_Long) countDiffEma20_15m_Long++;
+      if (passDiffEma40_15m_Long) countDiffEma40_15m_Long++;
       if (passX_Long) countX_Long++;
       if (passBbmLong) countBbmLong++;
 
-      const isLong = passDiffEma20_15m_Long && passX_Long && passBbmLong;
+      const isLong = passDiffEma20_15m_Long && passDiffEma40_15m_Long && passX_Long && passBbmLong;
 
       // --- ĐÁNH GIÁ ĐIỀU KIỆN LỆNH SHORT (15M) ---
-      // x > 1.7, diffema20(15m) < 2%, bbt(15m) > 0
-      const passX_Short = xVal !== null && xVal > 1.7;
-      const passDiffEma20_15m_Short = diffema20_15m !== null && diffema20_15m < 2;
+      // x > 2.0, diffema20(15m) < 3%, bbt(15m) > 0
+      const passX_Short = xVal !== null && xVal > 2.0;
+      const passDiffEma20_15m_Short = diffema20_15m !== null && diffema20_15m < 3;
       const passBbtShort = bbt15m > 0;
 
       if (passX_Short) countX_Short++;
@@ -324,6 +327,7 @@ async function main() {
       const hbbStr = `${coin.hbb15m.toFixed(2)}%`;
       const xStr = xVal !== null ? xVal.toFixed(2) : 'N/A';
       const diffema20_15mStr = diffema20_15m !== null ? `${diffema20_15m.toFixed(2)}%` : 'N/A';
+      const diffema40_15mStr = diffema40_15m !== null ? `${diffema40_15m.toFixed(2)}%` : 'N/A';
 
       if (isLong) countMatchedLong++;
       if (isShort) countMatchedShort++;
@@ -343,6 +347,7 @@ async function main() {
         bd24h: change24hStr,
         x: xStr,
         diffema20_15m: diffema20_15mStr,
+        diffema40_15m: diffema40_15mStr,
         bbm15m: bbm15m.toFixed(2) + '%',
         bbt15m: bbt15m.toFixed(2) + '%',
         link,
@@ -358,6 +363,7 @@ async function main() {
           `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <b>x (15m):</b> ${xStr}\n` +
           `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
+          `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n` +
           (isLong
             ? `• <b>bbm (15m):</b> ${bbm15m.toFixed(2)}%\n`
             : `• <b>bbt (15m):</b> ${bbt15m.toFixed(2)}%\n`) +
@@ -389,10 +395,11 @@ async function main() {
     console.log(`Số coin kiểm tra thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
       { 'Điều kiện': 'diffema20(15m) > 4% (Long)', 'Số lượng': countDiffEma20_15m_Long },
-      { 'Điều kiện': 'x < 1.3 (Long)', 'Số lượng': countX_Long },
+      { 'Điều kiện': 'diffema40(15m) > 6% (Long)', 'Số lượng': countDiffEma40_15m_Long },
+      { 'Điều kiện': 'x < 1.5 (Long)', 'Số lượng': countX_Long },
       { 'Điều kiện': 'bbm(15m) < 0 (Long)', 'Số lượng': countBbmLong },
-      { 'Điều kiện': 'x > 1.7 (Short)', 'Số lượng': countX_Short },
-      { 'Điều kiện': 'diffema20(15m) < 2% (Short)', 'Số lượng': countDiffEma20_15m_Short },
+      { 'Điều kiện': 'x > 2.0 (Short)', 'Số lượng': countX_Short },
+      { 'Điều kiện': 'diffema20(15m) < 3% (Short)', 'Số lượng': countDiffEma20_15m_Short },
       { 'Điều kiện': 'bbt(15m) > 0 (Short)', 'Số lượng': countBbtShort },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
       { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
