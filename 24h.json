@@ -1,72 +1,58 @@
 {
-  "lastScanAt": "2026-09-29T00:05:31.064Z",
+  "lastScanAt": "2026-09-29T00:10:34.247Z",
   "ud4h": "+3",
   "targetCoinsCount": 7,
   "targetCoinsList": [
     {
       "instId": "XLM-USDT-SWAP",
-      "open24h": 0.2153,
-      "last": 0.23389,
-      "change24hVal": 8.63,
-      "hbb5m": 5.54
+      "open24h": 0.2144,
+      "last": 0.23286,
+      "change24hVal": 8.61,
+      "hbb5m": 5.78
     },
     {
       "instId": "SYRUP-USDT-SWAP",
-      "open24h": 0.2172,
-      "last": 0.2315,
-      "change24hVal": 6.58,
-      "hbb5m": 4.9
+      "open24h": 0.2169,
+      "last": 0.235,
+      "change24hVal": 8.34,
+      "hbb5m": 5.36
     },
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.053221,
-      "last": 0.058298,
-      "change24hVal": 9.54,
-      "hbb5m": 3.29
+      "open24h": 0.05307,
+      "last": 0.057653,
+      "change24hVal": 8.64,
+      "hbb5m": 4.73
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2625,
-      "last": 0.29,
-      "change24hVal": 10.48,
-      "hbb5m": 9.24
+      "open24h": 0.2631,
+      "last": 0.2919,
+      "change24hVal": 10.95,
+      "hbb5m": 8.75
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3518,
-      "last": 0.3779,
-      "change24hVal": 7.42,
-      "hbb5m": 7.9
+      "open24h": 0.3508,
+      "last": 0.3766,
+      "change24hVal": 7.35,
+      "hbb5m": 7.3
     },
     {
       "instId": "LINK-USDT-SWAP",
-      "open24h": 13.984,
-      "last": 15.545,
-      "change24hVal": 11.16,
-      "hbb5m": 4.05
+      "open24h": 13.953,
+      "last": 15.57,
+      "change24hVal": 11.59,
+      "hbb5m": 3.85
     },
     {
       "instId": "AZTEC-USDT-SWAP",
-      "open24h": 0.01795,
-      "last": 0.01931,
-      "change24hVal": 7.58,
-      "hbb5m": 3.81
+      "open24h": 0.01784,
+      "last": 0.01922,
+      "change24hVal": 7.74,
+      "hbb5m": 3.51
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "XLM-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb5m": "5.54%",
-      "bd24h": "+8.63%",
-      "x": "5.66",
-      "diffema20_15m": "0.82%",
-      "diffema20_5m": "1.37%",
-      "bbd5m": "5.57%",
-      "bbt5m": "0.18%",
-      "link": "https://www.okx.com/trade-swap/xlm-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
