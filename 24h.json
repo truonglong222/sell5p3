@@ -1,63 +1,63 @@
 {
-  "lastScanAt": "2026-09-29T02:05:28.703Z",
+  "lastScanAt": "2026-09-29T02:10:33.066Z",
   "ud4h": "+8",
   "targetCoinsCount": 8,
   "targetCoinsList": [
     {
       "instId": "XLM-USDT-SWAP",
-      "open24h": 0.216,
-      "last": 0.22782,
-      "change24hVal": 5.47,
-      "hbb5m": 3.59
+      "open24h": 0.21538,
+      "last": 0.2262,
+      "change24hVal": 5.02,
+      "hbb5m": 3.31
     },
     {
       "instId": "ALGO-USDT-SWAP",
-      "open24h": 0.11894,
-      "last": 0.13469,
-      "change24hVal": 13.24,
-      "hbb5m": 3.27
+      "open24h": 0.11919,
+      "last": 0.13477,
+      "change24hVal": 13.07,
+      "hbb5m": 3.09
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2638,
-      "last": 0.2854,
-      "change24hVal": 8.19,
-      "hbb5m": 11.81
+      "open24h": 0.2633,
+      "last": 0.2819,
+      "change24hVal": 7.06,
+      "hbb5m": 12.11
     },
     {
       "instId": "ARX-USDT-SWAP",
-      "open24h": 0.2376,
-      "last": 0.2534,
-      "change24hVal": 6.65,
-      "hbb5m": 4.11
+      "open24h": 0.2369,
+      "last": 0.2524,
+      "change24hVal": 6.54,
+      "hbb5m": 3.81
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3448,
-      "last": 0.376,
-      "change24hVal": 9.05,
+      "open24h": 0.3465,
+      "last": 0.3739,
+      "change24hVal": 7.91,
       "hbb5m": 3.13
     },
     {
       "instId": "LINK-USDT-SWAP",
-      "open24h": 14.032,
-      "last": 15.211,
-      "change24hVal": 8.4,
-      "hbb5m": 4.35
+      "open24h": 14.023,
+      "last": 15.14,
+      "change24hVal": 7.97,
+      "hbb5m": 4.37
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.05202,
-      "last": 0.05817,
-      "change24hVal": 11.82,
-      "hbb5m": 3.56
+      "open24h": 0.05208,
+      "last": 0.05813,
+      "change24hVal": 11.62,
+      "hbb5m": 3.89
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.0798,
-      "last": 0.09285,
-      "change24hVal": 16.35,
-      "hbb5m": 3.96
+      "open24h": 0.07975,
+      "last": 0.09475,
+      "change24hVal": 18.81,
+      "hbb5m": 5.37
     }
   ],
   "matchedCount": 2,
@@ -65,26 +65,26 @@
     {
       "symbol": "CAP-USDT-SWAP",
       "type": "SHORT",
-      "Hbb5m": "3.56%",
-      "bd24h": "+11.82%",
+      "Hbb5m": "3.89%",
+      "bd24h": "+11.62%",
       "x": "1.82",
       "diffema20_15m": "1.02%",
-      "diffema20_5m": "1.00%",
-      "bbd5m": "4.02%",
-      "bbt5m": "0.58%",
+      "diffema20_5m": "1.18%",
+      "bbd5m": "3.91%",
+      "bbt5m": "0.20%",
       "link": "https://www.okx.com/trade-swap/cap-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     },
     {
       "symbol": "KII-USDT-SWAP",
       "type": "SHORT",
-      "Hbb5m": "3.96%",
-      "bd24h": "+16.35%",
+      "Hbb5m": "5.37%",
+      "bd24h": "+18.81%",
       "x": "4.33",
       "diffema20_15m": "2.90%",
-      "diffema20_5m": "0.94%",
-      "bbd5m": "4.16%",
-      "bbt5m": "0.25%",
+      "diffema20_5m": "1.26%",
+      "bbd5m": "6.18%",
+      "bbt5m": "1.26%",
       "link": "https://www.okx.com/trade-swap/kii-usdt-swap",
       "teleSent": false
     }
