@@ -292,10 +292,10 @@ async function main() {
       }
 
       // --- ĐÁNH GIÁ ĐIỀU KIỆN LỆNH LONG (15M) ---
-      // diffema20(15m) > 4%, diffema40(15m) > 6%, x < 1.5, bbm(15m) < 0
+      // diffema20(15m) > 4%, diffema40(15m) > 4%, x < 3.0, bbm(15m) < 0
       const passDiffEma20_15m_Long = diffema20_15m !== null && diffema20_15m > 4;
-      const passDiffEma40_15m_Long = diffema40_15m !== null && diffema40_15m > 6;
-      const passX_Long = xVal !== null && xVal < 1.5;
+      const passDiffEma40_15m_Long = diffema40_15m !== null && diffema40_15m > 4;
+      const passX_Long = xVal !== null && xVal < 3.0;
       const passBbmLong = bbm15m < 0;
 
       if (passDiffEma20_15m_Long) countDiffEma20_15m_Long++;
@@ -306,8 +306,8 @@ async function main() {
       const isLong = passDiffEma20_15m_Long && passDiffEma40_15m_Long && passX_Long && passBbmLong;
 
       // --- ĐÁNH GIÁ ĐIỀU KIỆN LỆNH SHORT (15M) ---
-      // x > 2.0, diffema20(15m) < 3%, bbt(15m) > 0
-      const passX_Short = xVal !== null && xVal > 2.0;
+      // x > 3.0, diffema20(15m) < 3%, bbt(15m) > 0
+      const passX_Short = xVal !== null && xVal > 3.0;
       const passDiffEma20_15m_Short = diffema20_15m !== null && diffema20_15m < 3;
       const passBbtShort = bbt15m > 0;
 
@@ -395,10 +395,10 @@ async function main() {
     console.log(`Số coin kiểm tra thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
       { 'Điều kiện': 'diffema20(15m) > 4% (Long)', 'Số lượng': countDiffEma20_15m_Long },
-      { 'Điều kiện': 'diffema40(15m) > 6% (Long)', 'Số lượng': countDiffEma40_15m_Long },
-      { 'Điều kiện': 'x < 1.5 (Long)', 'Số lượng': countX_Long },
+      { 'Điều kiện': 'diffema40(15m) > 4% (Long)', 'Số lượng': countDiffEma40_15m_Long },
+      { 'Điều kiện': 'x < 3.0 (Long)', 'Số lượng': countX_Long },
       { 'Điều kiện': 'bbm(15m) < 0 (Long)', 'Số lượng': countBbmLong },
-      { 'Điều kiện': 'x > 2.0 (Short)', 'Số lượng': countX_Short },
+      { 'Điều kiện': 'x > 3.0 (Short)', 'Số lượng': countX_Short },
       { 'Điều kiện': 'diffema20(15m) < 3% (Short)', 'Số lượng': countDiffEma20_15m_Short },
       { 'Điều kiện': 'bbt(15m) > 0 (Short)', 'Số lượng': countBbtShort },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
