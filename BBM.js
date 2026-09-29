@@ -1,4 +1,4 @@
-import axios from 'axios';
+Import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -97,23 +97,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// Tính diffema cho khoảng lag mong muốn
-function calculateDiffEma(candles, period = 20, lagBars = 20) {
-  if (!candles || candles.length < period + lagBars + 1) return null;
-  const closedPrices = candles.slice(1).reverse().map((c) => parseFloat(c[4]));
-  const emaSeries = calculateEMAArray(closedPrices, period);
-
-  if (emaSeries.length < lagBars) return null;
-
-  const emaCurrent = emaSeries[emaSeries.length - 1];
-  const emaLag = emaSeries[emaSeries.length - lagBars];
-
-  if (!emaLag || emaLag <= 0) return null;
-
-  return ((emaCurrent - emaLag) / emaLag) * 100;
-}
-
-// ------------------- LỌC THỊ TRƯỜNG (bd24h > 5%) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & |bd24h| > 5%) -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -131,8 +115,7 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-
-      if (change24hVal > 5) {
+      if (change24hVal > 5 || change24hVal < -5) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -155,7 +138,7 @@ async function getFilteredMarkets() {
 
 // ------------------- LẤY DỮ LIỆU NẾN -------------------
 
-async function getCandles(symbol, bar = '15m', limit = 100) {
+async function getCandles(symbol, bar = '5m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
@@ -177,41 +160,19 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // STEP 1: Lọc theo Vol > 5M và bd24h > 5%
-    const { allSwapsCount, volPassedCount, filteredCoins: rawCoins } = await getFilteredMarkets();
+    const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa bd24h > 5%: ${rawCoins.length} coin`
+      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
     );
 
-    // STEP 2: Lọc tiếp Hbb > 3% trên KHUNG NẾN 15M
-    console.log(`⏳ Đang kiểm tra điều kiện Hbb > 3% trên khung 15m...`);
-    const targetCoins = [];
-
-    for (const coin of rawCoins) {
-      const candles15m = await getCandles(coin.instId, '15m', 30);
-      if (candles15m && candles15m.length >= 21) {
-        const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-        const bb15m = calculateBollingerBands(closesBB15m, 20);
-
-        if (bb15m && bb15m.middle > 0) {
-          const hbbPercent = ((bb15m.upper - bb15m.lower) / bb15m.middle) * 100;
-          if (hbbPercent > 3) {
-            coin.hbb15m = parseFloat(hbbPercent.toFixed(2));
-            targetCoins.push(coin);
-          }
-        }
-      }
-      await sleep(60);
-    }
-
-    console.log(`🎯 Số coin thỏa mãn thêm Hbb (15m) > 3%: ${targetCoins.length} coin`);
-
-    // STEP 3: Tính chỉ số ud (4H) trên danh sách coin đã lọc
+    // --- TÍNH CHỈ SỐ UD TOÀN TẬP COIN ĐÃ LỌC ---
+    // ud = tổng số coin có nến 4h vừa đóng tăng - tổng số coin có nến 4h vừa đóng giảm
     console.log(`⏳ Đang tải nến 4H tính chỉ số ud cho ${targetCoins.length} coin...`);
     let totalUp4hCoins = 0;
     let totalDown4hCoins = 0;
 
     for (const coin of targetCoins) {
+      // limit=2: candles[0] là nến đang chạy, candles[1] là nến vừa đóng
       const candles4h = await getCandles(coin.instId, '4H', 2);
       if (candles4h && candles4h.length >= 2) {
         const closedCandle = candles4h[1];
@@ -224,7 +185,7 @@ async function main() {
           totalDown4hCoins++;
         }
       }
-      await sleep(60);
+      await sleep(60); // Giảm tải rate-limit OKX
     }
 
     const marketUD = totalUp4hCoins - totalDown4hCoins;
@@ -239,83 +200,95 @@ async function main() {
 
     let countValidCandles = 0;
 
-    // Biến đếm thống kê
-    let countDiffEma20_15m_Long = 0;
-    let countDiffEma40_15m_Long = 0;
-    let countX_Long = 0;
-    let countBbmLong = 0;
+    // Đếm độc lập từng điều kiện
+    let countBd24Long = 0;
+    let countDiffEma40Long = 0;
+    let countBbdLong = 0;
+    let countHbbLong = 0;
 
-    let countX_Short = 0;
-    let countDiffEma20_15m_Short = 0;
+    let countBd24Short = 0;
+    let countDiffEma40Short = 0;
     let countBbtShort = 0;
+    let countHbbShort = 0;
 
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
-    // STEP 4: Kiểm tra chiến lược LONG / SHORT hoàn toàn trên KHUNG 15M
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      const candles15m = await getCandles(symbol, '15m', 65);
-
-      if (!candles15m || candles15m.length < 65) {
+      const candles5m = await getCandles(symbol, '5m', 100);
+      if (!candles5m || candles5m.length < 65) {
         await sleep(80);
         continue;
       }
       countValidCandles++;
 
-      // --- Tính toán Bollinger Bands & Chênh lệch giá nến 15m ---
-      const candle0_15m = candles15m[0]; // Nến 15m vừa đóng
-      const high0_15m = parseFloat(candle0_15m[2]);
-      const low0_15m = parseFloat(candle0_15m[3]);
+      const candle0 = candles5m[0];
+      const high0 = parseFloat(candle0[2]);
+      const low0 = parseFloat(candle0[3]);
 
-      const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bb15m = calculateBollingerBands(closesBB15m, 20);
+      // --- 1. BOLLINGER BANDS (20) TRÊN NẾN 5m SỐ 1 VỪA ĐÓNG ---
+      const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const bb5m = calculateBollingerBands(closesBB5m, 20);
 
-      if (!bb15m || bb15m.lower <= 0 || bb15m.upper <= 0 || bb15m.middle <= 0) {
+      if (!bb5m || bb5m.lower <= 0 || bb5m.upper <= 0 || bb5m.middle <= 0) {
         await sleep(80);
         continue;
       }
 
-      // bbm: % chênh lệch giữa LOW nến 15m vừa đóng với BB MID
-      const bbm15m = ((low0_15m - bb15m.middle) / bb15m.middle) * 100;
-      // bbt: % chênh lệch giữa HIGH nến 15m vừa đóng với BB UPPER
-      const bbt15m = ((high0_15m - bb15m.upper) / bb15m.upper) * 100;
+      // bbd: % chênh lệch giá thấp nhất nến hiện tại với BB dưới
+      const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
+      // bbt: % chênh lệch giá cao nhất nến hiện tại với BB trên
+      const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
 
-      // --- Tính toán EMA & x trên khung 15m ---
-      const diffema20_15m = calculateDiffEma(candles15m, 20, 20);
-      const diffema40_15m = calculateDiffEma(candles15m, 20, 40);
+      // Hbb: Độ rộng dải Bollinger Band nến số 1 tính theo %
+      const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
 
-      let xVal = null;
-      if (diffema20_15m !== null && diffema40_15m !== null && diffema20_15m !== 0) {
-        xVal = diffema40_15m / diffema20_15m;
+      // --- 2. EMA20 VÀ diffema40 TRÊN NẾN 5m ---
+      const allClosedCandles = candles5m.slice(1).reverse();
+      const closedPrices = allClosedCandles.map((c) => parseFloat(c[4]));
+      const emaSeries5m = calculateEMAArray(closedPrices, 20);
+
+      if (emaSeries5m.length < 40) {
+        await sleep(80);
+        continue;
       }
 
-      // --- ĐÁNH GIÁ ĐIỀU KIỆN LỆNH LONG (15M) ---
-      // diffema20(15m) > 4%, diffema40(15m) > 4%, x < 3.0, bbm(15m) < 0
-      const passDiffEma20_15m_Long = diffema20_15m !== null && diffema20_15m > 4;
-      const passDiffEma40_15m_Long = diffema40_15m !== null && diffema40_15m > 4;
-      const passX_Long = xVal !== null && xVal < 3.0;
-      const passBbmLong = bbm15m < 0;
+      const ema20_n1 = emaSeries5m[emaSeries5m.length - 1];
+      const ema20_n40 = emaSeries5m[emaSeries5m.length - 40];
 
-      if (passDiffEma20_15m_Long) countDiffEma20_15m_Long++;
-      if (passDiffEma40_15m_Long) countDiffEma40_15m_Long++;
-      if (passX_Long) countX_Long++;
-      if (passBbmLong) countBbmLong++;
+      if (!ema20_n40 || ema20_n40 <= 0) {
+        await sleep(80);
+        continue;
+      }
 
-      const isLong = passDiffEma20_15m_Long && passDiffEma40_15m_Long && passX_Long && passBbmLong;
+      const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
-      // --- ĐÁNH GIÁ ĐIỀU KIỆN LỆNH SHORT (15M) ---
-      // x > 3.0, diffema20(15m) < 3%, bbt(15m) > 0
-      const passX_Short = xVal !== null && xVal > 3.0;
-      const passDiffEma20_15m_Short = diffema20_15m !== null && diffema20_15m < 3;
-      const passBbtShort = bbt15m > 0;
+      // Đánh giá từng điều kiện
+      const passHbb = hbbPercent > 2;
 
-      if (passX_Short) countX_Short++;
-      if (passDiffEma20_15m_Short) countDiffEma20_15m_Short++;
+      const passBd24Long = coin.change24hVal > 5;
+      const passDiffEma40Long = diffema40 > 4;
+      const passBbdLong = bbd < 0;
+
+      const passBd24Short = coin.change24hVal < -5;
+      const passDiffEma40Short = diffema40 < -3;
+      const passBbtShort = bbt > 0;
+
+      if (passBd24Long) countBd24Long++;
+      if (passDiffEma40Long) countDiffEma40Long++;
+      if (passBbdLong) countBbdLong++;
+      if (passBd24Long && passHbb) countHbbLong++;
+
+      if (passBd24Short) countBd24Short++;
+      if (passDiffEma40Short) countDiffEma40Short++;
       if (passBbtShort) countBbtShort++;
+      if (passBd24Short && passHbb) countHbbShort++;
 
-      const isShort = passX_Short && passDiffEma20_15m_Short && passBbtShort;
+      // Tín hiệu kết hợp
+      const isLong = passBd24Long && passDiffEma40Long && passBbdLong && passHbb;
+      const isShort = passBd24Short && passDiffEma40Short && passBbtShort && passHbb;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -323,11 +296,9 @@ async function main() {
       }
 
       const signalType = isLong ? 'LONG' : 'SHORT';
-      const change24hStr = `+${coin.change24hVal.toFixed(2)}%`;
-      const hbbStr = `${coin.hbb15m.toFixed(2)}%`;
-      const xStr = xVal !== null ? xVal.toFixed(2) : 'N/A';
-      const diffema20_15mStr = diffema20_15m !== null ? `${diffema20_15m.toFixed(2)}%` : 'N/A';
-      const diffema40_15mStr = diffema40_15m !== null ? `${diffema40_15m.toFixed(2)}%` : 'N/A';
+      const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
+      const diffema40Str = `${diffema40 > 0 ? '+' : ''}${diffema40.toFixed(2)}%`;
+      const hbbStr = `${hbbPercent.toFixed(2)}%`;
 
       if (isLong) countMatchedLong++;
       if (isShort) countMatchedShort++;
@@ -343,30 +314,22 @@ async function main() {
       scanResults.matched.push({
         symbol,
         type: signalType,
-        Hbb15m: hbbStr,
+        Hbb: hbbStr,
+        diffema40: diffema40Str,
         bd24h: change24hStr,
-        x: xStr,
-        diffema20_15m: diffema20_15mStr,
-        diffema40_15m: diffema40_15mStr,
-        bbm15m: bbm15m.toFixed(2) + '%',
-        bbt15m: bbt15m.toFixed(2) + '%',
         link,
         teleSent: !isCooldown
       });
 
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
+        // Đặt ud lên đầu tiên của tin nhắn Telegram
         const message =
           `<b>ud (4H): ${marketUDStr}</b>\n` +
-          `${icon} <b>TÍN HIỆU ${signalType} (15m): ${coinName}</b>\n` +
-          `• <b>Hbb (15m):</b> ${hbbStr}\n` +
+          `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
+          `• <b>Hbb (5m):</b> ${hbbStr}\n` +
+          `• <b>diffema40:</b> ${diffema40Str}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
-          `• <b>x (15m):</b> ${xStr}\n` +
-          `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
-          `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n` +
-          (isLong
-            ? `• <b>bbm (15m):</b> ${bbm15m.toFixed(2)}%\n`
-            : `• <b>bbt (15m):</b> ${bbt15m.toFixed(2)}%\n`) +
           `• <a href="${link}">Link OKX</a>`;
 
         console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
@@ -390,17 +353,18 @@ async function main() {
     saveScanResults(scanResults);
 
     // Bảng thống kê ngắn gọn
-    console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN (KHUNG 15M) ---');
+    console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
     console.log(`Chỉ số thị trường ud (4H): ${marketUDStr}`);
-    console.log(`Số coin kiểm tra thành công: ${countValidCandles}/${targetCoins.length}`);
+    console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
-      { 'Điều kiện': 'diffema20(15m) > 4% (Long)', 'Số lượng': countDiffEma20_15m_Long },
-      { 'Điều kiện': 'diffema40(15m) > 4% (Long)', 'Số lượng': countDiffEma40_15m_Long },
-      { 'Điều kiện': 'x < 3.0 (Long)', 'Số lượng': countX_Long },
-      { 'Điều kiện': 'bbm(15m) < 0 (Long)', 'Số lượng': countBbmLong },
-      { 'Điều kiện': 'x > 3.0 (Short)', 'Số lượng': countX_Short },
-      { 'Điều kiện': 'diffema20(15m) < 3% (Short)', 'Số lượng': countDiffEma20_15m_Short },
-      { 'Điều kiện': 'bbt(15m) > 0 (Short)', 'Số lượng': countBbtShort },
+      { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
+      { 'Điều kiện': 'diffema40 > 4% (Long)', 'Số lượng': countDiffEma40Long },
+      { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
+      { 'Điều kiện': 'Hbb > 2% (Long)', 'Số lượng': countHbbLong },
+      { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
+      { 'Điều kiện': 'diffema40 < -3% (Short)', 'Số lượng': countDiffEma40Short },
+      { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
+      { 'Điều kiện': 'Hbb > 2% (Short)', 'Số lượng': countHbbShort },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
       { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
     ]);
