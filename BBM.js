@@ -97,7 +97,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & bd24h > 5%) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & |bd24h| > 5%) -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -115,8 +115,8 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-      // Đã đổi điều kiện: Chỉ lấy bd24h > 5% cho cả Long và Short
-      if (change24hVal > 5) {
+      // Lấy các coin có biến động 24h > 5% (cho Long) hoặc < -5% (cho Short)
+      if (Math.abs(change24hVal) > 5) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -163,7 +163,7 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa bd24h > 5%: ${targetCoins.length} coin`
+      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
     );
 
     // --- TÍNH CHỈ SỐ UD TOÀN TẬP COIN ĐÃ LỌC ---
@@ -200,6 +200,8 @@ async function main() {
     let countValidCandles = 0;
 
     // Đếm độc lập từng điều kiện
+    let countDiffEma10Common = 0;
+
     let countBd24Long = 0;
     let countDiffEma40Long = 0;
     let countBbdLong = 0;
@@ -241,7 +243,7 @@ async function main() {
 
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
 
-      // --- 2. EMA20 VÀ diffema40 TRÊN NẾN 5m ---
+      // --- 2. EMA20, diffema10 VÀ diffema40 TRÊN NẾN 5m ---
       const allClosedCandles = candles5m.slice(1).reverse();
       const closedPrices = allClosedCandles.map((c) => parseFloat(c[4]));
       const emaSeries5m = calculateEMAArray(closedPrices, 20);
@@ -252,25 +254,32 @@ async function main() {
       }
 
       const ema20_n1 = emaSeries5m[emaSeries5m.length - 1];
+      const ema20_n10 = emaSeries5m[emaSeries5m.length - 10];
       const ema20_n40 = emaSeries5m[emaSeries5m.length - 40];
 
-      if (!ema20_n40 || ema20_n40 <= 0) {
+      if (!ema20_n40 || ema20_n40 <= 0 || !ema20_n10 || ema20_n10 <= 0) {
         await sleep(80);
         continue;
       }
 
+      const diffema10 = ((ema20_n1 - ema20_n10) / ema20_n10) * 100;
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
-      // Đánh giá từng điều kiện đã cập nhật
-      const passHbb = hbbPercent > 3; // Đã đổi: Hbb > 3%
+      // --- ĐÁNH GIÁ CÁC ĐIỀU KIỆN ---
+      const passDiffEma10 = diffema10 > -0.5 && diffema10 < 0.5; // Điều kiện chung
+      const passHbb = hbbPercent > 3;
 
+      // Điều kiện LONG
       const passBd24Long = coin.change24hVal > 5;
-      const passDiffEma40Long = diffema40 > 4;
+      const passDiffEma40Long = diffema40 < -2;
       const passBbdLong = bbd < 0;
 
-      const passBd24Short = coin.change24hVal > 5; // Đã đổi: bd24h > 5% cho Short
-      const passDiffEma40Short = diffema40 < 4; // Đã đổi: diffema40 < 4% cho Short
+      // Điều kiện SHORT
+      const passBd24Short = coin.change24hVal < -5;
+      const passDiffEma40Short = diffema40 > 2;
       const passBbtShort = bbt > 0;
+
+      if (passDiffEma10) countDiffEma10Common++;
 
       if (passBd24Long) countBd24Long++;
       if (passDiffEma40Long) countDiffEma40Long++;
@@ -283,8 +292,8 @@ async function main() {
       if (passBd24Short && passHbb) countHbbShort++;
 
       // Tín hiệu kết hợp
-      const isLong = passBd24Long && passDiffEma40Long && passBbdLong && passHbb;
-      const isShort = passBd24Short && passDiffEma40Short && passBbtShort && passHbb;
+      const isLong = passDiffEma10 && passBd24Long && passDiffEma40Long && passBbdLong && passHbb;
+      const isShort = passDiffEma10 && passBd24Short && passDiffEma40Short && passBbtShort && passHbb;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -293,6 +302,7 @@ async function main() {
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
+      const diffema10Str = `${diffema10 > 0 ? '+' : ''}${diffema10.toFixed(2)}%`;
       const diffema40Str = `${diffema40 > 0 ? '+' : ''}${diffema40.toFixed(2)}%`;
       const hbbStr = `${hbbPercent.toFixed(2)}%`;
 
@@ -311,6 +321,7 @@ async function main() {
         symbol,
         type: signalType,
         Hbb: hbbStr,
+        diffema10: diffema10Str,
         diffema40: diffema40Str,
         bd24h: change24hStr,
         link,
@@ -323,6 +334,7 @@ async function main() {
           `<b>ud (4H): ${marketUDStr}</b>\n` +
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Hbb (5m):</b> ${hbbStr}\n` +
+          `• <b>diffema10:</b> ${diffema10Str}\n` +
           `• <b>diffema40:</b> ${diffema40Str}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -352,12 +364,13 @@ async function main() {
     console.log(`Chỉ số thị trường ud (4H): ${marketUDStr}`);
     console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
     console.table([
+      { 'Điều kiện': '-0.5% < diffema10 < 0.5% (Chung)', 'Số lượng': countDiffEma10Common },
       { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
-      { 'Điều kiện': 'diffema40 > 4% (Long)', 'Số lượng': countDiffEma40Long },
+      { 'Điều kiện': 'diffema40 < -2% (Long)', 'Số lượng': countDiffEma40Long },
       { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
       { 'Điều kiện': 'Hbb > 3% (Long)', 'Số lượng': countHbbLong },
-      { 'Điều kiện': 'bd24h > 5% (Short)', 'Số lượng': countBd24Short },
-      { 'Điều kiện': 'diffema40 < 4% (Short)', 'Số lượng': countDiffEma40Short },
+      { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
+      { 'Điều kiện': 'diffema40 > 2% (Short)', 'Số lượng': countDiffEma40Short },
       { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
       { 'Điều kiện': 'Hbb > 3% (Short)', 'Số lượng': countHbbShort },
       { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
