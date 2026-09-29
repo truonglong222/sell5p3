@@ -1,65 +1,58 @@
 {
-  "lastScanAt": "2026-09-29T02:50:32.577Z",
-  "ud4h": "+4",
-  "targetCoinsCount": 6,
+  "lastScanAt": "2026-09-29T02:55:28.416Z",
+  "ud4h": "+5",
+  "targetCoinsCount": 7,
   "targetCoinsList": [
     {
       "instId": "SYRUP-USDT-SWAP",
       "open24h": 0.2117,
-      "last": 0.2233,
-      "change24hVal": 5.48,
-      "hbb5m": 5.76
+      "last": 0.2242,
+      "change24hVal": 5.9,
+      "hbb5m": 4.18
     },
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.05336,
-      "last": 0.059031,
-      "change24hVal": 10.63,
-      "hbb5m": 4.62
+      "open24h": 0.052875,
+      "last": 0.058519,
+      "change24hVal": 10.67,
+      "hbb5m": 4.86
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2554,
-      "last": 0.2765,
-      "change24hVal": 8.26,
-      "hbb5m": 5.15
+      "open24h": 0.2549,
+      "last": 0.2778,
+      "change24hVal": 8.98,
+      "hbb5m": 5.26
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.09489,
-      "last": 0.11812,
-      "change24hVal": 24.48,
-      "hbb5m": 3.08
+      "open24h": 0.0951,
+      "last": 0.11831,
+      "change24hVal": 24.41,
+      "hbb5m": 3.14
+    },
+    {
+      "instId": "CRV-USDT-SWAP",
+      "open24h": 0.3401,
+      "last": 0.3783,
+      "change24hVal": 11.23,
+      "hbb5m": 3.09
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.05325,
-      "last": 0.05749,
-      "change24hVal": 7.96,
-      "hbb5m": 5.1
+      "open24h": 0.05301,
+      "last": 0.05736,
+      "change24hVal": 8.21,
+      "hbb5m": 5.12
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.07981,
-      "last": 0.09107,
-      "change24hVal": 14.11,
+      "open24h": 0.08003,
+      "last": 0.09006,
+      "change24hVal": 12.53,
       "hbb5m": 6.71
     }
   ],
-  "matchedCount": 1,
-  "matchedList": [
-    {
-      "symbol": "MUBARAK-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb5m": "4.62%",
-      "bd24h": "+10.63%",
-      "x": "2.23",
-      "diffema20_15m": "-1.46%",
-      "diffema20_5m": "-0.53%",
-      "bbd5m": "4.87%",
-      "bbt5m": "0.36%",
-      "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
