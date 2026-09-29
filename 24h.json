@@ -1,92 +1,114 @@
 {
-  "lastScanAt": "2026-09-29T03:01:43.412Z",
-  "ud4h": "+4",
-  "targetCoinsCount": 8,
+  "lastScanAt": "2026-09-29T03:05:33.912Z",
+  "ud4h": "+11",
+  "targetCoinsCount": 15,
   "targetCoinsList": [
     {
+      "instId": "XLM-USDT-SWAP",
+      "open24h": 0.2142,
+      "last": 0.22526,
+      "change24hVal": 5.16,
+      "hbb15m": 4.75
+    },
+    {
       "instId": "SYRUP-USDT-SWAP",
-      "open24h": 0.2123,
-      "last": 0.2272,
-      "change24hVal": 7.02,
-      "hbb5m": 3.47
+      "open24h": 0.2117,
+      "last": 0.2262,
+      "change24hVal": 6.85,
+      "hbb15m": 9.84
+    },
+    {
+      "instId": "ALGO-USDT-SWAP",
+      "open24h": 0.11737,
+      "last": 0.1347,
+      "change24hVal": 14.77,
+      "hbb15m": 3.17
+    },
+    {
+      "instId": "PROS-USDT-SWAP",
+      "open24h": 0.6326,
+      "last": 0.679,
+      "change24hVal": 7.33,
+      "hbb15m": 3.27
     },
     {
       "instId": "MUBARAK-USDT-SWAP",
-      "open24h": 0.052983,
-      "last": 0.05929,
-      "change24hVal": 11.9,
-      "hbb5m": 5.12
+      "open24h": 0.05291,
+      "last": 0.059175,
+      "change24hVal": 11.84,
+      "hbb15m": 7.26
     },
     {
       "instId": "0G-USDT-SWAP",
-      "open24h": 0.2556,
-      "last": 0.2794,
-      "change24hVal": 9.31,
-      "hbb5m": 5.37
+      "open24h": 0.2535,
+      "last": 0.2798,
+      "change24hVal": 10.37,
+      "hbb15m": 11.28
+    },
+    {
+      "instId": "NIGHT-USDT-SWAP",
+      "open24h": 0.026375,
+      "last": 0.027832,
+      "change24hVal": 5.52,
+      "hbb15m": 4.56
+    },
+    {
+      "instId": "ARX-USDT-SWAP",
+      "open24h": 0.2308,
+      "last": 0.2546,
+      "change24hVal": 10.31,
+      "hbb15m": 6.12
     },
     {
       "instId": "HBAR-USDT-SWAP",
-      "open24h": 0.095,
-      "last": 0.11804,
-      "change24hVal": 24.25,
-      "hbb5m": 3.21
+      "open24h": 0.09456,
+      "last": 0.11744,
+      "change24hVal": 24.2,
+      "hbb15m": 5.64
     },
     {
       "instId": "CRV-USDT-SWAP",
-      "open24h": 0.3416,
-      "last": 0.3831,
-      "change24hVal": 12.15,
-      "hbb5m": 3.07
+      "open24h": 0.3405,
+      "last": 0.3808,
+      "change24hVal": 11.84,
+      "hbb15m": 6.49
+    },
+    {
+      "instId": "LINK-USDT-SWAP",
+      "open24h": 14.067,
+      "last": 15.001,
+      "change24hVal": 6.64,
+      "hbb15m": 5.3
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.0533,
-      "last": 0.05673,
-      "change24hVal": 6.44,
-      "hbb5m": 5.11
+      "open24h": 0.05325,
+      "last": 0.05663,
+      "change24hVal": 6.35,
+      "hbb15m": 3.31
+    },
+    {
+      "instId": "CELO-USDT-SWAP",
+      "open24h": 0.09274,
+      "last": 0.09909,
+      "change24hVal": 6.85,
+      "hbb15m": 7.21
     },
     {
       "instId": "AZTEC-USDT-SWAP",
-      "open24h": 0.01704,
-      "last": 0.01802,
-      "change24hVal": 5.75,
-      "hbb5m": 7.23
+      "open24h": 0.01695,
+      "last": 0.01796,
+      "change24hVal": 5.96,
+      "hbb15m": 10.11
     },
     {
       "instId": "KII-USDT-SWAP",
-      "open24h": 0.07995,
-      "last": 0.09024,
-      "change24hVal": 12.87,
-      "hbb5m": 6.61
+      "open24h": 0.08008,
+      "last": 0.08995,
+      "change24hVal": 12.33,
+      "hbb15m": 6.45
     }
   ],
-  "matchedCount": 2,
-  "matchedList": [
-    {
-      "symbol": "MUBARAK-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb5m": "5.12%",
-      "bd24h": "+11.90%",
-      "x": "2.39",
-      "diffema20_15m": "-1.33%",
-      "diffema20_5m": "0.15%",
-      "bbd5m": "4.63%",
-      "bbt5m": "0.25%",
-      "link": "https://www.okx.com/trade-swap/mubarak-usdt-swap",
-      "teleSent": false
-    },
-    {
-      "symbol": "CRV-USDT-SWAP",
-      "type": "SHORT",
-      "Hbb5m": "3.07%",
-      "bd24h": "+12.15%",
-      "x": "2.70",
-      "diffema20_15m": "4.37%",
-      "diffema20_5m": "0.49%",
-      "bbd5m": "2.54%",
-      "bbt5m": "0.77%",
-      "link": "https://www.okx.com/trade-swap/crv-usdt-swap",
-      "teleSent": false
-    }
-  ]
+  "matchedCount": 0,
+  "matchedList": []
 }
