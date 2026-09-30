@@ -116,7 +116,7 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
       
-      // BƯỚC 1: Bảng dư 24h thỏa |bd24h| > 5% mới đưa vào danh sách lọc tiếp
+      // BƯỚC 1: Bảng dư 24h thỏa |bd24h| > 5%
       if (Math.abs(change24hVal) > 5) {
         filteredCoins.push({
           instId: item.instId,
@@ -162,7 +162,6 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // BƯỚC 1: Lọc bd24h ngay từ bước gọi Tickers
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
       `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
@@ -201,7 +200,7 @@ async function main() {
 
     let countValidCandles = 0;
 
-    // Đếm độc lập các điều kiện
+    // Biến đếm từng điều kiện
     let countBd24Long = 0;
     let countBd24Short = 0;
     let countPassedHbb = 0;
@@ -217,11 +216,9 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Đếm bd24h
       if (coin.change24hVal > 5) countBd24Long++;
       if (coin.change24hVal < -5) countBd24Short++;
 
-      // Lấy dữ liệu nến 5m
       const candles5m = await getCandles(symbol, '5m', 100);
       if (!candles5m || candles5m.length < 65) {
         await sleep(80);
@@ -246,11 +243,9 @@ async function main() {
 
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
 
-      // Đếm độc lập Hbb > 2%
       if (hbbPercent > 2) {
         countPassedHbb++;
       } else {
-        // Tối ưu: Dừng sớm để tiết kiệm tài nguyên tính toán EMA
         await sleep(80);
         continue;
       }
@@ -277,11 +272,9 @@ async function main() {
 
       const diffema10 = ((ema20_n1 - ema20_n10) / ema20_n10) * 100;
 
-      // Đếm độc lập diffema10 thỏa mãn
       if (diffema10 > -0.5 && diffema10 < 0.5) {
         countPassedDiffEma10++;
       } else {
-        // Tối ưu: Dừng sớm nếu không thỏa
         await sleep(80);
         continue;
       }
@@ -304,7 +297,6 @@ async function main() {
       if (bbd < 0) countBbdLong++;
       if (bbt > 0) countBbtShort++;
 
-      // Đánh giá tín hiệu Long / Short
       const isLong = coin.change24hVal > 5 && diffema40 < -2 && bbd < 0;
       const isShort = coin.change24hVal < -5 && diffema40 > 2 && bbt > 0;
 
@@ -373,38 +365,52 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    // Bảng thống kê từng điều kiện độc lập
-    console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA TỪNG ĐIỀU KIỆN ---');
-    console.log(`Chỉ số thị trường ud (4H): ${marketUDStr}`);
-    console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
-    console.table([
-      { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
-      { 'Điều kiện': 'bd24h < -5% (Short)', 'Số lượng': countBd24Short },
-      { 'Điều kiện': 'Hbb > 2%', 'Số lượng': countPassedHbb },
-      { 'Điều kiện': '-0.5% < diffema10 < 0.5%', 'Số lượng': countPassedDiffEma10 },
-      { 'Điều kiện': 'diffema40 < -2% (Long)', 'Số lượng': countDiffEma40Long },
-      { 'Điều kiện': 'diffema40 > 2% (Short)', 'Số lượng': countDiffEma40Short },
-      { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
-      { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
-      { 'Điều kiện': 'THỎA TẤT CẢ LONG', 'Số lượng': countMatchedLong },
-      { 'Điều kiện': 'THỎA TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
-    ]);
+    // IN DẠNG LIST VĂN BẢN (KHÔNG DÙNG BẢNG)
+    console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN QUA TỪNG ĐIỀU KIỆN ---');
+    console.log(`• Chỉ số thị trường ud (4H): ${marketUDStr}`);
+    console.log(`• Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
+    console.log(`• Số coin thỏa bd24h > 5% (Long): ${countBd24Long}`);
+    console.log(`• Số coin thỏa bd24h < -5% (Short): ${countBd24Short}`);
+    console.log(`• Số coin thỏa Hbb > 2%: ${countPassedHbb}`);
+    console.log(`• Số coin thỏa -0.5% < diffema10 < 0.5%: ${countPassedDiffEma10}`);
+    console.log(`• Số coin thỏa diffema40 < -2% (Long): ${countDiffEma40Long}`);
+    console.log(`• Số coin thỏa diffema40 > 2% (Short): ${countDiffEma40Short}`);
+    console.log(`• Số coin thỏa bbd < 0 (Long): ${countBbdLong}`);
+    console.log(`• Số coin thỏa bbt > 0 (Short): ${countBbtShort}`);
+    console.log(`• Số coin THỎA TẤT CẢ LONG: ${countMatchedLong}`);
+    console.log(`• Số coin THỎA TẤT CẢ SHORT: ${countMatchedShort}`);
 
-    // Danh sách tên các coin thỏa mãn tất cả điều kiện
     console.log('\n--- DANH SÁCH COIN THỎA MÃN TẤT CẢ ĐIỀU KIỆN ---');
     if (scanResults.matched.length > 0) {
-      const matchedLongNames = scanResults.matched.filter((item) => item.type === 'LONG').map((item) => item.coin);
-      const matchedShortNames = scanResults.matched.filter((item) => item.type === 'SHORT').map((item) => item.coin);
+      const matchedLong = scanResults.matched.filter((i) => i.type === 'LONG');
+      const matchedShort = scanResults.matched.filter((i) => i.type === 'SHORT');
 
-      console.log(`🟢 LONG (${matchedLongNames.length}): ${matchedLongNames.length > 0 ? matchedLongNames.join(', ') : 'Không có'}`);
-      console.log(`🔴 SHORT (${matchedShortNames.length}): ${matchedShortNames.length > 0 ? matchedShortNames.join(', ') : 'Không có'}\n`);
+      console.log(`🟢 TÍN HIỆU LONG (${matchedLong.length}):`);
+      if (matchedLong.length > 0) {
+        matchedLong.forEach((item, index) => {
+          console.log(
+            `  ${index + 1}. ${item.coin} | bd24h: ${item.bd24h} | Hbb: ${item.Hbb} | diffema10: ${item.diffema10} | diffema40: ${item.diffema40}`
+          );
+        });
+      } else {
+        console.log('  (Không có)');
+      }
 
-      console.table(scanResults.matched);
+      console.log(`\n🔴 TÍN HIỆU SHORT (${matchedShort.length}):`);
+      if (matchedShort.length > 0) {
+        matchedShort.forEach((item, index) => {
+          console.log(
+            `  ${index + 1}. ${item.coin} | bd24h: ${item.bd24h} | Hbb: ${item.Hbb} | diffema10: ${item.diffema10} | diffema40: ${item.diffema40}`
+          );
+        });
+      } else {
+        console.log('  (Không có)');
+      }
     } else {
       console.log('Không có coin nào thỏa mãn tất cả tiêu chí.');
     }
 
-    console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
+    console.log(`\n📁 File kết quả đã lưu: ${RESULTS_FILE}`);
     console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
   } catch (err) {
     console.error('Lỗi hệ thống trong main():', err.message);
