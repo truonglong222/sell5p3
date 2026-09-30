@@ -97,7 +97,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & |bd24h| > 5%) -------------------
+// ------------------- LỌC THỊ TRƯỜNG -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -116,8 +116,8 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
       
-      // BƯỚC 1: Bảng dư 24h thỏa |bd24h| > 5%
-      if (Math.abs(change24hVal) > 5) {
+      // BƯỚC 1: Lọc coin thỏa mãn điều kiện Long (0 < bd24h < 10) hoặc Short (bd24h > 10)
+      if ((change24hVal > 0 && change24hVal < 10) || change24hVal > 10) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -164,7 +164,7 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
+      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa điều kiện bd24h sơ bộ: ${targetCoins.length} coin`
     );
 
     // --- TÍNH CHỈ SỐ UD TOÀN TẬP COIN ĐÃ LỌC ---
@@ -216,8 +216,9 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      if (coin.change24hVal > 5) countBd24Long++;
-      if (coin.change24hVal > 10) countBd24Short++; // Đã cập nhật điều kiện Short bd24h > 10%
+      // Cập nhật điều kiện đếm Long: 0% < bd24h < 10%
+      if (coin.change24hVal > 0 && coin.change24hVal < 10) countBd24Long++;
+      if (coin.change24hVal > 10) countBd24Short++;
 
       const candles5m = await getCandles(symbol, '5m', 100);
       if (!candles5m || candles5m.length < 65) {
@@ -292,14 +293,13 @@ async function main() {
       const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
       const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
 
-      // CẬP NHẬT ĐIỀU KIỆN ĐẾM THỐNG KÊ
       if (diffema40 > 0 && diffema40 < 5) countDiffEma40Long++;
       if (diffema40 > 5) countDiffEma40Short++;
       if (bbd < 0) countBbdLong++;
       if (bbt > 0) countBbtShort++;
 
-      // CẬP NHẬT ĐIỀU KIỆN TÍN HIỆU
-      const isLong = coin.change24hVal > 5 && (diffema40 > 0 && diffema40 < 5) && bbd < 0;
+      // CẬP NHẬT ĐIỀU KIỆN TÍN HIỆU LONG: 0% < bd24h < 10%
+      const isLong = (coin.change24hVal > 0 && coin.change24hVal < 10) && (diffema40 > 0 && diffema40 < 5) && bbd < 0;
       const isShort = coin.change24hVal > 10 && diffema40 > 5 && bbt > 0;
 
       if (!isLong && !isShort) {
@@ -367,11 +367,11 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    // IN DẠNG LIST VĂN BẢN (KHÔNG DÙNG BẢNG)
+    // IN DẠNG LIST VĂN BẢN
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN QUA TỪNG ĐIỀU KIỆN ---');
     console.log(`• Chỉ số thị trường ud (4H): ${marketUDStr}`);
     console.log(`• Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
-    console.log(`• Số coin thỏa bd24h > 5% (Long): ${countBd24Long}`);
+    console.log(`• Số coin thỏa 0% < bd24h < 10% (Long): ${countBd24Long}`);
     console.log(`• Số coin thỏa bd24h > 10% (Short): ${countBd24Short}`);
     console.log(`• Số coin thỏa Hbb > 2%: ${countPassedHbb}`);
     console.log(`• Số coin thỏa -0.5% < diffema10 < 0.5%: ${countPassedDiffEma10}`);
