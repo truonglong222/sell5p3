@@ -204,7 +204,7 @@ async function main() {
     let countBd24Long = 0;
     let countBd24Short = 0;
     let countPassedHbb = 0;
-    let countPassedDiffEma5 = 0; // Đổi diffema10 -> diffema5
+    let countPassedDiffEma5 = 0;
     let countDiffEma40Long = 0;
     let countDiffEma40Short = 0;
     let countBbdLong = 0;
@@ -263,7 +263,7 @@ async function main() {
       }
 
       const ema20_n1 = emaSeries5m[emaSeries5m.length - 1];
-      const ema20_n5 = emaSeries5m[emaSeries5m.length - 5]; // Cập nhật: lấy nến thứ 5 trước đó
+      const ema20_n5 = emaSeries5m[emaSeries5m.length - 5];
 
       if (!ema20_n5 || ema20_n5 <= 0) {
         await sleep(80);
@@ -292,15 +292,15 @@ async function main() {
       const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
       const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
 
-      // Cập nhật điều kiện Long: 2% < diffema40 < 5%
-      if (diffema40 > 2 && diffema40 < 5) countDiffEma40Long++;
-      if (diffema40 > 5) countDiffEma40Short++;
+      // Cập nhật điều kiện Long (1 < diffema40 < 3) và Short (diffema40 > 3)
+      if (diffema40 > 1 && diffema40 < 3) countDiffEma40Long++;
+      if (diffema40 > 3) countDiffEma40Short++;
       if (bbd < 0) countBbdLong++;
       if (bbt > 0) countBbtShort++;
 
       // Điều kiện tín hiệu
-      const isLong = (coin.change24hVal > 0 && coin.change24hVal < 10) && (diffema40 > 2 && diffema40 < 5) && bbd < 0;
-      const isShort = coin.change24hVal > 10 && diffema40 > 5 && bbt > 0;
+      const isLong = (coin.change24hVal > 0 && coin.change24hVal < 10) && (diffema40 > 1 && diffema40 < 3) && bbd < 0;
+      const isShort = coin.change24hVal > 10 && diffema40 > 3 && bbt > 0;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -375,8 +375,8 @@ async function main() {
     console.log(`• Số coin thỏa bd24h > 10% (Short): ${countBd24Short}`);
     console.log(`• Số coin thỏa Hbb > 2%: ${countPassedHbb}`);
     console.log(`• Số coin thỏa -0.5% < diffema5 < 0.5%: ${countPassedDiffEma5}`);
-    console.log(`• Số coin thỏa 2% < diffema40 < 5% (Long): ${countDiffEma40Long}`);
-    console.log(`• Số coin thỏa diffema40 > 5% (Short): ${countDiffEma40Short}`);
+    console.log(`• Số coin thỏa 1% < diffema40 < 3% (Long): ${countDiffEma40Long}`);
+    console.log(`• Số coin thỏa diffema40 > 3% (Short): ${countDiffEma40Short}`);
     console.log(`• Số coin thỏa bbd < 0 (Long): ${countBbdLong}`);
     console.log(`• Số coin thỏa bbt > 0 (Short): ${countBbtShort}`);
     console.log(`• Số coin THỎA TẤT CẢ LONG: ${countMatchedLong}`);
