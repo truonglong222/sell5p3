@@ -1,4 +1,4 @@
-Import axios from 'axios';
+import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -115,7 +115,6 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-      // Đã đổi điều kiện: Chỉ lấy bd24h > 5% cho cả Long và Short
       if (change24hVal > 5) {
         filteredCoins.push({
           instId: item.instId,
@@ -199,16 +198,12 @@ async function main() {
 
     let countValidCandles = 0;
 
-    // Đếm độc lập từng điều kiện
-    let countBd24Long = 0;
-    let countDiffEma40Long = 0;
+    // Các biến đếm điều kiện độc lập
+    let countBd24 = 0;
+    let countDiffEma40 = 0;
+    let countHbb = 0;
     let countBbdLong = 0;
-    let countHbbLong = 0;
-
-    let countBd24Short = 0;
-    let countDiffEma40Short = 0;
     let countBbtShort = 0;
-    let countHbbShort = 0;
 
     let countMatchedLong = 0;
     let countMatchedShort = 0;
@@ -238,7 +233,6 @@ async function main() {
 
       const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
       const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
-
       const hbbPercent = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
 
       // --- 2. EMA20 VÀ diffema40 TRÊN NẾN 5m ---
@@ -261,30 +255,23 @@ async function main() {
 
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
 
-      // Đánh giá từng điều kiện đã cập nhật
-      const passHbb = hbbPercent > 3; // Đã đổi: Hbb > 3%
+      // Đánh giá các điều kiện (diffema40 > 3% dùng chung cho cả Long/Short)
+      const passBd24 = coin.change24hVal > 5;
+      const passDiffEma40 = diffema40 > 3;
+      const passHbb = hbbPercent > 3;
 
-      const passBd24Long = coin.change24hVal > 5;
-      const passDiffEma40Long = diffema40 > 4;
       const passBbdLong = bbd < 0;
-
-      const passBd24Short = coin.change24hVal > 5; // Đã đổi: bd24h > 5% cho Short
-      const passDiffEma40Short = diffema40 < 4; // Đã đổi: diffema40 < 4% cho Short
       const passBbtShort = bbt > 0;
 
-      if (passBd24Long) countBd24Long++;
-      if (passDiffEma40Long) countDiffEma40Long++;
+      if (passBd24) countBd24++;
+      if (passDiffEma40) countDiffEma40++;
+      if (passHbb) countHbb++;
       if (passBbdLong) countBbdLong++;
-      if (passBd24Long && passHbb) countHbbLong++;
-
-      if (passBd24Short) countBd24Short++;
-      if (passDiffEma40Short) countDiffEma40Short++;
       if (passBbtShort) countBbtShort++;
-      if (passBd24Short && passHbb) countHbbShort++;
 
       // Tín hiệu kết hợp
-      const isLong = passBd24Long && passDiffEma40Long && passBbdLong && passHbb;
-      const isShort = passBd24Short && passDiffEma40Short && passBbtShort && passHbb;
+      const isLong = passBd24 && passDiffEma40 && passHbb && passBbdLong;
+      const isShort = passBd24 && passDiffEma40 && passHbb && passBbtShort;
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -347,27 +334,34 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    // Bảng thống kê ngắn gọn
-    console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ---');
-    console.log(`Chỉ số thị trường ud (4H): ${marketUDStr}`);
-    console.log(`Số coin tải nến 5m thành công: ${countValidCandles}/${targetCoins.length}`);
-    console.table([
-      { 'Điều kiện': 'bd24h > 5% (Long)', 'Số lượng': countBd24Long },
-      { 'Điều kiện': 'diffema40 > 4% (Long)', 'Số lượng': countDiffEma40Long },
-      { 'Điều kiện': 'bbd < 0 (Long)', 'Số lượng': countBbdLong },
-      { 'Điều kiện': 'Hbb > 3% (Long)', 'Số lượng': countHbbLong },
-      { 'Điều kiện': 'bd24h > 5% (Short)', 'Số lượng': countBd24Short },
-      { 'Điều kiện': 'diffema40 < 4% (Short)', 'Số lượng': countDiffEma40Short },
-      { 'Điều kiện': 'bbt > 0 (Short)', 'Số lượng': countBbtShort },
-      { 'Điều kiện': 'Hbb > 3% (Short)', 'Số lượng': countHbbShort },
-      { 'Điều kiện': 'KHỚP TẤT CẢ LONG', 'Số lượng': countMatchedLong },
-      { 'Điều kiện': 'KHỚP TẤT CẢ SHORT', 'Số lượng': countMatchedShort }
-    ]);
+    // --- LOG BẰNG VĂN BẢN (KHÔNG DÙNG CONSOLE.TABLE) ---
+    console.log('\n================ THỐNG KÊ CHI TIẾT ================');
+    console.log(`• Chỉ số ud (4H): ${marketUDStr}`);
+    console.log(`• Nến 5m tải thành công: ${countValidCandles}/${targetCoins.length} coin\n`);
+
+    console.log('--- SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ĐỘC LẬP ---');
+    console.log(`• bd24h > 5%: ${countBd24} coin`);
+    console.log(`• diffema40 > 3%: ${countDiffEma40} coin`);
+    console.log(`• Hbb > 3%: ${countHbb} coin`);
+    console.log(`• bbd < 0 (Chạm/Lủng Band Dưới): ${countBbdLong} coin`);
+    console.log(`• bbt > 0 (Chạm/Lủng Band Trên): ${countBbtShort} coin\n`);
+
+    console.log('--- KẾT QUẢ KHỚP TÍN HIỆU HOÀN CHỈNH ---');
+    console.log(`• KHỚP TẤT CẢ LONG: ${countMatchedLong} coin`);
+    console.log(`• KHỚP TẤT CẢ SHORT: ${countMatchedShort} coin`);
+    console.log('===================================================\n');
 
     if (scanResults.matched.length > 0) {
-      console.table(scanResults.matched);
+      console.log('--- DANH SÁCH COIN KHỚP TÍN HIỆU ---');
+      scanResults.matched.forEach((item, index) => {
+        const status = item.teleSent ? 'Đã gửi Tele' : 'Đang Cooldown';
+        console.log(
+          `${index + 1}. [${item.type}] ${item.symbol} | Hbb: ${item.Hbb} | diffema40: ${item.diffema40} | bd24h: ${item.bd24h} | ${status}`
+        );
+      });
+      console.log('');
     } else {
-      console.log('Không có coin nào thỏa mãn tất cả tiêu chí.');
+      console.log('❌ Không có coin nào thỏa mãn tất cả tiêu chí.\n');
     }
 
     console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
