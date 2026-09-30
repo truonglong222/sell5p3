@@ -116,7 +116,7 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
       
-      // BƯỚC 1: Lọc coin thỏa mãn điều kiện Long (0 < bd24h < 10) hoặc Short (bd24h > 10)
+      // Lọc coin thỏa mãn điều kiện Long (0 < bd24h < 10) hoặc Short (bd24h > 10)
       if ((change24hVal > 0 && change24hVal < 10) || change24hVal > 10) {
         filteredCoins.push({
           instId: item.instId,
@@ -204,7 +204,7 @@ async function main() {
     let countBd24Long = 0;
     let countBd24Short = 0;
     let countPassedHbb = 0;
-    let countPassedDiffEma10 = 0;
+    let countPassedDiffEma5 = 0; // Đổi diffema10 -> diffema5
     let countDiffEma40Long = 0;
     let countDiffEma40Short = 0;
     let countBbdLong = 0;
@@ -216,7 +216,6 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Cập nhật điều kiện đếm Long: 0% < bd24h < 10%
       if (coin.change24hVal > 0 && coin.change24hVal < 10) countBd24Long++;
       if (coin.change24hVal > 10) countBd24Short++;
 
@@ -252,7 +251,7 @@ async function main() {
       }
 
       // ==========================================
-      // BƯỚC 3: Tính diffema10 (-0.5% < diffema10 < 0.5%)
+      // BƯỚC 3: Tính diffema5 (-0.5% < diffema5 < 0.5%)
       // ==========================================
       const allClosedCandles = candles5m.slice(1).reverse();
       const closedPrices = allClosedCandles.map((c) => parseFloat(c[4]));
@@ -264,17 +263,17 @@ async function main() {
       }
 
       const ema20_n1 = emaSeries5m[emaSeries5m.length - 1];
-      const ema20_n10 = emaSeries5m[emaSeries5m.length - 10];
+      const ema20_n5 = emaSeries5m[emaSeries5m.length - 5]; // Cập nhật: lấy nến thứ 5 trước đó
 
-      if (!ema20_n10 || ema20_n10 <= 0) {
+      if (!ema20_n5 || ema20_n5 <= 0) {
         await sleep(80);
         continue;
       }
 
-      const diffema10 = ((ema20_n1 - ema20_n10) / ema20_n10) * 100;
+      const diffema5 = ((ema20_n1 - ema20_n5) / ema20_n5) * 100;
 
-      if (diffema10 > -0.5 && diffema10 < 0.5) {
-        countPassedDiffEma10++;
+      if (diffema5 > -0.5 && diffema5 < 0.5) {
+        countPassedDiffEma5++;
       } else {
         await sleep(80);
         continue;
@@ -293,13 +292,14 @@ async function main() {
       const bbd = ((low0 - bb5m.lower) / bb5m.lower) * 100;
       const bbt = ((high0 - bb5m.upper) / bb5m.upper) * 100;
 
-      if (diffema40 > 0 && diffema40 < 5) countDiffEma40Long++;
+      // Cập nhật điều kiện Long: 2% < diffema40 < 5%
+      if (diffema40 > 2 && diffema40 < 5) countDiffEma40Long++;
       if (diffema40 > 5) countDiffEma40Short++;
       if (bbd < 0) countBbdLong++;
       if (bbt > 0) countBbtShort++;
 
-      // CẬP NHẬT ĐIỀU KIỆN TÍN HIỆU LONG: 0% < bd24h < 10%
-      const isLong = (coin.change24hVal > 0 && coin.change24hVal < 10) && (diffema40 > 0 && diffema40 < 5) && bbd < 0;
+      // Điều kiện tín hiệu
+      const isLong = (coin.change24hVal > 0 && coin.change24hVal < 10) && (diffema40 > 2 && diffema40 < 5) && bbd < 0;
       const isShort = coin.change24hVal > 10 && diffema40 > 5 && bbt > 0;
 
       if (!isLong && !isShort) {
@@ -309,7 +309,7 @@ async function main() {
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
-      const diffema10Str = `${diffema10 > 0 ? '+' : ''}${diffema10.toFixed(2)}%`;
+      const diffema5Str = `${diffema5 > 0 ? '+' : ''}${diffema5.toFixed(2)}%`;
       const diffema40Str = `${diffema40 > 0 ? '+' : ''}${diffema40.toFixed(2)}%`;
       const hbbStr = `${hbbPercent.toFixed(2)}%`;
 
@@ -329,7 +329,7 @@ async function main() {
         symbol,
         type: signalType,
         Hbb: hbbStr,
-        diffema10: diffema10Str,
+        diffema5: diffema5Str,
         diffema40: diffema40Str,
         bd24h: change24hStr,
         link,
@@ -342,7 +342,7 @@ async function main() {
           `<b>ud (4H): ${marketUDStr}</b>\n` +
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Hbb (5m):</b> ${hbbStr}\n` +
-          `• <b>diffema10:</b> ${diffema10Str}\n` +
+          `• <b>diffema5:</b> ${diffema5Str}\n` +
           `• <b>diffema40:</b> ${diffema40Str}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -374,8 +374,8 @@ async function main() {
     console.log(`• Số coin thỏa 0% < bd24h < 10% (Long): ${countBd24Long}`);
     console.log(`• Số coin thỏa bd24h > 10% (Short): ${countBd24Short}`);
     console.log(`• Số coin thỏa Hbb > 2%: ${countPassedHbb}`);
-    console.log(`• Số coin thỏa -0.5% < diffema10 < 0.5%: ${countPassedDiffEma10}`);
-    console.log(`• Số coin thỏa 0% < diffema40 < 5% (Long): ${countDiffEma40Long}`);
+    console.log(`• Số coin thỏa -0.5% < diffema5 < 0.5%: ${countPassedDiffEma5}`);
+    console.log(`• Số coin thỏa 2% < diffema40 < 5% (Long): ${countDiffEma40Long}`);
     console.log(`• Số coin thỏa diffema40 > 5% (Short): ${countDiffEma40Short}`);
     console.log(`• Số coin thỏa bbd < 0 (Long): ${countBbdLong}`);
     console.log(`• Số coin thỏa bbt > 0 (Short): ${countBbtShort}`);
@@ -391,7 +391,7 @@ async function main() {
       if (matchedLong.length > 0) {
         matchedLong.forEach((item, index) => {
           console.log(
-            `  ${index + 1}. ${item.coin} | bd24h: ${item.bd24h} | Hbb: ${item.Hbb} | diffema10: ${item.diffema10} | diffema40: ${item.diffema40}`
+            `  ${index + 1}. ${item.coin} | bd24h: ${item.bd24h} | Hbb: ${item.Hbb} | diffema5: ${item.diffema5} | diffema40: ${item.diffema40}`
           );
         });
       } else {
@@ -402,7 +402,7 @@ async function main() {
       if (matchedShort.length > 0) {
         matchedShort.forEach((item, index) => {
           console.log(
-            `  ${index + 1}. ${item.coin} | bd24h: ${item.bd24h} | Hbb: ${item.Hbb} | diffema10: ${item.diffema10} | diffema40: ${item.diffema40}`
+            `  ${index + 1}. ${item.coin} | bd24h: ${item.bd24h} | Hbb: ${item.Hbb} | diffema5: ${item.diffema5} | diffema40: ${item.diffema40}`
           );
         });
       } else {
