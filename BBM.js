@@ -301,7 +301,7 @@ async function main() {
               const diffema40_15m = ((ema20_15m_n1 - ema20_15m_n40) / ema20_15m_n40) * 100;
               diffema40_15mStr = `${diffema40_15m > 0 ? '+' : ''}${diffema40_15m.toFixed(2)}%`;
 
-              if (diffema40_15m > 5) {
+              if (diffema40_15m > 4) {
                 countDiffEma40_15mLong++;
                 isLong = true;
               }
