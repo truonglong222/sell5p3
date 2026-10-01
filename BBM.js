@@ -206,6 +206,7 @@ async function main() {
     let countHbb = 0;
     let countBbdLong = 0;
     let countBbtShort = 0;
+    let countDiffEma40_15mLong = 0;
 
     let countMatchedLong = 0;
     let countMatchedShort = 0;
@@ -259,7 +260,7 @@ async function main() {
       const diffema40 = ((ema20_n1 - ema20_n40) / ema20_n40) * 100;
       const diffema20 = ((ema20_n1 - ema20_n20) / ema20_n20) * 100;
 
-      // Đánh giá các điều kiện
+      // Đánh giá các điều kiện cơ bản
       const passBd24 = coin.change24hVal > 5;
       const passDiffEma40 = diffema40 > 3;
       const passDiffEma20Long = diffema20 > 1;
@@ -277,9 +278,37 @@ async function main() {
       if (passBbdLong) countBbdLong++;
       if (passBbtShort) countBbtShort++;
 
-      // Tín hiệu kết hợp
-      const isLong = passBd24 && passDiffEma40 && passDiffEma20Long && passHbb && passBbdLong;
+      // Tiền kiểm tra tín hiệu
+      const passBaseLong = passBd24 && passDiffEma40 && passDiffEma20Long && passHbb && passBbdLong;
       const isShort = passBd24 && passDiffEma40 && passDiffEma20Short && passHbb && passBbtShort;
+
+      let isLong = false;
+      let diffema40_15mStr = 'N/A';
+
+      // --- OPTIMIZATION: CHỈ TẢI NẾN 15m KHI THỎA ĐIỀU KIỆN LONG CƠ BẢN ---
+      if (passBaseLong) {
+        const candles15m = await getCandles(symbol, '15m', 100);
+        if (candles15m && candles15m.length >= 65) {
+          const closed15m = candles15m.slice(1).reverse();
+          const closedPrices15m = closed15m.map((c) => parseFloat(c[4]));
+          const emaSeries15m = calculateEMAArray(closedPrices15m, 20);
+
+          if (emaSeries15m.length >= 40) {
+            const ema20_15m_n1 = emaSeries15m[emaSeries15m.length - 1];
+            const ema20_15m_n40 = emaSeries15m[emaSeries15m.length - 40];
+
+            if (ema20_15m_n40 > 0) {
+              const diffema40_15m = ((ema20_15m_n1 - ema20_15m_n40) / ema20_15m_n40) * 100;
+              diffema40_15mStr = `${diffema40_15m > 0 ? '+' : ''}${diffema40_15m.toFixed(2)}%`;
+
+              if (diffema40_15m > 5) {
+                countDiffEma40_15mLong++;
+                isLong = true;
+              }
+            }
+          }
+        }
+      }
 
       if (!isLong && !isShort) {
         await sleep(80);
@@ -303,7 +332,7 @@ async function main() {
       const lastSentTime = sentLog[symbol][alertKey];
       const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
 
-      scanResults.matched.push({
+      const matchedItem = {
         symbol,
         type: signalType,
         Hbb: hbbStr,
@@ -312,16 +341,28 @@ async function main() {
         bd24h: change24hStr,
         link,
         teleSent: !isCooldown
-      });
+      };
+
+      if (isLong) {
+        matchedItem.diffema40_15m = diffema40_15mStr;
+      }
+
+      scanResults.matched.push(matchedItem);
 
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
-        const message =
+        let message =
           `<b>ud (4H): ${marketUDStr}</b>\n` +
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>Hbb (5m):</b> ${hbbStr}\n` +
-          `• <b>diffema40:</b> ${diffema40Str}\n` +
-          `• <b>diffema20:</b> ${diffema20Str}\n` +
+          `• <b>diffema40 (5m):</b> ${diffema40Str}\n`;
+
+        if (isLong) {
+          message += `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n`;
+        }
+
+        message +=
+          `• <b>diffema20 (5m):</b> ${diffema20Str}\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <a href="${link}">Link OKX</a>`;
 
@@ -352,12 +393,13 @@ async function main() {
 
     console.log('--- SỐ LƯỢNG COIN THỎA ĐIỀU KIỆN ĐỘC LẬP ---');
     console.log(`• bd24h > 5%: ${countBd24} coin`);
-    console.log(`• diffema40 > 3%: ${countDiffEma40} coin`);
-    console.log(`• diffema20 > 1% (Long): ${countDiffEma20Long} coin`);
-    console.log(`• diffema20 < 1% (Short): ${countDiffEma20Short} coin`);
+    console.log(`• diffema40 (5m) > 3%: ${countDiffEma40} coin`);
+    console.log(`• diffema20 (5m) > 1% (Long): ${countDiffEma20Long} coin`);
+    console.log(`• diffema20 (5m) < 1% (Short): ${countDiffEma20Short} coin`);
     console.log(`• Hbb > 3%: ${countHbb} coin`);
     console.log(`• bbd < 0 (Chạm/Lủng Band Dưới): ${countBbdLong} coin`);
-    console.log(`• bbt > 0 (Chạm/Lủng Band Trên): ${countBbtShort} coin\n`);
+    console.log(`• bbt > 0 (Chạm/Lủng Band Trên): ${countBbtShort} coin`);
+    console.log(`• diffema40 (15m) > 5% (Long): ${countDiffEma40_15mLong} coin\n`);
 
     console.log('--- KẾT QUẢ KHỚP TÍN HIỆU HOÀN CHỈNH ---');
     console.log(`• KHỚP TẤT CẢ LONG: ${countMatchedLong} coin`);
@@ -368,8 +410,9 @@ async function main() {
       console.log('--- DANH SÁCH COIN KHỚP TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
         const status = item.teleSent ? 'Đã gửi Tele' : 'Đang Cooldown';
+        const extra15m = item.diffema40_15m ? ` | diffema40(15m): ${item.diffema40_15m}` : '';
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | Hbb: ${item.Hbb} | diffema40: ${item.diffema40} | diffema20: ${item.diffema20} | bd24h: ${item.bd24h} | ${status}`
+          `${index + 1}. [${item.type}] ${item.symbol} | Hbb: ${item.Hbb} | diffema40(5m): ${item.diffema40}${extra15m} | diffema20(5m): ${item.diffema20} | bd24h: ${item.bd24h} | ${status}`
         );
       });
       console.log('');
