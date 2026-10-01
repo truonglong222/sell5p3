@@ -1,87 +1,98 @@
 {
-  "lastScanAt": "2026-10-01T12:40:35.645Z",
+  "lastScanAt": "2026-10-01T12:45:39.596Z",
   "ud4h": "+7",
   "targetCoinsCount": 13,
   "targetCoinsList": [
     {
       "instId": "KITE-USDT-SWAP",
-      "open24h": 0.14159,
-      "last": 0.15161,
-      "change24hVal": 7.08
+      "open24h": 0.14176,
+      "last": 0.15216,
+      "change24hVal": 7.34
     },
     {
       "instId": "MON-USDT-SWAP",
-      "open24h": 0.02782,
-      "last": 0.03342,
-      "change24hVal": 20.13
+      "open24h": 0.02786,
+      "last": 0.03319,
+      "change24hVal": 19.13
     },
     {
       "instId": "OPN-USDT-SWAP",
-      "open24h": 0.05558,
-      "last": 0.06316,
-      "change24hVal": 13.64
+      "open24h": 0.05543,
+      "last": 0.06307,
+      "change24hVal": 13.78
     },
     {
       "instId": "ESP-USDT-SWAP",
-      "open24h": 0.10206,
-      "last": 0.10752,
-      "change24hVal": 5.35
+      "open24h": 0.10218,
+      "last": 0.10739,
+      "change24hVal": 5.1
     },
     {
       "instId": "NIGHT-USDT-SWAP",
-      "open24h": 0.036358,
-      "last": 0.044168,
-      "change24hVal": 21.48
+      "open24h": 0.036456,
+      "last": 0.044474,
+      "change24hVal": 21.99
     },
     {
       "instId": "ARX-USDT-SWAP",
-      "open24h": 0.2633,
-      "last": 0.2869,
-      "change24hVal": 8.96
+      "open24h": 0.2641,
+      "last": 0.2856,
+      "change24hVal": 8.14
     },
     {
       "instId": "APR-USDT-SWAP",
-      "open24h": 0.1227,
-      "last": 0.1416,
-      "change24hVal": 15.4
+      "open24h": 0.1236,
+      "last": 0.1419,
+      "change24hVal": 14.81
     },
     {
       "instId": "STX-USDT-SWAP",
-      "open24h": 0.3262,
+      "open24h": 0.328,
       "last": 0.3776,
-      "change24hVal": 15.76
+      "change24hVal": 15.12
     },
     {
       "instId": "MEGA-USDT-SWAP",
-      "open24h": 0.04322,
-      "last": 0.04727,
-      "change24hVal": 9.37
+      "open24h": 0.0433,
+      "last": 0.04742,
+      "change24hVal": 9.52
     },
     {
       "instId": "CT-USDT-SWAP",
-      "open24h": 0.3841,
-      "last": 0.4945,
-      "change24hVal": 28.74
+      "open24h": 0.3731,
+      "last": 0.4999,
+      "change24hVal": 33.99
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.06309,
-      "last": 0.07595,
-      "change24hVal": 20.38
+      "open24h": 0.06312,
+      "last": 0.07644,
+      "change24hVal": 21.1
     },
     {
       "instId": "MOVE-USDT-SWAP",
-      "open24h": 0.009323,
-      "last": 0.009956,
-      "change24hVal": 6.79
+      "open24h": 0.00933,
+      "last": 0.009905,
+      "change24hVal": 6.16
     },
     {
       "instId": "HUMA-USDT-SWAP",
-      "open24h": 0.03052,
-      "last": 0.03286,
-      "change24hVal": 7.67
+      "open24h": 0.03049,
+      "last": 0.0326,
+      "change24hVal": 6.92
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 1,
+  "matchedList": [
+    {
+      "symbol": "NIGHT-USDT-SWAP",
+      "type": "SHORT",
+      "Hbb": "3.06%",
+      "diffema40": "+4.79%",
+      "diffema20": "+0.37%",
+      "bd24h": "+21.99%",
+      "link": "https://www.okx.com/trade-swap/night-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
