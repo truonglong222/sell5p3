@@ -1,122 +1,132 @@
 {
-  "lastScanAt": "2026-10-01T11:50:38.905Z",
+  "lastScanAt": "2026-10-01T11:55:34.804Z",
   "ud4h": "+4",
   "targetCoinsCount": 17,
   "targetCoinsList": [
     {
       "instId": "KITE-USDT-SWAP",
-      "open24h": 0.13964,
-      "last": 0.15272,
-      "change24hVal": 9.37
+      "open24h": 0.14019,
+      "last": 0.1528,
+      "change24hVal": 8.99
     },
     {
       "instId": "RE-USDT-SWAP",
-      "open24h": 0.48787,
-      "last": 0.5156,
-      "change24hVal": 5.68
+      "open24h": 0.48821,
+      "last": 0.51702,
+      "change24hVal": 5.9
     },
     {
       "instId": "PLUME-USDT-SWAP",
-      "open24h": 0.018169,
-      "last": 0.019214,
-      "change24hVal": 5.75
+      "open24h": 0.018204,
+      "last": 0.019217,
+      "change24hVal": 5.56
     },
     {
       "instId": "MON-USDT-SWAP",
-      "open24h": 0.02736,
-      "last": 0.03271,
-      "change24hVal": 19.55
+      "open24h": 0.02735,
+      "last": 0.03265,
+      "change24hVal": 19.38
     },
     {
       "instId": "OPN-USDT-SWAP",
-      "open24h": 0.05456,
-      "last": 0.0626,
-      "change24hVal": 14.74
+      "open24h": 0.0546,
+      "last": 0.06291,
+      "change24hVal": 15.22
     },
     {
       "instId": "FET-USDT-SWAP",
-      "open24h": 0.2215,
-      "last": 0.2376,
-      "change24hVal": 7.27
+      "open24h": 0.2225,
+      "last": 0.2387,
+      "change24hVal": 7.28
     },
     {
       "instId": "ESP-USDT-SWAP",
-      "open24h": 0.10063,
-      "last": 0.10793,
-      "change24hVal": 7.25
+      "open24h": 0.10065,
+      "last": 0.10797,
+      "change24hVal": 7.27
     },
     {
       "instId": "NIGHT-USDT-SWAP",
-      "open24h": 0.037664,
-      "last": 0.043511,
-      "change24hVal": 15.52
+      "open24h": 0.037119,
+      "last": 0.042992,
+      "change24hVal": 15.82
     },
     {
       "instId": "ARX-USDT-SWAP",
-      "open24h": 0.2601,
-      "last": 0.2803,
-      "change24hVal": 7.77
+      "open24h": 0.2588,
+      "last": 0.2804,
+      "change24hVal": 8.35
     },
     {
       "instId": "APR-USDT-SWAP",
-      "open24h": 0.121,
+      "open24h": 0.1207,
       "last": 0.1389,
-      "change24hVal": 14.79
+      "change24hVal": 15.08
     },
     {
       "instId": "STX-USDT-SWAP",
-      "open24h": 0.3198,
-      "last": 0.3813,
-      "change24hVal": 19.23
+      "open24h": 0.3202,
+      "last": 0.3798,
+      "change24hVal": 18.61
     },
     {
       "instId": "MERL-USDT-SWAP",
-      "open24h": 0.02941,
-      "last": 0.03104,
-      "change24hVal": 5.54
+      "open24h": 0.0295,
+      "last": 0.03098,
+      "change24hVal": 5.02
     },
     {
       "instId": "MEGA-USDT-SWAP",
-      "open24h": 0.0428,
-      "last": 0.04643,
-      "change24hVal": 8.48
+      "open24h": 0.04278,
+      "last": 0.04634,
+      "change24hVal": 8.32
     },
     {
       "instId": "CT-USDT-SWAP",
-      "open24h": 0.424,
-      "last": 0.4809,
-      "change24hVal": 13.42
+      "open24h": 0.4139,
+      "last": 0.477,
+      "change24hVal": 15.25
     },
     {
       "instId": "CAP-USDT-SWAP",
-      "open24h": 0.06173,
-      "last": 0.0753,
-      "change24hVal": 21.98
+      "open24h": 0.06236,
+      "last": 0.07344,
+      "change24hVal": 17.77
     },
     {
       "instId": "MOVE-USDT-SWAP",
-      "open24h": 0.009217,
-      "last": 0.009951,
-      "change24hVal": 7.96
+      "open24h": 0.009229,
+      "last": 0.010054,
+      "change24hVal": 8.94
     },
     {
       "instId": "HUMA-USDT-SWAP",
-      "open24h": 0.03001,
-      "last": 0.03345,
-      "change24hVal": 11.46
+      "open24h": 0.03007,
+      "last": 0.03311,
+      "change24hVal": 10.11
     }
   ],
-  "matchedCount": 1,
+  "matchedCount": 2,
   "matchedList": [
+    {
+      "symbol": "NIGHT-USDT-SWAP",
+      "type": "LONG",
+      "Hbb": "3.31%",
+      "diffema40": "+5.52%",
+      "diffema20": "+1.65%",
+      "bd24h": "+15.82%",
+      "link": "https://www.okx.com/trade-swap/night-usdt-swap",
+      "teleSent": true
+    },
     {
       "symbol": "HUMA-USDT-SWAP",
       "type": "LONG",
-      "Hbb": "3.22%",
-      "diffema40": "+4.49%",
-      "diffema20": "+1.46%",
-      "bd24h": "+11.46%",
+      "Hbb": "4.08%",
+      "diffema40": "+4.13%",
+      "diffema20": "+1.04%",
+      "bd24h": "+10.11%",
       "link": "https://www.okx.com/trade-swap/huma-usdt-swap",
-      "teleSent": true
+      "teleSent": false
     }
   ]
 }
