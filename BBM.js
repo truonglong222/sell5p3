@@ -191,13 +191,13 @@ async function main() {
     const marketUDStr = marketUD > 0 ? `+${marketUD}` : `${marketUD}`;
     console.log(`📈 Kết quả ud (4H): ${marketUDStr} (Tăng: ${totalUp4hCoins} | Giảm: ${totalDown4hCoins})\n`);
 
-    // --- LỌC BƯỚC 2: TÍNH diffema40 TRÊN NẾN 15m ---
-    console.log(`⏳ Đang kiểm tra diffema40 (15m) cho ${targetCoins.length} coin...`);
+    // --- LỌC BƯỚC 2: TÍNH diffema20 TRÊN NẾN 15m ---
+    console.log(`⏳ Đang kiểm tra diffema20 (15m) cho ${targetCoins.length} coin...`);
     const coinsPassing15m = [];
 
     for (const coin of targetCoins) {
       const candles15m = await getCandles(coin.instId, '15m', 100);
-      if (!candles15m || candles15m.length < 65) {
+      if (!candles15m || candles15m.length < 45) {
         await sleep(80);
         continue;
       }
@@ -206,24 +206,24 @@ async function main() {
       const closedPrices15m = closed15m.map((c) => parseFloat(c[4]));
       const emaSeries15m = calculateEMAArray(closedPrices15m, 20);
 
-      if (emaSeries15m.length >= 40) {
+      if (emaSeries15m.length >= 20) {
         const ema20_15m_n1 = emaSeries15m[emaSeries15m.length - 1];
-        const ema20_15m_n40 = emaSeries15m[emaSeries15m.length - 40];
+        const ema20_15m_n20 = emaSeries15m[emaSeries15m.length - 20];
 
-        if (ema20_15m_n40 > 0) {
-          const diffema40_15m = ((ema20_15m_n1 - ema20_15m_n40) / ema20_15m_n40) * 100;
+        if (ema20_15m_n20 > 0) {
+          const diffema20_15m = ((ema20_15m_n1 - ema20_15m_n20) / ema20_15m_n20) * 100;
 
-          if (coin.change24hVal > 2 && diffema40_15m > 3) {
+          if (coin.change24hVal > 2 && diffema20_15m > 3) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'LONG',
-              diffema40_15m
+              diffema20_15m
             });
-          } else if (coin.change24hVal > 2 && diffema40_15m < -3) {
+          } else if (coin.change24hVal > 2 && diffema20_15m < -1) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'SHORT',
-              diffema40_15m
+              diffema20_15m
             });
           }
         }
@@ -231,7 +231,7 @@ async function main() {
       await sleep(80);
     }
 
-    console.log(`🔍 Số coin thỏa diffema40 (15m): ${coinsPassing15m.length} coin\n`);
+    console.log(`🔍 Số coin thỏa diffema20 (15m): ${coinsPassing15m.length} coin\n`);
 
     const scanResults = {
       ud4h: marketUDStr,
@@ -316,18 +316,18 @@ async function main() {
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
-      const diffema40_15mStr = `${coin.diffema40_15m > 0 ? '+' : ''}${coin.diffema40_15m.toFixed(2)}%`;
+      const diffema20_15mStr = `${coin.diffema20_15m > 0 ? '+' : ''}${coin.diffema20_15m.toFixed(2)}%`;
 
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // --- GỬI TELEGRAM (RÚT GỌN VÀ SẮP XẾP LẠI THỨ TỰ) ---
+      // --- GỬI TELEGRAM ---
       const icon = isLong ? '🟢' : '🔴';
 
       const message =
         `${icon} <b>${signalType}: ${coinName}</b>\n` +
         `• <b>Hbb (5m):</b> ${hbbStr}\n` +
-        `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n` +
+        `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
         `• <b>ud (4H):</b> ${marketUDStr}\n` +
         `• <b>bd24h:</b> ${change24hStr} (${targetCoins.length} coin)\n` +
         `• <a href="${link}">Link OKX</a>`;
@@ -356,7 +356,7 @@ async function main() {
           symbol,
           type: signalType,
           hbb5m: hbbStr,
-          diffema40_15m: diffema40_15mStr,
+          diffema20_15m: diffema20_15mStr,
           ud4h: marketUDStr,
           bd24h: change24hStr,
           link,
@@ -385,7 +385,7 @@ async function main() {
       console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(5m): ${item.hbb5m} | diffema40(15m): ${item.diffema40_15m} | bd24h: ${item.bd24h}`
+          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(5m): ${item.hbb5m} | diffema20(15m): ${item.diffema20_15m} | bd24h: ${item.bd24h}`
         );
       });
       console.log('');
