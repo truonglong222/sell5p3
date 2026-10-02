@@ -115,7 +115,7 @@ async function getFilteredMarkets() {
       if (open24h <= 0) continue;
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
-      
+
       if (change24hVal > 2) {
         filteredCoins.push({
           instId: item.instId,
@@ -242,7 +242,7 @@ async function main() {
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
-    // --- LỌC BƯỚC 3: KIỂM TRA NẾN 5m VÀ TÍNH NẾN 1H ---
+    // --- LỌC BƯỚC 3: KIỂM TRA ĐIỀU KIỆN VÀ TÍNH Hbb KHUNG 5M ---
     for (const coin of coinsPassing15m) {
       const symbol = coin.instId;
       const candles5m = await getCandles(symbol, '5m', 100);
@@ -297,60 +297,43 @@ async function main() {
         continue;
       }
 
-      // --- TÍNH TOÁN DỮ LIỆU NẾN 1H ---
-      const candles1h = await getCandles(symbol, '1H', 30);
+      // --- TÍNH TOÁN Hbb TRÊN KHUNG 5M ---
       let hbbStr = 'N/A';
-      let halfHbbStr = 'N/A';
+      const closed5m = candles5m[1];
+      const high5m = parseFloat(closed5m[2]);
+      const low5m = parseFloat(closed5m[3]);
 
-      if (candles1h && candles1h.length >= 22) {
-        const closed1h = candles1h[1];
-        const high1h = parseFloat(closed1h[2]);
-        const low1h = parseFloat(closed1h[3]);
+      const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const bb5m = calculateBollingerBands(closesBB5m, 20);
 
-        const closesBB1h = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-        const bb1h = calculateBollingerBands(closesBB1h, 20);
+      if (bb5m && bb5m.lower > 0 && bb5m.upper > 0) {
+        const bbt5m = ((high5m - bb5m.upper) / bb5m.upper) * 100;
+        const bbd5m = ((low5m - bb5m.lower) / bb5m.lower) * 100;
+        const hbbVal = bbt5m - bbd5m;
 
-        if (bb1h && bb1h.lower > 0 && bb1h.upper > 0) {
-          const bbt1h = ((high1h - bb1h.upper) / bb1h.upper) * 100;
-          const bbd1h = ((low1h - bb1h.lower) / bb1h.lower) * 100;
-          const hbbVal = bbt1h - bbd1h;
-          const halfHbbVal = 0.5 * hbbVal;
-
-          hbbStr = `${hbbVal > 0 ? '+' : ''}${hbbVal.toFixed(2)}%`;
-          halfHbbStr = `${halfHbbVal > 0 ? '+' : ''}${halfHbbVal.toFixed(2)}%`;
-        }
+        hbbStr = `${hbbVal > 0 ? '+' : ''}${hbbVal.toFixed(2)}%`;
       }
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
       const diffema40_15mStr = `${coin.diffema40_15m > 0 ? '+' : ''}${coin.diffema40_15m.toFixed(2)}%`;
 
-      // Đã mã hóa các ký tự HTML (< -> &lt;, > -> &gt;) tránh lỗi 400
-      const bandMetricTele = isLong 
-        ? `bbd: ${bbd.toFixed(4)} (&lt; 0)` 
-        : `bbt: +${bbt.toFixed(4)} (&gt; 0)`;
-
-      const bandMetricLog = isLong 
-        ? `bbd: ${bbd.toFixed(4)} (< 0)` 
-        : `bbt: +${bbt.toFixed(4)} (> 0)`;
-
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // --- GỬI TELEGRAM ---
+      // --- GỬI TELEGRAM (RÚT GỌN VÀ SẮP XẾP LẠI THỨ TỰ) ---
       const icon = isLong ? '🟢' : '🔴';
 
       const message =
-        `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
+        `${icon} <b>${signalType}: ${coinName}</b>\n` +
+        `• <b>Hbb (5m):</b> ${hbbStr}\n` +
         `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n` +
-        `• <b>Hbb (1H):</b> ${hbbStr} | <b>0.5hbb:</b> ${halfHbbStr}\n` +
         `• <b>ud (4H):</b> ${marketUDStr}\n` +
-        `• <b>bd24h:</b> ${change24hStr} (${targetCoins.length} coin thỏa > +2%)\n` +
-        `• <b>Trạng thái 5m:</b> ${bandMetricTele}\n` +
+        `• <b>bd24h:</b> ${change24hStr} (${targetCoins.length} coin)\n` +
         `• <a href="${link}">Link OKX</a>`;
 
       console.log(`🚀 [${signalType}] Gửi Telegram tín hiệu cho ${symbol}...`);
-      
+
       let isSentSuccess = false;
       try {
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -372,10 +355,9 @@ async function main() {
         scanResults.matched.push({
           symbol,
           type: signalType,
+          hbb5m: hbbStr,
           diffema40_15m: diffema40_15mStr,
-          hbb1h: hbbStr,
-          halfHbb1h: halfHbbStr,
-          bandMetric: bandMetricLog,
+          ud4h: marketUDStr,
           bd24h: change24hStr,
           link,
           teleSent: true
@@ -403,7 +385,7 @@ async function main() {
       console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | diffema40(15m): ${item.diffema40_15m} | Hbb(1h): ${item.hbb1h} (0.5hbb: ${item.halfHbb1h}) | bd24h: ${item.bd24h}`
+          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(5m): ${item.hbb5m} | diffema40(15m): ${item.diffema40_15m} | bd24h: ${item.bd24h}`
         );
       });
       console.log('');
