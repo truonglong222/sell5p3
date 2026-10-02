@@ -97,7 +97,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & |bd24h| > 5%) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & bd24h > +2%) -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -116,8 +116,8 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
       
-      // Lọc bd24h > 5% HOẶC bd24h < -5%
-      if (change24hVal > 5 || change24hVal < -5) {
+      // Chỉ lấy coin có bd24h > +2% cho cả Long và Short
+      if (change24hVal > 2) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -164,7 +164,7 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa |bd24h| > 5%: ${targetCoins.length} coin`
+      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa bd24h > +2%: ${targetCoins.length} coin`
     );
 
     // --- TÍNH CHỈ SỐ UD TOÀN TẬP COIN ĐÃ LỌC ---
@@ -214,14 +214,14 @@ async function main() {
         if (ema20_15m_n40 > 0) {
           const diffema40_15m = ((ema20_15m_n1 - ema20_15m_n40) / ema20_15m_n40) * 100;
 
-          // Tiêu chí: bd24 > 3% & diffema40_15m > 2% HOẶC bd24 < -3% & diffema40_15m < -2%
-          if (coin.change24hVal > 3 && diffema40_15m > 2) {
+          // Cả LONG và SHORT đều yêu cầu bd24h > 2%
+          if (coin.change24hVal > 2 && diffema40_15m > 2) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'LONG',
               diffema40_15m
             });
-          } else if (coin.change24hVal < -3 && diffema40_15m < -2) {
+          } else if (coin.change24hVal > 2 && diffema40_15m < -2) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'SHORT',
