@@ -214,14 +214,14 @@ async function main() {
         if (ema20_15m_n40 > 0) {
           const diffema40_15m = ((ema20_15m_n1 - ema20_15m_n40) / ema20_15m_n40) * 100;
 
-          // Cả LONG và SHORT đều yêu cầu bd24h > 2%
-          if (coin.change24hVal > 2 && diffema40_15m > 2) {
+          // Cập nhật điều kiện diffema40_15m: LONG > +3%, SHORT < -3%
+          if (coin.change24hVal > 2 && diffema40_15m > 3) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'LONG',
               diffema40_15m
             });
-          } else if (coin.change24hVal > 2 && diffema40_15m < -2) {
+          } else if (coin.change24hVal > 2 && diffema40_15m < -3) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'SHORT',
@@ -244,7 +244,7 @@ async function main() {
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
-    // --- LỌC BƯỚC 3: KIỂM TRA NẾN 5m ---
+    // --- LỌC BƯỚC 3: KIỂM TRA NẾN 5m VÀ TÍNH NẾN 1H KHI THỎA ĐIỀU KIỆN ---
     for (const coin of coinsPassing15m) {
       const symbol = coin.instId;
       const candles5m = await getCandles(symbol, '5m', 100);
@@ -265,7 +265,7 @@ async function main() {
       const high2 = parseFloat(candle2[2]);
       const low2 = parseFloat(candle2[3]);
 
-      // Tính Bollinger Bands nến số 2
+      // Tính Bollinger Bands nến số 2 khung 5m
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb2 = calculateBollingerBands(closesBB2, 20);
 
@@ -291,63 +291,92 @@ async function main() {
         continue;
       }
 
-      const signalType = isLong ? 'LONG' : 'SHORT';
-      const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
-      const diffema40_15mStr = `${coin.diffema40_15m > 0 ? '+' : ''}${coin.diffema40_15m.toFixed(2)}%`;
-      const bandMetricStr = isLong ? `bbd: ${bbd.toFixed(4)} (< 0)` : `bbt: +${bbt.toFixed(4)} (> 0)`;
-
-      if (isLong) countMatchedLong++;
-      if (isShort) countMatchedShort++;
-
-      const coinName = symbol.replace('-USDT-SWAP', '');
-      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
-
+      // --- KIỂM TRA COOLDOWN TELEGRAM ---
       if (!sentLog[symbol]) sentLog[symbol] = {};
       const alertKey = isLong ? 'longAlert' : 'shortAlert';
       const lastSentTime = sentLog[symbol][alertKey];
       const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
 
+      // Nếu đang trong thời gian Cooldown thì bỏ qua, không tính vào danh sách khớp tín hiệu mới
+      if (isCooldown) {
+        await sleep(80);
+        continue;
+      }
+
+      // --- TÍNH TOÁN DỮ LIỆU NẾN 1H KHI ĐÃ THỎA ĐIỀU KIỆN & KHÔNG COOLDOWN ---
+      const candles1h = await getCandles(symbol, '1H', 30);
+      let hbbStr = 'N/A';
+      let halfHbbStr = 'N/A';
+
+      if (candles1h && candles1h.length >= 22) {
+        const closed1h = candles1h[1]; // Nến 1H vừa đóng
+        const high1h = parseFloat(closed1h[2]);
+        const low1h = parseFloat(closed1h[3]);
+
+        const closesBB1h = candles1h.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+        const bb1h = calculateBollingerBands(closesBB1h, 20);
+
+        if (bb1h && bb1h.lower > 0 && bb1h.upper > 0) {
+          const bbt1h = ((high1h - bb1h.upper) / bb1h.upper) * 100;
+          const bbd1h = ((low1h - bb1h.lower) / bb1h.lower) * 100;
+          const hbbVal = bbt1h - bbd1h;
+          const halfHbbVal = 0.5 * hbbVal;
+
+          hbbStr = `${hbbVal > 0 ? '+' : ''}${hbbVal.toFixed(2)}%`;
+          halfHbbStr = `${halfHbbVal > 0 ? '+' : ''}${halfHbbVal.toFixed(2)}%`;
+        }
+      }
+
+      // Tăng biến đếm tín hiệu gửi thực tế
+      if (isLong) countMatchedLong++;
+      if (isShort) countMatchedShort++;
+
+      const signalType = isLong ? 'LONG' : 'SHORT';
+      const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
+      const diffema40_15mStr = `${coin.diffema40_15m > 0 ? '+' : ''}${coin.diffema40_15m.toFixed(2)}%`;
+      const bandMetricStr = isLong ? `bbd: ${bbd.toFixed(4)} (< 0)` : `bbt: +${bbt.toFixed(4)} (> 0)`;
+
+      const coinName = symbol.replace('-USDT-SWAP', '');
+      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
       const matchedItem = {
         symbol,
         type: signalType,
         diffema40_15m: diffema40_15mStr,
+        hbb1h: hbbStr,
+        halfHbb1h: halfHbbStr,
         bandMetric: bandMetricStr,
         bd24h: change24hStr,
         link,
-        teleSent: !isCooldown
+        teleSent: true
       };
 
       scanResults.matched.push(matchedItem);
 
-      // --- CHỈ GỬI TELEGRAM KHI CÓ COIN THỎA ĐIỀU KIỆN LONG/SHORT ---
-      if (!isCooldown) {
-        const icon = isLong ? '🟢' : '🔴';
-        const candle1Desc = isLong ? 'Nến 1: TĂNG' : 'Nến 1: GIẢM';
+      // --- GỬI TELEGRAM THEO THỨ TỰ THÔNG TIN MỚI ---
+      const icon = isLong ? '🟢' : '🔴';
 
-        // Đã ghép dòng "Số coin bd24h > +2%" chung vào tin nhắn tín hiệu
-        const message =
-          `<b>ud (4H): ${marketUDStr}</b>\n` +
-          `📊 <b>Coin bd24h > +2%: ${targetCoins.length} coin</b>\n` +
-          `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
-          `• <b>bd24h:</b> ${change24hStr}\n` +
-          `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n` +
-          `• <b>${bandMetricStr}</b>\n` +
-          `• <b>Trạng thái:</b> ${candle1Desc}\n` +
-          `• <a href="${link}">Link OKX</a>`;
+      const message =
+        `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
+        `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n` +
+        `• <b>Hbb (1H):</b> ${hbbStr} | <b>0.5hbb:</b> ${halfHbbStr}\n` +
+        `• <b>ud (4H):</b> ${marketUDStr}\n` +
+        `• <b>bd24h:</b> ${change24hStr} (${targetCoins.length} coin thỏa > +2%)\n` +
+        `• <b>Trạng thái 5m:</b> ${bandMetricStr}\n` +
+        `• <a href="${link}">Link OKX</a>`;
 
-        console.log(`🚀 [${signalType}] Gửi Telegram tín hiệu cho ${symbol}...`);
-        await axios
-          .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: 'HTML',
-            disable_web_page_preview: true
-          })
-          .catch((err) => console.error('Lỗi gửi Telegram tín hiệu:', err.message));
+      console.log(`🚀 [${signalType}] Gửi Telegram tín hiệu cho ${symbol}...`);
+      await axios
+        .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true
+        })
+        .catch((err) => console.error('Lỗi gửi Telegram tín hiệu:', err.message));
 
-        sentLog[symbol][alertKey] = currentTime;
-        hasNewAlert = true;
-      }
+      sentLog[symbol][alertKey] = currentTime;
+      hasNewAlert = true;
 
       await sleep(80);
     }
@@ -359,21 +388,20 @@ async function main() {
     console.log('\n================ THỐNG KÊ CHI TIẾT ================');
     console.log(`• Chỉ số ud (4H): ${marketUDStr}`);
     console.log(`• Số coin bd24h > +2%: ${targetCoins.length} coin`);
-    console.log(`• Khớp tín hiệu LONG: ${countMatchedLong} coin`);
-    console.log(`• Khớp tín hiệu SHORT: ${countMatchedShort} coin`);
+    console.log(`• Tín hiệu LONG đã gửi: ${countMatchedLong} coin`);
+    console.log(`• Tín hiệu SHORT đã gửi: ${countMatchedShort} coin`);
     console.log('===================================================\n');
 
     if (scanResults.matched.length > 0) {
-      console.log('--- DANH SÁCH COIN KHỚP TÍN HIỆU ---');
+      console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
-        const status = item.teleSent ? 'Đã gửi Tele' : 'Đang Cooldown';
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | bd24h: ${item.bd24h} | diffema40(15m): ${item.diffema40_15m} | ${item.bandMetric} | ${status}`
+          `${index + 1}. [${item.type}] ${item.symbol} | diffema40(15m): ${item.diffema40_15m} | Hbb(1h): ${item.hbb1h} (0.5hbb: ${item.halfHbb1h}) | bd24h: ${item.bd24h}`
         );
       });
       console.log('');
     } else {
-      console.log('❌ Không có coin nào thỏa mãn tất cả tiêu chí.\n');
+      console.log('❌ Không có coin nào thỏa mãn điều kiện gửi tín hiệu mới.\n');
     }
 
     console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
