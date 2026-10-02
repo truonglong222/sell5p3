@@ -51,7 +51,8 @@
     "longAlert": 1790950829983
   },
   "GALA-USDT-SWAP": {
-    "longAlert": 1790951125487
+    "longAlert": 1790951125487,
+    "shortAlert": 1790982625034
   },
   "BRETT-USDT-SWAP": {
     "longAlert": 1790951125487
@@ -176,5 +177,11 @@
   },
   "AKE-USDT-SWAP": {
     "longAlert": 1790965520080
+  },
+  "ACH-USDT-SWAP": {
+    "shortAlert": 1790982625034
+  },
+  "LAB-USDT-SWAP": {
+    "shortAlert": 1790982625034
   }
 }
