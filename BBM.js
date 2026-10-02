@@ -116,7 +116,6 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
       
-      // Chỉ lấy coin có bd24h > +2% cho cả Long và Short
       if (change24hVal > 2) {
         filteredCoins.push({
           instId: item.instId,
@@ -214,7 +213,6 @@ async function main() {
         if (ema20_15m_n40 > 0) {
           const diffema40_15m = ((ema20_15m_n1 - ema20_15m_n40) / ema20_15m_n40) * 100;
 
-          // Cập nhật điều kiện diffema40_15m: LONG > +3%, SHORT < -3%
           if (coin.change24hVal > 2 && diffema40_15m > 3) {
             coinsPassing15m.push({
               ...coin,
@@ -244,7 +242,7 @@ async function main() {
     let countMatchedLong = 0;
     let countMatchedShort = 0;
 
-    // --- LỌC BƯỚC 3: KIỂM TRA NẾN 5m VÀ TÍNH NẾN 1H KHI THỎA ĐIỀU KIỆN ---
+    // --- LỌC BƯỚC 3: KIỂM TRA NẾN 5m VÀ TÍNH NẾN 1H ---
     for (const coin of coinsPassing15m) {
       const symbol = coin.instId;
       const candles5m = await getCandles(symbol, '5m', 100);
@@ -253,19 +251,16 @@ async function main() {
         continue;
       }
 
-      // Nến số 1: nến vừa đóng (index 1)
       const candle1 = candles5m[1];
       const open1 = parseFloat(candle1[1]);
       const close1 = parseFloat(candle1[4]);
       const isCandle1Bullish = close1 > open1;
       const isCandle1Bearish = close1 < open1;
 
-      // Nến số 2: nến trước đó (index 2)
       const candle2 = candles5m[2];
       const high2 = parseFloat(candle2[2]);
       const low2 = parseFloat(candle2[3]);
 
-      // Tính Bollinger Bands nến số 2 khung 5m
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb2 = calculateBollingerBands(closesBB2, 20);
 
@@ -291,25 +286,24 @@ async function main() {
         continue;
       }
 
-      // --- KIỂM TRA COOLDOWN TELEGRAM ---
+      // Kiểm tra Cooldown
       if (!sentLog[symbol]) sentLog[symbol] = {};
       const alertKey = isLong ? 'longAlert' : 'shortAlert';
       const lastSentTime = sentLog[symbol][alertKey];
       const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
 
-      // Nếu đang trong thời gian Cooldown thì bỏ qua, không tính vào danh sách khớp tín hiệu mới
       if (isCooldown) {
         await sleep(80);
         continue;
       }
 
-      // --- TÍNH TOÁN DỮ LIỆU NẾN 1H KHI ĐÃ THỎA ĐIỀU KIỆN & KHÔNG COOLDOWN ---
+      // --- TÍNH TOÁN DỮ LIỆU NẾN 1H ---
       const candles1h = await getCandles(symbol, '1H', 30);
       let hbbStr = 'N/A';
       let halfHbbStr = 'N/A';
 
       if (candles1h && candles1h.length >= 22) {
-        const closed1h = candles1h[1]; // Nến 1H vừa đóng
+        const closed1h = candles1h[1];
         const high1h = parseFloat(closed1h[2]);
         const low1h = parseFloat(closed1h[3]);
 
@@ -327,33 +321,23 @@ async function main() {
         }
       }
 
-      // Tăng biến đếm tín hiệu gửi thực tế
-      if (isLong) countMatchedLong++;
-      if (isShort) countMatchedShort++;
-
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
       const diffema40_15mStr = `${coin.diffema40_15m > 0 ? '+' : ''}${coin.diffema40_15m.toFixed(2)}%`;
-      const bandMetricStr = isLong ? `bbd: ${bbd.toFixed(4)} (< 0)` : `bbt: +${bbt.toFixed(4)} (> 0)`;
+
+      // Đã mã hóa các ký tự HTML (< -> &lt;, > -> &gt;) tránh lỗi 400
+      const bandMetricTele = isLong 
+        ? `bbd: ${bbd.toFixed(4)} (&lt; 0)` 
+        : `bbt: +${bbt.toFixed(4)} (&gt; 0)`;
+
+      const bandMetricLog = isLong 
+        ? `bbd: ${bbd.toFixed(4)} (< 0)` 
+        : `bbt: +${bbt.toFixed(4)} (> 0)`;
 
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      const matchedItem = {
-        symbol,
-        type: signalType,
-        diffema40_15m: diffema40_15mStr,
-        hbb1h: hbbStr,
-        halfHbb1h: halfHbbStr,
-        bandMetric: bandMetricStr,
-        bd24h: change24hStr,
-        link,
-        teleSent: true
-      };
-
-      scanResults.matched.push(matchedItem);
-
-      // --- GỬI TELEGRAM THEO THỨ TỰ THÔNG TIN MỚI ---
+      // --- GỬI TELEGRAM ---
       const icon = isLong ? '🟢' : '🔴';
 
       const message =
@@ -362,21 +346,44 @@ async function main() {
         `• <b>Hbb (1H):</b> ${hbbStr} | <b>0.5hbb:</b> ${halfHbbStr}\n` +
         `• <b>ud (4H):</b> ${marketUDStr}\n` +
         `• <b>bd24h:</b> ${change24hStr} (${targetCoins.length} coin thỏa > +2%)\n` +
-        `• <b>Trạng thái 5m:</b> ${bandMetricStr}\n` +
+        `• <b>Trạng thái 5m:</b> ${bandMetricTele}\n` +
         `• <a href="${link}">Link OKX</a>`;
 
       console.log(`🚀 [${signalType}] Gửi Telegram tín hiệu cho ${symbol}...`);
-      await axios
-        .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      
+      let isSentSuccess = false;
+      try {
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
           chat_id: TELEGRAM_CHAT_ID,
           text: message,
           parse_mode: 'HTML',
           disable_web_page_preview: true
-        })
-        .catch((err) => console.error('Lỗi gửi Telegram tín hiệu:', err.message));
+        });
+        isSentSuccess = true;
+      } catch (err) {
+        console.error('Lỗi gửi Telegram tín hiệu:', err.message);
+      }
 
-      sentLog[symbol][alertKey] = currentTime;
-      hasNewAlert = true;
+      // Chỉ khi gửi thành công mới đếm vào kết quả
+      if (isSentSuccess) {
+        if (isLong) countMatchedLong++;
+        if (isShort) countMatchedShort++;
+
+        scanResults.matched.push({
+          symbol,
+          type: signalType,
+          diffema40_15m: diffema40_15mStr,
+          hbb1h: hbbStr,
+          halfHbb1h: halfHbbStr,
+          bandMetric: bandMetricLog,
+          bd24h: change24hStr,
+          link,
+          teleSent: true
+        });
+
+        sentLog[symbol][alertKey] = currentTime;
+        hasNewAlert = true;
+      }
 
       await sleep(80);
     }
@@ -401,7 +408,7 @@ async function main() {
       });
       console.log('');
     } else {
-      console.log('❌ Không có coin nào thỏa mãn điều kiện gửi tín hiệu mới.\n');
+      console.log('❌ Không có coin nào thỏa mãn gửi tín hiệu mới.\n');
     }
 
     console.log(`📁 File kết quả đã lưu: ${RESULTS_FILE}`);
