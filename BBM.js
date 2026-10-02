@@ -265,7 +265,7 @@ async function main() {
       const high2 = parseFloat(candle2[2]);
       const low2 = parseFloat(candle2[3]);
 
-      // Tính Bollinger Bands nến số 2: lấy 20 nến từ nến số 2 trở về trước (index 2 đến 21)
+      // Tính Bollinger Bands nến số 2
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb2 = calculateBollingerBands(closesBB2, 20);
 
@@ -274,8 +274,6 @@ async function main() {
         continue;
       }
 
-      // bbd = low nến 2 - BB lower nến 2
-      // bbt = high nến 2 - BB upper nến 2
       const bbd = low2 - bb2.lower;
       const bbt = high2 - bb2.upper;
 
@@ -321,12 +319,15 @@ async function main() {
 
       scanResults.matched.push(matchedItem);
 
+      // --- CHỈ GỬI TELEGRAM KHI CÓ COIN THỎA ĐIỀU KIỆN LONG/SHORT ---
       if (!isCooldown) {
         const icon = isLong ? '🟢' : '🔴';
         const candle1Desc = isLong ? 'Nến 1: TĂNG' : 'Nến 1: GIẢM';
 
+        // Đã ghép dòng "Số coin bd24h > +2%" chung vào tin nhắn tín hiệu
         const message =
           `<b>ud (4H): ${marketUDStr}</b>\n` +
+          `📊 <b>Coin bd24h > +2%: ${targetCoins.length} coin</b>\n` +
           `${icon} <b>TÍN HIỆU ${signalType}: ${coinName}</b>\n` +
           `• <b>bd24h:</b> ${change24hStr}\n` +
           `• <b>diffema40 (15m):</b> ${diffema40_15mStr}\n` +
@@ -334,7 +335,7 @@ async function main() {
           `• <b>Trạng thái:</b> ${candle1Desc}\n` +
           `• <a href="${link}">Link OKX</a>`;
 
-        console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
+        console.log(`🚀 [${signalType}] Gửi Telegram tín hiệu cho ${symbol}...`);
         await axios
           .post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
@@ -342,7 +343,7 @@ async function main() {
             parse_mode: 'HTML',
             disable_web_page_preview: true
           })
-          .catch((err) => console.error('Lỗi gửi Telegram:', err.message));
+          .catch((err) => console.error('Lỗi gửi Telegram tín hiệu:', err.message));
 
         sentLog[symbol][alertKey] = currentTime;
         hasNewAlert = true;
@@ -357,6 +358,7 @@ async function main() {
     // --- LOG KẾT QUẢ ---
     console.log('\n================ THỐNG KÊ CHI TIẾT ================');
     console.log(`• Chỉ số ud (4H): ${marketUDStr}`);
+    console.log(`• Số coin bd24h > +2%: ${targetCoins.length} coin`);
     console.log(`• Khớp tín hiệu LONG: ${countMatchedLong} coin`);
     console.log(`• Khớp tín hiệu SHORT: ${countMatchedShort} coin`);
     console.log('===================================================\n');
