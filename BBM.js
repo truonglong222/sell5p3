@@ -214,14 +214,14 @@ async function main() {
         if (ema20_15m_n40 > 0) {
           const diffema40_15m = ((ema20_15m_n1 - ema20_15m_n40) / ema20_15m_n40) * 100;
 
-          // Tiêu chí: bd24 > 5% & diffema40_15m > 3% HOẶC bd24 < -5% & diffema40_15m < -3%
-          if (coin.change24hVal > 5 && diffema40_15m > 3) {
+          // Tiêu chí: bd24 > 3% & diffema40_15m > 2% HOẶC bd24 < -3% & diffema40_15m < -2%
+          if (coin.change24hVal > 3 && diffema40_15m > 2) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'LONG',
               diffema40_15m
             });
-          } else if (coin.change24hVal < -5 && diffema40_15m < -3) {
+          } else if (coin.change24hVal < -3 && diffema40_15m < -2) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'SHORT',
