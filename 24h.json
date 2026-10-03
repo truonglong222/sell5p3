@@ -1,69 +1,90 @@
 {
-  "lastScanAt": "2026-10-03T13:20:33.203Z",
+  "lastScanAt": "2026-10-03T13:25:28.813Z",
   "ud4h": "+4",
   "targetCoinsCount": 10,
   "targetCoinsList": [
     {
       "instId": "RAY-USDT-SWAP",
-      "open24h": 1.9588,
-      "last": 2.0657,
-      "change24hVal": 5.46
+      "open24h": 1.9559,
+      "last": 2.0643,
+      "change24hVal": 5.54
     },
     {
       "instId": "ATH-USDT-SWAP",
-      "open24h": 0.006382,
-      "last": 0.007195,
-      "change24hVal": 12.74
+      "open24h": 0.006369,
+      "last": 0.007203,
+      "change24hVal": 13.09
     },
     {
       "instId": "SENT-USDT-SWAP",
-      "open24h": 0.02127,
-      "last": 0.02216,
-      "change24hVal": 4.18
+      "open24h": 0.02122,
+      "last": 0.02223,
+      "change24hVal": 4.76
     },
     {
       "instId": "WLD-USDT-SWAP",
-      "open24h": 0.572,
-      "last": 0.6074,
-      "change24hVal": 6.19
+      "open24h": 0.5717,
+      "last": 0.6047,
+      "change24hVal": 5.77
     },
     {
       "instId": "XDP-USDT-SWAP",
-      "open24h": 0.01953,
-      "last": 0.02071,
-      "change24hVal": 6.04
+      "open24h": 0.0195,
+      "last": 0.02065,
+      "change24hVal": 5.9
     },
     {
       "instId": "GRASS-USDT-SWAP",
-      "open24h": 0.7104,
-      "last": 0.7415,
-      "change24hVal": 4.38
+      "open24h": 0.7096,
+      "last": 0.7487,
+      "change24hVal": 5.51
     },
     {
       "instId": "ONE-USDT-SWAP",
-      "open24h": 0.0019929,
-      "last": 0.0020782,
-      "change24hVal": 4.28
+      "open24h": 0.0019912,
+      "last": 0.0020841,
+      "change24hVal": 4.67
     },
     {
       "instId": "SAND-USDT-SWAP",
-      "open24h": 0.06725,
-      "last": 0.07485,
-      "change24hVal": 11.3
+      "open24h": 0.06769,
+      "last": 0.07449,
+      "change24hVal": 10.05
     },
     {
       "instId": "ZRO-USDT-SWAP",
-      "open24h": 1.8998,
-      "last": 2.049,
-      "change24hVal": 7.85
+      "open24h": 1.9094,
+      "last": 2.0545,
+      "change24hVal": 7.6
     },
     {
       "instId": "INIT-USDT-SWAP",
-      "open24h": 0.10083,
-      "last": 0.10917,
-      "change24hVal": 8.27
+      "open24h": 0.10079,
+      "last": 0.1088,
+      "change24hVal": 7.95
     }
   ],
-  "matchedCount": 0,
-  "matchedList": []
+  "matchedCount": 2,
+  "matchedList": [
+    {
+      "symbol": "SAND-USDT-SWAP",
+      "type": "SHORT",
+      "hbb5m": "-3.18%",
+      "diffema20_15m": "-3.08%",
+      "ud4h": "+4",
+      "bd24h": "+10.05%",
+      "link": "https://www.okx.com/trade-swap/sand-usdt-swap",
+      "teleSent": true
+    },
+    {
+      "symbol": "INIT-USDT-SWAP",
+      "type": "SHORT",
+      "hbb5m": "-0.78%",
+      "diffema20_15m": "-1.56%",
+      "ud4h": "+4",
+      "bd24h": "+7.95%",
+      "link": "https://www.okx.com/trade-swap/init-usdt-swap",
+      "teleSent": true
+    }
+  ]
 }
