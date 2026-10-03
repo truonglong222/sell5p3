@@ -97,7 +97,7 @@ function calculateEMAArray(prices, period = 20) {
   return emaArray;
 }
 
-// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & bd24h > +2%) -------------------
+// ------------------- LỌC THỊ TRƯỜNG (VOL > 5M & bd24h > +4%) -------------------
 
 async function getFilteredMarkets() {
   try {
@@ -116,7 +116,8 @@ async function getFilteredMarkets() {
 
       const change24hVal = ((lastPrice - open24h) / open24h) * 100;
 
-      if (change24hVal > 2) {
+      // Lọc bd24h > +4%
+      if (change24hVal > 4) {
         filteredCoins.push({
           instId: item.instId,
           open24h,
@@ -163,7 +164,7 @@ async function main() {
 
     const { allSwapsCount, volPassedCount, filteredCoins: targetCoins } = await getFilteredMarkets();
     console.log(
-      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa bd24h > +2%: ${targetCoins.length} coin`
+      `📊 Tổng USDT Swap: ${allSwapsCount} | Vol > 5M: ${volPassedCount} | Thỏa bd24h > +4%: ${targetCoins.length} coin`
     );
 
     // --- TÍNH CHỈ SỐ UD TOÀN TẬP COIN ĐÃ LỌC ---
@@ -213,13 +214,15 @@ async function main() {
         if (ema20_15m_n20 > 0) {
           const diffema20_15m = ((ema20_15m_n1 - ema20_15m_n20) / ema20_15m_n20) * 100;
 
-          if (coin.change24hVal > 2 && diffema20_15m > 3) {
+          // Điều kiện LONG: bd24h > 4% và diffema20_15m > 3%
+          if (coin.change24hVal > 4 && diffema20_15m > 3) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'LONG',
               diffema20_15m
             });
-          } else if (coin.change24hVal > 2 && diffema20_15m < -1) {
+          // Điều kiện SHORT: bd24h > 4% và diffema20_15m < -1%
+          } else if (coin.change24hVal > 4 && diffema20_15m < -1) {
             coinsPassing15m.push({
               ...coin,
               expectedSignal: 'SHORT',
@@ -376,7 +379,7 @@ async function main() {
     // --- LOG KẾT QUẢ ---
     console.log('\n================ THỐNG KÊ CHI TIẾT ================');
     console.log(`• Chỉ số ud (4H): ${marketUDStr}`);
-    console.log(`• Số coin bd24h > +2%: ${targetCoins.length} coin`);
+    console.log(`• Số coin bd24h > +4%: ${targetCoins.length} coin`);
     console.log(`• Tín hiệu LONG đã gửi: ${countMatchedLong} coin`);
     console.log(`• Tín hiệu SHORT đã gửi: ${countMatchedShort} coin`);
     console.log('===================================================\n');
