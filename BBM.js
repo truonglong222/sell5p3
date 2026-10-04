@@ -153,7 +153,7 @@ async function getCandles(symbol, bar = '15m', limit = 100) {
 
 async function main() {
   try {
-    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX (KHUNG 15M) ---');
+    console.log('--- BẮT ĐẦU QUÉT THỊ TRƯỜNG OKX ---');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -189,8 +189,8 @@ async function main() {
     const marketUDStr = marketUD > 0 ? `+${marketUD}` : `${marketUD}`;
     console.log(`📈 Kết quả ud (4H): ${marketUDStr} (Tăng: ${totalUp4hCoins} | Giảm: ${totalDown4hCoins})\n`);
 
-    // --- QUÉT DỮ LIỆU NẾN 15M VÀ KIỂM TRA TÍN HIỆU ---
-    console.log(`⏳ Đang kiểm tra điều kiện tín hiệu (15m) cho ${targetCoins.length} coin...`);
+    // --- QUÉT DỮ LIỆU NẾN VÀ KIỂM TRA TÍN HIỆU ---
+    console.log(`⏳ Đang kiểm tra điều kiện tín hiệu cho ${targetCoins.length} coin...`);
 
     const scanResults = {
       ud4h: marketUDStr,
@@ -203,39 +203,46 @@ async function main() {
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
-      const candles15m = await getCandles(symbol, '15m', 100);
-      if (!candles15m || candles15m.length < 45) {
+
+      // 1. TÍNH diffema20 TRÊN KHUNG 5M
+      const candles5m = await getCandles(symbol, '5m', 100);
+      if (!candles5m || candles5m.length < 45) {
         await sleep(80);
         continue;
       }
 
-      // 1. TÍNH diffema20 (15m)
-      const closed15m = candles15m.slice(1).reverse();
-      const closedPrices15m = closed15m.map((c) => parseFloat(c[4]));
-      const emaSeries15m = calculateEMAArray(closedPrices15m, 20);
+      const closed5m = candles5m.slice(1).reverse();
+      const closedPrices5m = closed5m.map((c) => parseFloat(c[4]));
+      const emaSeries5m = calculateEMAArray(closedPrices5m, 20);
 
-      if (emaSeries15m.length < 20) {
+      if (emaSeries5m.length < 20) {
         await sleep(80);
         continue;
       }
 
-      const ema20_15m_n1 = emaSeries15m[emaSeries15m.length - 1];
-      const ema20_15m_n20 = emaSeries15m[emaSeries15m.length - 20];
+      const ema20_5m_n1 = emaSeries5m[emaSeries5m.length - 1];
+      const ema20_5m_n20 = emaSeries5m[emaSeries5m.length - 20];
 
-      if (ema20_15m_n20 <= 0) {
+      if (ema20_5m_n20 <= 0) {
         await sleep(80);
         continue;
       }
 
-      const diffema20_15m = ((ema20_15m_n1 - ema20_15m_n20) / ema20_15m_n20) * 100;
+      const diffema20_5m = ((ema20_5m_n1 - ema20_5m_n20) / ema20_5m_n20) * 100;
 
-      // Điều kiện chung: -1% < diffema20 < 1%
-      if (diffema20_15m <= -1 || diffema20_15m >= 1) {
+      // Điều kiện chung mới: -0.5% < diffema20 < 0.5%
+      if (diffema20_5m <= -0.5 || diffema20_5m >= 0.5) {
         await sleep(80);
         continue;
       }
 
       // 2. KIỂM TRA ĐIỀU KIỆN NẾN VÀ BOLLINGER BANDS (15m)
+      const candles15m = await getCandles(symbol, '15m', 100);
+      if (!candles15m || candles15m.length < 25) {
+        await sleep(80);
+        continue;
+      }
+
       const candle1 = candles15m[1];
       const open1 = parseFloat(candle1[1]);
       const close1 = parseFloat(candle1[4]);
@@ -304,7 +311,7 @@ async function main() {
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
-      const diffema20_15mStr = `${diffema20_15m > 0 ? '+' : ''}${diffema20_15m.toFixed(2)}%`;
+      const diffema20_5mStr = `${diffema20_5m > 0 ? '+' : ''}${diffema20_5m.toFixed(2)}%`;
 
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -315,7 +322,7 @@ async function main() {
       const message =
         `${icon} <b>${signalType}: ${coinName}</b>\n` +
         `• <b>Hbb (15m):</b> ${hbbStr}\n` +
-        `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
+        `• <b>diffema20 (5m):</b> ${diffema20_5mStr}\n` +
         `• <b>ud (4H):</b> ${marketUDStr}\n` +
         `• <b>bd24h:</b> ${change24hStr}\n` +
         `• <a href="${link}">Link OKX</a>`;
@@ -344,7 +351,7 @@ async function main() {
           symbol,
           type: signalType,
           hbb15m: hbbStr,
-          diffema20_15m: diffema20_15mStr,
+          diffema20_5m: diffema20_5mStr,
           ud4h: marketUDStr,
           bd24h: change24hStr,
           link,
@@ -372,7 +379,7 @@ async function main() {
       console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(15m): ${item.hbb15m} | diffema20(15m): ${item.diffema20_15m} | bd24h: ${item.bd24h}`
+          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(15m): ${item.hbb15m} | diffema20(5m): ${item.diffema20_5m} | bd24h: ${item.bd24h}`
         );
       });
       console.log('');
