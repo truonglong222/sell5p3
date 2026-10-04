@@ -305,20 +305,17 @@ async function main() {
 
       pipelineStats.step5_signalMatched++;
 
-      // TÍNH HBB KHUNG 15M ĐỂ GỬI TÍN HIỆU
+      // TÍNH HBB KHUNG 15M CỦA NẾN VỪA ĐÓNG ([1])
       let hbbStr = 'N/A';
-      const closed15mLast = candles15m[1];
-      const high15m = parseFloat(closed15mLast[2]);
-      const low15m = parseFloat(closed15mLast[3]);
 
+      // Tính Bollinger Bands cho 20 nến vừa đóng (từ index 1 đến 20)
       const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
       const bb15m = calculateBollingerBands(closesBB15m, 20);
 
       if (bb15m && bb15m.lower > 0 && bb15m.upper > 0) {
-        const bbt15m = ((high15m - bb15m.upper) / bb15m.upper) * 100;
-        const bbd15m = ((low15m - bb15m.lower) / bb15m.lower) * 100;
-        const hbbVal = bbt15m - bbd15m;
-        hbbStr = `${hbbVal > 0 ? '+' : ''}${hbbVal.toFixed(2)}%`;
+        // % chênh lệch giữa Dải Trên và Dải Dưới so với Dải Dưới
+        const hbbVal = ((bb15m.upper - bb15m.lower) / bb15m.lower) * 100;
+        hbbStr = `${hbbVal.toFixed(2)}%`;
       }
 
       const signalType = isLong ? 'LONG' : 'SHORT';
