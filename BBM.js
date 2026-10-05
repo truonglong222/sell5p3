@@ -177,6 +177,8 @@ async function main() {
       step5_signalMatched: 0
     };
 
+    const diffemaPassedList = [];
+
     // BƯỚC 2: TÍNH UD (4H) CHỈ TRÊN DANH SÁCH COIN ĐÃ QUA LỌC BD24H
     console.log(`⏳ Đang tính chỉ số market UD (4H) trên ${bd24hPassedCoins.length} coin thỏa bd24h...`);
     let totalUp4hCoins = 0;
@@ -262,6 +264,12 @@ async function main() {
         continue;
       }
       pipelineStats.step4_diffemaPassed++;
+      diffemaPassedList.push({
+        symbol,
+        type: potentialType,
+        diffema10: diffema10_15m.toFixed(2),
+        bd24h: coin.change24hVal
+      });
 
       // BƯỚC 5: KIỂM TRA BOLLINGER BANDS VÀ NẾN TRÊN KHUNG 5M
       const candles5m = await getCandles(symbol, '5m', 100);
@@ -376,13 +384,28 @@ async function main() {
 
     // --- LOG THỐNG KÊ PHỄU LỌC ---
     console.log('\n📊 ================= BÁO CÁO PHỄU LỌC (FILTER PIPELINE) =================');
-    console.log(`1. Tổng USDT Swap trên OKX               : ${pipelineStats.step0_allSwaps} coin`);
+    console.log(`1. Tổng USDT Swap trên OKX                : ${pipelineStats.step0_allSwaps} coin`);
     console.log(`2. Thỏa điều kiện Vol 24h (> 5M USDT)     : ${pipelineStats.step1_volPassed} coin`);
     console.log(`3. Thỏa biên độ bd24h (Long>3% / Short<-3%): ${pipelineStats.step2_bd24hPassed} coin`);
     console.log(`4. Qua kiểm tra Cooldown (12h)            : ${pipelineStats.step3_cooldownPassed} coin`);
     console.log(`5. Thỏa diffema10 15m (>2% hoặc <-2%)     : ${pipelineStats.step4_diffemaPassed} coin`);
     console.log(`6. Khớp Bollinger Bands & Nến 5m          : ${pipelineStats.step5_signalMatched} coin`);
     console.log('=========================================================================\n');
+
+    // --- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA10 ---
+    console.log('--- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA10 (15M) ---');
+    if (diffemaPassedList.length > 0) {
+      diffemaPassedList.forEach((item, index) => {
+        const signDiff = parseFloat(item.diffema10) > 0 ? '+' : '';
+        const signBd = item.bd24h > 0 ? '+' : '';
+        console.log(
+          `${index + 1}. [${item.type}] ${item.symbol} | diffema10(15m): ${signDiff}${item.diffema10}% | bd24h: ${signBd}${item.bd24h}%`
+        );
+      });
+      console.log('');
+    } else {
+      console.log('❌ Không có coin nào thỏa mãn điều kiện diffema10.\n');
+    }
 
     console.log('=============== KẾT QUẢ TÍN HIỆU GỬI ĐI ===============');
     console.log(`• Chỉ số ud (4H)        : ${marketUDStr}`);
