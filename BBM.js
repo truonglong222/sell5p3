@@ -77,7 +77,7 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-function calculateEMAArray(prices, period = 20) {
+function calculateEMAArray(prices, period = 10) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
   const emaArray = [];
@@ -158,33 +158,31 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // Lấy toàn bộ thị trường
+    // Lấy toàn bộ thị trường thỏa Volume
     const { allSwapsCount, volPassedCoins } = await getFilteredMarkets();
 
-    // Pipeline Stats tracking
+    // BƯỚC 1: LỌC BD24H SỚM (Long > 3%, Short < -3%)
+    const bd24hPassedCoins = volPassedCoins.filter((coin) => {
+      const isLongPotential = coin.change24hVal > 3;
+      const isShortPotential = coin.change24hVal < -3;
+      return isLongPotential || isShortPotential;
+    });
+
     const pipelineStats = {
       step0_allSwaps: allSwapsCount,
       step1_volPassed: volPassedCoins.length,
-      step2_bd24hPassed: 0,
+      step2_bd24hPassed: bd24hPassedCoins.length,
       step3_cooldownPassed: 0,
       step4_diffemaPassed: 0,
       step5_signalMatched: 0
     };
 
-    // BƯỚC 1: LỌC BD24H SỚM NGAY TRÊN MEMORY (Không tốn API call)
-    const bd24hPassedCoins = volPassedCoins.filter((coin) => {
-      const isLongPotential = coin.change24hVal > 5;
-      const isShortPotential = coin.change24hVal > -7 && coin.change24hVal < -2;
-      return isLongPotential || isShortPotential;
-    });
-    pipelineStats.step2_bd24hPassed = bd24hPassedCoins.length;
-
-    // --- TÍNH CHỈ SỐ UD (4H) CHO CÁC COIN THỎA VOL ---
-    console.log(`⏳ Đang tính chỉ số market UD (4H) trên ${volPassedCoins.length} coin...`);
+    // BƯỚC 2: TÍNH UD (4H) CHỈ TRÊN DANH SÁCH COIN ĐÃ QUA LỌC BD24H
+    console.log(`⏳ Đang tính chỉ số market UD (4H) trên ${bd24hPassedCoins.length} coin thỏa bd24h...`);
     let totalUp4hCoins = 0;
     let totalDown4hCoins = 0;
 
-    for (const coin of volPassedCoins) {
+    for (const coin of bd24hPassedCoins) {
       const candles4h = await getCandles(coin.instId, '4H', 2);
       if (candles4h && candles4h.length >= 2) {
         const closedCandle = candles4h[1];
@@ -215,70 +213,75 @@ async function main() {
 
     for (const coin of bd24hPassedCoins) {
       const symbol = coin.instId;
-      const potentialType = coin.change24hVal > 5 ? 'LONG' : 'SHORT';
+      const potentialType = coin.change24hVal > 3 ? 'LONG' : 'SHORT';
 
-      // BƯỚC 2: KIỂM TRA COOLDOWN ĐẦU TIÊN (Kiểm tra File Local, bỏ qua ngay nếu đang Cooldown)
+      // BƯỚC 3: KIỂM TRA COOLDOWN
       if (!sentLog[symbol]) sentLog[symbol] = {};
       const alertKey = potentialType === 'LONG' ? 'longAlert' : 'shortAlert';
       const lastSentTime = sentLog[symbol][alertKey];
       const isCooldown = currentTime - (lastSentTime || 0) < COOLDOWN_TIME;
 
       if (isCooldown) {
-        continue; // Loại ngay lập tức mà không cần sleep hay gọi API
+        continue;
       }
       pipelineStats.step3_cooldownPassed++;
 
-      // BƯỚC 3: LỌC DIFFEMA20 TRÊN KHUNG 5M
-      const candles5m = await getCandles(symbol, '5m', 100);
-      if (!candles5m || candles5m.length < 45) {
+      // BƯỚC 4: LỌC DIFFEMA10 TRÊN KHUNG 15M (Long > 2%, Short < -2%)
+      const candles15m = await getCandles(symbol, '15m', 100);
+      if (!candles15m || candles15m.length < 35) {
         await sleep(60);
         continue;
       }
 
-      const closed5m = candles5m.slice(1).reverse();
-      const closedPrices5m = closed5m.map((c) => parseFloat(c[4]));
-      const emaSeries5m = calculateEMAArray(closedPrices5m, 20);
+      // Nến index 0 là nến đang chạy -> lấy từ index 1 trở đi và đảo lại theo thứ tự thời gian tăng dần
+      const closed15m = candles15m.slice(1).reverse();
+      const closedPrices15m = closed15m.map((c) => parseFloat(c[4]));
+      const emaSeries15m = calculateEMAArray(closedPrices15m, 10);
 
-      if (emaSeries5m.length < 20) {
+      if (emaSeries15m.length < 10) {
         await sleep(60);
         continue;
       }
 
-      const ema20_5m_n1 = emaSeries5m[emaSeries5m.length - 1];
-      const ema20_5m_n20 = emaSeries5m[emaSeries5m.length - 20];
+      const ema10_15m_n1 = emaSeries15m[emaSeries15m.length - 1];
+      const ema10_15m_n10 = emaSeries15m[emaSeries15m.length - 10];
 
-      if (ema20_5m_n20 <= 0) {
+      if (ema10_15m_n10 <= 0) {
         await sleep(60);
         continue;
       }
 
-      const diffema20_5m = ((ema20_5m_n1 - ema20_5m_n20) / ema20_5m_n20) * 100;
+      const diffema10_15m = ((ema10_15m_n1 - ema10_15m_n10) / ema10_15m_n10) * 100;
 
-      // Điều kiện diffema20: -0.5% < diffema20 < 0.5%
-      if (diffema20_5m <= -0.5 || diffema20_5m >= 0.5) {
+      if (potentialType === 'LONG' && diffema10_15m <= 2) {
+        await sleep(60);
+        continue;
+      }
+      if (potentialType === 'SHORT' && diffema10_15m >= -2) {
         await sleep(60);
         continue;
       }
       pipelineStats.step4_diffemaPassed++;
 
-      // BƯỚC 4: KIỂM TRA BOLLINGER BANDS VÀ NẾN (15M)
-      const candles15m = await getCandles(symbol, '15m', 100);
-      if (!candles15m || candles15m.length < 25) {
+      // BƯỚC 5: KIỂM TRA BOLLINGER BANDS VÀ NẾN TRÊN KHUNG 5M
+      const candles5m = await getCandles(symbol, '5m', 100);
+      if (!candles5m || candles5m.length < 25) {
         await sleep(60);
         continue;
       }
 
-      const candle1 = candles15m[1];
+      const candle1 = candles5m[1];
       const open1 = parseFloat(candle1[1]);
       const close1 = parseFloat(candle1[4]);
       const isCandle1Bullish = close1 > open1;
       const isCandle1Bearish = close1 < open1;
 
-      const candle2 = candles15m[2];
+      const candle2 = candles5m[2];
       const high2 = parseFloat(candle2[2]);
       const low2 = parseFloat(candle2[3]);
 
-      const closesBB2 = candles15m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
+      // BB cho 20 nến tính từ nến 2
+      const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb2 = calculateBollingerBands(closesBB2, 20);
 
       if (!bb2 || bb2.lower <= 0 || bb2.upper <= 0) {
@@ -305,22 +308,19 @@ async function main() {
 
       pipelineStats.step5_signalMatched++;
 
-      // TÍNH HBB KHUNG 15M CỦA NẾN VỪA ĐÓNG ([1])
+      // TÍNH HBB KHUNG 5M CỦA NẾN VỪA ĐÓNG ([1])
       let hbbStr = 'N/A';
+      const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const bb5m = calculateBollingerBands(closesBB5m, 20);
 
-      // Tính Bollinger Bands cho 20 nến vừa đóng (từ index 1 đến 20)
-      const closesBB15m = candles15m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bb15m = calculateBollingerBands(closesBB15m, 20);
-
-      if (bb15m && bb15m.lower > 0 && bb15m.upper > 0) {
-        // % chênh lệch giữa Dải Trên và Dải Dưới so với Dải Dưới
-        const hbbVal = ((bb15m.upper - bb15m.lower) / bb15m.lower) * 100;
+      if (bb5m && bb5m.lower > 0 && bb5m.upper > 0) {
+        const hbbVal = ((bb5m.upper - bb5m.lower) / bb5m.lower) * 100;
         hbbStr = `${hbbVal.toFixed(2)}%`;
       }
 
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
-      const diffema20_5mStr = `${diffema20_5m > 0 ? '+' : ''}${diffema20_5m.toFixed(2)}%`;
+      const diffema10_15mStr = `${diffema10_15m > 0 ? '+' : ''}${diffema10_15m.toFixed(2)}%`;
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
@@ -328,8 +328,8 @@ async function main() {
       const icon = isLong ? '🟢' : '🔴';
       const message =
         `${icon} <b>${signalType}: ${coinName}</b>\n` +
-        `• <b>Hbb (15m):</b> ${hbbStr}\n` +
-        `• <b>diffema20 (5m):</b> ${diffema20_5mStr}\n` +
+        `• <b>Hbb (5m):</b> ${hbbStr}\n` +
+        `• <b>diffema10 (15m):</b> ${diffema10_15mStr}\n` +
         `• <b>ud (4H):</b> ${marketUDStr}\n` +
         `• <b>bd24h:</b> ${change24hStr}\n` +
         `• <a href="${link}">Link OKX</a>`;
@@ -356,8 +356,8 @@ async function main() {
         scanResults.matched.push({
           symbol,
           type: signalType,
-          hbb15m: hbbStr,
-          diffema20_5m: diffema20_5mStr,
+          hbb5m: hbbStr,
+          diffema10_15m: diffema10_15mStr,
           ud4h: marketUDStr,
           bd24h: change24hStr,
           link,
@@ -376,12 +376,12 @@ async function main() {
 
     // --- LOG THỐNG KÊ PHỄU LỌC ---
     console.log('\n📊 ================= BÁO CÁO PHỄU LỌC (FILTER PIPELINE) =================');
-    console.log(`1. Tổng USDT Swap trên OKX             : ${pipelineStats.step0_allSwaps} coin`);
-    console.log(`2. Thỏa điều kiện Vol 24h (> 5M USDT)   : ${pipelineStats.step1_volPassed} coin`);
-    console.log(`3. Thỏa biên độ bd24h (Long/Short)      : ${pipelineStats.step2_bd24hPassed} coin`);
-    console.log(`4. Qua kiểm tra Cooldown (12h)          : ${pipelineStats.step3_cooldownPassed} coin`);
-    console.log(`5. Thỏa diffema20 5m (-0.5% < x < 0.5%) : ${pipelineStats.step4_diffemaPassed} coin`);
-    console.log(`6. Khớp Bollinger Bands & Nến 15m       : ${pipelineStats.step5_signalMatched} coin`);
+    console.log(`1. Tổng USDT Swap trên OKX               : ${pipelineStats.step0_allSwaps} coin`);
+    console.log(`2. Thỏa điều kiện Vol 24h (> 5M USDT)     : ${pipelineStats.step1_volPassed} coin`);
+    console.log(`3. Thỏa biên độ bd24h (Long>3% / Short<-3%): ${pipelineStats.step2_bd24hPassed} coin`);
+    console.log(`4. Qua kiểm tra Cooldown (12h)            : ${pipelineStats.step3_cooldownPassed} coin`);
+    console.log(`5. Thỏa diffema10 15m (>2% hoặc <-2%)     : ${pipelineStats.step4_diffemaPassed} coin`);
+    console.log(`6. Khớp Bollinger Bands & Nến 5m          : ${pipelineStats.step5_signalMatched} coin`);
     console.log('=========================================================================\n');
 
     console.log('=============== KẾT QUẢ TÍN HIỆU GỬI ĐI ===============');
@@ -394,7 +394,7 @@ async function main() {
       console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(15m): ${item.hbb15m} | diffema20(5m): ${item.diffema20_5m} | bd24h: ${item.bd24h}`
+          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(5m): ${item.hbb5m} | diffema10(15m): ${item.diffema10_15m} | bd24h: ${item.bd24h}`
         );
       });
       console.log('');
