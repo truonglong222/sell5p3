@@ -292,7 +292,7 @@ async function main() {
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb2 = calculateBollingerBands(closesBB2, 20);
 
-      if (!bb2 || bb2.lower <= 0 || bb2.upper <= 0) {
+      if (!bb2 || bb2.lower <= 0 || bb2.upper <= 0 || bb2.middle <= 0) {
         await sleep(60);
         continue;
       }
@@ -303,10 +303,29 @@ async function main() {
       let isLong = false;
       let isShort = false;
 
-      if (potentialType === 'LONG' && bbd < 0 && isCandle1Bullish) {
-        isLong = true;
-      } else if (potentialType === 'SHORT' && bbt > 0 && isCandle1Bearish) {
-        isShort = true;
+      // ----------------- TÁCH ĐIỀU KIỆN LONG / SHORT -----------------
+      if (potentialType === 'LONG') {
+        const bbmLong = ((low2 - bb2.middle) / bb2.middle) * 100;
+        
+        // TH 1: diffema10 > 4% & bbm < 0 & nến 1 tăng
+        const isCase1 = diffema10_15m > 4 && bbmLong < 0 && isCandle1Bullish;
+        // TH 2: 2% < diffema10 <= 4% & bbd < 0 & nến 1 tăng
+        const isCase2 = diffema10_15m > 2 && diffema10_15m <= 4 && bbd < 0 && isCandle1Bullish;
+
+        if (isCase1 || isCase2) {
+          isLong = true;
+        }
+      } else if (potentialType === 'SHORT') {
+        const bbmShort = ((high2 - bb2.middle) / bb2.middle) * 100;
+
+        // TH 1: diffema10 < -4% & bbm > 0 & nến 1 giảm
+        const isCase1 = diffema10_15m < -4 && bbmShort > 0 && isCandle1Bearish;
+        // TH 2: -4% <= diffema10 < -2% & bbt > 0 & nến 1 giảm
+        const isCase2 = diffema10_15m < -2 && diffema10_15m >= -4 && bbt > 0 && isCandle1Bearish;
+
+        if (isCase1 || isCase2) {
+          isShort = true;
+        }
       }
 
       if (!isLong && !isShort) {
