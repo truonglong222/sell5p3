@@ -228,7 +228,7 @@ async function main() {
       }
       pipelineStats.step3_cooldownPassed++;
 
-      // BƯỚC 4: LỌC DIFFEMA20 TRÊN KHUNG 15M (Long > 3%, Short < -2%)
+      // BƯỚC 4: LỌC DIFFEMA20 TRÊN KHUNG 15M (Long > 2%, Short < -2%)
       const candles15m = await getCandles(symbol, '15m', 100);
       if (!candles15m || candles15m.length < 50) {
         await sleep(60);
@@ -255,7 +255,7 @@ async function main() {
 
       const diffema20_15m = ((ema20_15m_n1 - ema20_15m_n20) / ema20_15m_n20) * 100;
 
-      if (potentialType === 'LONG' && diffema20_15m <= 3) {
+      if (potentialType === 'LONG' && diffema20_15m <= 2) {
         await sleep(60);
         continue;
       }
@@ -308,14 +308,14 @@ async function main() {
       let isLong = false;
       let isShort = false;
 
-      // ----------------- ĐIỀU KIỆN TÍN HIỆU LONG / SHORT -----------------
+      // ----------------- ĐIỀU KIỆN TÍN HIỆU LONG / SHORT MỚI -----------------
       if (potentialType === 'LONG') {
         const bbmLong = ((low2 - bb2.middle) / bb2.middle) * 100;
 
-        // Trường hợp LONG 1: diffema20 > 3%, Hbb [1] > 6%, bbm < 0, nến [1] tăng
-        const isCase1 = diffema20_15m > 3 && hbb1Val > 6 && bbmLong < 0 && isCandle1Bullish;
-        // Trường hợp LONG 2: diffema20 > 3%, Hbb [1] < 6%, bbd < 0, nến [1] tăng
-        const isCase2 = diffema20_15m > 3 && hbb1Val < 6 && bbd < 0 && isCandle1Bullish;
+        // Trường hợp LONG 1: diffema20 > 2, Hbb [1] > 6%, bbm < 0, nến [1] tăng
+        const isCase1 = diffema20_15m > 2 && hbb1Val > 6 && bbmLong < 0 && isCandle1Bullish;
+        // Trường hợp LONG 2: diffema20 > 2, Hbb [1] < 6%, bbd < 0, nến [1] tăng
+        const isCase2 = diffema20_15m > 2 && hbb1Val < 6 && bbd < 0 && isCandle1Bullish;
 
         if (isCase1 || isCase2) {
           isLong = true;
@@ -323,9 +323,9 @@ async function main() {
       } else if (potentialType === 'SHORT') {
         const bbmShort = ((high2 - bb2.middle) / bb2.middle) * 100;
 
-        // Trường hợp SHORT 1: diffema20 < -2%, Hbb [1] > 6%, bbm > 0, nến [1] giảm
+        // Trường hợp SHORT 1: diffema20 < -2, Hbb [1] > 6%, bbm > 0, nến [1] giảm
         const isCase1 = diffema20_15m < -2 && hbb1Val > 6 && bbmShort > 0 && isCandle1Bearish;
-        // Trường hợp SHORT 2: diffema20 < -2%, Hbb [1] < 6%, bbt > 0, nến [1] giảm
+        // Trường hợp SHORT 2: diffema20 < -2, Hbb [1] < 6%, bbt > 0, nến [1] giảm
         const isCase2 = diffema20_15m < -2 && hbb1Val < 6 && bbt > 0 && isCandle1Bearish;
 
         if (isCase1 || isCase2) {
@@ -403,7 +403,7 @@ async function main() {
     console.log(`2. Thỏa điều kiện Vol 24h (> 5M USDT)     : ${pipelineStats.step1_volPassed} coin`);
     console.log(`3. Thỏa biên độ bd24h (Long>3% / Short<-3%): ${pipelineStats.step2_bd24hPassed} coin`);
     console.log(`4. Qua kiểm tra Cooldown (12h)            : ${pipelineStats.step3_cooldownPassed} coin`);
-    console.log(`5. Thỏa diffema20 15m (Long>3% / Short<-2%): ${pipelineStats.step4_diffemaPassed} coin`);
+    console.log(`5. Thỏa diffema20 15m (>2% hoặc <-2%)     : ${pipelineStats.step4_diffemaPassed} coin`);
     console.log(`6. Khớp Bollinger Bands & Nến 5m          : ${pipelineStats.step5_signalMatched} coin`);
     console.log('=========================================================================\n');
 
