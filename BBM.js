@@ -77,7 +77,7 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-function calculateEMAArray(prices, period = 10) {
+function calculateEMAArray(prices, period = 20) {
   if (prices.length < period) return [];
   const k = 2 / (period + 1);
   const emaArray = [];
@@ -228,9 +228,9 @@ async function main() {
       }
       pipelineStats.step3_cooldownPassed++;
 
-      // BƯỚC 4: LỌC DIFFEMA10 TRÊN KHUNG 15M (Long > 2%, Short < -2%)
+      // BƯỚC 4: LỌC DIFFEMA20 TRÊN KHUNG 15M (Long > 2%, Short < -2%)
       const candles15m = await getCandles(symbol, '15m', 100);
-      if (!candles15m || candles15m.length < 35) {
+      if (!candles15m || candles15m.length < 50) {
         await sleep(60);
         continue;
       }
@@ -238,28 +238,28 @@ async function main() {
       // Nến index 0 là nến đang chạy -> lấy từ index 1 trở đi và đảo lại theo thứ tự thời gian tăng dần
       const closed15m = candles15m.slice(1).reverse();
       const closedPrices15m = closed15m.map((c) => parseFloat(c[4]));
-      const emaSeries15m = calculateEMAArray(closedPrices15m, 10);
+      const emaSeries15m = calculateEMAArray(closedPrices15m, 20);
 
-      if (emaSeries15m.length < 10) {
+      if (emaSeries15m.length < 20) {
         await sleep(60);
         continue;
       }
 
-      const ema10_15m_n1 = emaSeries15m[emaSeries15m.length - 1];
-      const ema10_15m_n10 = emaSeries15m[emaSeries15m.length - 10];
+      const ema20_15m_n1 = emaSeries15m[emaSeries15m.length - 1];
+      const ema20_15m_n20 = emaSeries15m[emaSeries15m.length - 20];
 
-      if (ema10_15m_n10 <= 0) {
+      if (ema20_15m_n20 <= 0) {
         await sleep(60);
         continue;
       }
 
-      const diffema10_15m = ((ema10_15m_n1 - ema10_15m_n10) / ema10_15m_n10) * 100;
+      const diffema20_15m = ((ema20_15m_n1 - ema20_15m_n20) / ema20_15m_n20) * 100;
 
-      if (potentialType === 'LONG' && diffema10_15m <= 2) {
+      if (potentialType === 'LONG' && diffema20_15m <= 2) {
         await sleep(60);
         continue;
       }
-      if (potentialType === 'SHORT' && diffema10_15m >= -2) {
+      if (potentialType === 'SHORT' && diffema20_15m >= -2) {
         await sleep(60);
         continue;
       }
@@ -267,7 +267,7 @@ async function main() {
       diffemaPassedList.push({
         symbol,
         type: potentialType,
-        diffema10: diffema10_15m.toFixed(2),
+        diffema20: diffema20_15m.toFixed(2),
         bd24h: coin.change24hVal
       });
 
@@ -288,29 +288,34 @@ async function main() {
       const high2 = parseFloat(candle2[2]);
       const low2 = parseFloat(candle2[3]);
 
-      // BB cho 20 nến tính từ nến 2
+      // BB cho 20 nến tính từ nến [2]
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb2 = calculateBollingerBands(closesBB2, 20);
 
-      if (!bb2 || bb2.lower <= 0 || bb2.upper <= 0 || bb2.middle <= 0) {
+      // TÍNH HBB KHUNG 5M CỦA NẾN VỪA ĐÓNG ([1])
+      const closesBB1 = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
+      const bb1 = calculateBollingerBands(closesBB1, 20);
+
+      if (!bb2 || bb2.lower <= 0 || bb2.upper <= 0 || bb2.middle <= 0 || !bb1 || bb1.lower <= 0) {
         await sleep(60);
         continue;
       }
 
+      const hbb1Val = ((bb1.upper - bb1.lower) / bb1.lower) * 100;
       const bbd = low2 - bb2.lower;
       const bbt = high2 - bb2.upper;
 
       let isLong = false;
       let isShort = false;
 
-      // ----------------- TÁCH ĐIỀU KIỆN LONG / SHORT -----------------
+      // ----------------- ĐIỀU KIỆN TÍN HIỆU LONG / SHORT MỚI -----------------
       if (potentialType === 'LONG') {
         const bbmLong = ((low2 - bb2.middle) / bb2.middle) * 100;
-        
-        // TH 1: diffema10 > 4% & bbm < 0 & nến 1 tăng
-        const isCase1 = diffema10_15m > 4 && bbmLong < 0 && isCandle1Bullish;
-        // TH 2: 2% < diffema10 <= 4% & bbd < 0 & nến 1 tăng
-        const isCase2 = diffema10_15m > 2 && diffema10_15m <= 4 && bbd < 0 && isCandle1Bullish;
+
+        // Trường hợp LONG 1: diffema20 > 2, Hbb [1] > 6%, bbm < 0, nến [1] tăng
+        const isCase1 = diffema20_15m > 2 && hbb1Val > 6 && bbmLong < 0 && isCandle1Bullish;
+        // Trường hợp LONG 2: diffema20 > 2, Hbb [1] < 6%, bbd < 0, nến [1] tăng
+        const isCase2 = diffema20_15m > 2 && hbb1Val < 6 && bbd < 0 && isCandle1Bullish;
 
         if (isCase1 || isCase2) {
           isLong = true;
@@ -318,10 +323,10 @@ async function main() {
       } else if (potentialType === 'SHORT') {
         const bbmShort = ((high2 - bb2.middle) / bb2.middle) * 100;
 
-        // TH 1: diffema10 < -4% & bbm > 0 & nến 1 giảm
-        const isCase1 = diffema10_15m < -4 && bbmShort > 0 && isCandle1Bearish;
-        // TH 2: -4% <= diffema10 < -2% & bbt > 0 & nến 1 giảm
-        const isCase2 = diffema10_15m < -2 && diffema10_15m >= -4 && bbt > 0 && isCandle1Bearish;
+        // Trường hợp SHORT 1: diffema20 < -2, Hbb [1] > 6%, bbm > 0, nến [1] giảm
+        const isCase1 = diffema20_15m < -2 && hbb1Val > 6 && bbmShort > 0 && isCandle1Bearish;
+        // Trường hợp SHORT 2: diffema20 < -2, Hbb [1] < 6%, bbt > 0, nến [1] giảm
+        const isCase2 = diffema20_15m < -2 && hbb1Val < 6 && bbt > 0 && isCandle1Bearish;
 
         if (isCase1 || isCase2) {
           isShort = true;
@@ -335,19 +340,10 @@ async function main() {
 
       pipelineStats.step5_signalMatched++;
 
-      // TÍNH HBB KHUNG 5M CỦA NẾN VỪA ĐÓNG ([1])
-      let hbbStr = 'N/A';
-      const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bb5m = calculateBollingerBands(closesBB5m, 20);
-
-      if (bb5m && bb5m.lower > 0 && bb5m.upper > 0) {
-        const hbbVal = ((bb5m.upper - bb5m.lower) / bb5m.lower) * 100;
-        hbbStr = `${hbbVal.toFixed(2)}%`;
-      }
-
+      const hbbStr = `${hbb1Val.toFixed(2)}%`;
       const signalType = isLong ? 'LONG' : 'SHORT';
       const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
-      const diffema10_15mStr = `${diffema10_15m > 0 ? '+' : ''}${diffema10_15m.toFixed(2)}%`;
+      const diffema20_15mStr = `${diffema20_15m > 0 ? '+' : ''}${diffema20_15m.toFixed(2)}%`;
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
@@ -356,7 +352,7 @@ async function main() {
       const message =
         `${icon} <b>${signalType}: ${coinName}</b>\n` +
         `• <b>Hbb (5m):</b> ${hbbStr}\n` +
-        `• <b>diffema10 (15m):</b> ${diffema10_15mStr}\n` +
+        `• <b>diffema20 (15m):</b> ${diffema20_15mStr}\n` +
         `• <b>ud (4H):</b> ${marketUDStr}\n` +
         `• <b>bd24h:</b> ${change24hStr}\n` +
         `• <a href="${link}">Link OKX</a>`;
@@ -384,7 +380,7 @@ async function main() {
           symbol,
           type: signalType,
           hbb5m: hbbStr,
-          diffema10_15m: diffema10_15mStr,
+          diffema20_15m: diffema20_15mStr,
           ud4h: marketUDStr,
           bd24h: change24hStr,
           link,
@@ -407,23 +403,23 @@ async function main() {
     console.log(`2. Thỏa điều kiện Vol 24h (> 5M USDT)     : ${pipelineStats.step1_volPassed} coin`);
     console.log(`3. Thỏa biên độ bd24h (Long>3% / Short<-3%): ${pipelineStats.step2_bd24hPassed} coin`);
     console.log(`4. Qua kiểm tra Cooldown (12h)            : ${pipelineStats.step3_cooldownPassed} coin`);
-    console.log(`5. Thỏa diffema10 15m (>2% hoặc <-2%)     : ${pipelineStats.step4_diffemaPassed} coin`);
+    console.log(`5. Thỏa diffema20 15m (>2% hoặc <-2%)     : ${pipelineStats.step4_diffemaPassed} coin`);
     console.log(`6. Khớp Bollinger Bands & Nến 5m          : ${pipelineStats.step5_signalMatched} coin`);
     console.log('=========================================================================\n');
 
-    // --- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA10 ---
-    console.log('--- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA10 (15M) ---');
+    // --- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA20 ---
+    console.log('--- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA20 (15M) ---');
     if (diffemaPassedList.length > 0) {
       diffemaPassedList.forEach((item, index) => {
-        const signDiff = parseFloat(item.diffema10) > 0 ? '+' : '';
+        const signDiff = parseFloat(item.diffema20) > 0 ? '+' : '';
         const signBd = item.bd24h > 0 ? '+' : '';
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | diffema10(15m): ${signDiff}${item.diffema10}% | bd24h: ${signBd}${item.bd24h}%`
+          `${index + 1}. [${item.type}] ${item.symbol} | diffema20(15m): ${signDiff}${item.diffema20}% | bd24h: ${signBd}${item.bd24h}%`
         );
       });
       console.log('');
     } else {
-      console.log('❌ Không có coin nào thỏa mãn điều kiện diffema10.\n');
+      console.log('❌ Không có coin nào thỏa mãn điều kiện diffema20.\n');
     }
 
     console.log('=============== KẾT QUẢ TÍN HIỆU GỬI ĐI ===============');
@@ -436,7 +432,7 @@ async function main() {
       console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(5m): ${item.hbb5m} | diffema10(15m): ${item.diffema10_15m} | bd24h: ${item.bd24h}`
+          `${index + 1}. [${item.type}] ${item.symbol} | Hbb(5m): ${item.hbb5m} | diffema20(15m): ${item.diffema20_15m} | bd24h: ${item.bd24h}`
         );
       });
       console.log('');
