@@ -184,9 +184,9 @@ async function main() {
         continue;
       }
 
-      // Điều kiện 2: diffrsi5 > 5%
+      // Điều kiện 2: diffrsi5 > 10%
       const diffRsi5 = currentRsi - rsiCandle5;
-      if (diffRsi5 <= 5) {
+      if (diffRsi5 <= 10) {
         await sleep(60);
         continue;
       }
