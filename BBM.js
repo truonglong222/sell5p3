@@ -56,7 +56,6 @@ function saveScanResults(results) {
 
 // ------------------- HÀM TÍNH TOÁN KỸ THUẬT -------------------
 
-// Tính RSI (Wilder's Smoothing 14) cho toàn bộ chuỗi giá đóng cửa
 function calculateRSIArray(closes, period = 14) {
   if (closes.length <= period) return [];
 
@@ -91,7 +90,6 @@ function calculateRSIArray(closes, period = 14) {
   return rsiArray;
 }
 
-// Tính Bollinger Bands (Mặc định chu kỳ 20, độ lệch chuẩn 2)
 function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
@@ -105,78 +103,4 @@ function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
   };
 }
 
-// ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
-
-async function getFilteredMarkets() {
-  try {
-    const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
-    const res = await axios.get(url, { timeout: 10000 });
-    if (!res.data || res.data.code !== '0') return [];
-
-    const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
-    return tickers.filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H);
-  } catch (error) {
-    console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return [];
-  }
-}
-
-async function getCandles(symbol, bar = '15m', limit = 100) {
-  try {
-    const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
-    const res = await axios.get(url, { timeout: 6000 });
-    if (!res.data || res.data.code !== '0' || !Array.isArray(res.data.data)) return null;
-    return res.data.data;
-  } catch (error) {
-    console.error(`Lỗi lấy nến ${bar} (${symbol}):`, error.message);
-    return null;
-  }
-}
-
-// ------------------- TIẾN TRÌNH CHÍNH -------------------
-
-async function main() {
-  try {
-    console.log('=== BẮT ĐẦU QUÉT TÍN HIỆU SHORT (RSI 15M & HBB 5M) ===\n');
-
-    const sentLog = loadSentLog();
-    const currentTime = Date.now();
-    let hasNewAlert = false;
-
-    // 1. Lọc Volume > 5M USDT
-    const targetCoins = await getFilteredMarkets();
-    console.log(`Tìm thấy ${targetCoins.length} coin đạt Volume > 5M USDT.\n`);
-
-    const scanResults = { matched: [] };
-
-    for (const coin of targetCoins) {
-      const symbol = coin.instId;
-
-      // Kiểm tra Cooldown 1h
-      const lastSent = sentLog[symbol] || 0;
-      if (currentTime - lastSent < COOLDOWN_TIME) {
-        continue;
-      }
-
-      // 2. Lấy nến 15m (OKX trả về thứ tự: [0] là nến hiện tại đang chạy, [1] là nến vừa đóng, ...)
-      const candles15m = await getCandles(symbol, '15m', 80);
-      if (!candles15m || candles15m.length < 35) {
-        await sleep(60);
-        continue;
-      }
-
-      // Đảo chiều mảng nến để tính RSI theo thứ tự thời gian cũ -> mới
-      const chronological15m = [...candles15m].reverse();
-      const closes15m = chronological15m.map((c) => parseFloat(c[4]));
-
-      const rsiSeries15m = calculateRSIArray(closes15m, 14);
-      if (rsiSeries15m.length < 11) {
-        await sleep(60);
-        continue;
-      }
-
-      // RSI nến hiện tại đang chạy ([0] trong API gốc = phần tử cuối mảng)
-      const currentRsi = rsiSeries15m[rsiSeries15m.length - 1];
-
-      // RSI của nến số 10 (cách 10 nến trước đó tính từ nến hiện tại)
-      const rsiCandle10 = rsi
+// ------------------- LỌC THỊ TRƯỜNG & LẤY NẾ
