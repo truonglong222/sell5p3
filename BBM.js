@@ -106,7 +106,12 @@ async function getFilteredMarkets() {
     if (!res.data || res.data.code !== '0') return { allSwapsCount: 0, targetCoins: [] };
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
-    const targetCoins = tickers.filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H);
+    const targetCoins = tickers
+      .filter((item) => parseFloat(item.volCcy24h || 0) > MIN_VOL_CCY24H)
+      .map((item) => ({
+        instId: item.instId,
+        volCcy24h: parseFloat(item.volCcy24h || 0)
+      }));
 
     return {
       allSwapsCount: tickers.length,
@@ -232,19 +237,22 @@ async function main() {
       stats.passedBbmRange++;
       stats.totalMatched++;
 
-      // 4. Gửi Telegram
+      // 4. Chuẩn bị gửi Telegram
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
       const rsiStr = currentRsi15m.toFixed(2);
       const bbmStr = `${bbm > 0 ? '+' : ''}${bbm.toFixed(2)}%`;
       const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
+      const volFormatted = `$${(coin.volCcy24h / 1_000_000).toFixed(2)}M USDT`;
 
+      // Tin nhắn gửi Telegram: Volume xếp ở cuối cùng (trước link OKX)
       const message =
         `🟢 <b>LONG: ${coinName}</b>\n` +
         `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
         `• <b>bbm (5m nến 2):</b> ${bbmStr}\n` +
         `• <b>Nến 1 (5m):</b> Tăng (+${changeCandle1}%)\n` +
+        `• <b>Volume 24h:</b> ${volFormatted}\n` +
         `• <a href="${link}">Link OKX</a>`;
 
       console.log(`🚀 [LONG] Đạt tất cả điều kiện! Đang gửi Telegram cho ${symbol}...`);
@@ -273,6 +281,7 @@ async function main() {
           rsi15m: rsiStr,
           bbm: bbmStr,
           candle1Change: `+${changeCandle1}%`,
+          vol24h: volFormatted,
           link,
           time: new Date().toISOString()
         });
@@ -303,7 +312,7 @@ async function main() {
     if (scanResults.matched.length > 0) {
       console.log('--- DANH SÁCH COIN ĐÃ PHÁT TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
-        console.log(`${index + 1}. [LONG] ${item.symbol} -> RSI(20) 15m: ${item.rsi15m}%, bbm: ${item.bbm}, nến 1: ${item.candle1Change}`);
+        console.log(`${index + 1}. [LONG] ${item.symbol} -> RSI(20) 15m: ${item.rsi15m}%, bbm: ${item.bbm}, nến 1: ${item.candle1Change}, Vol: ${item.vol24h}`);
       });
       console.log('');
     }
