@@ -158,13 +158,32 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    // Bước 1: Lấy toàn bộ thị trường thỏa Volume > 5M USDT
+    // Lọc Volume > 5M USDT
     const { allSwapsCount, volPassedCoins } = await getFilteredMarkets();
 
-    // Bước 2: Lọc bd24h > 5%
+    // Lọc bd24h > 5%
     const targetCoins = volPassedCoins.filter((coin) => coin.change24hVal > 5);
 
-    console.log(`Tổng SWAP: ${allSwapsCount} | Đạt Vol > 5M: ${volPassedCoins.length} | Đạt bd24h > 5%: ${targetCoins.length}\n`);
+    // Bộ đếm thống kê từng điều kiện
+    const stats = {
+      allSwaps: allSwapsCount,
+      passedVol5M: volPassedCoins.length,
+      passedBd24h: targetCoins.length,
+      // Đếm các coin thỏa mãn từng chỉ số kỹ thuật độc lập
+      passedDiffema30: 0,
+      passedHbb: 0,
+      passedBbd: 0,
+      passedBbt: 0,
+      passedBdn1Bullish: 0,
+      passedBdn1Bearish: 0,
+      // Điều kiện lọc theo nhánh Long
+      longReadyCooldown: 0,
+      longMatched: 0,
+      // Điều kiện lọc theo nhánh Short
+      inLongCooldownList: 0,
+      shortReadyCooldown: 0,
+      shortMatched: 0
+    };
 
     const scanResults = {
       targetCoins,
@@ -181,19 +200,25 @@ async function main() {
       const inLongCooldown = currentTime - (sentLog[symbol].longAlert || 0) < COOLDOWN_LONG;
       const inShortCooldown = currentTime - (sentLog[symbol].shortAlert || 0) < COOLDOWN_SHORT;
 
-      // Bỏ qua nếu đang cooldown Short hoặc (đang cooldown Long nhưng không thể xét Short vì vướng Short Cooldown)
+      if (!inLongCooldown) {
+        stats.longReadyCooldown++;
+      } else {
+        stats.inLongCooldownList++;
+        if (!inShortCooldown) {
+          stats.shortReadyCooldown++;
+        }
+      }
+
       if (inLongCooldown && inShortCooldown) {
         continue;
       }
 
-      // Lấy dữ liệu nến 5m
       const candles5m = await getCandles(symbol, '5m', 150);
       if (!candles5m || candles5m.length < 100) {
         await sleep(60);
         continue;
       }
 
-      // Nến index 0 là nến chưa đóng -> lấy từ index 1 trở đi và sắp xếp tăng dần theo thời gian
       const closed5m = candles5m.slice(1).reverse();
       const closedPrices5m = closed5m.map((c) => parseFloat(c[4]));
 
@@ -212,6 +237,7 @@ async function main() {
       }
 
       const diffema30_5m = ((ema30_n1 - ema30_n30) / ema30_n30) * 100;
+      if (diffema30_5m > 3) stats.passedDiffema30++;
 
       // 2. Tính Bollinger Bands trên nến 2
       const candle2 = candles5m[2];
@@ -230,7 +256,11 @@ async function main() {
       const bbd = low2 - bb2.lower;
       const bbt = high2 - bb2.upper;
 
-      // 3. Tính biến động nến 1 (bdn1)
+      if (Hbb > 3) stats.passedHbb++;
+      if (bbd < 0) stats.passedBbd++;
+      if (bbt > 0) stats.passedBbt++;
+
+      // 3. Tính bdn1
       const candle1 = candles5m[1];
       const open1 = parseFloat(candle1[1]);
       const close1 = parseFloat(candle1[4]);
@@ -240,21 +270,26 @@ async function main() {
       }
       const bdn1 = ((close1 - open1) / open1) * 100;
 
+      if (bdn1 > 0) stats.passedBdn1Bullish++;
+      if (bdn1 < 0) stats.passedBdn1Bearish++;
+
       let isLong = false;
       let isShort = false;
 
       // KIỂM TRA ĐIỀU KIỆN TÍN HIỆU
-      // Điều kiện LONG: Không vướng cooldown Long, diffema30 > 3%, Hbb > 3%, bbd < 0, bdn1 > 0%
+      // Long: Chưa dính cooldown Long, diffema30 > 3%, Hbb > 3%, bbd < 0, bdn1 > 0%
       if (!inLongCooldown) {
         if (diffema30_5m > 3 && Hbb > 3 && bbd < 0 && bdn1 > 0) {
           isLong = true;
+          stats.longMatched++;
         }
       }
 
-      // Điều kiện SHORT: Đang nằm trong danh sách cooldown Long (< 12h), chưa dính cooldown Short (< 2h), Hbb > 3%, bbt > 0, bdn1 < 0%
+      // Short: Đang trong cooldown Long (< 12h), chưa dính cooldown Short (< 2h), Hbb > 3%, bbt > 0, bdn1 < 0%
       if (inLongCooldown && !inShortCooldown) {
         if (Hbb > 3 && bbt > 0 && bdn1 < 0) {
           isShort = true;
+          stats.shortMatched++;
         }
       }
 
@@ -267,7 +302,6 @@ async function main() {
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Định dạng hiển thị chuỗi
       const hbbStr = `${Hbb.toFixed(2)}%`;
       const diffema30Str = `${diffema30_5m > 0 ? '+' : ''}${diffema30_5m.toFixed(2)}%`;
       const bd24Str = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
@@ -328,25 +362,46 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    console.log('\n=============== KẾT QUẢ TÍN HIỆU GỬI ĐI ===============');
-    console.log(`• Tín hiệu LONG đã gửi  : ${countMatchedLong} coin`);
-    console.log(`• Tín hiệu SHORT đã gửi : ${countMatchedShort} coin`);
-    console.log('=======================================================\n');
+    // ================= LOG SỐ LƯỢNG THỎA MÃN TỪNG ĐIỀU KIỆN (DẠNG VĂN BẢN) =================
+    console.log('\n--- BÁO CÁO THỐNG KÊ SỐ LƯỢNG COIN THỎA MÃN TỪNG ĐIỀU KIỆN ---');
+    console.log(`Tổng số cặp USDT-SWAP quét được: ${stats.allSwaps} coin.`);
+    console.log(`Số coin đạt Volume 24h trên 5 triệu USDT: ${stats.passedVol5M} coin.`);
+    console.log(`Số coin đạt biên độ bd24h > 5%: ${stats.passedBd24h} coin.`);
+    console.log('');
+    console.log(`[Thống kê kỹ thuật trên danh sách bd24h > 5%]`);
+    console.log(`- Số coin có diffema30 > 3%: ${stats.passedDiffema30} coin.`);
+    console.log(`- Số coin có Hbb > 3%: ${stats.passedHbb} coin.`);
+    console.log(`- Số coin có bbd < 0 (giá thấp nhất nến 2 xuyên qua Lower BB): ${stats.passedBbd} coin.`);
+    console.log(`- Số coin có bbt > 0 (giá cao nhất nến 2 xuyên qua Upper BB): ${stats.passedBbt} coin.`);
+    console.log(`- Số coin có nến 1 tăng (bdn1 > 0%): ${stats.passedBdn1Bullish} coin.`);
+    console.log(`- Số coin có nến 1 giảm (bdn1 < 0%): ${stats.passedBdn1Bearish} coin.`);
+    console.log('');
+    console.log(`[Thống kê lọc lệnh LONG]`);
+    console.log(`- Số coin hợp lệ chưa dính Cooldown Long (12h): ${stats.longReadyCooldown} coin.`);
+    console.log(`- Số coin khớp tất cả điều kiện LONG: ${stats.longMatched} coin.`);
+    console.log(`- Số tín hiệu LONG gửi Telegram thành công: ${countMatchedLong} coin.`);
+    console.log('');
+    console.log(`[Thống kê lọc lệnh SHORT]`);
+    console.log(`- Số coin đang nằm trong danh sách Cooldown Long (12h): ${stats.inLongCooldownList} coin.`);
+    console.log(`- Số coin sẵn sàng vào lệnh Short (chưa dính Cooldown Short 2h): ${stats.shortReadyCooldown} coin.`);
+    console.log(`- Số coin khớp tất cả điều kiện SHORT: ${stats.shortMatched} coin.`);
+    console.log(`- Số tín hiệu SHORT gửi Telegram thành công: ${countMatchedShort} coin.`);
+    console.log('-------------------------------------------------------------\n');
 
     if (scanResults.matched.length > 0) {
-      console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
+      console.log('--- CHI TIẾT CÁC COIN ĐÃ PHÁT TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
         console.log(
-          `${index + 1}. [${item.type}] ${item.symbol} | Hbb: ${item.Hbb} | diffema30: ${item.diffema30} | bd24: ${item.bd24} | bdn1: ${item.bdn1}`
+          `${index + 1}. [${item.type}] ${item.symbol} -> Hbb: ${item.Hbb}, diffema30: ${item.diffema30}, bd24: ${item.bd24}, bdn1: ${item.bdn1}`
         );
       });
       console.log('');
     } else {
-      console.log('❌ Không có coin nào thỏa mãn tất cả điều kiện lọc.\n');
+      console.log('Không có coin nào khớp toàn bộ điều kiện trong lượt quét này.\n');
     }
 
-    console.log(`📁 Kết quả lưu tại: ${RESULTS_FILE}`);
-    console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
+    console.log(`Kết quả JSON đã được ghi vào file: ${RESULTS_FILE}`);
+    console.log('=== HOÀN THÀNH QUÉT THỊ TRƯỜNG ===\n');
   } catch (err) {
     console.error('Lỗi hệ thống trong main():', err.message);
   }
