@@ -56,6 +56,7 @@ function saveScanResults(results) {
 
 // ------------------- HÀM TÍNH TOÁN KỸ THUẬT -------------------
 
+// Tính RSI (Wilder's Smoothing chu kỳ 14)
 function calculateRSIArray(closes, period = 14) {
   if (closes.length <= period) return [];
 
@@ -90,17 +91,12 @@ function calculateRSIArray(closes, period = 14) {
   return rsiArray;
 }
 
-function calculateBollingerBands(prices, period = 20, stdDevMultiplier = 2) {
+// Tính Middle Band (SMA chu kỳ 20)
+function calculateBBMiddle(prices, period = 20) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
   const mean = slice.reduce((a, b) => a + b, 0) / period;
-  const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
-  const stdDev = Math.sqrt(variance);
-  return {
-    middle: mean,
-    upper: mean + stdDevMultiplier * stdDev,
-    lower: mean - stdDevMultiplier * stdDev
-  };
+  return mean;
 }
 
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
@@ -135,7 +131,7 @@ async function getCandles(symbol, bar = '15m', limit = 100) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT TÍN HIỆU SHORT (RSI 15M > 80% & DIFFRSI5 > 5%) ===\n');
+    console.log('=== BẮT ĐẦU QUÉT TÍN HIỆU LONG (RSI 15M > 65 & BBM 5M) ===\n');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -156,7 +152,7 @@ async function main() {
         continue;
       }
 
-      // 2. Lấy nến 15m
+      // 2. Lấy nến 15m để tính RSI
       const candles15m = await getCandles(symbol, '15m', 80);
       if (!candles15m || candles15m.length < 35) {
         await sleep(60);
@@ -167,65 +163,74 @@ async function main() {
       const closes15m = chronological15m.map((c) => parseFloat(c[4]));
 
       const rsiSeries15m = calculateRSIArray(closes15m, 14);
-      if (rsiSeries15m.length < 6) {
+      if (rsiSeries15m.length === 0) {
         await sleep(60);
         continue;
       }
 
-      // RSI nến hiện tại đang chạy ([0] theo API gốc OKX)
-      const currentRsi = rsiSeries15m[rsiSeries15m.length - 1];
+      // RSI nến 15m hiện tại (phần tử cuối cùng)
+      const currentRsi15m = rsiSeries15m[rsiSeries15m.length - 1];
 
-      // RSI nến số 5 (cách 5 nến trước đó)
-      const rsiCandle5 = rsiSeries15m[rsiSeries15m.length - 1 - 5];
-
-      // Điều kiện 1: RSI hiện tại > 80
-      if (currentRsi <= 80) {
+      // Điều kiện 1: RSI 15m > 65
+      if (currentRsi15m <= 65) {
         await sleep(60);
         continue;
       }
 
-      // Điều kiện 2: diffrsi5 > 10%
-      const diffRsi5 = currentRsi - rsiCandle5;
-      if (diffRsi5 <= 10) {
-        await sleep(60);
-        continue;
-      }
-
-      // 3. Lấy nến 5m để tính Hbb của nến vừa đóng
+      // 3. Lấy nến 5m để kiểm tra nến số 1 và tính bbm trên nến số 2
+      // candles5m[0]: nến đang chạy, [1]: nến số 1 vừa đóng, [2]: nến số 2
       const candles5m = await getCandles(symbol, '5m', 40);
       if (!candles5m || candles5m.length < 25) {
         await sleep(60);
         continue;
       }
 
-      // Nến 5m vừa đóng là index 1, tính 20 nến từ 1 đến 20
-      const closesBB5m = candles5m.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
-      const bb5m = calculateBollingerBands(closesBB5m, 20);
+      // Nến số 1: kiểm tra nến xanh (close > open)
+      const open1 = parseFloat(candles5m[1][1]);
+      const close1 = parseFloat(candles5m[1][4]);
+      const isGreenCandle1 = close1 > open1;
 
-      if (!bb5m || bb5m.middle <= 0) {
+      if (!isGreenCandle1) {
         await sleep(60);
         continue;
       }
 
-      // Hbb = ((Upper - Lower) / Middle) * 100
-      const Hbb = ((bb5m.upper - bb5m.lower) / bb5m.middle) * 100;
+      // Nến số 2: tính bbm = (low2 - middle2) / middle2 * 100
+      const low2 = parseFloat(candles5m[2][3]);
 
-      // 4. Chuẩn bị gửi Telegram
+      // Lấy 20 nến đóng cửa tính từ nến số 2 (index 2 đến 21) để tính Middle Band (SMA 20) của nến số 2
+      const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
+      const bbMiddle2 = calculateBBMiddle(closesBB2, 20);
+
+      if (!bbMiddle2 || bbMiddle2 <= 0) {
+        await sleep(60);
+        continue;
+      }
+
+      const bbm = ((low2 - bbMiddle2) / bbMiddle2) * 100;
+
+      // Điều kiện 2: -1% < bbm < 0.5%
+      if (bbm <= -1 || bbm >= 0.5) {
+        await sleep(60);
+        continue;
+      }
+
+      // 4. Chuẩn bị gửi Telegram tín hiệu LONG
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      const rsiCurrentStr = currentRsi.toFixed(2);
-      const diffRsi5Str = `${diffRsi5 > 0 ? '+' : ''}${diffRsi5.toFixed(2)}%`;
-      const hbbStr = `${Hbb.toFixed(2)}%`;
+      const rsiStr = currentRsi15m.toFixed(2);
+      const bbmStr = `${bbm > 0 ? '+' : ''}${bbm.toFixed(2)}%`;
+      const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
 
       const message =
-        `🔴 <b>SHORT: ${coinName}</b>\n` +
-        `• <b>RSI hiện tại:</b> ${rsiCurrentStr}\n` +
-        `• <b>diffrsi5:</b> ${diffRsi5Str}\n` +
-        `• <b>Hbb (5m):</b> ${hbbStr}\n` +
+        `🟢 <b>LONG: ${coinName}</b>\n` +
+        `• <b>RSI (15m):</b> ${rsiStr}%\n` +
+        `• <b>bbm (5m nến 2):</b> ${bbmStr}\n` +
+        `• <b>Nến 1 (5m):</b> Tăng (+${changeCandle1}%)\n` +
         `• <a href="${link}">Link OKX</a>`;
 
-      console.log(`🚀 [SHORT] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
+      console.log(`🚀 [LONG] Đạt tất cả điều kiện! Đang gửi Telegram cho ${symbol}...`);
 
       let isSentSuccess = false;
       try {
@@ -246,10 +251,10 @@ async function main() {
 
         scanResults.matched.push({
           symbol,
-          type: 'SHORT',
-          rsiCurrent: rsiCurrentStr,
-          diffrsi5: diffRsi5Str,
-          Hbb: hbbStr,
+          type: 'LONG',
+          rsi15m: rsiStr,
+          bbm: bbmStr,
+          candle1Change: `+${changeCandle1}%`,
           link,
           time: new Date().toISOString()
         });
@@ -261,7 +266,7 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    console.log(`\n=== HOÀN TẤT: Có ${scanResults.matched.length} coin gửi tín hiệu thành công. ===\n`);
+    console.log(`\n=== HOÀN TẤT: Có ${scanResults.matched.length} coin gửi tín hiệu LONG thành công. ===\n`);
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
   }
