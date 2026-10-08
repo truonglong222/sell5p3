@@ -159,3 +159,160 @@ async function main() {
     const scanResults = { matched: [] };
 
     for (const coin of targetCoins) {
+      const symbol = coin.instId;
+
+      // Kiểm tra Cooldown 1h
+      const lastSent = sentLog[symbol] || 0;
+      if (currentTime - lastSent < COOLDOWN_TIME) {
+        stats.inCooldown++;
+        continue;
+      }
+      stats.readyCooldown++;
+
+      // 2. Lấy nến 15m để tính RSI(20)
+      const candles15m = await getCandles(symbol, '15m', 80);
+      if (!candles15m || candles15m.length < 45) {
+        await sleep(60);
+        continue;
+      }
+
+      const chronological15m = [...candles15m].reverse();
+      const closes15m = chronological15m.map((c) => parseFloat(c[4]));
+
+      const rsiSeries15m = calculateRSIArray(closes15m, 20);
+      if (rsiSeries15m.length === 0) {
+        await sleep(60);
+        continue;
+      }
+
+      const currentRsi15m = rsiSeries15m[rsiSeries15m.length - 1];
+
+      // Điều kiện 1: RSI 15m > 65
+      if (currentRsi15m <= 65) {
+        await sleep(60);
+        continue;
+      }
+      stats.passedRsi65++;
+
+      // 3. Lấy nến 5m
+      const candles5m = await getCandles(symbol, '5m', 40);
+      if (!candles5m || candles5m.length < 25) {
+        await sleep(60);
+        continue;
+      }
+
+      // Nến số 1: kiểm tra nến xanh (close > open)
+      const open1 = parseFloat(candles5m[1][1]);
+      const close1 = parseFloat(candles5m[1][4]);
+      const isGreenCandle1 = close1 > open1;
+
+      if (!isGreenCandle1) {
+        await sleep(60);
+        continue;
+      }
+      stats.passedGreenCandle1++;
+
+      // Nến số 2: tính bbm
+      const low2 = parseFloat(candles5m[2][3]);
+      const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
+      const bbMiddle2 = calculateBBMiddle(closesBB2, 20);
+
+      if (!bbMiddle2 || bbMiddle2 <= 0) {
+        await sleep(60);
+        continue;
+      }
+
+      const bbm = ((low2 - bbMiddle2) / bbMiddle2) * 100;
+
+      // Điều kiện 2: -1% < bbm < 0.5%
+      if (bbm <= -1 || bbm >= 0.5) {
+        await sleep(60);
+        continue;
+      }
+      stats.passedBbmRange++;
+      stats.totalMatched++;
+
+      // 4. Gửi Telegram
+      const coinName = symbol.replace('-USDT-SWAP', '');
+      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
+      const rsiStr = currentRsi15m.toFixed(2);
+      const bbmStr = `${bbm > 0 ? '+' : ''}${bbm.toFixed(2)}%`;
+      const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
+
+      const message =
+        `🟢 <b>LONG: ${coinName}</b>\n` +
+        `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
+        `• <b>bbm (5m nến 2):</b> ${bbmStr}\n` +
+        `• <b>Nến 1 (5m):</b> Tăng (+${changeCandle1}%)\n` +
+        `• <a href="${link}">Link OKX</a>`;
+
+      console.log(`🚀 [LONG] Đạt tất cả điều kiện! Đang gửi Telegram cho ${symbol}...`);
+
+      let isSentSuccess = false;
+      try {
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true
+        });
+        isSentSuccess = true;
+      } catch (err) {
+        console.error(`Lỗi gửi Telegram (${symbol}):`, err.message);
+      }
+
+      if (isSentSuccess) {
+        stats.sentTelegramSuccess++;
+        sentLog[symbol] = currentTime;
+        hasNewAlert = true;
+
+        scanResults.matched.push({
+          symbol,
+          type: 'LONG',
+          rsi15m: rsiStr,
+          bbm: bbmStr,
+          candle1Change: `+${changeCandle1}%`,
+          link,
+          time: new Date().toISOString()
+        });
+      }
+
+      await sleep(100);
+    }
+
+    if (hasNewAlert) saveSentLog(sentLog);
+    saveScanResults(scanResults);
+
+    // ================= BÁO CÁO THỐNG KÊ DẠNG VĂN BẢN =================
+    console.log('\n--- BÁO CÁO THỐNG KÊ SỐ LƯỢNG COIN THỎA MÃN TỪNG ĐIỀU KIỆN ---');
+    console.log(`Tổng số cặp USDT-SWAP quét được: ${stats.allSwaps} coin.`);
+    console.log(`Số coin đạt Volume 24h trên 5 triệu USDT: ${stats.passedVol5M} coin.`);
+    console.log(`Số coin đang trong thời gian Cooldown (1h): ${stats.inCooldown} coin.`);
+    console.log(`Số coin sẵn sàng quét (không dính Cooldown): ${stats.readyCooldown} coin.`);
+    console.log('');
+    console.log('[Kết quả lọc qua các tầng kỹ thuật]');
+    console.log(`- Số coin thỏa mãn RSI(20) 15m > 65%: ${stats.passedRsi65} coin.`);
+    console.log(`- Số coin (đã qua RSI 65%) có nến 5m số 1 là nến xanh: ${stats.passedGreenCandle1} coin.`);
+    console.log(`- Số coin (đã qua 2 điều kiện trên) có -1% < bbm < 0.5%: ${stats.passedBbmRange} coin.`);
+    console.log('');
+    console.log(`Tổng số coin thỏa mãn toàn bộ điều kiện LONG: ${stats.totalMatched} coin.`);
+    console.log(`Số tín hiệu LONG gửi Telegram thành công: ${stats.sentTelegramSuccess} coin.`);
+    console.log('-------------------------------------------------------------\n');
+
+    if (scanResults.matched.length > 0) {
+      console.log('--- DANH SÁCH COIN ĐÃ PHÁT TÍN HIỆU ---');
+      scanResults.matched.forEach((item, index) => {
+        console.log(`${index + 1}. [LONG] ${item.symbol} -> RSI(20) 15m: ${item.rsi15m}%, bbm: ${item.bbm}, nến 1: ${item.candle1Change}`);
+      });
+      console.log('');
+    }
+
+    console.log(`Kết quả chi tiết đã được ghi vào file: ${RESULTS_FILE}`);
+    console.log('=== HOÀN TẤT QUÉT THỊ TRƯỜNG ===\n');
+  } catch (err) {
+    console.error('Lỗi trong hàm main():', err.message);
+  }
+}
+
+main();
