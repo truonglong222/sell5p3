@@ -161,8 +161,8 @@ async function main() {
     // Lọc Volume > 5M USDT
     const { allSwapsCount, volPassedCoins } = await getFilteredMarkets();
 
-    // Lọc bd24h > 5%
-    const targetCoins = volPassedCoins.filter((coin) => coin.change24hVal > 5);
+    // Lọc bd24h > 3%
+    const targetCoins = volPassedCoins.filter((coin) => coin.change24hVal > 3);
 
     // Bộ đếm thống kê từng điều kiện
     const stats = {
