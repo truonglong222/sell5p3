@@ -178,13 +178,13 @@ async function main() {
       // RSI của nến số 10 (cách 10 nến trước đó)
       const rsiCandle10 = rsiSeries15m[rsiSeries15m.length - 1 - 10];
 
-      // Điều kiện: RSI > 70
-      if (currentRsi <= 70) {
+      // Điều kiện: RSI > 80
+      if (currentRsi <= 80) {
         await sleep(60);
         continue;
       }
 
-      // Điều kiện: diffrsi10 > 0.5%
+      // Điều kiện: diffrsi10 > 5%
       const diffRsi10 = currentRsi - rsiCandle10;
       if (diffRsi10 <= 0.5) {
         await sleep(60);
