@@ -248,3 +248,189 @@ async function main() {
       }
 
       const diffema25_5m = ((ema25_n1 - ema25_n25) / ema25_n25) * 100;
+
+      // Lọc điều kiện: -1% < diffema25 < 1%
+      if (diffema25_5m <= -1 || diffema25_5m >= 1) {
+        await sleep(60);
+        continue;
+      }
+
+      pipelineStats.step3_diffema25Passed++;
+
+      // BƯỚC 4: TÍNH DIFFEMA50 VÀ XÁC MINH BOLLINGER BANDS / NẾN 5M
+      const ema50Series5m = calculateEMAArray(closedPrices5m, 50);
+      if (ema50Series5m.length < 50) {
+        await sleep(60);
+        continue;
+      }
+
+      const ema50_n1 = ema50Series5m[ema50Series5m.length - 1];
+      const ema50_n50 = ema50Series5m[ema50Series5m.length - 50];
+
+      if (ema50_n50 <= 0) {
+        await sleep(60);
+        continue;
+      }
+
+      const diffema50_5m = ((ema50_n1 - ema50_n50) / ema50_n50) * 100;
+
+      diffemaPassedList.push({
+        symbol,
+        diffema25: diffema25_5m.toFixed(2),
+        diffema50: diffema50_5m.toFixed(2),
+        bd24h: coin.change24hVal
+      });
+
+      // Kiểm tra Nến 1 (Đã đóng)
+      const candle1 = candles5m[1];
+      const open1 = parseFloat(candle1[1]);
+      const close1 = parseFloat(candle1[4]);
+      const isCandle1Bullish = close1 > open1; // Nến 1 Tăng
+      const isCandle1Bearish = close1 < open1; // Nến 1 Giảm
+
+      // Kiểm tra Nến 2 (Đóng trước nến 1)
+      const candle2 = candles5m[2];
+      const high2 = parseFloat(candle2[2]);
+      const low2 = parseFloat(candle2[3]);
+
+      // BB cho 20 nến tính từ nến [2]
+      const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
+      const bb2 = calculateBollingerBands(closesBB2, 20);
+
+      if (!bb2 || bb2.lower <= 0 || bb2.upper <= 0) {
+        await sleep(60);
+        continue;
+      }
+
+      const bbd = low2 - bb2.lower;
+      const bbt = high2 - bb2.upper;
+
+      let isLong = false;
+      let isShort = false;
+
+      // ----------------- ĐIỀU KIỆN TÍN HIỆU LONG / SHORT -----------------
+      // Điều kiện LONG: Không bị cooldown LONG + diffema50 > 3% + low2 < lowerBB + nến [1] xanh
+      if (!isLongCooldown && diffema50_5m > 3 && bbd < 0 && isCandle1Bullish) {
+        isLong = true;
+      }
+      // Điều kiện SHORT: Không bị cooldown SHORT + diffema50 < -3% + high2 > upperBB + nến [1] đỏ
+      else if (!isShortCooldown && diffema50_5m < -3 && bbt > 0 && isCandle1Bearish) {
+        isShort = true;
+      }
+
+      if (!isLong && !isShort) {
+        await sleep(60);
+        continue;
+      }
+
+      pipelineStats.step4_signalMatched++;
+
+      const signalType = isLong ? 'LONG' : 'SHORT';
+      const alertKey = isLong ? 'longAlert' : 'shortAlert';
+      const change24hStr = `${coin.change24hVal > 0 ? '+' : ''}${coin.change24hVal.toFixed(2)}%`;
+      const diffema25Str = `${diffema25_5m > 0 ? '+' : ''}${diffema25_5m.toFixed(2)}%`;
+      const diffema50Str = `${diffema50_5m > 0 ? '+' : ''}${diffema50_5m.toFixed(2)}%`;
+      const coinName = symbol.replace('-USDT-SWAP', '');
+      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
+      // GỬI TELEGRAM
+      const icon = isLong ? '🟢' : '🔴';
+      const message =
+        `${icon} <b>${signalType}: ${coinName}</b>\n` +
+        `• <b>diffema25 (5m):</b> ${diffema25Str}\n` +
+        `• <b>diffema50 (5m):</b> ${diffema50Str}\n` +
+        `• <b>ud (4H):</b> ${marketUDStr}\n` +
+        `• <b>bd24h:</b> ${change24hStr}\n` +
+        `• <a href="${link}">Link OKX</a>`;
+
+      console.log(`🚀 [${signalType}] Gửi Telegram cho ${symbol}...`);
+
+      let isSentSuccess = false;
+      try {
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true
+        });
+        isSentSuccess = true;
+      } catch (err) {
+        console.error('Lỗi gửi Telegram:', err.message);
+      }
+
+      if (isSentSuccess) {
+        if (isLong) countMatchedLong++;
+        if (isShort) countMatchedShort++;
+
+        scanResults.matched.push({
+          symbol,
+          type: signalType,
+          diffema25_5m: diffema25Str,
+          diffema50_5m: diffema50Str,
+          ud4h: marketUDStr,
+          bd24h: change24hStr,
+          link,
+          teleSent: true
+        });
+
+        sentLog[symbol][alertKey] = currentTime;
+        hasNewAlert = true;
+      }
+
+      await sleep(60);
+    }
+
+    if (hasNewAlert) saveSentLog(sentLog);
+    saveScanResults(scanResults);
+
+    // --- LOG THỐNG KÊ PHỄU LỌC ---
+    console.log('\n📊 ================= BÁO CÁO PHỄU LỌC (FILTER PIPELINE) =================');
+    console.log(`1. Tổng USDT Swap trên OKX                       : ${pipelineStats.step0_allSwaps} coin`);
+    console.log(`2. Thỏa điều kiện Vol 24h (> 5M USDT)            : ${pipelineStats.step1_volPassed} coin`);
+    console.log(`3. Qua kiểm tra Cooldown (12h)                   : ${pipelineStats.step2_cooldownPassed} coin`);
+    console.log(`4. Thỏa diffema25 5m (-1% < diffema25 < 1%)     : ${pipelineStats.step3_diffema25Passed} coin`);
+    console.log(`5. Khớp diffema50, BB & Nến 5m (Signal Matched)   : ${pipelineStats.step4_signalMatched} coin`);
+    console.log('=========================================================================\n');
+
+    // --- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA25 ---
+    console.log('--- DANH SÁCH COIN THỎA ĐIỀU KIỆN DIFFEMA25 (-1% < diffema25 < 1%) ---');
+    if (diffemaPassedList.length > 0) {
+      diffemaPassedList.forEach((item, index) => {
+        const signDiff25 = parseFloat(item.diffema25) > 0 ? '+' : '';
+        const signDiff50 = parseFloat(item.diffema50) > 0 ? '+' : '';
+        const signBd = item.bd24h > 0 ? '+' : '';
+        console.log(
+          `${index + 1}. ${item.symbol} | diffema25(5m): ${signDiff25}${item.diffema25}% | diffema50(5m): ${signDiff50}${item.diffema50}% | bd24h: ${signBd}${item.bd24h}%`
+        );
+      });
+      console.log('');
+    } else {
+      console.log('❌ Không có coin nào thỏa mãn điều kiện diffema25.\n');
+    }
+
+    console.log('=============== KẾT QUẢ TÍN HIỆU GỬI ĐI ===============');
+    console.log(`• Chỉ số ud (4H)        : ${marketUDStr}`);
+    console.log(`• Tín hiệu LONG đã gửi  : ${countMatchedLong} coin`);
+    console.log(`• Tín hiệu SHORT đã gửi : ${countMatchedShort} coin`);
+    console.log('=======================================================\n');
+
+    if (scanResults.matched.length > 0) {
+      console.log('--- DANH SÁCH COIN ĐÃ GỬI TÍN HIỆU ---');
+      scanResults.matched.forEach((item, index) => {
+        console.log(
+          `${index + 1}. [${item.type}] ${item.symbol} | diffema25(5m): ${item.diffema25_5m} | diffema50(5m): ${item.diffema50_5m} | bd24h: ${item.bd24h}`
+        );
+      });
+      console.log('');
+    } else {
+      console.log('❌ Không có coin nào thỏa mãn tất cả điều kiện lọc.\n');
+    }
+
+    console.log(`📁 Kết quả lưu tại: ${RESULTS_FILE}`);
+    console.log('--- HOÀN THÀNH QUÉT THỊ TRƯỜNG ---\n');
+  } catch (err) {
+    console.error('Lỗi hệ thống trong main():', err.message);
+  }
+}
+
+main();
