@@ -90,10 +90,18 @@ function calculateRSIArray(closes, period = 20) {
   return rsiArray;
 }
 
-function calculateBBMiddle(prices, period = 20) {
+// Hàm tính Bollinger Bands (Mid & Upper)
+function calculateBollingerBands(prices, period = 20, multiplier = 2) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
-  return slice.reduce((a, b) => a + b, 0) / period;
+  const mid = slice.reduce((a, b) => a + b, 0) / period;
+
+  const variance = slice.reduce((sum, price) => sum + Math.pow(price - mid, 2), 0) / period;
+  const stdDev = Math.sqrt(variance);
+
+  const upper = mid + multiplier * stdDev;
+
+  return { mid, upper };
 }
 
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
@@ -215,18 +223,19 @@ async function main() {
 
       // Tính BBM và Hbb dựa trên nến 5m số 2
       const low2 = parseFloat(candles5m[2][3]);
-      const high2 = parseFloat(candles5m[2][2]);
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
-      const bbMiddle2 = calculateBBMiddle(closesBB2, 20);
+      const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
       let bbm = null;
       let hbm = null;
       let bbmStr = 'N/A';
       let hbmStr = 'N/A';
 
-      if (bbMiddle2 && bbMiddle2 > 0) {
-        bbm = ((low2 - bbMiddle2) / bbMiddle2) * 100;
-        hbm = ((high2 - bbMiddle2) / bbMiddle2) * 100;
+      if (bb2 && bb2.mid > 0) {
+        bbm = ((low2 - bb2.mid) / bb2.mid) * 100;
+        // Công thức Hbb mới: (Upper Band - Mid Band) / Mid Band * 100
+        hbm = ((bb2.upper - bb2.mid) / bb2.mid) * 100;
+
         bbmStr = `${bbm > 0 ? '+' : ''}${bbm.toFixed(2)}%`;
         hbmStr = `${hbm > 0 ? '+' : ''}${hbm.toFixed(2)}%`;
       }
