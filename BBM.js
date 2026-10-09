@@ -123,7 +123,7 @@ async function getFilteredMarkets() {
   }
 }
 
-async function getCandles(symbol, bar = '15m', limit = 100) {
+async function getCandles(symbol, bar = '5m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 6000 });
@@ -156,6 +156,7 @@ async function main() {
       readyCooldown: 0,
       passedRsi65: 0,
       passedGreenCandle1: 0,
+      passedRedCandle2: 0, // Đếm nến số 2 là nến đỏ
       passedBbmRange: 0,
       totalMatched: 0,
       sentTelegramSuccess: 0
@@ -217,6 +218,17 @@ async function main() {
       }
       stats.passedGreenCandle1++;
 
+      // Nến số 2: kiểm tra nến giảm (close < open)
+      const open2 = parseFloat(candles5m[2][1]);
+      const close2 = parseFloat(candles5m[2][4]);
+      const isRedCandle2 = close2 < open2;
+
+      if (!isRedCandle2) {
+        await sleep(60);
+        continue;
+      }
+      stats.passedRedCandle2++;
+
       // Nến số 2: tính bbm
       const low2 = parseFloat(candles5m[2][3]);
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
@@ -229,7 +241,7 @@ async function main() {
 
       const bbm = ((low2 - bbMiddle2) / bbMiddle2) * 100;
 
-      // Điều kiện 2: -1% < bbm < 0.5%
+      // Điều kiện 3: -1% < bbm < 0.5%
       if (bbm <= -1 || bbm >= 0.5) {
         await sleep(60);
         continue;
@@ -244,14 +256,15 @@ async function main() {
       const rsiStr = currentRsi15m.toFixed(2);
       const bbmStr = `${bbm > 0 ? '+' : ''}${bbm.toFixed(2)}%`;
       const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
+      const changeCandle2 = (((close2 - open2) / open2) * 100).toFixed(2);
       const volFormatted = `$${(coin.volCcy24h / 1_000_000).toFixed(2)}M USDT`;
 
-      // Tin nhắn gửi Telegram: Volume xếp ở cuối cùng (trước link OKX)
       const message =
         `🟢 <b>LONG: ${coinName}</b>\n` +
         `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
         `• <b>bbm (5m nến 2):</b> ${bbmStr}\n` +
         `• <b>Nến 1 (5m):</b> Tăng (+${changeCandle1}%)\n` +
+        `• <b>Nến 2 (5m):</b> Giảm (${changeCandle2}%)\n` +
         `• <b>Volume 24h:</b> ${volFormatted}\n` +
         `• <a href="${link}">Link OKX</a>`;
 
@@ -281,6 +294,7 @@ async function main() {
           rsi15m: rsiStr,
           bbm: bbmStr,
           candle1Change: `+${changeCandle1}%`,
+          candle2Change: `${changeCandle2}%`,
           vol24h: volFormatted,
           link,
           time: new Date().toISOString()
@@ -303,7 +317,8 @@ async function main() {
     console.log('[Kết quả lọc qua các tầng kỹ thuật]');
     console.log(`- Số coin thỏa mãn RSI(20) 15m > 65%: ${stats.passedRsi65} coin.`);
     console.log(`- Số coin (đã qua RSI 65%) có nến 5m số 1 là nến xanh: ${stats.passedGreenCandle1} coin.`);
-    console.log(`- Số coin (đã qua 2 điều kiện trên) có -1% < bbm < 0.5%: ${stats.passedBbmRange} coin.`);
+    console.log(`- Số coin (đã qua nến 1 xanh) có nến 5m số 2 là nến đỏ: ${stats.passedRedCandle2} coin.`);
+    console.log(`- Số coin (đã qua các điều kiện trên) có -1% < bbm < 0.5%: ${stats.passedBbmRange} coin.`);
     console.log('');
     console.log(`Tổng số coin thỏa mãn toàn bộ điều kiện LONG: ${stats.totalMatched} coin.`);
     console.log(`Số tín hiệu LONG gửi Telegram thành công: ${stats.sentTelegramSuccess} coin.`);
@@ -312,7 +327,7 @@ async function main() {
     if (scanResults.matched.length > 0) {
       console.log('--- DANH SÁCH COIN ĐÃ PHÁT TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
-        console.log(`${index + 1}. [LONG] ${item.symbol} -> RSI(20) 15m: ${item.rsi15m}%, bbm: ${item.bbm}, nến 1: ${item.candle1Change}, Vol: ${item.vol24h}`);
+        console.log(`${index + 1}. [LONG] ${item.symbol} -> RSI(20) 15m: ${item.rsi15m}%, bbm: ${item.bbm}, nến 1: ${item.candle1Change}, nến 2: ${item.candle2Change}, Vol: ${item.vol24h}`);
       });
       console.log('');
     }
