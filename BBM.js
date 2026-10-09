@@ -13,8 +13,9 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const RESULTS_FILE = path.join(__dirname, 'scan_results.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
-const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // 1 giờ
-const MIN_VOL_CCY24H = 5_000_000;          // Volume 24h > 5 triệu USDT
+const COOLDOWN_TIME_SHORT = 1 * 60 * 60 * 1000;  // 1 giờ cho Short
+const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;  // 24 giờ cho Long
+const MIN_VOL_CCY24H = 5_000_000;                 // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -33,7 +34,10 @@ function saveSentLog(logData) {
     const now = Date.now();
     const cleanedLog = {};
     for (const [key, timestamp] of Object.entries(logData)) {
-      if (now - timestamp < COOLDOWN_TIME) {
+      const isLong = key.endsWith('_LONG');
+      const cooldown = isLong ? COOLDOWN_TIME_LONG : COOLDOWN_TIME_SHORT;
+      
+      if (now - timestamp < cooldown) {
         cleanedLog[key] = timestamp;
       }
     }
@@ -90,7 +94,7 @@ function calculateRSIArray(closes, period = 20) {
   return rsiArray;
 }
 
-// Hàm tính Bollinger Bands (Mid & Upper)
+// Hàm tính Bollinger Bands (Mid, Upper & Lower)
 function calculateBollingerBands(prices, period = 20, multiplier = 2) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
@@ -100,8 +104,9 @@ function calculateBollingerBands(prices, period = 20, multiplier = 2) {
   const stdDev = Math.sqrt(variance);
 
   const upper = mid + multiplier * stdDev;
+  const lower = mid - multiplier * stdDev;
 
-  return { mid, upper };
+  return { mid, upper, lower };
 }
 
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
@@ -195,7 +200,7 @@ async function main() {
       const closes15m = chronological15m.map((c) => parseFloat(c[4]));
 
       const rsiSeries15m = calculateRSIArray(closes15m, 20);
-      if (rsiSeries15m.length < 4) {
+      if (rsiSeries15m.length < 6) { // Yêu cầu tối thiểu 6 giá trị để tính diffRsi5
         await sleep(60);
         continue;
       }
@@ -209,7 +214,7 @@ async function main() {
       }
       stats.passedRsi65++;
 
-      // 2. Lấy nến 5m để kiểm tra điều kiện Long & tính BBM, Hbb
+      // 2. Lấy nến 5m để kiểm tra điều kiện Long & tính BBD, Hbb
       const candles5m = await getCandles(symbol, '5m', 40);
       if (!candles5m || candles5m.length < 25) {
         await sleep(60);
@@ -221,40 +226,40 @@ async function main() {
       const volFormatted = `$${(coin.volCcy24h / 1_000_000).toFixed(2)}M USDT`;
       const rsiStr = currentRsi15m.toFixed(2);
 
-      // Tính BBM và Hbb dựa trên nến 5m số 2
+      // Tính BBD và Hbb dựa trên nến 5m số 2
       const low2 = parseFloat(candles5m[2][3]);
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
-      let bbm = null;
+      let bbd = null;
       let hbm = null;
-      let bbmStr = 'N/A';
+      let bbdStr = 'N/A';
       let hbmStr = 'N/A';
 
       if (bb2 && bb2.mid > 0) {
-        bbm = ((low2 - bb2.mid) / bb2.mid) * 100;
-        // Công thức Hbb mới: (Upper Band - Mid Band) / Mid Band * 100
+        // BBD = Giá thấp nhất nến 2 - Dải Bollinger Band dưới nến 2
+        bbd = low2 - bb2.lower;
         hbm = ((bb2.upper - bb2.mid) / bb2.mid) * 100;
 
-        bbmStr = `${bbm > 0 ? '+' : ''}${bbm.toFixed(2)}%`;
+        bbdStr = bbd.toFixed(4);
         hbmStr = `${hbm > 0 ? '+' : ''}${hbm.toFixed(2)}%`;
       }
 
       // ---------------- KIỂM TRA ĐIỀU KIỆN SHORT ----------------
-      // diffrsi3 = RSI hiện tại - RSI nến 15m số 3 trước đó (cách 3 cây nến)
-      const rsi3Prev15m = rsiSeries15m[rsiSeries15m.length - 4];
-      const diffRsi3 = currentRsi15m - rsi3Prev15m;
+      // diffrsi5 = RSI hiện tại - RSI nến 15m số 5 trước đó (cách 5 cây nến)
+      const rsi5Prev15m = rsiSeries15m[rsiSeries15m.length - 6];
+      const diffRsi5 = currentRsi15m - rsi5Prev15m;
       const shortKey = `${symbol}_SHORT`;
       const lastSentShort = sentLog[shortKey] || 0;
 
-      if (currentRsi15m > 80 && diffRsi3 > 10 && (currentTime - lastSentShort >= COOLDOWN_TIME)) {
+      if (currentRsi15m > 80 && diffRsi5 > 15 && (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT)) {
         stats.matchedShort++;
-        const diffRsiStr = `${diffRsi3 > 0 ? '+' : ''}${diffRsi3.toFixed(2)}`;
+        const diffRsiStr = `${diffRsi5 > 0 ? '+' : ''}${diffRsi5.toFixed(2)}`;
 
         const shortMsg =
           `🔴 <b>SHORT: ${coinName}</b>\n` +
           `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
-          `• <b>diffrsi3 (15m):</b> ${diffRsiStr}\n` +
+          `• <b>diffrsi5 (15m):</b> ${diffRsiStr}\n` +
           `• <b>Hbb (5m nến 2):</b> ${hbmStr}\n` +
           `• <b>Volume 24h:</b> ${volFormatted}\n` +
           `• <a href="${link}">Link OKX</a>`;
@@ -271,7 +276,7 @@ async function main() {
             symbol,
             type: 'SHORT',
             rsi15m: rsiStr,
-            diffrsi3: diffRsiStr,
+            diffrsi5: diffRsiStr,
             hbb: hbmStr,
             vol24h: volFormatted,
             link,
@@ -284,7 +289,7 @@ async function main() {
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
-      if (currentTime - lastSentLong >= COOLDOWN_TIME) {
+      if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
         const open1 = parseFloat(candles5m[1][1]);
         const close1 = parseFloat(candles5m[1][4]);
         const isGreenCandle1 = close1 > open1;
@@ -293,7 +298,7 @@ async function main() {
         const close2 = parseFloat(candles5m[2][4]);
         const isRedCandle2 = close2 < open2;
 
-        if (isGreenCandle1 && isRedCandle2 && bbm !== null && bbm > -1 && bbm < 0.5) {
+        if (isGreenCandle1 && isRedCandle2 && bbd !== null && bbd > -1 && bbd < 0.5) {
           stats.matchedLong++;
 
           const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
@@ -302,7 +307,7 @@ async function main() {
           const longMsg =
             `🟢 <b>LONG: ${coinName}</b>\n` +
             `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
-            `• <b>bbm (5m nến 2):</b> ${bbmStr}\n` +
+            `• <b>bbd (5m nến 2):</b> ${bbdStr}\n` +
             `• <b>Hbb (5m nến 2):</b> ${hbmStr}\n` +
             `• <b>Nến 1 (5m):</b> Tăng (+${changeCandle1}%)\n` +
             `• <b>Nến 2 (5m):</b> Giảm (${changeCandle2}%)\n` +
@@ -321,7 +326,7 @@ async function main() {
               symbol,
               type: 'LONG',
               rsi15m: rsiStr,
-              bbm: bbmStr,
+              bbd: bbdStr,
               hbb: hbmStr,
               candle1Change: `+${changeCandle1}%`,
               candle2Change: `${changeCandle2}%`,
