@@ -95,7 +95,6 @@ function calculateRSIArray(closes, period = 20) {
   return rsiArray;
 }
 
-// Hàm tính Bollinger Bands (Mid, Upper & Lower)
 function calculateBollingerBands(prices, period = 20, multiplier = 2) {
   if (prices.length < period) return null;
   const slice = prices.slice(-period);
@@ -113,39 +112,47 @@ function calculateBollingerBands(prices, period = 20, multiplier = 2) {
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
 
 async function getFilteredMarkets() {
+  let allSwaps = 0;
+  let passedVol = 0;
+  let passedVolAndBd24h = 0;
+  const targetCoins = [];
+
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
-    if (!res.data || res.data.code !== '0') return { allSwapsCount: 0, targetCoins: [] };
+    if (!res.data || res.data.code !== '0') {
+      return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
+    }
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
-    
-    // Lọc theo Volume 24h > 5M USDT VÀ Biến động 24h (bd24h) > 5%
-    const targetCoins = tickers
-      .filter((item) => {
-        const vol = parseFloat(item.volCcy24h || 0);
-        const open24h = parseFloat(item.open24h || 0);
-        const last = parseFloat(item.last || 0);
-        
-        let bd24h = 0;
-        if (open24h > 0) {
-          bd24h = Math.abs((last - open24h) / open24h) * 100;
+    allSwaps = tickers.length;
+
+    for (const item of tickers) {
+      const vol = parseFloat(item.volCcy24h || 0);
+      const open24h = parseFloat(item.open24h || 0);
+      const last = parseFloat(item.last || 0);
+
+      let bd24h = 0;
+      if (open24h > 0) {
+        bd24h = Math.abs((last - open24h) / open24h) * 100;
+      }
+
+      if (vol > MIN_VOL_CCY24H) {
+        passedVol++;
+        if (bd24h > MIN_BD24H) {
+          passedVolAndBd24h++;
+          targetCoins.push({
+            instId: item.instId,
+            volCcy24h: vol
+          });
         }
+      }
+    }
 
-        return vol > MIN_VOL_CCY24H && bd24h > MIN_BD24H;
-      })
-      .map((item) => ({
-        instId: item.instId,
-        volCcy24h: parseFloat(item.volCcy24h || 0)
-      }));
-
-    return {
-      allSwapsCount: tickers.length,
-      targetCoins
-    };
+    return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return { allSwapsCount: 0, targetCoins: [] };
+    return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
   }
 }
 
@@ -186,16 +193,26 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    const { allSwapsCount, targetCoins } = await getFilteredMarkets();
+    const { allSwaps, passedVol, passedVolAndBd24h, targetCoins } = await getFilteredMarkets();
 
     const stats = {
-      allSwaps: allSwapsCount,
-      passedVolAndBd24h: targetCoins.length,
-      passedRsi50: 0,
-      matchedLong: 0,
-      sentLongSuccess: 0,
-      matchedShort: 0,
-      sentShortSuccess: 0
+      allSwaps,
+      passedVol,
+      passedVolAndBd24h,
+      candlesValid: 0,
+      
+      // Thống kê từng điều kiện SHORT
+      shortRsi80: 0,
+      shortDiffRsi15: 0,
+      shortMatched: 0,
+      shortSentSuccess: 0,
+
+      // Thống kê từng điều kiện LONG
+      longMaxRsi80: 0,
+      longCandlePattern: 0,
+      longLowerBB: 0,
+      longMatched: 0,
+      longSentSuccess: 0
     };
 
     const scanResults = { matched: [] };
@@ -203,34 +220,25 @@ async function main() {
     for (const coin of targetCoins) {
       const symbol = coin.instId;
 
-      // Lấy 80 nến 15m để đủ dữ liệu tính RSI(20) và BB(20)
       const candles15m = await getCandles(symbol, '15m', 80);
       if (!candles15m || candles15m.length < 55) {
         await sleep(60);
         continue;
       }
 
-      // Nến OKX trả về từ mới đến cũ -> Bỏ nến đang chạy (index 0), lấy các nến đã đóng
       const closedCandles = candles15m.slice(1);
       const chronological15m = [...closedCandles].reverse();
       const closes15m = chronological15m.map((c) => parseFloat(c[4]));
 
-      // Calculate RSI series cho chuỗi nến đã đóng
       const rsiSeries15m = calculateRSIArray(closes15m, 20);
       if (rsiSeries15m.length < 30) {
         await sleep(60);
         continue;
       }
 
+      stats.candlesValid++;
+
       const currentRsi15m = rsiSeries15m[rsiSeries15m.length - 1];
-
-      // Lọc coin có RSI 15m > 50
-      if (currentRsi15m <= 50) {
-        await sleep(60);
-        continue;
-      }
-      stats.passedRsi50++;
-
       const coinName = symbol.replace('-USDT-SWAP', '');
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
       const volFormatted = `$${(coin.volCcy24h / 1_000_000).toFixed(2)}M USDT`;
@@ -242,8 +250,8 @@ async function main() {
       let minLow30 = Infinity;
 
       for (const c of last30Candles) {
-        const h = parseFloat(c[2]); // High
-        const l = parseFloat(c[3]); // Low
+        const h = parseFloat(c[2]);
+        const l = parseFloat(c[3]);
         if (h > maxHigh30) maxHigh30 = h;
         if (l < minLow30) minLow30 = l;
       }
@@ -257,36 +265,42 @@ async function main() {
       const shortKey = `${symbol}_SHORT`;
       const lastSentShort = sentLog[shortKey] || 0;
 
-      if (currentRsi15m > 80 && diffRsi5 > 15 && (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT)) {
-        stats.matchedShort++;
-        const diffRsiStr = `${diffRsi5 > 0 ? '+' : ''}${diffRsi5.toFixed(2)}`;
+      if (currentRsi15m > 80) {
+        stats.shortRsi80++;
+        if (diffRsi5 > 15) {
+          stats.shortDiffRsi15++;
+          if (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT) {
+            stats.shortMatched++;
+            const diffRsiStr = `${diffRsi5 > 0 ? '+' : ''}${diffRsi5.toFixed(2)}`;
 
-        const shortMsg =
-          `🔴 <b>SHORT: ${coinName}</b>\n` +
-          `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
-          `• <b>diffrsi5 (15m):</b> ${diffRsiStr}\n` +
-          `• <b>bd30 (15m):</b> ${bd30Str}\n` +
-          `• <b>Volume 24h:</b> ${volFormatted}\n` +
-          `• <a href="${link}">Link OKX</a>`;
+            const shortMsg =
+              `🔴 <b>SHORT: ${coinName}</b>\n` +
+              `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
+              `• <b>diffrsi5 (15m):</b> ${diffRsiStr}\n` +
+              `• <b>bd30 (15m):</b> ${bd30Str}\n` +
+              `• <b>Volume 24h:</b> ${volFormatted}\n` +
+              `• <a href="${link}">Link OKX</a>`;
 
-        console.log(`🔻 [SHORT] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
+            console.log(`🔻 [SHORT] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
 
-        const isShortSent = await sendTelegramMessage(shortMsg);
-        if (isShortSent) {
-          stats.sentShortSuccess++;
-          sentLog[shortKey] = currentTime;
-          hasNewAlert = true;
+            const isShortSent = await sendTelegramMessage(shortMsg);
+            if (isShortSent) {
+              stats.shortSentSuccess++;
+              sentLog[shortKey] = currentTime;
+              hasNewAlert = true;
 
-          scanResults.matched.push({
-            symbol,
-            type: 'SHORT',
-            rsi15m: rsiStr,
-            diffrsi5: diffRsiStr,
-            bd30: bd30Str,
-            vol24h: volFormatted,
-            link,
-            time: new Date().toISOString()
-          });
+              scanResults.matched.push({
+                symbol,
+                type: 'SHORT',
+                rsi15m: rsiStr,
+                diffrsi5: diffRsiStr,
+                bd30: bd30Str,
+                vol24h: volFormatted,
+                link,
+                time: new Date().toISOString()
+              });
+            }
+          }
         }
       }
 
@@ -294,81 +308,83 @@ async function main() {
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
-      if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
-        // 1. Tìm nến có High cao nhất trong 30 nến 15m vừa đóng
-        let highestHighIndexIn30 = 0; // index trong mảng last30Candles (0 là nến vừa đóng gần nhất)
-        let highestHighVal = -Infinity;
+      // 1. Tìm nến có High cao nhất trong 30 nến 15m vừa đóng
+      let highestHighIndexIn30 = 0;
+      let highestHighVal = -Infinity;
 
-        for (let i = 0; i < last30Candles.length; i++) {
-          const h = parseFloat(last30Candles[i][2]);
-          if (h > highestHighVal) {
-            highestHighVal = h;
-            highestHighIndexIn30 = i;
-          }
+      for (let i = 0; i < last30Candles.length; i++) {
+        const h = parseFloat(last30Candles[i][2]);
+        if (h > highestHighVal) {
+          highestHighVal = h;
+          highestHighIndexIn30 = i;
         }
+      }
 
-        // Đổi index sang mảng mốc thời gian tăng dần `chronological15m`
-        const highestHighChronoIndex = (chronological15m.length - 1) - highestHighIndexIn30;
-        const rsiAtHighestCandle = rsiSeries15m[highestHighChronoIndex];
+      const highestHighChronoIndex = (chronological15m.length - 1) - highestHighIndexIn30;
+      const rsiAtHighestCandle = rsiSeries15m[highestHighChronoIndex];
 
-        // Điều kiện LONG 1: RSI nến High cao nhất > 80
-        if (rsiAtHighestCandle > 80) {
-          // Nến 1 (vừa đóng) và Nến 2 (trước nến 1) trên khung 15m
-          const candle1 = closedCandles[0];
-          const candle2 = closedCandles[1];
+      if (rsiAtHighestCandle > 80) {
+        stats.longMaxRsi80++;
 
-          const open1 = parseFloat(candle1[1]);
-          const close1 = parseFloat(candle1[4]);
-          const isGreenCandle1 = close1 > open1; // Nến 1 là nến TĂNG
+        const candle1 = closedCandles[0];
+        const candle2 = closedCandles[1];
 
-          const open2 = parseFloat(candle2[1]);
-          const close2 = parseFloat(candle2[4]);
-          const low2 = parseFloat(candle2[3]);
-          const isRedCandle2 = close2 < open2;   // Nến 2 là nến GIẢM
+        const open1 = parseFloat(candle1[1]);
+        const close1 = parseFloat(candle1[4]);
+        const isGreenCandle1 = close1 > open1;
 
-          // Tính Bollinger Bands 15m tại nến số 2
-          // slice(1, 21) lấy 20 nến từ nến số 2 trở về trước trong `closedCandles`
+        const open2 = parseFloat(candle2[1]);
+        const close2 = parseFloat(candle2[4]);
+        const low2 = parseFloat(candle2[3]);
+        const isRedCandle2 = close2 < open2;
+
+        if (isGreenCandle1 && isRedCandle2) {
+          stats.longCandlePattern++;
+
           const closesBB2 = closedCandles.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
           const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
-          // Điều kiện LONG 2: Nến 1 Tăng, Nến 2 Giảm và Low2 < Lower Band 15m của Nến 2
-          if (isGreenCandle1 && isRedCandle2 && bb2 && low2 < bb2.lower) {
-            stats.matchedLong++;
+          if (bb2 && low2 < bb2.lower) {
+            stats.longLowerBB++;
 
-            const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
-            const changeCandle2 = (((close2 - open2) / open2) * 100).toFixed(2);
+            if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
+              stats.longMatched++;
 
-            const longMsg =
-              `🟢 <b>LONG: ${coinName}</b>\n` +
-              `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
-              `• <b>RSI Nến High Max:</b> ${rsiAtHighestCandle.toFixed(2)}%\n` +
-              `• <b>bd30 (15m):</b> ${bd30Str}\n` +
-              `• <b>Nến 1 (15m):</b> Tăng (+${changeCandle1}%)\n` +
-              `• <b>Nến 2 (15m):</b> Giảm (${changeCandle2}%)\n` +
-              `• <b>Low Nến 2:</b> < Lower BB (${low2.toFixed(4)} < ${bb2.lower.toFixed(4)})\n` +
-              `• <b>Volume 24h:</b> ${volFormatted}\n` +
-              `• <a href="${link}">Link OKX</a>`;
+              const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
+              const changeCandle2 = (((close2 - open2) / open2) * 100).toFixed(2);
 
-            console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
+              const longMsg =
+                `🟢 <b>LONG: ${coinName}</b>\n` +
+                `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
+                `• <b>RSI Nến High Max:</b> ${rsiAtHighestCandle.toFixed(2)}%\n` +
+                `• <b>bd30 (15m):</b> ${bd30Str}\n` +
+                `• <b>Nến 1 (15m):</b> Tăng (+${changeCandle1}%)\n` +
+                `• <b>Nến 2 (15m):</b> Giảm (${changeCandle2}%)\n` +
+                `• <b>Low Nến 2:</b> < Lower BB (${low2.toFixed(4)} < ${bb2.lower.toFixed(4)})\n` +
+                `• <b>Volume 24h:</b> ${volFormatted}\n` +
+                `• <a href="${link}">Link OKX</a>`;
 
-            const isLongSent = await sendTelegramMessage(longMsg);
-            if (isLongSent) {
-              stats.sentLongSuccess++;
-              sentLog[longKey] = currentTime;
-              hasNewAlert = true;
+              console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
 
-              scanResults.matched.push({
-                symbol,
-                type: 'LONG',
-                rsi15m: rsiStr,
-                rsiHighestCandle: rsiAtHighestCandle.toFixed(2),
-                bd30: bd30Str,
-                candle1Change: `+${changeCandle1}%`,
-                candle2Change: `${changeCandle2}%`,
-                vol24h: volFormatted,
-                link,
-                time: new Date().toISOString()
-              });
+              const isLongSent = await sendTelegramMessage(longMsg);
+              if (isLongSent) {
+                stats.longSentSuccess++;
+                sentLog[longKey] = currentTime;
+                hasNewAlert = true;
+
+                scanResults.matched.push({
+                  symbol,
+                  type: 'LONG',
+                  rsi15m: rsiStr,
+                  rsiHighestCandle: rsiAtHighestCandle.toFixed(2),
+                  bd30: bd30Str,
+                  candle1Change: `+${changeCandle1}%`,
+                  candle2Change: `${changeCandle2}%`,
+                  vol24h: volFormatted,
+                  link,
+                  time: new Date().toISOString()
+                });
+              }
             }
           }
         }
@@ -380,16 +396,29 @@ async function main() {
     if (hasNewAlert) saveSentLog(sentLog);
     saveScanResults(scanResults);
 
-    // ================= BÁO CÁO THỐNG KÊ =================
-    console.log('\n--- BÁO CÁO THỐNG KÊ CHI TIẾT ---');
-    console.log(`Tổng SWAP quét được: ${stats.allSwaps}`);
-    console.log(`Đạt Vol > 5M USDT & bd24h > 5%: ${stats.passedVolAndBd24h}`);
-    console.log(`Thỏa mãn RSI 15m > 50%: ${stats.passedRsi50}`);
-    console.log(`- LONG thỏa mãn: ${stats.matchedLong} (Đã gửi TG: ${stats.sentLongSuccess})`);
-    console.log(`- SHORT thỏa mãn: ${stats.matchedShort} (Đã gửi TG: ${stats.sentShortSuccess})`);
-    console.log(`Tổng tín hiệu ghi nhận: ${scanResults.matched.length}`);
-    console.log(`File kết quả: ${RESULTS_FILE}`);
-    console.log('=== HOÀN TẤT QUÉT THỊ TRƯỜNG ===\n');
+    // ================= BÁO CÁO THỐNG KÊ CHI TIẾT (VĂN BẢN) =================
+    console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG ================');
+    console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
+    console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
+    console.log(`- Số coin thỏa mãn thêm Biến động 24h (bd24h) > 5%: ${stats.passedVolAndBd24h} coin`);
+    console.log(`- Số coin tải thành công đủ dữ liệu nến 15m: ${stats.candlesValid} coin`);
+    console.log('');
+    console.log('--- ĐIỀU KIỆN SHORT ---');
+    console.log(`- Số coin có RSI 15m hiện tại > 80: ${stats.shortRsi80} coin`);
+    console.log(`- Số coin có diffrsi5 (RSI hiện tại - RSI 5 nến trước) > 15: ${stats.shortDiffRsi15} coin`);
+    console.log(`- Số coin thỏa mãn SHORT và qua Cooldown (1h): ${stats.shortMatched} coin`);
+    console.log(`- Số tin nhắn SHORT đã gửi Telegram thành công: ${stats.shortSentSuccess} tin`);
+    console.log('');
+    console.log('--- ĐIỀU KIỆN LONG ---');
+    console.log(`- Số coin có RSI của nến High cao nhất trong 30 nến > 80: ${stats.longMaxRsi80} coin`);
+    console.log(`- Số coin thỏa mãn mô hình Nến 1 Tăng VÀ Nến 2 Giảm: ${stats.longCandlePattern} coin`);
+    console.log(`- Số coin thỏa mãn thêm Low Nến 2 < Lower BB 15m: ${stats.longLowerBB} coin`);
+    console.log(`- Số coin thỏa mãn LONG và qua Cooldown (24h): ${stats.longMatched} coin`);
+    console.log(`- Số tin nhắn LONG đã gửi Telegram thành công: ${stats.longSentSuccess} tin`);
+    console.log('');
+    console.log(`- Tổng số tín hiệu ghi nhận trong phiên: ${scanResults.matched.length}`);
+    console.log(`- File kết quả đã lưu: ${RESULTS_FILE}`);
+    console.log('==================================================================\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
   }
