@@ -229,8 +229,9 @@ async function main() {
       }
       stats.passedRedCandle2++;
 
-      // Nến số 2: tính bbm
+      // Nến số 2: tính bbm & hbm
       const low2 = parseFloat(candles5m[2][3]);
+      const high2 = parseFloat(candles5m[2][2]); // Giá High của nến 2
       const closesBB2 = candles5m.slice(2, 22).map((c) => parseFloat(c[4])).reverse();
       const bbMiddle2 = calculateBBMiddle(closesBB2, 20);
 
@@ -240,6 +241,7 @@ async function main() {
       }
 
       const bbm = ((low2 - bbMiddle2) / bbMiddle2) * 100;
+      const hbm = ((high2 - bbMiddle2) / bbMiddle2) * 100; // Tính Hbb (%)
 
       // Điều kiện 3: -1% < bbm < 0.5%
       if (bbm <= -1 || bbm >= 0.5) {
@@ -255,6 +257,7 @@ async function main() {
 
       const rsiStr = currentRsi15m.toFixed(2);
       const bbmStr = `${bbm > 0 ? '+' : ''}${bbm.toFixed(2)}%`;
+      const hbmStr = `${hbm > 0 ? '+' : ''}${hbm.toFixed(2)}%`;
       const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
       const changeCandle2 = (((close2 - open2) / open2) * 100).toFixed(2);
       const volFormatted = `$${(coin.volCcy24h / 1_000_000).toFixed(2)}M USDT`;
@@ -263,6 +266,7 @@ async function main() {
         `🟢 <b>LONG: ${coinName}</b>\n` +
         `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
         `• <b>bbm (5m nến 2):</b> ${bbmStr}\n` +
+        `• <b>Hbb (5m nến 2):</b> ${hbmStr}\n` +
         `• <b>Nến 1 (5m):</b> Tăng (+${changeCandle1}%)\n` +
         `• <b>Nến 2 (5m):</b> Giảm (${changeCandle2}%)\n` +
         `• <b>Volume 24h:</b> ${volFormatted}\n` +
@@ -293,6 +297,7 @@ async function main() {
           type: 'LONG',
           rsi15m: rsiStr,
           bbm: bbmStr,
+          hbb: hbmStr,
           candle1Change: `+${changeCandle1}%`,
           candle2Change: `${changeCandle2}%`,
           vol24h: volFormatted,
@@ -327,7 +332,7 @@ async function main() {
     if (scanResults.matched.length > 0) {
       console.log('--- DANH SÁCH COIN ĐÃ PHÁT TÍN HIỆU ---');
       scanResults.matched.forEach((item, index) => {
-        console.log(`${index + 1}. [LONG] ${item.symbol} -> RSI(20) 15m: ${item.rsi15m}%, bbm: ${item.bbm}, nến 1: ${item.candle1Change}, nến 2: ${item.candle2Change}, Vol: ${item.vol24h}`);
+        console.log(`${index + 1}. [LONG] ${item.symbol} -> RSI(20) 15m: ${item.rsi15m}%, bbm: ${item.bbm}, Hbb: ${item.hbb}, nến 1: ${item.candle1Change}, nến 2: ${item.candle2Change}, Vol: ${item.vol24h}`);
       });
       console.log('');
     }
