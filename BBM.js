@@ -10,7 +10,6 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
-const RESULTS_FILE = path.join(__dirname, 'scan_results.json');
 const FILE_24H = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
@@ -60,7 +59,7 @@ function updateAndSave24hList(list24h, newRsi80Coins) {
   try {
     const now = Date.now();
     
-    // Thêm hoặc cập nhật coin mới đạt RSI > 80
+    // Thêm hoặc cập nhật mốc thời gian cho coin mới đạt RSI > 80
     for (const symbol of newRsi80Coins) {
       list24h[symbol] = now;
     }
@@ -78,19 +77,6 @@ function updateAndSave24hList(list24h, newRsi80Coins) {
   } catch (e) {
     console.error('Lỗi khi lưu 24h.json:', e.message);
     return list24h;
-  }
-}
-
-function saveScanResults(results) {
-  try {
-    const outputData = {
-      lastScanAt: new Date().toISOString(),
-      matchedCount: results.matched.length,
-      matchedList: results.matched
-    };
-    fs.writeFileSync(RESULTS_FILE, JSON.stringify(outputData, null, 2), 'utf8');
-  } catch (e) {
-    console.error('Lỗi khi lưu kết quả scan:', e.message);
   }
 }
 
@@ -249,7 +235,6 @@ async function main() {
       longSentSuccess: 0
     };
 
-    const scanResults = { matched: [] };
     const newRsi80Coins = [];
 
     for (const coin of targetCoins) {
@@ -279,7 +264,7 @@ async function main() {
       const volFormatted = `$${(coin.volCcy24h / 1_000_000).toFixed(2)}M USDT`;
       const rsiStr = currentRsi15m.toFixed(2);
 
-      // --- BƯỚC 1: KIỂM TRA RSI 15M HIỆN TẠI > 80 VÀ LƯU VÀO FILE 24H.JSON ---
+      // --- BƯỚC 1: CẬP NHẬT COIN CÓ RSI 15M HIỆN TẠI > 80 VÀO TẬP LƯU 24H ---
       if (currentRsi15m > 80) {
         newRsi80Coins.push(symbol);
         stats.newRsi80Detected++;
@@ -304,7 +289,7 @@ async function main() {
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
-      // Điều kiện LONG 1: Coin BẮT BUỘC phải có trong file 24h.json (hoặc vừa có RSI > 80 trong lượt này)
+      // Điều kiện 1: Coin BẮT BUỘC phải nằm trong danh sách 24h.json (hoặc vừa chạm RSI > 80)
       const isIn24hList = !!list24h[symbol] || currentRsi15m > 80;
 
       if (isIn24hList) {
@@ -322,14 +307,14 @@ async function main() {
         const low2 = parseFloat(candle2[3]);
         const isRedCandle2 = close2 < open2;   // Nến 2 Giảm
 
-        // Điều kiện LONG 2: Mô hình Nến 1 Tăng, Nến 2 Giảm
+        // Điều kiện 2: Mô hình Nến 1 Tăng VÀ Nến 2 Giảm
         if (isGreenCandle1 && isRedCandle2) {
           stats.longCandlePattern++;
 
           const closesBB2 = closedCandles.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
           const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
-          // Điều kiện LONG 3: Low Nến 2 < Lower BB 15m của Nến 2
+          // Điều kiện 3: Low Nến 2 < Lower BB 15m của Nến 2
           if (bb2 && low2 < bb2.lower) {
             stats.longLowerBB++;
 
@@ -357,18 +342,6 @@ async function main() {
                 stats.longSentSuccess++;
                 sentLog[longKey] = currentTime;
                 hasNewAlert = true;
-
-                scanResults.matched.push({
-                  symbol,
-                  type: 'LONG',
-                  rsi15m: rsiStr,
-                  bd30: bd30Str,
-                  candle1Change: `+${changeCandle1}%`,
-                  candle2Change: `${changeCandle2}%`,
-                  vol24h: volFormatted,
-                  link,
-                  time: new Date().toISOString()
-                });
               }
             }
           }
@@ -378,12 +351,11 @@ async function main() {
       await sleep(100);
     }
 
-    // Cập nhật và lưu danh sách 24h.json cùng log đã gửi
+    // Cập nhật file 24h.json và sent_ema.json
     list24h = updateAndSave24hList(list24h, newRsi80Coins);
     stats.totalIn24hList = Object.keys(list24h).length;
 
     if (hasNewAlert) saveSentLog(sentLog);
-    saveScanResults(scanResults);
 
     // ================= BÁO CÁO THỐNG KÊ CHI TIẾT (VĂN BẢN) =================
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG ================');
@@ -392,19 +364,16 @@ async function main() {
     console.log(`- Số coin thỏa mãn thêm Biến động 24h (bd24h) > 5%: ${stats.passedVolAndBd24h} coin`);
     console.log(`- Số coin tải thành công đủ dữ liệu nến 15m: ${stats.candlesValid} coin`);
     console.log('');
-    console.log('--- THỐNG KÊ FILE 24H.JSON ---');
-    console.log(`- Số coin mới có RSI 15m > 80 vừa phát hiện trong lượt này: ${stats.newRsi80Detected} coin`);
-    console.log(`- Tổng số coin đang lưu trong file 24h.json (còn hạn < 12h): ${stats.totalIn24hList} coin`);
+    console.log('--- QUẢN LÝ TẬP LƯU 24H (24h.json) ---');
+    console.log(`- Số coin có RSI 15m hiện tại > 80 mới phát hiện phiên này: ${stats.newRsi80Detected} coin`);
+    console.log(`- Tổng số coin hiện lưu trong 24h.json (còn hạn < 12h): ${stats.totalIn24hList} coin`);
     console.log('');
-    console.log('--- ĐIỀU KIỆN LONG ---');
-    console.log(`- Số coin đang nằm trong file 24h.json được đưa vào xét LONG: ${stats.longIn24hList} coin`);
-    console.log(`- Số coin thỏa mãn mô hình Nến 1 Tăng VÀ Nến 2 Giảm: ${stats.longCandlePattern} coin`);
-    console.log(`- Số coin thỏa mãn thêm Low Nến 2 < Lower BB 15m: ${stats.longLowerBB} coin`);
-    console.log(`- Số coin thỏa mãn LONG và qua Cooldown (24h): ${stats.longMatched} coin`);
-    console.log(`- Số tin nhắn LONG đã gửi Telegram thành công: ${stats.longSentSuccess} tin`);
-    console.log('');
-    console.log(`- Tổng số tín hiệu ghi nhận trong phiên: ${scanResults.matched.length}`);
-    console.log(`- File kết quả đã lưu: ${RESULTS_FILE}`);
+    console.log('--- KẾT QUẢ XÉT TÍN HIỆU LONG ---');
+    console.log(`- Số coin nằm trong 24h.json được đưa vào kiểm tra: ${stats.longIn24hList} coin`);
+    console.log(`- Số coin đạt mô hình Nến 1 Tăng VÀ Nến 2 Giảm: ${stats.longCandlePattern} coin`);
+    console.log(`- Số coin đạt thêm Low Nến 2 < Lower BB 15m: ${stats.longLowerBB} coin`);
+    console.log(`- Số coin đạt điều kiện LONG và đã qua Cooldown (24h): ${stats.longMatched} coin`);
+    console.log(`- Số tín hiệu LONG gửi Telegram thành công: ${stats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
