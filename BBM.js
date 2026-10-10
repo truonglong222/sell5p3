@@ -15,8 +15,8 @@ const FILE_24H = path.join(__dirname, '24h.json');
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const CLEANUP_TIME_24H_FILE = 12 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 12 giờ
-const MIN_VOL_CCY24H = 5_000_000;                     // Volume 24h > 5 triệu USDT
-const MIN_BD24H = 5;                                  // Biến động 24h > 5%
+const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
+const MIN_BD24H = 5;                                // Biến động 24h > 5%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -208,7 +208,7 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT TÍN HIỆU LONG ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG ===\n');
 
     const sentLog = loadSentLog();
     let list24h = load24hList();
@@ -223,8 +223,9 @@ async function main() {
       passedVolAndBd24h,
       candlesValid: 0,
       
-      // Thống kê 24h.json
+      // Thống kê 24h.json & RSI > 80
       newRsi80Detected: 0,
+      rsi80SentSuccess: 0,
       totalIn24hList: 0,
 
       // Thống kê từng điều kiện LONG
@@ -264,10 +265,29 @@ async function main() {
       const volFormatted = `$${(coin.volCcy24h / 1_000_000).toFixed(2)}M USDT`;
       const rsiStr = currentRsi15m.toFixed(2);
 
-      // --- BƯỚC 1: CẬP NHẬT COIN CÓ RSI 15M HIỆN TẠI > 80 VÀO TẬP LƯU 24H ---
+      // --- BƯỚC 1: XỬ LÝ COIN CÓ RSI 15M HIỆN TẠI > 80 ---
       if (currentRsi15m > 80) {
         newRsi80Coins.push(symbol);
         stats.newRsi80Detected++;
+
+        // Gửi Telegram cảnh báo RSI > 80 (kèm cooldown theo chu kỳ CLEANUP_TIME_24H_FILE)
+        const rsi80Key = `${symbol}_RSI80`;
+        const lastSentRsi80 = sentLog[rsi80Key] || 0;
+
+        if (currentTime - lastSentRsi80 >= CLEANUP_TIME_24H_FILE) {
+          const rsi80Msg =
+            `🔥 <b>CẢNH BÁO RSI > 80: ${coinName}</b>\n` +
+            `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
+            `• <a href="${link}">Link OKX</a>`;
+
+          console.log(`⚡ [RSI > 80] Phát hiện ${symbol} (RSI: ${rsiStr}%). Đang gửi Telegram...`);
+          const isSent = await sendTelegramMessage(rsi80Msg);
+          if (isSent) {
+            stats.rsi80SentSuccess++;
+            sentLog[rsi80Key] = currentTime;
+            hasNewAlert = true;
+          }
+        }
       }
 
       // --- TÍNH BIẾN ĐỘNG BD30 TRÊN 30 NẾN 15M ĐÃ ĐÓNG GẦN NHẤT ---
@@ -370,6 +390,7 @@ async function main() {
     console.log('');
     console.log('--- QUẢN LÝ TẬP LƯU 24H (24h.json) ---');
     console.log(`- Số coin có RSI 15m hiện tại > 80 mới phát hiện phiên này: ${stats.newRsi80Detected} coin`);
+    console.log(`- Số thông báo RSI > 80 gửi Telegram thành công: ${stats.rsi80SentSuccess} tin`);
     console.log(`- Tổng số coin hiện lưu trong 24h.json (còn hạn < 12h): ${stats.totalIn24hList} coin`);
     console.log('');
     console.log('--- KẾT QUẢ XÉT TÍN HIỆU LONG ---');
