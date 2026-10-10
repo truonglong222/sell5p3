@@ -230,7 +230,7 @@ async function main() {
       // Thống kê từng điều kiện LONG
       longIn24hList: 0,
       longCandlePattern: 0,
-      longLowerBB: 0,
+      longBbdUnderThreshold: 0,
       longMatched: 0,
       longSentSuccess: 0
     };
@@ -314,9 +314,12 @@ async function main() {
           const closesBB2 = closedCandles.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
           const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
-          // Điều kiện 3: Low Nến 2 < Lower BB 15m của Nến 2
-          if (bb2 && low2 < bb2.lower) {
-            stats.longLowerBB++;
+          // Tính độ lệch bbd giữa Low Nến 2 và Lower BB
+          const bbd = (bb2 && bb2.lower > 0) ? (Math.abs(low2 - bb2.lower) / bb2.lower) * 100 : null;
+
+          // Điều kiện 3: bbd < 0.5%
+          if (bbd !== null && bbd < 0.5) {
+            stats.longBbdUnderThreshold++;
 
             // Kiểm tra Cooldown 24h
             if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
@@ -331,7 +334,8 @@ async function main() {
                 `• <b>bd30 (15m):</b> ${bd30Str}\n` +
                 `• <b>Nến 1 (15m):</b> Tăng (+${changeCandle1}%)\n` +
                 `• <b>Nến 2 (15m):</b> Giảm (${changeCandle2}%)\n` +
-                `• <b>Low Nến 2:</b> < Lower BB (${low2.toFixed(4)} < ${bb2.lower.toFixed(4)})\n` +
+                `• <b>bbd (Low Nến 2 vs Lower BB):</b> ${bbd.toFixed(2)}% (< 0.5%)\n` +
+                `• <b>Low Nến 2 / Lower BB:</b> ${low2.toFixed(4)} / ${bb2.lower.toFixed(4)}\n` +
                 `• <b>Volume 24h:</b> ${volFormatted}\n` +
                 `• <a href="${link}">Link OKX</a>`;
 
@@ -371,7 +375,7 @@ async function main() {
     console.log('--- KẾT QUẢ XÉT TÍN HIỆU LONG ---');
     console.log(`- Số coin nằm trong 24h.json được đưa vào kiểm tra: ${stats.longIn24hList} coin`);
     console.log(`- Số coin đạt mô hình Nến 1 Tăng VÀ Nến 2 Giảm: ${stats.longCandlePattern} coin`);
-    console.log(`- Số coin đạt thêm Low Nến 2 < Lower BB 15m: ${stats.longLowerBB} coin`);
+    console.log(`- Số coin đạt thêm bbd < 0.5%: ${stats.longBbdUnderThreshold} coin`);
     console.log(`- Số coin đạt điều kiện LONG và đã qua Cooldown (24h): ${stats.longMatched} coin`);
     console.log(`- Số tín hiệu LONG gửi Telegram thành công: ${stats.longSentSuccess} tin`);
     console.log('==================================================================\n');
