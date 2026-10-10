@@ -199,7 +199,8 @@ async function sendTelegramMessage(message) {
     });
     return true;
   } catch (err) {
-    console.error('Lỗi gửi Telegram:', err.message);
+    // In chi tiết lỗi trả về từ Telegram giúp dễ dàng debug
+    console.error('Lỗi gửi Telegram:', err.response ? JSON.stringify(err.response.data) : err.message);
     return false;
   }
 }
@@ -270,13 +271,12 @@ async function main() {
         newRsi80Coins.push(symbol);
         stats.newRsi80Detected++;
 
-        // Gửi Telegram cảnh báo RSI > 80 (kèm cooldown theo chu kỳ CLEANUP_TIME_24H_FILE)
         const rsi80Key = `${symbol}_RSI80`;
         const lastSentRsi80 = sentLog[rsi80Key] || 0;
 
         if (currentTime - lastSentRsi80 >= CLEANUP_TIME_24H_FILE) {
           const rsi80Msg =
-            `🔥 <b>CẢNH BÁO RSI > 80: ${coinName}</b>\n` +
+            `🔥 <b>CẢNH BÁO RSI &gt; 80: ${coinName}</b>\n` +
             `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
             `• <a href="${link}">Link OKX</a>`;
 
@@ -309,7 +309,6 @@ async function main() {
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
-      // Điều kiện 1: Coin BẮT BUỘC phải nằm trong danh sách 24h.json (hoặc vừa chạm RSI > 80)
       const isIn24hList = !!list24h[symbol] || currentRsi15m > 80;
 
       if (isIn24hList) {
@@ -320,41 +319,38 @@ async function main() {
 
         const open1 = parseFloat(candle1[1]);
         const close1 = parseFloat(candle1[4]);
-        const isGreenCandle1 = close1 > open1; // Nến 1 Tăng
+        const isGreenCandle1 = close1 > open1;
 
         const open2 = parseFloat(candle2[1]);
         const close2 = parseFloat(candle2[4]);
         const low2 = parseFloat(candle2[3]);
-        const isRedCandle2 = close2 < open2;   // Nến 2 Giảm
+        const isRedCandle2 = close2 < open2;
 
-        // Điều kiện 2: Mô hình Nến 1 Tăng VÀ Nến 2 Giảm
         if (isGreenCandle1 && isRedCandle2) {
           stats.longCandlePattern++;
 
           const closesBB2 = closedCandles.slice(1, 21).map((c) => parseFloat(c[4])).reverse();
           const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
-          // Tính độ lệch bbd giữa Low Nến 2 và Lower BB
           const bbd = (bb2 && bb2.lower > 0) ? (Math.abs(low2 - bb2.lower) / bb2.lower) * 100 : null;
 
-          // Điều kiện 3: bbd < 0.5%
           if (bbd !== null && bbd < 0.5) {
             stats.longBbdUnderThreshold++;
 
-            // Kiểm tra Cooldown 24h
             if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
               stats.longMatched++;
 
               const changeCandle1 = (((close1 - open1) / open1) * 100).toFixed(2);
               const changeCandle2 = (((close2 - open2) / open2) * 100).toFixed(2);
 
+              // Đã đổi dấu < thành &lt; để tránh lỗi cú pháp HTML của Telegram
               const longMsg =
                 `🟢 <b>LONG: ${coinName}</b>\n` +
                 `• <b>RSI(20) (15m):</b> ${rsiStr}%\n` +
                 `• <b>bd30 (15m):</b> ${bd30Str}\n` +
                 `• <b>Nến 1 (15m):</b> Tăng (+${changeCandle1}%)\n` +
                 `• <b>Nến 2 (15m):</b> Giảm (${changeCandle2}%)\n` +
-                `• <b>bbd (Low Nến 2 vs Lower BB):</b> ${bbd.toFixed(2)}% (< 0.5%)\n` +
+                `• <b>bbd (Low Nến 2 vs Lower BB):</b> ${bbd.toFixed(2)}% (&lt; 0.5%)\n` +
                 `• <b>Low Nến 2 / Lower BB:</b> ${low2.toFixed(4)} / ${bb2.lower.toFixed(4)}\n` +
                 `• <b>Volume 24h:</b> ${volFormatted}\n` +
                 `• <a href="${link}">Link OKX</a>`;
@@ -375,7 +371,6 @@ async function main() {
       await sleep(100);
     }
 
-    // Cập nhật file 24h.json và sent_ema.json
     list24h = updateAndSave24hList(list24h, newRsi80Coins);
     stats.totalIn24hList = Object.keys(list24h).length;
 
