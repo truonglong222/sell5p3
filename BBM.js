@@ -14,7 +14,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
-const CLEANUP_TIME_24H_FILE = 4 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 4 giờ
+const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
 const MIN_BD24H = 5;                                // Biến động 24h > 5%
 
