@@ -20,6 +20,14 @@ const MIN_BD24H = 5;                                // Biến động 24h > 5%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// ------------------- HÀM TIỆN ÍCH TRÁNH LỖI HTML TELEGRAM -------------------
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
 
 function loadSentLog() {
@@ -259,7 +267,7 @@ async function main() {
       stats.candlesValid++;
 
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
-      const coinName = symbol.replace('-USDT-SWAP', '');
+      const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
       const rsiStr = currentRsi5m.toFixed(2);
 
@@ -273,7 +281,7 @@ async function main() {
 
         if (currentTime - lastSentRsi70 >= CLEANUP_TIME_24H_FILE) {
           const rsi70Msg =
-            `🔥 <b>CẢNH BÁO RSI &gt; 70: ${coinName} (5m)</b>\n` +
+            `🔥 <b>CANH BAO RSI &gt; 70: ${coinName} (5m)</b>\n` +
             `• <b>RSI(20):</b> ${rsiStr}%\n` +
             `• <a href="${link}">Link OKX</a>`;
 
@@ -336,7 +344,7 @@ async function main() {
               const longMsg =
                 `🟢 <b>LONG: ${coinName} (5m)</b>\n` +
                 `• <b>RSI (24h.json):</b> ${rsiStr}%\n` +
-                `• <b>Điều kiện (bbm):</b> ${indicatorVal.toFixed(2)}% (&lt; 0.5%)\n` +
+                `• <b>Dieu kien (bbm):</b> ${indicatorVal.toFixed(2)}% (&lt; 0.5%)\n` +
                 `• <a href="${link}">Link OKX</a>`;
 
               console.log(`🚀 [LONG] Đạt điều kiện (bbm)! Đang gửi Telegram cho ${symbol}...`);
