@@ -24,8 +24,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/</g, '')
+    .replace(/>/g, '');
 }
 
 // ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
@@ -281,9 +281,9 @@ async function main() {
 
         if (currentTime - lastSentRsi70 >= CLEANUP_TIME_24H_FILE) {
           const rsi70Msg =
-            `🔥 <b>CANH BAO RSI &gt; 70: ${coinName} (5m)</b>\n` +
-            `• <b>RSI(20):</b> ${rsiStr}%\n` +
-            `• <a href="${link}">Link OKX</a>`;
+            `CANH BAO RSI TREN 70: ${coinName} khung 5m\n` +
+            `Chi so RSI la: ${rsiStr}%\n` +
+            `Link giao dich: ${link}`;
 
           console.log(`⚡ [RSI > 70] Phát hiện ${symbol} (RSI: ${rsiStr}%). Đang gửi Telegram...`);
           const isSent = await sendTelegramMessage(rsi70Msg);
@@ -342,10 +342,10 @@ async function main() {
               stats.longSentSuccess++;
 
               const longMsg =
-                `🟢 <b>LONG: ${coinName} (5m)</b>\n` +
-                `• <b>RSI (24h.json):</b> ${rsiStr}%\n` +
-                `• <b>Dieu kien (bbm):</b> ${indicatorVal.toFixed(2)}% (&lt; 0.5%)\n` +
-                `• <a href="${link}">Link OKX</a>`;
+                `TIN HIEU LONG: ${coinName} khung 5m\n` +
+                `Chi so RSI la: ${rsiStr}%\n` +
+                `Dieu kien bbm la: ${indicatorVal.toFixed(2)}% duoi 0.5 phần trăm\n` +
+                `Link giao dich: ${link}`;
 
               console.log(`🚀 [LONG] Đạt điều kiện (bbm)! Đang gửi Telegram cho ${symbol}...`);
 
