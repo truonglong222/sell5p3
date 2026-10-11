@@ -281,9 +281,10 @@ async function main() {
 
         if (currentTime - lastSentRsi70 >= CLEANUP_TIME_24H_FILE) {
           const rsi70Msg =
-            `CANH BAO RSI TREN 70: ${coinName} khung 5m\n` +
-            `Chi so RSI la: ${rsiStr}%\n` +
-            `Link giao dich: ${link}`;
+            `<b>⚡ CẢNH BÁO RSI > 70</b>\n` +
+            `Coin: <b>${coinName}</b> (5m)\n` +
+            `RSI: ${rsiStr}%\n` +
+            `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
           console.log(`⚡ [RSI > 70] Phát hiện ${symbol} (RSI: ${rsiStr}%). Đang gửi Telegram...`);
           const isSent = await sendTelegramMessage(rsi70Msg);
@@ -305,17 +306,17 @@ async function main() {
       if (entryData) {
         stats.longIn24hList++;
 
-        const candle1 = closedCandles[0];
-        const candle2 = closedCandles[1];
+        const candle1 = closedCandles[0]; // Nến vừa đóng
+        const candle2 = closedCandles[1]; // Nến trước nến vừa đóng
 
         const open1 = parseFloat(candle1[1]);
         const close1 = parseFloat(candle1[4]);
-        const isGreenCandle1 = close1 > open1;
+        const isGreenCandle1 = close1 > open1; // Nến vừa đóng là nến xanh
 
         const open2 = parseFloat(candle2[1]);
         const close2 = parseFloat(candle2[4]);
         const low2 = parseFloat(candle2[3]);
-        const isRedCandle2 = close2 < open2;
+        const isRedCandle2 = close2 < open2; // Nến trước nến vừa đóng là nến đỏ
 
         if (isGreenCandle1 && isRedCandle2) {
           stats.longCandlePattern++;
@@ -324,14 +325,13 @@ async function main() {
           const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
           let conditionPassed = false;
-          let indicatorVal = 0;
+          let midVal = 0;
 
           if (bb2) {
-            // Chỉ kiểm tra điều kiện bbm < 0.5%
-            const bbm = bb2.mid > 0 ? (Math.abs(low2 - bb2.mid) / bb2.mid) * 100 : null;
-            if (bbm !== null && bbm < 0.5) {
+            // Nến đỏ trước đó có giá thấp nhất < Bollinger band mid
+            if (low2 < bb2.mid) {
               conditionPassed = true;
-              indicatorVal = bbm;
+              midVal = bb2.mid;
             }
           }
 
@@ -342,12 +342,13 @@ async function main() {
               stats.longSentSuccess++;
 
               const longMsg =
-                `TIN HIEU LONG: ${coinName} khung 5m\n` +
-                `Chi so RSI la: ${rsiStr}%\n` +
-                `Dieu kien bbm la: ${indicatorVal.toFixed(2)}% duoi 0.5 phần trăm\n` +
-                `Link giao dich: ${link}`;
+                `<b>🚀 TÍN HIỆU LONG</b>\n` +
+                `Coin: <b>${coinName}</b> (5m)\n` +
+                `RSI: ${rsiStr}%\n` +
+                `Low nến đỏ (${low2.toFixed(4)}) &lt; Mid BB (${midVal.toFixed(4)})\n` +
+                `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-              console.log(`🚀 [LONG] Đạt điều kiện (bbm)! Đang gửi Telegram cho ${symbol}...`);
+              console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
 
               const isLongSent = await sendTelegramMessage(longMsg);
               if (isLongSent) {
