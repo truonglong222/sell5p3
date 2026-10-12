@@ -27,6 +27,17 @@ function escapeHtml(str) {
     .replace(/>/g, '');
 }
 
+// Hàm format số volume cho dễ đọc (ví dụ: 12,345,678 hoặc dạng rút gọn)
+function formatVolume(num) {
+  if (num >= 1_000_000_000) {
+    return (num / 1_000_000_000).toFixed(2) + 'B USDT';
+  } else if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(2) + 'M USDT';
+  } else {
+    return num.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USDT';
+  }
+}
+
 // ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
 
 function loadSentLog() {
@@ -242,7 +253,7 @@ async function main() {
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
-      const bd24hVal = coin.bd24h !== undefined ? coin.bd24h.toFixed(2) : '0.00';
+      const volFormatted = formatVolume(coin.volCcy24h);
 
       // Đổi sang khung nến 5m
       const candles5m = await getCandles(symbol, '5m', 80);
@@ -281,6 +292,7 @@ async function main() {
             `<b>⚡ CẢNH BÁO RSI > 70</b>\n` +
             `Coin: <b>${coinName}</b> (5m)\n` +
             `RSI: ${rsiStr}%\n` +
+            `Volume 24h: ${volFormatted}\n` +
             `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
           console.log(`⚡ [RSI > 70] Phát hiện ${symbol} (RSI: ${rsiStr}%). Đang gửi Telegram...`);
@@ -340,7 +352,7 @@ async function main() {
                 `<b>🚀 TÍN HIỆU LONG</b>\n` +
                 `Coin: <b>${coinName}</b> (5m)\n` +
                 `RSI: ${rsiStr}%\n` +
-                `Biến động 24h: ${bd24hVal}%\n` +
+                `Volume 24h: ${volFormatted}\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
               console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
