@@ -16,7 +16,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
-const MIN_BD24H = 5;                                // Biến động 24h > 5%
+const MIN_BD24H = 3;                                // Biến động 24h > 3%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -173,7 +173,8 @@ async function getFilteredMarkets() {
           passedVolAndBd24h++;
           targetCoins.push({
             instId: item.instId,
-            volCcy24h: vol
+            volCcy24h: vol,
+            bd24h: bd24h
           });
         }
       }
@@ -246,6 +247,7 @@ async function main() {
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
+      const bd24hVal = coin.bd24h !== undefined ? coin.bd24h.toFixed(2) : '0.00';
 
       // Đổi sang khung nến 5m
       const candles5m = await getCandles(symbol, '5m', 80);
@@ -325,13 +327,11 @@ async function main() {
           const bb2 = calculateBollingerBands(closesBB2, 20, 2);
 
           let conditionPassed = false;
-          let midVal = 0;
 
           if (bb2) {
             // Nến đỏ trước đó có giá thấp nhất < Bollinger band mid
             if (low2 < bb2.mid) {
               conditionPassed = true;
-              midVal = bb2.mid;
             }
           }
 
@@ -345,7 +345,7 @@ async function main() {
                 `<b>🚀 TÍN HIỆU LONG</b>\n` +
                 `Coin: <b>${coinName}</b> (5m)\n` +
                 `RSI: ${rsiStr}%\n` +
-                `Low nến đỏ (${low2.toFixed(4)}) &lt; Mid BB (${midVal.toFixed(4)})\n` +
+                `Biến động 24h: ${bd24hVal}%\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
               console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
@@ -371,7 +371,7 @@ async function main() {
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
     console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
     console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
-    console.log(`- Số coin thỏa mãn Biến động 24h > 5%: ${stats.passedVolAndBd24h} coin`);
+    console.log(`- Số coin thỏa mãn Biến động 24h > 3%: ${stats.passedVolAndBd24h} coin`);
     console.log(`- Số coin tải đủ dữ liệu nến 5m: ${stats.candlesValid} coin`);
     console.log(`- Số coin đạt RSI > 70 mới: ${stats.newRsi70Detected} coin`);
     console.log(`- Tổng số coin lưu trong 24h.json: ${stats.totalIn24hList} coin`);
