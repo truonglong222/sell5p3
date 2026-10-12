@@ -15,7 +15,8 @@ const FILE_24H = path.join(__dirname, '24h.json');
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
-const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
+const MIN_VOL_CCY24H = 10_000_000;                  // Volume 24h > 10 triệu USDT (ĐÃ CẬP NHẬT)
+const MIN_BD24H = 3;                                // Biến động 24h > 3%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -25,17 +26,6 @@ function escapeHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '')
     .replace(/>/g, '');
-}
-
-// Hàm format số volume cho dễ đọc (ví dụ: 12,345,678 hoặc dạng rút gọn)
-function formatVolume(num) {
-  if (num >= 1_000_000_000) {
-    return (num / 1_000_000_000).toFixed(2) + 'B USDT';
-  } else if (num >= 1_000_000) {
-    return (num / 1_000_000).toFixed(2) + 'M USDT';
-  } else {
-    return num.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USDT';
-  }
 }
 
 // ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
@@ -154,43 +144,46 @@ function calculateBollingerBands(prices, period = 20, multiplier = 2) {
 async function getFilteredMarkets() {
   let allSwaps = 0;
   let passedVol = 0;
+  let passedVolAndBd24h = 0;
   const targetCoins = [];
 
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
     if (!res.data || res.data.code !== '0') {
-      return { allSwaps, passedVol, targetCoins };
+      return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
     }
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
     allSwaps = tickers.length;
 
     for (const item of tickers) {
-      const vol24h = parseFloat(item.vol24h || 0);
-      const last = parseFloat(item.last || 0);
-      const calculatedVol = vol24h * last; // Volume 24h * giá coin hiện tại
-
+      const vol = parseFloat(item.volCcy24h || 0);
       const open24h = parseFloat(item.open24h || 0);
+      const last = parseFloat(item.last || 0);
+
       let bd24h = 0;
       if (open24h > 0) {
         bd24h = Math.abs((last - open24h) / open24h) * 100;
       }
 
-      if (calculatedVol > MIN_VOL_CCY24H) {
+      if (vol > MIN_VOL_CCY24H) {
         passedVol++;
-        targetCoins.push({
-          instId: item.instId,
-          volCcy24h: calculatedVol,
-          bd24h: bd24h
-        });
+        if (bd24h > MIN_BD24H) {
+          passedVolAndBd24h++;
+          targetCoins.push({
+            instId: item.instId,
+            volCcy24h: vol,
+            bd24h: bd24h
+          });
+        }
       }
     }
 
-    return { allSwaps, passedVol, targetCoins };
+    return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return { allSwaps, passedVol, targetCoins };
+    return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
   }
 }
 
@@ -232,11 +225,12 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    const { allSwaps, passedVol, targetCoins } = await getFilteredMarkets();
+    const { allSwaps, passedVol, passedVolAndBd24h, targetCoins } = await getFilteredMarkets();
 
     const stats = {
       allSwaps,
       passedVol,
+      passedVolAndBd24h,
       candlesValid: 0,
       
       newRsi70Detected: 0,
@@ -253,7 +247,7 @@ async function main() {
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
-      const volFormatted = formatVolume(coin.volCcy24h);
+      const bd24hVal = coin.bd24h !== undefined ? coin.bd24h.toFixed(2) : '0.00';
 
       // Đổi sang khung nến 5m
       const candles5m = await getCandles(symbol, '5m', 80);
@@ -292,7 +286,6 @@ async function main() {
             `<b>⚡ CẢNH BÁO RSI > 70</b>\n` +
             `Coin: <b>${coinName}</b> (5m)\n` +
             `RSI: ${rsiStr}%\n` +
-            `Volume 24h: ${volFormatted}\n` +
             `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
           console.log(`⚡ [RSI > 70] Phát hiện ${symbol} (RSI: ${rsiStr}%). Đang gửi Telegram...`);
@@ -352,7 +345,7 @@ async function main() {
                 `<b>🚀 TÍN HIỆU LONG</b>\n` +
                 `Coin: <b>${coinName}</b> (5m)\n` +
                 `RSI: ${rsiStr}%\n` +
-                `Volume 24h: ${volFormatted}\n` +
+                `Biến động 24h: ${bd24hVal}%\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
               console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
@@ -377,7 +370,8 @@ async function main() {
 
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
     console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
-    console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
+    console.log(`- Số coin thỏa mãn Volume 24h > 10M USDT: ${stats.passedVol} coin`);
+    console.log(`- Số coin thỏa mãn Biến động 24h > 3%: ${stats.passedVolAndBd24h} coin`);
     console.log(`- Số coin tải đủ dữ liệu nến 5m: ${stats.candlesValid} coin`);
     console.log(`- Số coin đạt RSI > 70 mới: ${stats.newRsi70Detected} coin`);
     console.log(`- Tổng số coin lưu trong 24h.json: ${stats.totalIn24hList} coin`);
