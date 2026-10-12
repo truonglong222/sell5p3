@@ -16,7 +16,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
-const MIN_BD24H = 3;                                // Biến động 24h > 3%
+const MAX_BD24H = 5;                                // Biến động 24h < 5%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -169,7 +169,7 @@ async function getFilteredMarkets() {
 
       if (vol > MIN_VOL_CCY24H) {
         passedVol++;
-        if (bd24h > MIN_BD24H) {
+        if (bd24h < MAX_BD24H) {
           passedVolAndBd24h++;
           targetCoins.push({
             instId: item.instId,
@@ -371,7 +371,7 @@ async function main() {
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
     console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
     console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
-    console.log(`- Số coin thỏa mãn Biến động 24h > 3%: ${stats.passedVolAndBd24h} coin`);
+    console.log(`- Số coin thỏa mãn Biến động 24h < 5%: ${stats.passedVolAndBd24h} coin`);
     console.log(`- Số coin tải đủ dữ liệu nến 5m: ${stats.candlesValid} coin`);
     console.log(`- Số coin đạt RSI > 70 mới: ${stats.newRsi70Detected} coin`);
     console.log(`- Tổng số coin lưu trong 24h.json: ${stats.totalIn24hList} coin`);
