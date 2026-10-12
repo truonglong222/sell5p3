@@ -16,7 +16,6 @@ const FILE_24H = path.join(__dirname, '24h.json');
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
-const MAX_BD24H = 5;                                // Biến động 24h < 5%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -144,46 +143,43 @@ function calculateBollingerBands(prices, period = 20, multiplier = 2) {
 async function getFilteredMarkets() {
   let allSwaps = 0;
   let passedVol = 0;
-  let passedVolAndBd24h = 0;
   const targetCoins = [];
 
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/tickers?instType=SWAP`;
     const res = await axios.get(url, { timeout: 10000 });
     if (!res.data || res.data.code !== '0') {
-      return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
+      return { allSwaps, passedVol, targetCoins };
     }
 
     const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
     allSwaps = tickers.length;
 
     for (const item of tickers) {
-      const vol = parseFloat(item.volCcy24h || 0);
-      const open24h = parseFloat(item.open24h || 0);
+      const vol24h = parseFloat(item.vol24h || 0);
       const last = parseFloat(item.last || 0);
+      const calculatedVol = vol24h * last; // Volume 24h * giá coin hiện tại
 
+      const open24h = parseFloat(item.open24h || 0);
       let bd24h = 0;
       if (open24h > 0) {
         bd24h = Math.abs((last - open24h) / open24h) * 100;
       }
 
-      if (vol > MIN_VOL_CCY24H) {
+      if (calculatedVol > MIN_VOL_CCY24H) {
         passedVol++;
-        if (bd24h < MAX_BD24H) {
-          passedVolAndBd24h++;
-          targetCoins.push({
-            instId: item.instId,
-            volCcy24h: vol,
-            bd24h: bd24h
-          });
-        }
+        targetCoins.push({
+          instId: item.instId,
+          volCcy24h: calculatedVol,
+          bd24h: bd24h
+        });
       }
     }
 
-    return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
+    return { allSwaps, passedVol, targetCoins };
   } catch (error) {
     console.error('Lỗi khi lấy danh sách Tickers OKX:', error.message);
-    return { allSwaps, passedVol, passedVolAndBd24h, targetCoins };
+    return { allSwaps, passedVol, targetCoins };
   }
 }
 
@@ -225,12 +221,11 @@ async function main() {
     const currentTime = Date.now();
     let hasNewAlert = false;
 
-    const { allSwaps, passedVol, passedVolAndBd24h, targetCoins } = await getFilteredMarkets();
+    const { allSwaps, passedVol, targetCoins } = await getFilteredMarkets();
 
     const stats = {
       allSwaps,
       passedVol,
-      passedVolAndBd24h,
       candlesValid: 0,
       
       newRsi70Detected: 0,
@@ -371,7 +366,6 @@ async function main() {
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
     console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
     console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
-    console.log(`- Số coin thỏa mãn Biến động 24h < 5%: ${stats.passedVolAndBd24h} coin`);
     console.log(`- Số coin tải đủ dữ liệu nến 5m: ${stats.candlesValid} coin`);
     console.log(`- Số coin đạt RSI > 70 mới: ${stats.newRsi70Detected} coin`);
     console.log(`- Tổng số coin lưu trong 24h.json: ${stats.totalIn24hList} coin`);
