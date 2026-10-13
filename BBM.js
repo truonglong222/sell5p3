@@ -16,7 +16,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // 1. Lọc Volume 24h > 5 triệu USDT
-const MIN_BD5 = 3;                                  // 2. Lọc BD5 > +3%
+const MIN_BD5 = 2;                                  // 2. Lọc BD5 > +2% (đã cập nhật)
 const MIN_RSI = 60;                                 // 3. Lọc RSI > 60
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -68,7 +68,7 @@ function updateAndSave24hList(list24h, newRsiSymbols) {
   try {
     const now = Date.now();
     
-    // Thêm hoặc cập nhật mốc thời gian cho coin mới đạt RSI > 60 & BD5 > 3%
+    // Thêm hoặc cập nhật mốc thời gian cho coin mới đạt RSI > 60 & BD5 > 2%
     for (const symbol of newRsiSymbols) {
       list24h[symbol] = now;
     }
@@ -392,7 +392,7 @@ async function main() {
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
     console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
     console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
-    console.log(`- Số coin thỏa mãn BD5 > +3%: ${stats.passedBd5} coin`);
+    console.log(`- Số coin thỏa mãn BD5 > +2%: ${stats.passedBd5} coin`);
     console.log(`- Số coin thỏa mãn RSI > 60: ${stats.passedRsi60} coin`);
     console.log(`- Tổng số coin lưu trong 24h.json: ${stats.totalIn24hList} coin`);
     console.log(`- Số tín hiệu LONG gửi thành công: ${stats.longSentSuccess} tin`);
