@@ -16,7 +16,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // 1. Lọc Volume 24h > 5 triệu USDT
-const MIN_BD5 = 2;                                  // 2. Lọc BD5 > +2% (đã cập nhật)
+const MIN_BD5 = 2;                                  // 2. Lọc BD5 > +2%
 const MIN_RSI = 60;                                 // 3. Lọc RSI > 60
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,8 +25,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
-    .replace(/</g, '')
-    .replace(/>/g, '');
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 // ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
@@ -37,7 +37,9 @@ function loadSentLog() {
       const data = fs.readFileSync(DB_FILE, 'utf8');
       return data.trim() ? JSON.parse(data) : {};
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Lỗi đọc file sent_ema.json:', e.message);
+  }
   return {};
 }
 
@@ -51,7 +53,9 @@ function saveSentLog(logData) {
       }
     }
     fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
-  } catch (e) {}
+  } catch (e) {
+    console.error('Lỗi ghi file sent_ema.json:', e.message);
+  }
 }
 
 function load24hList() {
@@ -60,7 +64,9 @@ function load24hList() {
       const data = fs.readFileSync(FILE_24H, 'utf8');
       return data.trim() ? JSON.parse(data) : {};
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Lỗi đọc file 24h.json:', e.message);
+  }
   return {};
 }
 
@@ -70,7 +76,9 @@ function updateAndSave24hList(list24h, newRsiSymbols) {
     
     // Thêm hoặc cập nhật mốc thời gian cho coin mới đạt RSI > 60 & BD5 > 2%
     for (const symbol of newRsiSymbols) {
-      list24h[symbol] = now;
+      if (!list24h[symbol]) {
+        list24h[symbol] = now;
+      }
     }
 
     // Tự động dọn dẹp coin đã lưu quá thời gian quy định
@@ -190,6 +198,11 @@ async function getCandles(symbol, bar = '5m', limit = 100) {
 }
 
 async function sendTelegramMessage(message) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.error('❌ Thiếu Telegram BOT_TOKEN hoặc CHAT_ID trong môi trường!');
+    return false;
+  }
+
   try {
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: TELEGRAM_CHAT_ID,
@@ -199,7 +212,8 @@ async function sendTelegramMessage(message) {
     });
     return true;
   } catch (err) {
-    console.error('Lỗi gửi Telegram:', err.response ? JSON.stringify(err.response.data) : err.message);
+    const errDetail = err.response ? JSON.stringify(err.response.data) : err.message;
+    console.error(`❌ [Telegram Error] Không thể gửi tin nhắn cho Chat ID ${TELEGRAM_CHAT_ID}:`, errDetail);
     return false;
   }
 }
@@ -295,8 +309,9 @@ async function main() {
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
       const rsiStr = currentRsi5m.toFixed(2);
 
-      // --- XỬ LÝ LƯU FILE 24H.JSON & GỬI TELEGRAM KHI ĐẠT ĐIỀU KIỆN ---
+      // --- XỬ LÝ LƯU FILE 24H.JSON & GỬI TELEGRAM RSI ---
       newRsiSymbols.push(symbol);
+      list24h[symbol] = currentTime; // Cập nhật trực tiếp vào bộ nhớ tạm để kiểm tra LONG ngay
       stats.newRsiDetected++;
 
       const rsiKey = `${symbol}_RSI60`;
@@ -323,8 +338,8 @@ async function main() {
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
-      // Kiểm tra xem coin có nằm trong danh sách 24h.json hoặc vừa đạt điều kiện
-      const entryData = list24h[symbol] || (currentRsi5m > MIN_RSI ? currentTime : null);
+      // Kiểm tra xem coin có trong danh sách 24h
+      const entryData = list24h[symbol];
 
       if (entryData) {
         stats.longIn24hList++;
@@ -360,8 +375,6 @@ async function main() {
             stats.longConditionMatched++;
 
             if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
-              stats.longSentSuccess++;
-
               const longMsg =
                 `<b>🚀 TÍN HIỆU LONG</b>\n` +
                 `Coin: <b>${coinName}</b> (5m)\n` +
@@ -373,9 +386,15 @@ async function main() {
 
               const isLongSent = await sendTelegramMessage(longMsg);
               if (isLongSent) {
+                stats.longSentSuccess++;
                 sentLog[longKey] = currentTime;
                 hasNewAlert = true;
+                console.log(`✅ Gửi tín hiệu LONG thành công cho ${symbol}!`);
+              } else {
+                console.error(`❌ Gửi tín hiệu LONG thất bại cho ${symbol}. Kiếm tra lại log Telegram phía trên!`);
               }
+            } else {
+              console.log(`⏳ ${symbol} đạt điều kiện LONG nhưng đang trong thời gian Cooldown (${((COOLDOWN_TIME_LONG - (currentTime - lastSentLong)) / 3600000).toFixed(1)}h còn lại)`);
             }
           }
         }
@@ -395,6 +414,7 @@ async function main() {
     console.log(`- Số coin thỏa mãn BD5 > +2%: ${stats.passedBd5} coin`);
     console.log(`- Số coin thỏa mãn RSI > 60: ${stats.passedRsi60} coin`);
     console.log(`- Tổng số coin lưu trong 24h.json: ${stats.totalIn24hList} coin`);
+    console.log(`- Số tín hiệu LONG đạt mô hình & BB: ${stats.longConditionMatched} coin`);
     console.log(`- Số tín hiệu LONG gửi thành công: ${stats.longSentSuccess} tin`);
     console.log('======================================================================\n');
   } catch (err) {
