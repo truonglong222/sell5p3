@@ -190,17 +190,39 @@ async function getCandles(symbol, bar = '5m', limit = 100) {
   }
 }
 
+// ------------------- GỬI TELEGRAM & BẮT LOG LỖI CHI TIẾT -------------------
+
 async function sendTelegramMessage(message) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.error('\n❌ [TELEGRAM ERROR] Thiếu cấu hình BOT_TOKEN hoặc CHAT_ID:');
+    console.error(`   - BOT_TOKEN: ${TELEGRAM_BOT_TOKEN ? 'Đã có' : 'CHƯA CÓ (undefined)'}`);
+    console.error(`   - CHAT_ID: ${TELEGRAM_CHAT_ID ? TELEGRAM_CHAT_ID : 'CHƯA CÓ (undefined)'}\n`);
+    return false;
+  }
+
   try {
-    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    await axios.post(url, {
       chat_id: TELEGRAM_CHAT_ID,
       text: message,
       parse_mode: 'HTML',
       disable_web_page_preview: true
-    });
+    }, { timeout: 8000 });
     return true;
   } catch (err) {
-    console.error('Lỗi gửi Telegram:', err.response ? JSON.stringify(err.response.data) : err.message);
+    console.error('\n❌ [TELEGRAM SEND ERROR]');
+    if (err.response) {
+      console.error(`- HTTP Status : ${err.response.status}`);
+      console.error(`- Error Code  : ${err.response.data?.error_code}`);
+      console.error(`- Description : ${err.response.data?.description}`);
+      console.error(`- Raw Data    :`, JSON.stringify(err.response.data, null, 2));
+    } else if (err.request) {
+      console.error(`- Network Error: Không nhận được phản hồi từ api.telegram.org (${err.code || err.message})`);
+    } else {
+      console.error(`- General Error: ${err.message}`);
+    }
+    console.error('- Message Preview:\n', message);
+    console.error('--------------------------------------------------\n');
     return false;
   }
 }
@@ -333,7 +355,7 @@ async function main() {
         const low2 = parseFloat(candle2[3]);
         const isRedCandle2 = close2 < open2; // Nến 2 là nến đỏ
 
-        // Điều kiện: Nến 1 xanh và Nến 2 đỏ
+        // Điều kiện 1: Nến 1 xanh và Nến 2 đỏ
         if (isGreenCandle1 && isRedCandle2) {
           stats.longCandlePattern++;
 
@@ -348,7 +370,7 @@ async function main() {
             // bbm = chênh lệch % giữa giá thấp nhất nến 2 so với bb2.mid (không dùng trị tuyệt đối)
             bbm = ((low2 - bb2.mid) / bb2.mid) * 100;
 
-            // Điều kiện: bbm < 0.5%
+            // Điều kiện 2: bbm < 0.5%
             if (bbm < MAX_BBM) {
               conditionPassed = true;
             }
@@ -358,7 +380,7 @@ async function main() {
             stats.longConditionMatched++;
 
             if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
-              // 1. Cập nhật sentLog và lưu NGAY LẬP TỨC vào file sent_ema.json trước khi gửi Telegram
+              // 1. Cập nhật và lưu NGAY LẬP TỨC vào sent_ema.json trước khi gửi tin nhắn Telegram
               sentLog[longKey] = currentTime;
               saveSentLog(sentLog);
               stats.longSavedSuccess++;
@@ -374,7 +396,7 @@ async function main() {
 
               console.log(`💾 [LONG] Đã lưu ${symbol} vào sent_ema.json! Đang gửi Telegram (BBM: ${bbmSign}%)...`);
 
-              // 2. Gửi tin nhắn Telegram sau khi đã lưu file
+              // 2. Gửi tin nhắn Telegram sau khi đã lưu
               const isLongSent = await sendTelegramMessage(longMsg);
               if (isLongSent) {
                 stats.longSentSuccess++;
