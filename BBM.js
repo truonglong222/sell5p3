@@ -71,12 +71,10 @@ function updateAndSave24hList(list24h, newRsiSymbols) {
   try {
     const now = Date.now();
     
-    // Thêm hoặc cập nhật mốc thời gian cho coin mới đạt RSI > 70
     for (const symbol of newRsiSymbols) {
       list24h[symbol] = now;
     }
 
-    // Tự động dọn dẹp coin đã lưu quá thời gian quy định
     const cleaned24h = {};
     for (const [symbol, data] of Object.entries(list24h)) {
       const timestamp = typeof data === 'object' ? data.timestamp : data;
@@ -278,7 +276,7 @@ async function main() {
         continue;
       }
 
-      const closedCandles = candles5m.slice(1); // Bỏ nến chưa đóng hiện tại
+      const closedCandles = candles5m.slice(1);
       if (closedCandles.length < 21) {
         await sleep(60);
         continue;
@@ -298,7 +296,6 @@ async function main() {
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
       const rsiStr = currentRsi5m.toFixed(2);
 
-      // Tính BD5
       const close0 = parseFloat(closedCandles[0][4]);
       const open4 = parseFloat(closedCandles[4][1]);
       let bd5 = 0;
@@ -313,15 +310,16 @@ async function main() {
         stats.newRsi70Detected++;
       } else {
         if (!list24h[symbol] && bd5 > MIN_BD5) {
-          stats.shortPassedBasic++; // Thỏa mãn cơ bản (không nằm trong 24h.json, RSI < 70, BD5 > 2%)
+          stats.shortPassedBasic++;
 
-          // Gọi nến 1h tính diffema10 cho Short
           stats.shortCalled1H++;
-          const candles1h = await getCandles(symbol, '1h', 50);
+          // Tăng limit lên 100 để đảm bảo đủ dữ liệu nến 1h
+          const candles1h = await getCandles(symbol, '1h', 100);
           let diffema10 = 999;
 
-          if (candles1h && candles1h.length >= 35) {
-            stats.shortSuccess1H++; // Gọi nến 1h thành công và đủ dữ liệu
+          // Giảm điều kiện kiểm tra độ dài xuống >= 25 để tránh bị hụt
+          if (candles1h && candles1h.length >= 25) {
+            stats.shortSuccess1H++;
             const closed1h = candles1h.slice(1);
             const chronological1h = [...closed1h].reverse();
             const closes1h = chronological1h.map((c) => parseFloat(c[4]));
@@ -335,7 +333,7 @@ async function main() {
           }
 
           if (diffema10 < 0) {
-            stats.shortPassedDiffEMA10++; // Thỏa mãn diffema10 < 0
+            stats.shortPassedDiffEMA10++;
 
             const shortKey = `${symbol}_SHORT`;
             const lastSentShort = sentLog[shortKey] || 0;
@@ -364,7 +362,7 @@ async function main() {
       const entryData = list24h[symbol];
 
       if (entryData) {
-        stats.longIn24hList++; // Thuộc danh sách 24h.json
+        stats.longIn24hList++;
 
         const candle1 = closedCandles[0];
         const low1 = parseFloat(candle1[3]);
@@ -383,15 +381,16 @@ async function main() {
         }
 
         if (conditionPassedBBM) {
-          stats.longPassedBBM++; // Thỏa mãn BBM < 0.5% ở khung 5m
+          stats.longPassedBBM++;
 
-          // Gọi nến 1h tính diffema10 cho Long
           stats.longCalled1H++;
-          const candles1h = await getCandles(symbol, '1h', 50);
+          // Tăng limit lên 100 để đảm bảo đủ dữ liệu nến 1h
+          const candles1h = await getCandles(symbol, '1h', 100);
           let diffema10 = -999;
 
-          if (candles1h && candles1h.length >= 35) {
-            stats.longSuccess1H++; // Gọi nến 1h thành công và đủ dữ liệu
+          // Giảm điều kiện kiểm tra độ dài xuống >= 25 để tránh bị hụt
+          if (candles1h && candles1h.length >= 25) {
+            stats.longSuccess1H++;
             const closed1h = candles1h.slice(1);
             const chronological1h = [...closed1h].reverse();
             const closes1h = chronological1h.map((c) => parseFloat(c[4]));
@@ -405,7 +404,7 @@ async function main() {
           }
 
           if (diffema10 > 0) {
-            stats.longPassedDiffEMA10++; // Thỏa mãn DiffEMA10 > 0 ở khung 1h
+            stats.longPassedDiffEMA10++;
 
             const longKey = `${symbol}_LONG`;
             const lastSentLong = sentLog[longKey] || 0;
@@ -436,7 +435,6 @@ async function main() {
       await sleep(100);
     }
 
-    // Cập nhật và lưu file 24h.json
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
     stats.totalIn24hList = Object.keys(list24h).length;
 
