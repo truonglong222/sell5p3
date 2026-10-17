@@ -14,7 +14,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
-const COOLDOWN_TIME_SHORT = 4 * 60 * 60 * 1000;     // 24 giờ cho Short
+const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;     // 24 giờ cho Short
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
 const MIN_BD5 = 2;                                  // Biến động 5 nến gần nhất > 2% (Cho Short)
@@ -248,10 +248,14 @@ async function main() {
       
       newRsi70Detected: 0,
       totalIn24hList: 0,
+
+      shortPassedBasic: 0,
+      shortPassedDiffEMA10: 0,
       shortSentSuccess: 0,
 
       longIn24hList: 0,
-      longConditionMatched: 0,
+      longPassedBBM: 0,
+      longPassedDiffEMA10: 0,
       longSavedSuccess: 0,
       longSentSuccess: 0
     };
@@ -299,31 +303,34 @@ async function main() {
       }
       const bd5Str = `+${bd5.toFixed(2)}`;
 
-      // --- 1. XỬ LÝ RSI > 70 (Lưu file) HOẶC SHORT (Kiểm tra thêm DiffEMA10 khung 1h < 0) ---
+      // --- 1. XỬ LÝ SHORT ---
       if (currentRsi5m > 70) {
         newRsiSymbols.push(symbol);
         stats.newRsi70Detected++;
       } else {
         if (!list24h[symbol] && bd5 > MIN_BD5) {
-          // Gọi khung nến 1h để kiểm tra diffema10 cho Short
+          stats.shortPassedBasic++; // Thỏa mãn cơ bản (không nằm trong 24h.json, RSI < 70, BD5 > 2%)
+
+          // Gọi nến 1h tính diffema10 cho Short
           const candles1h = await getCandles(symbol, '1h', 50);
-          let diffema10 = 999; // Mặc định gán dương nếu không đủ dữ liệu để không trigger nhầm
+          let diffema10 = 999;
 
           if (candles1h && candles1h.length >= 35) {
-            const closed1h = candles1h.slice(1); // Bỏ nến 1h chưa đóng
+            const closed1h = candles1h.slice(1);
             const chronological1h = [...closed1h].reverse();
             const closes1h = chronological1h.map((c) => parseFloat(c[4]));
 
             const emaArray1h = calculateEMA(closes1h, 20);
             if (emaArray1h.length >= 10) {
-              const ema1Val = emaArray1h[emaArray1h.length - 1];   // Ema20 nến 1h hiện tại (vừa đóng)
-              const ema10Val = emaArray1h[emaArray1h.length - 10]; // Ema20 nến 1h số 10
+              const ema1Val = emaArray1h[emaArray1h.length - 1];
+              const ema10Val = emaArray1h[emaArray1h.length - 10];
               diffema10 = ema1Val - ema10Val;
             }
           }
 
-          // Nếu diffema10 < 0 thì mới đủ điều kiện Short
           if (diffema10 < 0) {
+            stats.shortPassedDiffEMA10++; // Thỏa mãn diffema10 < 0
+
             const shortKey = `${symbol}_SHORT`;
             const lastSentShort = sentLog[shortKey] || 0;
 
@@ -336,7 +343,6 @@ async function main() {
                 `DiffEMA10 (1h): ${diffema10.toFixed(4)}\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-              console.log(`🔻 [SHORT] Phát hiện ${symbol} (RSI: ${rsiStr}%, DiffEMA10: ${diffema10.toFixed(4)} < 0). Đang gửi Telegram...`);
               const isSent = await sendTelegramMessage(shortMsg);
               if (isSent) {
                 stats.shortSentSuccess++;
@@ -348,33 +354,32 @@ async function main() {
         }
       }
 
-      // --- 2. XỬ LÝ TÍN HIỆU LONG (ĐỘC LẬP, CHỈ XÉT COIN TRONG 24h.json) ---
-      const longKey = `${symbol}_LONG`;
-      const lastSentLong = sentLog[longKey] || 0;
-
+      // --- 2. XỬ LÝ LONG ---
       const entryData = list24h[symbol];
 
       if (entryData) {
-        stats.longIn24hList++;
+        stats.longIn24hList++; // Thuộc danh sách 24h.json
 
-        const candle1 = closedCandles[0]; // Nến 5m vừa đóng
-        const low1 = parseFloat(candle1[3]); // Giá thấp nhất nến 5m vừa đóng
+        const candle1 = closedCandles[0];
+        const low1 = parseFloat(candle1[3]);
 
-        // Lấy 20 nến 5m tính từ nến vừa đóng trở về trước để tính BB
         const closesBB1 = closedCandles.slice(0, 20).map((c) => parseFloat(c[4])).reverse();
         const bb1 = calculateBollingerBands(closesBB1, 20, 2);
 
-        let conditionPassed = false;
+        let conditionPassedBBM = false;
         let bbm = 0;
 
         if (bb1 && bb1.mid > 0) {
           bbm = ((low1 - bb1.mid) / bb1.mid) * 100;
           if (bbm < MAX_BBM) {
-            conditionPassed = true;
+            conditionPassedBBM = true;
           }
         }
 
-        if (conditionPassed) {
+        if (conditionPassedBBM) {
+          stats.longPassedBBM++; // Thỏa mãn BBM < 0.5% ở khung 5m
+
+          // Gọi nến 1h tính diffema10 cho Long
           const candles1h = await getCandles(symbol, '1h', 50);
           let diffema10 = -999;
 
@@ -392,7 +397,10 @@ async function main() {
           }
 
           if (diffema10 > 0) {
-            stats.longConditionMatched++;
+            stats.longPassedDiffEMA10++; // Thỏa mãn DiffEMA10 > 0 ở khung 1h
+
+            const longKey = `${symbol}_LONG`;
+            const lastSentLong = sentLog[longKey] || 0;
 
             if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
               sentLog[longKey] = currentTime;
@@ -408,7 +416,6 @@ async function main() {
                 `DiffEMA10 (1h): +${diffema10.toFixed(4)}\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-              console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol} (DiffEMA10: +${diffema10.toFixed(4)})...`);
               const isLongSent = await sendTelegramMessage(longMsg);
               if (isLongSent) {
                 stats.longSentSuccess++;
@@ -425,17 +432,25 @@ async function main() {
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
     stats.totalIn24hList = Object.keys(list24h).length;
 
-    console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
-    console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
-    console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
-    console.log(`- Số coin thỏa mãn điều kiện nến/RSI hợp lệ: ${stats.candlesValid} coin`);
-    console.log(`- Số coin đạt RSI > 70 đưa vào 24h.json: ${stats.newRsi70Detected} coin`);
-    console.log(`- Tổng số coin đang lưu trong 24h.json: ${stats.totalIn24hList} coin`);
-    console.log(`- Số tin SHORT gửi thành công: ${stats.shortSentSuccess} tin`);
-    console.log(`- Số coin trong 24h.json thỏa mãn xét Long: ${stats.longIn24hList} coin`);
-    console.log(`- Số tín hiệu LONG thỏa mãn & đã lưu file: ${stats.longSavedSuccess} coin`);
-    console.log(`- Số tín hiệu LONG gửi Telegram thành công: ${stats.longSentSuccess} tin`);
-    console.log('======================================================================\n');
+    console.log('\n================ BÁO CÁO THỐNG KÊ CHI TIẾT TỪNG BƯỚC ================');
+    console.log(`1. Tổng số cặp SWAP quét được từ OKX : ${stats.allSwaps} coin`);
+    console.log(`2. Số coin qua lọc Volume (> 5M USDT) : ${stats.passedVol} coin`);
+    console.log(`3. Số coin tải đủ dữ liệu nến 5m hợp lệ : ${stats.candlesValid} coin`);
+    console.log(`4. Số coin đạt RSI > 70 (vào 24h.json)   : ${stats.newRsi70Detected} coin`);
+    console.log(`5. Tổng số coin đang lưu trong 24h.json : ${stats.totalIn24hList} coin`);
+    console.log('------------------------------------------------------------------');
+    console.log('--- LUỒNG XÉT SHORT ---');
+    console.log(`- Thỏa mãn điều kiện cơ bản (RSI<70, BD5>2%): ${stats.shortPassedBasic} coin`);
+    console.log(`- Thỏa mãn thêm DiffEMA10 (1h) < 0        : ${stats.shortPassedDiffEMA10} coin`);
+    console.log(`- Gửi tin SHORT thành công               : ${stats.shortSentSuccess} tin`);
+    console.log('------------------------------------------------------------------');
+    console.log('--- LUỒNG XÉT LONG ---');
+    console.log(`- Số coin lấy ra từ 24h.json để xét Long  : ${stats.longIn24hList} coin`);
+    console.log(`- Thỏa mãn điều kiện BBM < 0.5% (5m)      : ${stats.longPassedBBM} coin`);
+    console.log(`- Thỏa mãn thêm DiffEMA10 > 0 (1h)       : ${stats.longPassedDiffEMA10} coin`);
+    console.log(`- Lưu file sent_ema.json thành công       : ${stats.longSavedSuccess} coin`);
+    console.log(`- Gửi tin LONG thành công                : ${stats.longSentSuccess} tin`);
+    console.log('==================================================================\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
   }
