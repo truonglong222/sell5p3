@@ -17,7 +17,7 @@ const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;     // 24 giờ cho Short
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
-const MIN_BD5 = 3;                                  // Biến động 5 nến gần nhất > 3%
+const MIN_BD5 = 2;                                  // Biến động 5 nến gần nhất > 2% (Đã cập nhật)
 const MAX_BBM = 0.5;                                // BBM < 0.5%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -143,6 +143,24 @@ function calculateBollingerBands(prices, period = 20, multiplier = 2) {
   return { mid, upper, lower };
 }
 
+function calculateEMA(prices, period = 20) {
+  if (prices.length < period) return [];
+  const k = 2 / (period + 1);
+  const emaArray = [];
+  let sum = 0;
+  for (let i = 0; i < period; i++) {
+    sum += prices[i];
+  }
+  let prevEMA = sum / period;
+  emaArray.push(prevEMA);
+
+  for (let i = period; i < prices.length; i++) {
+    prevEMA = (prices[i] - prevEMA) * k + prevEMA;
+    emaArray.push(prevEMA);
+  }
+  return emaArray;
+}
+
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
 
 async function getFilteredMarkets() {
@@ -266,7 +284,7 @@ async function main() {
         bd5 = ((close0 - open4) / open4) * 100;
       }
 
-      // Lọc BD5 > 3%
+      // Lọc BD5 > 2%
       if (bd5 <= MIN_BD5) {
         await sleep(60);
         continue;
@@ -295,7 +313,6 @@ async function main() {
         newRsiSymbols.push(symbol);
         stats.newRsi70Detected++;
       } else {
-        // Chỉ xét SHORT nếu coin KHÔNG nằm trong file 24h.json
         if (!list24h[symbol]) {
           const shortKey = `${symbol}_SHORT`;
           const lastSentShort = sentLog[shortKey] || 0;
@@ -319,44 +336,56 @@ async function main() {
         }
       }
 
-      // --- 2. XỬ LÝ TÍN HIỆU LONG (Chỉ xét các coin ĐÃ CÓ SẴN trong 24h.json) ---
+      // --- 2. XỬ LÝ TÍN HIỆU LONG ---
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
+      // Chỉ xét các coin ĐÃ CÓ SẴN trong 24h.json
       const entryData = list24h[symbol];
 
       if (entryData) {
         stats.longIn24hList++;
 
-        const candle1 = closedCandles[0]; // Nến vừa đóng
-        const candle2 = closedCandles[1]; // Nến trước nến vừa đóng
+        const candle1 = closedCandles[0]; // Nến 5m vừa đóng
+        const low1 = parseFloat(candle1[3]); // Giá thấp nhất nến 5m vừa đóng
 
-        const open1 = parseFloat(candle1[1]);
-        const close1 = parseFloat(candle1[4]);
-        const isGreenCandle1 = close1 > open1; // Nến vừa đóng là nến xanh
+        // Lấy 20 nến 5m tính từ nến vừa đóng trở về trước để tính BB
+        const closesBB1 = closedCandles.slice(0, 20).map((c) => parseFloat(c[4])).reverse();
+        const bb1 = calculateBollingerBands(closesBB1, 20, 2);
 
-        const open2 = parseFloat(candle2[1]);
-        const close2 = parseFloat(candle2[4]);
-        const isRedCandle2 = close2 < open2;   // Nến trước nến vừa đóng là nến đỏ
+        let conditionPassed = false;
+        let bbm = 0;
 
-        if (isGreenCandle1 && isRedCandle2) {
-          const low1 = parseFloat(candle1[3]); // Giá thấp nhất nến vừa đóng
+        if (bb1 && bb1.mid > 0) {
+          // bbm = chênh lệch % giá thấp nhất nến 5m hiện tại với Bollinger band mid
+          bbm = ((low1 - bb1.mid) / bb1.mid) * 100;
+          if (bbm < MAX_BBM) {
+            conditionPassed = true;
+          }
+        }
 
-          // Lấy 20 nến tính từ nến vừa đóng trở về trước để tính BB
-          const closesBB1 = closedCandles.slice(0, 20).map((c) => parseFloat(c[4])).reverse();
-          const bb1 = calculateBollingerBands(closesBB1, 20, 2);
+        if (conditionPassed) {
+          // Gọi khung nến 1h để kiểm tra diffema10
+          const candles1h = await getCandles(symbol, '1h', 50);
+          let diffema10 = -999;
+          let ema1Val = 0;
+          let ema10Val = 0;
 
-          let conditionPassed = false;
-          let bbm = 0;
+          if (candles1h && candles1h.length >= 35) {
+            const closed1h = candles1h.slice(1); // Bỏ nến 1h chưa đóng
+            const chronological1h = [...closed1h].reverse();
+            const closes1h = chronological1h.map((c) => parseFloat(c[4]));
 
-          if (bb1 && bb1.mid > 0) {
-            bbm = ((low1 - bb1.mid) / bb1.mid) * 100;
-            if (bbm < MAX_BBM) {
-              conditionPassed = true;
+            const emaArray1h = calculateEMA(closes1h, 20);
+            if (emaArray1h.length >= 10) {
+              ema1Val = emaArray1h[emaArray1h.length - 1];   // Ema20 nến 1h hiện tại (vừa đóng)
+              ema10Val = emaArray1h[emaArray1h.length - 10]; // Ema20 nến 1h số 10
+              diffema10 = ema1Val - ema10Val;
             }
           }
 
-          if (conditionPassed) {
+          // Nếu diffema10 > 0
+          if (diffema10 > 0) {
             stats.longConditionMatched++;
 
             if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
@@ -367,13 +396,14 @@ async function main() {
               const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
               const longMsg =
                 `<b>🚀 TÍN HIỆU LONG</b>\n` +
-                `Coin: <b>${coinName}</b> (5m)\n` +
-                `RSI: ${rsiStr}%\n` +
+                `Coin: <b>${coinName}</b> (5m/1h)\n` +
+                `RSI (5m): ${rsiStr}%\n` +
                 `BD5: ${bd5Str}%\n` +
                 `BBM: ${bbmSign}%\n` +
+                `DiffEMA10 (1h): +${diffema10.toFixed(4)}\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-              console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol}...`);
+              console.log(`🚀 [LONG] Đạt điều kiện! Đang gửi Telegram cho ${symbol} (DiffEMA10: +${diffema10.toFixed(4)})...`);
               const isLongSent = await sendTelegramMessage(longMsg);
               if (isLongSent) {
                 stats.longSentSuccess++;
@@ -393,7 +423,7 @@ async function main() {
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
     console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
     console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
-    console.log(`- Số coin thỏa mãn BD5 > 3%: ${stats.passedBd5} coin`);
+    console.log(`- Số coin thỏa mãn BD5 > 2%: ${stats.passedBd5} coin`);
     console.log(`- Số coin thỏa mãn điều kiện nến/RSI hợp lệ: ${stats.candlesValid} coin`);
     console.log(`- Số coin đạt RSI > 70 đưa vào 24h.json: ${stats.newRsi70Detected} coin`);
     console.log(`- Tổng số coin đang lưu trong 24h.json: ${stats.totalIn24hList} coin`);
