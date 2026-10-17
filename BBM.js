@@ -197,11 +197,13 @@ async function getFilteredMarkets() {
 async function getCandles(symbol, bar = '5m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
-    const res = await axios.get(url, { timeout: 6000 });
-    if (!res.data || res.data.code !== '0' || !Array.isArray(res.data.data)) return null;
+    const res = await axios.get(url, { timeout: 10000 });
+    
+    if (!res.data || res.data.code !== '0' || !Array.isArray(res.data.data)) {
+      return null;
+    }
     return res.data.data;
   } catch (error) {
-    console.error(`Lỗi lấy nến ${bar} (${symbol}):`, error.message);
     return null;
   }
 }
@@ -313,11 +315,9 @@ async function main() {
           stats.shortPassedBasic++;
 
           stats.shortCalled1H++;
-          // Tăng limit lên 100 để đảm bảo đủ dữ liệu nến 1h
           const candles1h = await getCandles(symbol, '1h', 100);
           let diffema10 = 999;
 
-          // Giảm điều kiện kiểm tra độ dài xuống >= 25 để tránh bị hụt
           if (candles1h && candles1h.length >= 25) {
             stats.shortSuccess1H++;
             const closed1h = candles1h.slice(1);
@@ -384,11 +384,9 @@ async function main() {
           stats.longPassedBBM++;
 
           stats.longCalled1H++;
-          // Tăng limit lên 100 để đảm bảo đủ dữ liệu nến 1h
           const candles1h = await getCandles(symbol, '1h', 100);
           let diffema10 = -999;
 
-          // Giảm điều kiện kiểm tra độ dài xuống >= 25 để tránh bị hụt
           if (candles1h && candles1h.length >= 25) {
             stats.longSuccess1H++;
             const closed1h = candles1h.slice(1);
