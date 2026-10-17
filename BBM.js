@@ -250,11 +250,15 @@ async function main() {
       totalIn24hList: 0,
 
       shortPassedBasic: 0,
+      shortCalled1H: 0,
+      shortSuccess1H: 0,
       shortPassedDiffEMA10: 0,
       shortSentSuccess: 0,
 
       longIn24hList: 0,
       longPassedBBM: 0,
+      longCalled1H: 0,
+      longSuccess1H: 0,
       longPassedDiffEMA10: 0,
       longSavedSuccess: 0,
       longSentSuccess: 0
@@ -312,10 +316,12 @@ async function main() {
           stats.shortPassedBasic++; // Thỏa mãn cơ bản (không nằm trong 24h.json, RSI < 70, BD5 > 2%)
 
           // Gọi nến 1h tính diffema10 cho Short
+          stats.shortCalled1H++;
           const candles1h = await getCandles(symbol, '1h', 50);
           let diffema10 = 999;
 
           if (candles1h && candles1h.length >= 35) {
+            stats.shortSuccess1H++; // Gọi nến 1h thành công và đủ dữ liệu
             const closed1h = candles1h.slice(1);
             const chronological1h = [...closed1h].reverse();
             const closes1h = chronological1h.map((c) => parseFloat(c[4]));
@@ -380,10 +386,12 @@ async function main() {
           stats.longPassedBBM++; // Thỏa mãn BBM < 0.5% ở khung 5m
 
           // Gọi nến 1h tính diffema10 cho Long
+          stats.longCalled1H++;
           const candles1h = await getCandles(symbol, '1h', 50);
           let diffema10 = -999;
 
           if (candles1h && candles1h.length >= 35) {
+            stats.longSuccess1H++; // Gọi nến 1h thành công và đủ dữ liệu
             const closed1h = candles1h.slice(1);
             const chronological1h = [...closed1h].reverse();
             const closes1h = chronological1h.map((c) => parseFloat(c[4]));
@@ -441,12 +449,16 @@ async function main() {
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG XÉT SHORT ---');
     console.log(`- Thỏa mãn điều kiện cơ bản (RSI<70, BD5>2%): ${stats.shortPassedBasic} coin`);
+    console.log(`- Gọi nến 1h (Short)                     : ${stats.shortCalled1H} coin`);
+    console.log(`- Gọi nến 1h thành công & đủ dữ liệu     : ${stats.shortSuccess1H} coin`);
     console.log(`- Thỏa mãn thêm DiffEMA10 (1h) < 0        : ${stats.shortPassedDiffEMA10} coin`);
     console.log(`- Gửi tin SHORT thành công               : ${stats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG XÉT LONG ---');
     console.log(`- Số coin lấy ra từ 24h.json để xét Long  : ${stats.longIn24hList} coin`);
     console.log(`- Thỏa mãn điều kiện BBM < 0.5% (5m)      : ${stats.longPassedBBM} coin`);
+    console.log(`- Gọi nến 1h (Long)                      : ${stats.longCalled1H} coin`);
+    console.log(`- Gọi nến 1h thành công & đủ dữ liệu     : ${stats.longSuccess1H} coin`);
     console.log(`- Thỏa mãn thêm DiffEMA10 > 0 (1h)       : ${stats.longPassedDiffEMA10} coin`);
     console.log(`- Lưu file sent_ema.json thành công       : ${stats.longSavedSuccess} coin`);
     console.log(`- Gửi tin LONG thành công                : ${stats.longSentSuccess} tin`);
