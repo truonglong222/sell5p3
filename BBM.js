@@ -17,8 +17,8 @@ const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
 const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;     // 24 giờ cho Short
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
-const MIN_BD5 = 2;                                  // Biến động 5 nến gần nhất > 2% (Đã cập nhật)
-const MAX_BBM = 0.5;                                // BBM < 0.5%
+const MIN_BD5 = 2;                                  // Biến động 5 nến gần nhất > 2% (Chỉ dùng cho Short / RSI > 70)
+const MAX_BBM = 0.5;                                // BBM < 0.5% cho Long
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -244,7 +244,6 @@ async function main() {
     const stats = {
       allSwaps,
       passedVol,
-      passedBd5: 0,
       candlesValid: 0,
       
       newRsi70Detected: 0,
@@ -261,8 +260,10 @@ async function main() {
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
+      const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
+      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Lấy nến 5m (cần ít nhất 35 nến để tính RSI 20 + 5 nến để tính bd5)
+      // Lấy nến 5m
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
         await sleep(60);
@@ -275,21 +276,7 @@ async function main() {
         continue;
       }
 
-      // Tính BD5: chênh lệch % giữa giá đóng cửa nến vừa đóng (index 0) và giá mở cửa nến số 5 (index 4)
-      const close0 = parseFloat(closedCandles[0][4]);
-      const open4 = parseFloat(closedCandles[4][1]);
-
-      let bd5 = 0;
-      if (open4 > 0) {
-        bd5 = ((close0 - open4) / open4) * 100;
-      }
-
-      // Lọc BD5 > 2%
-      if (bd5 <= MIN_BD5) {
-        await sleep(60);
-        continue;
-      }
-      stats.passedBd5++;
+      stats.candlesValid++;
 
       const chronological5m = [...closedCandles].reverse();
       const closes5m = chronological5m.map((c) => parseFloat(c[4]));
@@ -300,20 +287,24 @@ async function main() {
         continue;
       }
 
-      stats.candlesValid++;
-
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
-      const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
-      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
       const rsiStr = currentRsi5m.toFixed(2);
+
+      // Tính BD5 (chỉ dùng cho logic Short / RSI > 70)
+      const close0 = parseFloat(closedCandles[0][4]);
+      const open4 = parseFloat(closedCandles[4][1]);
+      let bd5 = 0;
+      if (open4 > 0) {
+        bd5 = ((close0 - open4) / open4) * 100;
+      }
       const bd5Str = `+${bd5.toFixed(2)}`;
 
-      // --- 1. XỬ LÝ RSI > 70 (Lưu file) HOẶC SHORT (RSI < 70 & KHÔNG NẰM TRONG 24h.json) ---
+      // --- 1. XỬ LÝ RSI > 70 (Lưu file) HOẶC SHORT (RSI < 70 & KHÔNG NẰM TRONG 24h.json & BD5 > 2%) ---
       if (currentRsi5m > 70) {
         newRsiSymbols.push(symbol);
         stats.newRsi70Detected++;
       } else {
-        if (!list24h[symbol]) {
+        if (!list24h[symbol] && bd5 > MIN_BD5) {
           const shortKey = `${symbol}_SHORT`;
           const lastSentShort = sentLog[shortKey] || 0;
 
@@ -336,11 +327,10 @@ async function main() {
         }
       }
 
-      // --- 2. XỬ LÝ TÍN HIỆU LONG ---
+      // --- 2. XỬ LÝ TÍN HIỆU LONG (ĐỘC LẬP, CHỈ XÉT COIN TRONG 24h.json - KHÔNG CẦN QUA BD5) ---
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
-      // Chỉ xét các coin ĐÃ CÓ SẴN trong 24h.json
       const entryData = list24h[symbol];
 
       if (entryData) {
@@ -398,7 +388,6 @@ async function main() {
                 `<b>🚀 TÍN HIỆU LONG</b>\n` +
                 `Coin: <b>${coinName}</b> (5m/1h)\n` +
                 `RSI (5m): ${rsiStr}%\n` +
-                `BD5: ${bd5Str}%\n` +
                 `BBM: ${bbmSign}%\n` +
                 `DiffEMA10 (1h): +${diffema10.toFixed(4)}\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
@@ -423,11 +412,11 @@ async function main() {
     console.log('\n================ BÁO CÁO THỐNG KÊ QUÉT THỊ TRƯỜNG (5m) ================');
     console.log(`- Tổng số cặp SWAP quét được từ OKX: ${stats.allSwaps} coin`);
     console.log(`- Số coin thỏa mãn Volume 24h > 5M USDT: ${stats.passedVol} coin`);
-    console.log(`- Số coin thỏa mãn BD5 > 2%: ${stats.passedBd5} coin`);
     console.log(`- Số coin thỏa mãn điều kiện nến/RSI hợp lệ: ${stats.candlesValid} coin`);
     console.log(`- Số coin đạt RSI > 70 đưa vào 24h.json: ${stats.newRsi70Detected} coin`);
     console.log(`- Tổng số coin đang lưu trong 24h.json: ${stats.totalIn24hList} coin`);
     console.log(`- Số tin SHORT gửi thành công: ${stats.shortSentSuccess} tin`);
+    console.log(`- Số coin trong 24h.json thỏa mãn xét Long: ${stats.longIn24hList} coin`);
     console.log(`- Số tín hiệu LONG thỏa mãn & đã lưu file: ${stats.longSavedSuccess} coin`);
     console.log(`- Số tín hiệu LONG gửi Telegram thành công: ${stats.longSentSuccess} tin`);
     console.log('======================================================================\n');
