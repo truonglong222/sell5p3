@@ -290,29 +290,31 @@ async function main() {
       const rsiStr = currentRsi5m.toFixed(2);
       const bd5Str = `+${bd5.toFixed(2)}`;
 
-      // --- 1. XỬ LÝ RSI > 70 (Lưu file) HOẶC SHORT (RSI < 70) ---
+      // --- 1. XỬ LÝ RSI > 70 (Lưu file) HOẶC SHORT (RSI < 70 & KHÔNG NẰM TRONG 24h.json) ---
       if (currentRsi5m > 70) {
         newRsiSymbols.push(symbol);
         stats.newRsi70Detected++;
       } else {
-        // Nếu RSI < 70, gửi cảnh báo SHORT (có cơ chế cooldown 24h tránh spam)
-        const shortKey = `${symbol}_SHORT`;
-        const lastSentShort = sentLog[shortKey] || 0;
+        // Chỉ xét SHORT nếu coin KHÔNG nằm trong file 24h.json
+        if (!list24h[symbol]) {
+          const shortKey = `${symbol}_SHORT`;
+          const lastSentShort = sentLog[shortKey] || 0;
 
-        if (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT) {
-          const shortMsg =
-            `<b>🔻 CẢNH BÁO SHORT</b>\n` +
-            `Coin: <b>${coinName}</b> (5m)\n` +
-            `RSI: ${rsiStr}%\n` +
-            `BD5: ${bd5Str}%\n` +
-            `<a href="${link}">🔗 Giao dịch OKX</a>`;
+          if (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT) {
+            const shortMsg =
+              `<b>🔻 CẢNH BÁO SHORT</b>\n` +
+              `Coin: <b>${coinName}</b> (5m)\n` +
+              `RSI: ${rsiStr}%\n` +
+              `BD5: ${bd5Str}%\n` +
+              `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-          console.log(`🔻 [SHORT] Phát hiện ${symbol} (RSI: ${rsiStr}% < 70). Đang gửi Telegram...`);
-          const isSent = await sendTelegramMessage(shortMsg);
-          if (isSent) {
-            stats.shortSentSuccess++;
-            sentLog[shortKey] = currentTime;
-            saveSentLog(sentLog);
+            console.log(`🔻 [SHORT] Phát hiện ${symbol} (RSI: ${rsiStr}% < 70, không có trong 24h.json). Đang gửi Telegram...`);
+            const isSent = await sendTelegramMessage(shortMsg);
+            if (isSent) {
+              stats.shortSentSuccess++;
+              sentLog[shortKey] = currentTime;
+              saveSentLog(sentLog);
+            }
           }
         }
       }
@@ -321,7 +323,6 @@ async function main() {
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
-      // Chỉ lấy các coin tồn tại trong file 24h.json từ các lần quét trước
       const entryData = list24h[symbol];
 
       if (entryData) {
@@ -385,7 +386,7 @@ async function main() {
       await sleep(100);
     }
 
-    // Cập nhật và lưu file 24h.json (đưa các coin RSI > 70 vào file để dùng cho các vòng quét sau)
+    // Cập nhật và lưu file 24h.json
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
     stats.totalIn24hList = Object.keys(list24h).length;
 
