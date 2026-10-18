@@ -210,7 +210,7 @@ async function main() {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Lấy nến 5m
+      // Lấy nến 5m (cần ít nhất 5 nến để tính bd5)
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
         await sleep(60);
@@ -225,19 +225,7 @@ async function main() {
 
       stats.candlesValid++;
 
-      const chronological5m = [...closedCandles].reverse();
-      const closes5m = chronological5m.map((c) => parseFloat(c[4]));
-
-      const rsiSeries5m = calculateRSIArray(closes5m, 20);
-      if (rsiSeries5m.length < 10) {
-        await sleep(60);
-        continue;
-      }
-
-      const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
-      const rsiStr = currentRsi5m.toFixed(2);
-
-      // Tính BD5 trước
+      // --- 1. TÍNH BD5 TRƯỚC ---
       const close0 = parseFloat(closedCandles[0][4]);
       const open4 = parseFloat(closedCandles[4][1]);
       let bd5 = 0;
@@ -246,9 +234,31 @@ async function main() {
       }
       const bd5Str = bd5 >= 0 ? `+${bd5.toFixed(2)}` : bd5.toFixed(2);
 
-      // --- 1. XÉT ĐIỀU KIỆN SHORT ---
-      // Điều kiện: RSI < 65% và 2.5% < bd5 < 4%
-      if (currentRsi5m < 65 && bd5 > 2.5 && bd5 < 4) {
+      // Kiểm tra xem bd5 có thỏa mãn điều kiện Short hoặc Long không
+      const isShortBd5 = bd5 > 2.5 && bd5 < 4;
+      const isLongBd5 = bd5 > -4 && bd5 < -2;
+
+      // Nếu không thỏa mãn bất kỳ điều kiện bd5 nào thì bỏ qua, không tính RSI
+      if (!isShortBd5 && !isLongBd5) {
+        await sleep(100);
+        continue;
+      }
+
+      // --- 2. CHỈ TÍNH RSI KHI THỎA MÃN ĐIỀU KIỆN BD5 ---
+      const chronological5m = [...closedCandles].reverse();
+      const closes5m = chronological5m.map((c) => parseFloat(c[4]));
+
+      const rsiSeries5m = calculateRSIArray(closes5m, 20);
+      if (rsiSeries5m.length < 10) {
+        await sleep(100);
+        continue;
+      }
+
+      const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
+      const rsiStr = currentRsi5m.toFixed(2);
+
+      // --- 3. XÉT ĐIỀU KIỆN SHORT ---
+      if (isShortBd5 && currentRsi5m < 65) {
         stats.shortPassedBasic++;
         stats.shortCalled1H++;
 
@@ -295,9 +305,8 @@ async function main() {
         }
       }
 
-      // --- 2. XÉT ĐIỀU KIỆN LONG ---
-      // Điều kiện: RSI > 50% và -4% < bd5 < -2%
-      if (currentRsi5m > 50 && bd5 > -4 && bd5 < -2) {
+      // --- 4. XÉT ĐIỀU KIỆN LONG ---
+      if (isLongBd5 && currentRsi5m > 50) {
         stats.longPassedBasic++;
         stats.longCalled1H++;
 
