@@ -14,7 +14,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24 giờ cho Long
-const COOLDOWN_TIME_SHORT = 4 * 60 * 60 * 1000;     // 24 giờ cho Short
+const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;     // 24 giờ cho Short
 const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Tự động xóa coin trong 24h.json sau 24 giờ
 const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
 const MIN_BD5 = 2;                                  // Biến động 5 nến gần nhất > 2% (Cho Short)
@@ -141,6 +141,24 @@ function calculateBollingerBands(prices, period = 20, multiplier = 2) {
   return { mid, upper, lower };
 }
 
+function calculateEMA(prices, period = 20) {
+  if (prices.length < period) return [];
+  const k = 2 / (period + 1);
+  const emaArray = [];
+  let sum = 0;
+  for (let i = 0; i < period; i++) {
+    sum += prices[i];
+  }
+  let prevEMA = sum / period;
+  emaArray.push(prevEMA);
+
+  for (let i = period; i < prices.length; i++) {
+    prevEMA = (prices[i] - prevEMA) * k + prevEMA;
+    emaArray.push(prevEMA);
+  }
+  return emaArray;
+}
+
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
 
 async function getFilteredMarkets() {
@@ -232,12 +250,16 @@ async function main() {
       totalIn24hList: 0,
 
       shortPassedBasic: 0,
-      shortPassedBDT: 0,
+      shortCalled1H: 0,
+      shortSuccess1H: 0,
+      shortPassedDiffEMA10: 0,
       shortSentSuccess: 0,
 
       longIn24hList: 0,
       longPassedBBM: 0,
-      longPassedBDT: 0,
+      longCalled1H: 0,
+      longSuccess1H: 0,
+      longPassedDiffEMA10: 0,
       longSavedSuccess: 0,
       longSentSuccess: 0
     };
@@ -249,9 +271,9 @@ async function main() {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Lấy nến 5m (limit = 100)
-      const candles5m = await getCandles(symbol, '5m', 100);
-      if (!candles5m || candles5m.length < 30) {
+      // Lấy nến 5m
+      const candles5m = await getCandles(symbol, '5m', 80);
+      if (!candles5m || candles5m.length < 35) {
         await sleep(60);
         continue;
       }
@@ -292,25 +314,37 @@ async function main() {
         if (!list24h[symbol] && bd5 > MIN_BD5) {
           stats.shortPassedBasic++;
 
-          const open0 = parseFloat(closedCandles[0][1]);
-          const lastIndex = closedCandles.length - 1;
-          const openLast = parseFloat(closedCandles[lastIndex][1]);
-          const bdt = open0 - openLast;
+          stats.shortCalled1H++;
+          const candles1H = await getCandles(symbol, '1H', 100);
+          let diffema10 = 999;
 
-          if (bdt < 0) {
-            stats.shortPassedBDT++;
+          if (candles1H && candles1H.length >= 25) {
+            stats.shortSuccess1H++;
+            const closed1H = candles1H.slice(1);
+            const chronological1H = [...closed1H].reverse();
+            const closes1H = chronological1H.map((c) => parseFloat(c[4]));
+
+            const emaArray1H = calculateEMA(closes1H, 20);
+            if (emaArray1H.length >= 10) {
+              const ema1Val = emaArray1H[emaArray1H.length - 1];
+              const ema10Val = emaArray1H[emaArray1H.length - 10];
+              diffema10 = ema1Val - ema10Val;
+            }
+          }
+
+          if (diffema10 < 0) {
+            stats.shortPassedDiffEMA10++;
 
             const shortKey = `${symbol}_SHORT`;
             const lastSentShort = sentLog[shortKey] || 0;
 
             if (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT) {
-              const bdtStr = bdt >= 0 ? `+${bdt.toFixed(4)}` : bdt.toFixed(4);
               const shortMsg =
                 `<b>🔻 CẢNH BÁO SHORT</b>\n` +
-                `Coin: <b>${coinName}</b> (5m)\n` +
+                `Coin: <b>${coinName}</b> (5m/1H)\n` +
                 `RSI (5m): ${rsiStr}%\n` +
                 `BD5: ${bd5Str}%\n` +
-                `BDT (5m): ${bdtStr}\n` +
+                `DiffEMA10 (1H): ${diffema10.toFixed(4)}\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
               const isSent = await sendTelegramMessage(shortMsg);
@@ -349,13 +383,26 @@ async function main() {
         if (conditionPassedBBM) {
           stats.longPassedBBM++;
 
-          const open0 = parseFloat(closedCandles[0][1]);
-          const lastIndex = closedCandles.length - 1;
-          const openLast = parseFloat(closedCandles[lastIndex][1]);
-          const bdt = open0 - openLast;
+          stats.longCalled1H++;
+          const candles1H = await getCandles(symbol, '1H', 100);
+          let diffema10 = -999;
 
-          if (bdt > 0) {
-            stats.longPassedBDT++;
+          if (candles1H && candles1H.length >= 25) {
+            stats.longSuccess1H++;
+            const closed1H = candles1H.slice(1);
+            const chronological1H = [...closed1H].reverse();
+            const closes1H = chronological1H.map((c) => parseFloat(c[4]));
+
+            const emaArray1H = calculateEMA(closes1H, 20);
+            if (emaArray1H.length >= 10) {
+              const ema1Val = emaArray1H[emaArray1H.length - 1];
+              const ema10Val = emaArray1H[emaArray1H.length - 10];
+              diffema10 = ema1Val - ema10Val;
+            }
+          }
+
+          if (diffema10 > 0) {
+            stats.longPassedDiffEMA10++;
 
             const longKey = `${symbol}_LONG`;
             const lastSentLong = sentLog[longKey] || 0;
@@ -366,13 +413,12 @@ async function main() {
               stats.longSavedSuccess++;
 
               const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
-              const bdtStr = bdt >= 0 ? `+${bdt.toFixed(4)}` : bdt.toFixed(4);
               const longMsg =
                 `<b>🚀 TÍN HIỆU LONG</b>\n` +
-                `Coin: <b>${coinName}</b> (5m)\n` +
+                `Coin: <b>${coinName}</b> (5m/1H)\n` +
                 `RSI (5m): ${rsiStr}%\n` +
                 `BBM: ${bbmSign}%\n` +
-                `BDT (5m): ${bdtStr}\n` +
+                `DiffEMA10 (1H): +${diffema10.toFixed(4)}\n` +
                 `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
               const isLongSent = await sendTelegramMessage(longMsg);
@@ -399,13 +445,17 @@ async function main() {
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG XÉT SHORT ---');
     console.log(`- Thỏa mãn điều kiện cơ bản (RSI<70, BD5>2%): ${stats.shortPassedBasic} coin`);
-    console.log(`- Thỏa mãn thêm BDT < 0 (5m)             : ${stats.shortPassedBDT} coin`);
+    console.log(`- Gọi nến 1H (Short)                     : ${stats.shortCalled1H} coin`);
+    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${stats.shortSuccess1H} coin`);
+    console.log(`- Thỏa mãn thêm DiffEMA10 (1H) < 0        : ${stats.shortPassedDiffEMA10} coin`);
     console.log(`- Gửi tin SHORT thành công               : ${stats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG XÉT LONG ---');
     console.log(`- Số coin lấy ra từ 24h.json để xét Long  : ${stats.longIn24hList} coin`);
     console.log(`- Thỏa mãn điều kiện BBM < 0.5% (5m)      : ${stats.longPassedBBM} coin`);
-    console.log(`- Thỏa mãn thêm BDT > 0 (5m)             : ${stats.longPassedBDT} coin`);
+    console.log(`- Gọi nến 1H (Long)                      : ${stats.longCalled1H} coin`);
+    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${stats.longSuccess1H} coin`);
+    console.log(`- Thỏa mãn thêm DiffEMA10 > 0 (1H)       : ${stats.longPassedDiffEMA10} coin`);
     console.log(`- Lưu file sent_ema.json thành công       : ${stats.longSavedSuccess} coin`);
     console.log(`- Gửi tin LONG thành công                : ${stats.longSentSuccess} tin`);
     console.log('==================================================================\n');
