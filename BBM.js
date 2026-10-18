@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
-const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;   // 24 giờ cho Long
-const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;  // 24 giờ cho Short
+const COOLDOWN_TIME_LONG = 4 * 60 * 60 * 1000;   // 24 giờ cho Long
+const COOLDOWN_TIME_SHORT = 4 * 60 * 60 * 1000;  // 24 giờ cho Short
 const MIN_VOL_CCY24H = 5_000_000;                // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
