@@ -10,11 +10,15 @@ const OKX_BASE_URL = 'https://www.okx.com';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
+const FILE_24H = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
-const COOLDOWN_TIME_LONG = 4 * 60 * 60 * 1000;   // 24 giờ cho Long
-const COOLDOWN_TIME_SHORT = 4 * 60 * 60 * 1000;  // 24 giờ cho Short
-const MIN_VOL_CCY24H = 5_000_000;                // Volume 24h > 5 triệu USDT
+const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24h cho Long
+const COOLDOWN_TIME_SHORT = 4 * 60 * 60 * 1000;      // 4h cho Short
+const CLEANUP_TIME_24H_FILE = 24 * 60 * 60 * 1000;  // Xóa coin trong 24h.json sau 24h
+const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu USDT
+const MIN_BD5 = 2.5;                                // BD5 > 2.5% mới xét tiếp RSI
+const MAX_BBM = 0.5;                                // BBM < 0.5% cho Long
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -26,7 +30,7 @@ function escapeHtml(str) {
     .replace(/>/g, '');
 }
 
-// ------------------- QUẢN LÝ DỮ LIỆU FILE SENT LOG -------------------
+// ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
 
 function loadSentLog() {
   try {
@@ -42,14 +46,49 @@ function saveSentLog(logData) {
   try {
     const now = Date.now();
     const cleanedLog = {};
+    const maxCooldown = Math.max(COOLDOWN_TIME_LONG, COOLDOWN_TIME_SHORT);
     for (const [key, timestamp] of Object.entries(logData)) {
-      if (now - timestamp < COOLDOWN_TIME_LONG) {
+      if (now - timestamp < maxCooldown) {
         cleanedLog[key] = timestamp;
       }
     }
     fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
   } catch (e) {
     console.error('Lỗi khi lưu sent_ema.json:', e.message);
+  }
+}
+
+function load24hList() {
+  try {
+    if (fs.existsSync(FILE_24H)) {
+      const data = fs.readFileSync(FILE_24H, 'utf8');
+      return data.trim() ? JSON.parse(data) : {};
+    }
+  } catch (e) {}
+  return {};
+}
+
+function updateAndSave24hList(list24h, newRsiSymbols) {
+  try {
+    const now = Date.now();
+    
+    for (const symbol of newRsiSymbols) {
+      list24h[symbol] = now;
+    }
+
+    const cleaned24h = {};
+    for (const [symbol, data] of Object.entries(list24h)) {
+      const timestamp = typeof data === 'object' ? data.timestamp : data;
+      if (now - timestamp < CLEANUP_TIME_24H_FILE) {
+        cleaned24h[symbol] = data;
+      }
+    }
+
+    fs.writeFileSync(FILE_24H, JSON.stringify(cleaned24h, null, 2), 'utf8');
+    return cleaned24h;
+  } catch (e) {
+    console.error('Lỗi khi lưu 24h.json:', e.message);
+    return list24h;
   }
 }
 
@@ -87,6 +126,20 @@ function calculateRSIArray(closes, period = 20) {
   }
 
   return rsiArray;
+}
+
+function calculateBollingerBands(prices, period = 20, multiplier = 2) {
+  if (prices.length < period) return null;
+  const slice = prices.slice(-period);
+  const mid = slice.reduce((a, b) => a + b, 0) / period;
+
+  const variance = slice.reduce((sum, price) => sum + Math.pow(price - mid, 2), 0) / period;
+  const stdDev = Math.sqrt(variance);
+
+  const upper = mid + multiplier * stdDev;
+  const lower = mid - multiplier * stdDev;
+
+  return { mid, upper, lower };
 }
 
 function calculateEMA(prices, period = 20) {
@@ -181,36 +234,39 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG (5m) ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG ===\n');
 
     const sentLog = loadSentLog();
+    let list24h = load24hList();
     const currentTime = Date.now();
 
+    // ==================================================================
+    // PHẦN 1: QUÉT THỊ TRƯỜNG -> LỌC VOL -> BD5 > 2.5% -> RSI -> SHORT / 24H.JSON
+    // ==================================================================
+    console.log('--- ĐANG QUÉT LUỒNG SHORT & WATCHLIST 24H ---');
     const { allSwaps, passedVol, targetCoins } = await getFilteredMarkets();
 
-    const stats = {
+    const shortStats = {
       allSwaps,
       passedVol,
       candlesValid: 0,
-      shortPassedBasic: 0,
+      passedBD5: 0,
+      newRsi70Detected: 0,
+      shortPassedRsi60: 0,
       shortCalled1H: 0,
       shortSuccess1H: 0,
       shortPassedDiffEMA10: 0,
-      shortSentSuccess: 0,
-
-      longPassedBasic: 0,
-      longCalled1H: 0,
-      longSuccess1H: 0,
-      longPassedDiffEMA10: 0,
-      longSentSuccess: 0
+      shortSentSuccess: 0
     };
+
+    const newRsiSymbols = [];
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Lấy nến 5m (cần ít nhất 5 nến để tính bd5)
+      // 1. Lấy nến 5m
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
         await sleep(60);
@@ -223,50 +279,53 @@ async function main() {
         continue;
       }
 
-      stats.candlesValid++;
+      shortStats.candlesValid++;
 
-      // --- 1. TÍNH BD5 TRƯỚC ---
+      // 2. Tính BD5 ngay sau khi lọc nến
       const close0 = parseFloat(closedCandles[0][4]);
       const open4 = parseFloat(closedCandles[4][1]);
       let bd5 = 0;
       if (open4 > 0) {
         bd5 = ((close0 - open4) / open4) * 100;
       }
-      const bd5Str = bd5 >= 0 ? `+${bd5.toFixed(2)}` : bd5.toFixed(2);
+      const bd5Str = `+${bd5.toFixed(2)}`;
 
-      // Kiểm tra xem bd5 có thỏa mãn điều kiện Short hoặc Long không
-      const isShortBd5 = bd5 > 2.5 && bd5 < 4;
-      const isLongBd5 = bd5 > -4 && bd5 < -2;
-
-      // Nếu không thỏa mãn bất kỳ điều kiện bd5 nào thì bỏ qua, không tính RSI
-      if (!isShortBd5 && !isLongBd5) {
-        await sleep(100);
+      // CHỈ NHỮNG COIN CÓ BD5 > 2.5% MỚI XÉT TIẾP RSI
+      if (bd5 <= MIN_BD5) {
+        await sleep(60);
         continue;
       }
+      shortStats.passedBD5++;
 
-      // --- 2. CHỈ TÍNH RSI KHI THỎA MÃN ĐIỀU KIỆN BD5 ---
+      // 3. Tính RSI 5m
       const chronological5m = [...closedCandles].reverse();
       const closes5m = chronological5m.map((c) => parseFloat(c[4]));
 
       const rsiSeries5m = calculateRSIArray(closes5m, 20);
       if (rsiSeries5m.length < 10) {
-        await sleep(100);
+        await sleep(60);
         continue;
       }
 
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
       const rsiStr = currentRsi5m.toFixed(2);
 
-      // --- 3. XÉT ĐIỀU KIỆN SHORT ---
-      if (isShortBd5 && currentRsi5m < 65) {
-        stats.shortPassedBasic++;
-        stats.shortCalled1H++;
+      // Nếu RSI > 70% thì gom để lưu file 24h.json
+      if (currentRsi5m > 70) {
+        newRsiSymbols.push(symbol);
+        shortStats.newRsi70Detected++;
+      }
+
+      // Nếu RSI < 60% thì xét tiếp điều kiện Short
+      if (currentRsi5m < 60) {
+        shortStats.shortPassedRsi60++;
+        shortStats.shortCalled1H++;
 
         const candles1H = await getCandles(symbol, '1H', 100);
-        let diffema10 = 0;
+        let diffema10Pct = 0;
 
         if (candles1H && candles1H.length >= 25) {
-          stats.shortSuccess1H++;
+          shortStats.shortSuccess1H++;
           const closed1H = candles1H.slice(1);
           const chronological1H = [...closed1H].reverse();
           const closes1H = chronological1H.map((c) => parseFloat(c[4]));
@@ -275,13 +334,13 @@ async function main() {
           if (emaArray1H.length >= 10) {
             const ema1Val = emaArray1H[emaArray1H.length - 1];
             const ema10Val = emaArray1H[emaArray1H.length - 10];
-            diffema10 = ((ema1Val - ema10Val) / ema10Val) * 100;
+            diffema10Pct = ((ema1Val - ema10Val) / ema10Val) * 100;
           }
         }
 
-        // Điều kiện: diffema10 < -0.5%
-        if (diffema10 < -0.5) {
-          stats.shortPassedDiffEMA10++;
+        // Điều kiện DiffEMA10 (1H) < -0.5%
+        if (diffema10Pct < -0.5) {
+          shortStats.shortPassedDiffEMA10++;
 
           const shortKey = `${symbol}_SHORT`;
           const lastSentShort = sentLog[shortKey] || 0;
@@ -292,61 +351,13 @@ async function main() {
               `Coin: <b>${coinName}</b> (5m/1H)\n` +
               `RSI (5m): ${rsiStr}%\n` +
               `BD5: ${bd5Str}%\n` +
-              `DiffEMA10 (1H): ${diffema10.toFixed(4)}%\n` +
+              `DiffEMA10 (1H): ${diffema10Pct.toFixed(4)}%\n` +
               `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
             const isSent = await sendTelegramMessage(shortMsg);
             if (isSent) {
-              stats.shortSentSuccess++;
+              shortStats.shortSentSuccess++;
               sentLog[shortKey] = currentTime;
-              saveSentLog(sentLog);
-            }
-          }
-        }
-      }
-
-      // --- 4. XÉT ĐIỀU KIỆN LONG ---
-      if (isLongBd5 && currentRsi5m > 50) {
-        stats.longPassedBasic++;
-        stats.longCalled1H++;
-
-        const candles1H = await getCandles(symbol, '1H', 100);
-        let diffema10 = 0;
-
-        if (candles1H && candles1H.length >= 25) {
-          stats.longSuccess1H++;
-          const closed1H = candles1H.slice(1);
-          const chronological1H = [...closed1H].reverse();
-          const closes1H = chronological1H.map((c) => parseFloat(c[4]));
-
-          const emaArray1H = calculateEMA(closes1H, 20);
-          if (emaArray1H.length >= 10) {
-            const ema1Val = emaArray1H[emaArray1H.length - 1];
-            const ema10Val = emaArray1H[emaArray1H.length - 10];
-            diffema10 = ((ema1Val - ema10Val) / ema10Val) * 100;
-          }
-        }
-
-        // Điều kiện: diffema10 > 0.5%
-        if (diffema10 > 0.5) {
-          stats.longPassedDiffEMA10++;
-
-          const longKey = `${symbol}_LONG`;
-          const lastSentLong = sentLog[longKey] || 0;
-
-          if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
-            const longMsg =
-              `<b>🚀 TÍN HIỆU LONG</b>\n` +
-              `Coin: <b>${coinName}</b> (5m/1H)\n` +
-              `RSI (5m): ${rsiStr}%\n` +
-              `BD5: ${bd5Str}%\n` +
-              `DiffEMA10 (1H): +${diffema10.toFixed(4)}%\n` +
-              `<a href="${link}">🔗 Giao dịch OKX</a>`;
-
-            const isSent = await sendTelegramMessage(longMsg);
-            if (isSent) {
-              stats.longSentSuccess++;
-              sentLog[longKey] = currentTime;
               saveSentLog(sentLog);
             }
           }
@@ -356,24 +367,154 @@ async function main() {
       await sleep(100);
     }
 
+    // Cập nhật lại 24h.json
+    list24h = updateAndSave24hList(list24h, newRsiSymbols);
+
+    // ==================================================================
+    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (CHỈ LẤY COIN TRONG FILE 24H.JSON)
+    // ==================================================================
+    console.log('--- ĐANG QUÉT LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
+    const symbolsIn24h = Object.keys(list24h);
+
+    const longStats = {
+      totalIn24hList: symbolsIn24h.length,
+      candlesValid: 0,
+      passedCandlePattern: 0,
+      passedBBM: 0,
+      called1H: 0,
+      success1H: 0,
+      passedDiffEMA10: 0,
+      longSentSuccess: 0
+    };
+
+    for (const symbol of symbolsIn24h) {
+      const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
+      const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
+      // Lấy nến 5m trực tiếp cho coin trong 24h.json
+      const candles5m = await getCandles(symbol, '5m', 80);
+      if (!candles5m || candles5m.length < 35) {
+        await sleep(60);
+        continue;
+      }
+
+      const closedCandles = candles5m.slice(1);
+      if (closedCandles.length < 21) {
+        await sleep(60);
+        continue;
+      }
+
+      longStats.candlesValid++;
+
+      // Nến 1 (vừa đóng gần nhất: closedCandles[0])
+      const open1 = parseFloat(closedCandles[0][1]);
+      const low1 = parseFloat(closedCandles[0][3]);
+      const close1 = parseFloat(closedCandles[0][4]);
+
+      // Nến 2 (nến trước đó: closedCandles[1])
+      const open2 = parseFloat(closedCandles[1][1]);
+      const close2 = parseFloat(closedCandles[1][4]);
+
+      // Kiểm tra: Nến 1 là nến xanh (close > open), Nến 2 là nến đỏ (close < open)
+      const isCandle1Green = close1 > open1;
+      const isCandle2Red = close2 < open2;
+
+      if (!isCandle1Green || !isCandle2Red) {
+        await sleep(60);
+        continue;
+      }
+      longStats.passedCandlePattern++;
+
+      // Kiểm tra BBM < 0.5%
+      const closesBB1 = closedCandles.slice(0, 20).map((c) => parseFloat(c[4])).reverse();
+      const bb1 = calculateBollingerBands(closesBB1, 20, 2);
+
+      let conditionPassedBBM = false;
+      let bbm = 0;
+
+      if (bb1 && bb1.mid > 0) {
+        bbm = ((low1 - bb1.mid) / bb1.mid) * 100;
+        if (bbm < MAX_BBM) {
+          conditionPassedBBM = true;
+        }
+      }
+
+      if (!conditionPassedBBM) {
+        await sleep(60);
+        continue;
+      }
+      longStats.passedBBM++;
+
+      // Gọi nến 1H để kiểm tra DiffEMA10 > +0.5%
+      longStats.called1H++;
+      const candles1H = await getCandles(symbol, '1H', 100);
+      let diffema10Pct = -999;
+
+      if (candles1H && candles1H.length >= 25) {
+        longStats.success1H++;
+        const closed1H = candles1H.slice(1);
+        const chronological1H = [...closed1H].reverse();
+        const closes1H = chronological1H.map((c) => parseFloat(c[4]));
+
+        const emaArray1H = calculateEMA(closes1H, 20);
+        if (emaArray1H.length >= 10) {
+          const ema1Val = emaArray1H[emaArray1H.length - 1];
+          const ema10Val = emaArray1H[emaArray1H.length - 10];
+          diffema10Pct = ((ema1Val - ema10Val) / ema10Val) * 100;
+        }
+      }
+
+      if (diffema10Pct > 0.5) {
+        longStats.passedDiffEMA10++;
+
+        const longKey = `${symbol}_LONG`;
+        const lastSentLong = sentLog[longKey] || 0;
+
+        if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
+          const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
+          const longMsg =
+            `<b>🚀 TÍN HIỆU LONG</b>\n` +
+            `Coin: <b>${coinName}</b> (5m/1H)\n` +
+            `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
+            `BBM (5m): ${bbmSign}%\n` +
+            `DiffEMA10 (1H): +${diffema10Pct.toFixed(4)}%\n` +
+            `<a href="${link}">🔗 Giao dịch OKX</a>`;
+
+          const isLongSent = await sendTelegramMessage(longMsg);
+          if (isLongSent) {
+            longStats.longSentSuccess++;
+            sentLog[longKey] = currentTime;
+            saveSentLog(sentLog);
+          }
+        }
+      }
+
+      await sleep(100);
+    }
+
+    // ------------------- BÁO CÁO THỐNG KÊ -------------------
     console.log('\n================ BÁO CÁO THỐNG KÊ CHI TIẾT TỪNG BƯỚC ================');
-    console.log(`1. Tổng số cặp SWAP quét được từ OKX : ${stats.allSwaps} coin`);
-    console.log(`2. Số coin qua lọc Volume (> 5M USDT) : ${stats.passedVol} coin`);
-    console.log(`3. Số coin tải đủ dữ liệu nến 5m hợp lệ : ${stats.candlesValid} coin`);
+    console.log(`1. Tổng số cặp SWAP quét được từ OKX    : ${shortStats.allSwaps} coin`);
+    console.log(`2. Số coin qua lọc Volume (> 5M USDT)    : ${shortStats.passedVol} coin`);
+    console.log(`3. Số coin tải đủ dữ liệu nến 5m hợp lệ  : ${shortStats.candlesValid} coin`);
+    console.log(`4. Số coin đạt BD5 > 2.5% (được tính RSI): ${shortStats.passedBD5} coin`);
+    console.log(`5. Số coin đạt RSI > 70 (vào 24h.json)   : ${shortStats.newRsi70Detected} coin`);
     console.log('------------------------------------------------------------------');
-    console.log('--- LUỒNG XÉT SHORT ---');
-    console.log(`- Thỏa mãn điều kiện cơ bản (RSI<65, 2.5%<BD5<4%): ${stats.shortPassedBasic} coin`);
-    console.log(`- Gọi nến 1H (Short)                     : ${stats.shortCalled1H} coin`);
-    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${stats.shortSuccess1H} coin`);
-    console.log(`- Thỏa mãn thêm DiffEMA10 (1H) < -0.5%   : ${stats.shortPassedDiffEMA10} coin`);
-    console.log(`- Gửi tin SHORT thành công               : ${stats.shortSentSuccess} tin`);
+    console.log('--- LUỒNG SHORT ---');
+    console.log(`- Thỏa mãn RSI < 60%                     : ${shortStats.shortPassedRsi60} coin`);
+    console.log(`- Gọi nến 1H (Short)                     : ${shortStats.shortCalled1H} coin`);
+    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${shortStats.shortSuccess1H} coin`);
+    console.log(`- Thỏa mãn DiffEMA10 (1H) < -0.5%        : ${shortStats.shortPassedDiffEMA10} coin`);
+    console.log(`- Gửi tin SHORT thành công               : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
-    console.log('--- LUỒNG XÉT LONG ---');
-    console.log(`- Thỏa mãn điều kiện cơ bản (RSI>50, -4%<BD5<-2%): ${stats.longPassedBasic} coin`);
-    console.log(`- Gọi nến 1H (Long)                      : ${stats.longCalled1H} coin`);
-    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${stats.longSuccess1H} coin`);
-    console.log(`- Thỏa mãn thêm DiffEMA10 > 0.5% (1H)    : ${stats.longPassedDiffEMA10} coin`);
-    console.log(`- Gửi tin LONG thành công                : ${stats.longSentSuccess} tin`);
+    console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
+    console.log(`- Tổng số coin lấy ra từ 24h.json        : ${longStats.totalIn24hList} coin`);
+    console.log(`- Tải đủ nến 5m hợp lệ                   : ${longStats.candlesValid} coin`);
+    console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ             : ${longStats.passedCandlePattern} coin`);
+    console.log(`- Thỏa mãn BBM < 0.5%                    : ${longStats.passedBBM} coin`);
+    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${longStats.success1H} coin`);
+    console.log(`- Thỏa mãn DiffEMA10 (1H) > +0.5%        : ${longStats.passedDiffEMA10} coin`);
+    console.log(`- Gửi tin LONG thành công                : ${longStats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
