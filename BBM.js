@@ -20,6 +20,9 @@ const MIN_VOL_CCY24H = 5_000_000;                   // Volume 24h > 5 triệu US
 const MIN_BD5 = 2.5;                                // BD5 > 2.5% mới xét tiếp RSI
 const MAX_BBM = 0.5;                                // BBM < 0.5% cho Long
 
+// Ngưỡng tối thiểu nến 1H để warm-up chuẩn theo sàn OKX
+const MIN_CANDLES_1H_WARMUP = 90;
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ------------------- HÀM TIỆN ÍCH TRÁNH LỖI HTML TELEGRAM -------------------
@@ -255,7 +258,7 @@ async function main() {
       shortPassedRsi60: 0,
       shortCalled1H: 0,
       shortSuccess1H: 0,
-      shortPassedDiffEMA4: 0,
+      shortPassedDiffEMA16: 0,
       shortSentSuccess: 0
     };
 
@@ -321,26 +324,27 @@ async function main() {
         shortStats.shortPassedRsi60++;
         shortStats.shortCalled1H++;
 
+        // Lấy 100 nến 1H để warm-up EMA chuẩn như biểu đồ sàn
         const candles1H = await getCandles(symbol, '1H', 100);
-        let diffema4Pct = 0;
+        let diffema16Pct = 0;
 
-        if (candles1H && candles1H.length >= 24) {
+        if (candles1H && candles1H.length >= MIN_CANDLES_1H_WARMUP) {
           shortStats.shortSuccess1H++;
           const closed1H = candles1H.slice(1);
           const chronological1H = [...closed1H].reverse();
           const closes1H = chronological1H.map((c) => parseFloat(c[4]));
 
           const emaArray1H = calculateEMA(closes1H, 20);
-          if (emaArray1H.length >= 4) {
+          if (emaArray1H.length >= 16) {
             const ema1Val = emaArray1H[emaArray1H.length - 1];
-            const ema4Val = emaArray1H[emaArray1H.length - 4];
-            diffema4Pct = ((ema1Val - ema4Val) / ema4Val) * 100;
+            const ema16Val = emaArray1H[emaArray1H.length - 16];
+            diffema16Pct = ((ema1Val - ema16Val) / ema16Val) * 100;
           }
         }
 
-        // Điều kiện DiffEMA4 (1H) < 0
-        if (diffema4Pct < 0) {
-          shortStats.shortPassedDiffEMA4++;
+        // Điều kiện DiffEMA16 (1H) < 0
+        if (diffema16Pct < 0) {
+          shortStats.shortPassedDiffEMA16++;
 
           const shortKey = `${symbol}_SHORT`;
           const lastSentShort = sentLog[shortKey] || 0;
@@ -351,7 +355,7 @@ async function main() {
               `Coin: <b>${coinName}</b> (5m/1H)\n` +
               `RSI (5m): ${rsiStr}%\n` +
               `BD5: ${bd5Str}%\n` +
-              `DiffEMA4 (1H): ${diffema4Pct.toFixed(4)}%\n` +
+              `DiffEMA16 (1H): ${diffema16Pct.toFixed(4)}%\n` +
               `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
             const isSent = await sendTelegramMessage(shortMsg);
@@ -383,7 +387,7 @@ async function main() {
       passedBBM: 0,
       called1H: 0,
       success1H: 0,
-      passedDiffEMA4: 0,
+      passedDiffEMA16: 0,
       longSentSuccess: 0
     };
 
@@ -445,27 +449,27 @@ async function main() {
       }
       longStats.passedBBM++;
 
-      // Gọi nến 1H để kiểm tra DiffEMA4 > 0
+      // Gọi 100 nến 1H để kiểm tra DiffEMA16 > 0 chuẩn xác
       longStats.called1H++;
       const candles1H = await getCandles(symbol, '1H', 100);
-      let diffema4Pct = -999;
+      let diffema16Pct = -999;
 
-      if (candles1H && candles1H.length >= 24) {
+      if (candles1H && candles1H.length >= MIN_CANDLES_1H_WARMUP) {
         longStats.success1H++;
         const closed1H = candles1H.slice(1);
         const chronological1H = [...closed1H].reverse();
         const closes1H = chronological1H.map((c) => parseFloat(c[4]));
 
         const emaArray1H = calculateEMA(closes1H, 20);
-        if (emaArray1H.length >= 4) {
+        if (emaArray1H.length >= 16) {
           const ema1Val = emaArray1H[emaArray1H.length - 1];
-          const ema4Val = emaArray1H[emaArray1H.length - 4];
-          diffema4Pct = ((ema1Val - ema4Val) / ema4Val) * 100;
+          const ema16Val = emaArray1H[emaArray1H.length - 16];
+          diffema16Pct = ((ema1Val - ema16Val) / ema16Val) * 100;
         }
       }
 
-      if (diffema4Pct > 0) {
-        longStats.passedDiffEMA4++;
+      if (diffema16Pct > 0) {
+        longStats.passedDiffEMA16++;
 
         const longKey = `${symbol}_LONG`;
         const lastSentLong = sentLog[longKey] || 0;
@@ -477,7 +481,7 @@ async function main() {
             `Coin: <b>${coinName}</b> (5m/1H)\n` +
             `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
             `BBM (5m): ${bbmSign}%\n` +
-            `DiffEMA4 (1H): +${diffema4Pct.toFixed(4)}%\n` +
+            `DiffEMA16 (1H): +${diffema16Pct.toFixed(4)}%\n` +
             `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
           const isLongSent = await sendTelegramMessage(longMsg);
@@ -503,8 +507,8 @@ async function main() {
     console.log('--- LUỒNG SHORT ---');
     console.log(`- Thỏa mãn RSI < 60%                     : ${shortStats.shortPassedRsi60} coin`);
     console.log(`- Gọi nến 1H (Short)                     : ${shortStats.shortCalled1H} coin`);
-    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${shortStats.shortSuccess1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA4 (1H) < 0%            : ${shortStats.shortPassedDiffEMA4} coin`);
+    console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)       : ${shortStats.shortSuccess1H} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) < 0%           : ${shortStats.shortPassedDiffEMA16} coin`);
     console.log(`- Gửi tin SHORT thành công               : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
@@ -512,8 +516,8 @@ async function main() {
     console.log(`- Tải đủ nến 5m hợp lệ                   : ${longStats.candlesValid} coin`);
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ             : ${longStats.passedCandlePattern} coin`);
     console.log(`- Thỏa mãn BBM < 0.5%                    : ${longStats.passedBBM} coin`);
-    console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${longStats.success1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA4 (1H) > 0%            : ${longStats.passedDiffEMA4} coin`);
+    console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)       : ${longStats.success1H} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) > 0%           : ${longStats.passedDiffEMA16} coin`);
     console.log(`- Gửi tin LONG thành công                : ${longStats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
