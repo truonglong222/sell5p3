@@ -255,7 +255,7 @@ async function main() {
       shortPassedRsi60: 0,
       shortCalled1H: 0,
       shortSuccess1H: 0,
-      shortPassedDiffEMA5: 0,
+      shortPassedDiffEMA4: 0,
       shortSentSuccess: 0
     };
 
@@ -322,25 +322,25 @@ async function main() {
         shortStats.shortCalled1H++;
 
         const candles1H = await getCandles(symbol, '1H', 100);
-        let diffema5Pct = 0;
+        let diffema4Pct = 0;
 
-        if (candles1H && candles1H.length >= 25) {
+        if (candles1H && candles1H.length >= 24) {
           shortStats.shortSuccess1H++;
           const closed1H = candles1H.slice(1);
           const chronological1H = [...closed1H].reverse();
           const closes1H = chronological1H.map((c) => parseFloat(c[4]));
 
           const emaArray1H = calculateEMA(closes1H, 20);
-          if (emaArray1H.length >= 5) {
+          if (emaArray1H.length >= 4) {
             const ema1Val = emaArray1H[emaArray1H.length - 1];
-            const ema5Val = emaArray1H[emaArray1H.length - 5];
-            diffema5Pct = ((ema1Val - ema5Val) / ema5Val) * 100;
+            const ema4Val = emaArray1H[emaArray1H.length - 4];
+            diffema4Pct = ((ema1Val - ema4Val) / ema4Val) * 100;
           }
         }
 
-        // Điều kiện DiffEMA5 (1H) < -0.5%
-        if (diffema5Pct < -0.5) {
-          shortStats.shortPassedDiffEMA5++;
+        // Điều kiện DiffEMA4 (1H) < 0
+        if (diffema4Pct < 0) {
+          shortStats.shortPassedDiffEMA4++;
 
           const shortKey = `${symbol}_SHORT`;
           const lastSentShort = sentLog[shortKey] || 0;
@@ -351,7 +351,7 @@ async function main() {
               `Coin: <b>${coinName}</b> (5m/1H)\n` +
               `RSI (5m): ${rsiStr}%\n` +
               `BD5: ${bd5Str}%\n` +
-              `DiffEMA5 (1H): ${diffema5Pct.toFixed(4)}%\n` +
+              `DiffEMA4 (1H): ${diffema4Pct.toFixed(4)}%\n` +
               `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
             const isSent = await sendTelegramMessage(shortMsg);
@@ -383,7 +383,7 @@ async function main() {
       passedBBM: 0,
       called1H: 0,
       success1H: 0,
-      passedDiffEMA5: 0,
+      passedDiffEMA4: 0,
       longSentSuccess: 0
     };
 
@@ -445,27 +445,27 @@ async function main() {
       }
       longStats.passedBBM++;
 
-      // Gọi nến 1H để kiểm tra DiffEMA5 > +0.5%
+      // Gọi nến 1H để kiểm tra DiffEMA4 > 0
       longStats.called1H++;
       const candles1H = await getCandles(symbol, '1H', 100);
-      let diffema5Pct = -999;
+      let diffema4Pct = -999;
 
-      if (candles1H && candles1H.length >= 25) {
+      if (candles1H && candles1H.length >= 24) {
         longStats.success1H++;
         const closed1H = candles1H.slice(1);
         const chronological1H = [...closed1H].reverse();
         const closes1H = chronological1H.map((c) => parseFloat(c[4]));
 
         const emaArray1H = calculateEMA(closes1H, 20);
-        if (emaArray1H.length >= 5) {
+        if (emaArray1H.length >= 4) {
           const ema1Val = emaArray1H[emaArray1H.length - 1];
-          const ema5Val = emaArray1H[emaArray1H.length - 5];
-          diffema5Pct = ((ema1Val - ema5Val) / ema5Val) * 100;
+          const ema4Val = emaArray1H[emaArray1H.length - 4];
+          diffema4Pct = ((ema1Val - ema4Val) / ema4Val) * 100;
         }
       }
 
-      if (diffema5Pct > 0.5) {
-        longStats.passedDiffEMA5++;
+      if (diffema4Pct > 0) {
+        longStats.passedDiffEMA4++;
 
         const longKey = `${symbol}_LONG`;
         const lastSentLong = sentLog[longKey] || 0;
@@ -477,7 +477,7 @@ async function main() {
             `Coin: <b>${coinName}</b> (5m/1H)\n` +
             `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
             `BBM (5m): ${bbmSign}%\n` +
-            `DiffEMA5 (1H): +${diffema5Pct.toFixed(4)}%\n` +
+            `DiffEMA4 (1H): +${diffema4Pct.toFixed(4)}%\n` +
             `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
           const isLongSent = await sendTelegramMessage(longMsg);
@@ -504,7 +504,7 @@ async function main() {
     console.log(`- Thỏa mãn RSI < 60%                     : ${shortStats.shortPassedRsi60} coin`);
     console.log(`- Gọi nến 1H (Short)                     : ${shortStats.shortCalled1H} coin`);
     console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${shortStats.shortSuccess1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA5 (1H) < -0.5%         : ${shortStats.shortPassedDiffEMA5} coin`);
+    console.log(`- Thỏa mãn DiffEMA4 (1H) < 0%            : ${shortStats.shortPassedDiffEMA4} coin`);
     console.log(`- Gửi tin SHORT thành công               : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
@@ -513,7 +513,7 @@ async function main() {
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ             : ${longStats.passedCandlePattern} coin`);
     console.log(`- Thỏa mãn BBM < 0.5%                    : ${longStats.passedBBM} coin`);
     console.log(`- Gọi nến 1H thành công & đủ dữ liệu     : ${longStats.success1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA5 (1H) > +0.5%         : ${longStats.passedDiffEMA5} coin`);
+    console.log(`- Thỏa mãn DiffEMA4 (1H) > 0%            : ${longStats.passedDiffEMA4} coin`);
     console.log(`- Gửi tin LONG thành công                : ${longStats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
