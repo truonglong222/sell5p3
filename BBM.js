@@ -350,6 +350,10 @@ async function main() {
           const lastSentShort = sentLog[shortKey] || 0;
 
           if (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT) {
+            // LƯU SENT LOG TRƯỚC KHI GỬI TIN TELEGRAM
+            sentLog[shortKey] = currentTime;
+            saveSentLog(sentLog);
+
             const shortMsg =
               `<b>🔻 CẢNH BÁO SHORT</b>\n` +
               `Coin: <b>${coinName}</b> (5m/1H)\n` +
@@ -361,8 +365,6 @@ async function main() {
             const isSent = await sendTelegramMessage(shortMsg);
             if (isSent) {
               shortStats.shortSentSuccess++;
-              sentLog[shortKey] = currentTime;
-              saveSentLog(sentLog);
             }
           }
         }
@@ -475,6 +477,10 @@ async function main() {
         const lastSentLong = sentLog[longKey] || 0;
 
         if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
+          // LƯU SENT LOG TRƯỚC KHI GỬI TIN TELEGRAM
+          sentLog[longKey] = currentTime;
+          saveSentLog(sentLog);
+
           const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
           const longMsg =
             `<b>🚀 TÍN HIỆU LONG</b>\n` +
@@ -487,8 +493,6 @@ async function main() {
           const isLongSent = await sendTelegramMessage(longMsg);
           if (isLongSent) {
             longStats.longSentSuccess++;
-            sentLog[longKey] = currentTime;
-            saveSentLog(sentLog);
           }
         }
       }
