@@ -342,8 +342,8 @@ async function main() {
           }
         }
 
-        // Điều kiện DiffEMA16 (1H) < 0
-        if (diffema16Pct < 0) {
+        // Điều kiện DiffEMA16 (1H) < -0.5%
+        if (diffema16Pct < -0.5) {
           shortStats.shortPassedDiffEMA16++;
 
           const shortKey = `${symbol}_SHORT`;
@@ -451,7 +451,7 @@ async function main() {
       }
       longStats.passedBBM++;
 
-      // Gọi 100 nến 1H để kiểm tra DiffEMA16 > 0 chuẩn xác
+      // Gọi 100 nến 1H để kiểm tra DiffEMA16 > +0.5% chuẩn xác
       longStats.called1H++;
       const candles1H = await getCandles(symbol, '1H', 100);
       let diffema16Pct = -999;
@@ -470,7 +470,8 @@ async function main() {
         }
       }
 
-      if (diffema16Pct > 0) {
+      // Điều kiện DiffEMA16 (1H) > 0.5%
+      if (diffema16Pct > 0.5) {
         longStats.passedDiffEMA16++;
 
         const longKey = `${symbol}_LONG`;
@@ -512,7 +513,7 @@ async function main() {
     console.log(`- Thỏa mãn RSI < 60%                     : ${shortStats.shortPassedRsi60} coin`);
     console.log(`- Gọi nến 1H (Short)                     : ${shortStats.shortCalled1H} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)       : ${shortStats.shortSuccess1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA16 (1H) < 0%           : ${shortStats.shortPassedDiffEMA16} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) < -0.5%        : ${shortStats.shortPassedDiffEMA16} coin`);
     console.log(`- Gửi tin SHORT thành công               : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
@@ -521,7 +522,7 @@ async function main() {
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ             : ${longStats.passedCandlePattern} coin`);
     console.log(`- Thỏa mãn BBM < 0.5%                    : ${longStats.passedBBM} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)       : ${longStats.success1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA16 (1H) > 0%           : ${longStats.passedDiffEMA16} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) > +0.5%        : ${longStats.passedDiffEMA16} coin`);
     console.log(`- Gửi tin LONG thành công                : ${longStats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
