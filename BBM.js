@@ -344,7 +344,7 @@ async function main() {
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
       const rsiStr = currentRsi5m.toFixed(2);
 
-      // Nếu RSI > 72: Lưu vào 24h.json
+      // Nếu RSI > 68: Lưu vào 24h.json
       if (currentRsi5m > 68) {
         newRsiSymbols.push(symbol);
         shortStats.newRsi72Detected++;
