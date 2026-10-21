@@ -163,6 +163,46 @@ function calculateEMA(prices, period = 20) {
   return emaArray;
 }
 
+/**
+ * Tính ATR (Average True Range) theo phương pháp Wilder's Smoothing
+ * @param {Array} candles - Mảng nến theo thứ tự thời gian tăng dần [cũ -> mới]
+ *   Mỗi phần tử: [ts, open, high, low, close, ...]
+ * @param {number} period - Chu kỳ tính (mặc định 14)
+ */
+function calculateATR(candles, period = 14) {
+  if (!candles || candles.length <= period) return null;
+
+  // Tính True Range (TR) cho từng nến
+  const trList = [];
+  for (let i = 1; i < candles.length; i++) {
+    const high = parseFloat(candles[i][2]);
+    const low = parseFloat(candles[i][3]);
+    const prevClose = parseFloat(candles[i - 1][4]);
+
+    const tr = Math.max(
+      high - low,
+      Math.abs(high - prevClose),
+      Math.abs(low - prevClose)
+    );
+    trList.push(tr);
+  }
+
+  if (trList.length < period) return null;
+
+  // ATR đầu tiên = Trung bình SMA của `period` cây nến đầu tiên
+  let atr = trList.slice(0, period).reduce((sum, val) => sum + val, 0) / period;
+
+  // Làm mượt bằng Wilder's smoothing cho các cây nến tiếp theo
+  for (let i = period; i < trList.length; i++) {
+    atr = (atr * (period - 1) + trList[i]) / period;
+  }
+
+  const latestClose = parseFloat(candles[candles.length - 1][4]);
+  const atrPct = latestClose > 0 ? (atr / latestClose) * 100 : 0;
+
+  return { atr, atrPct };
+}
+
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
 
 async function getFilteredMarkets() {
@@ -354,12 +394,19 @@ async function main() {
             sentLog[shortKey] = currentTime;
             saveSentLog(sentLog);
 
+            // Tính ATR 14 chu kỳ trên nến 5m
+            const atrData = calculateATR(chronological5m, 14);
+            const atrText = atrData 
+              ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
+              : 'N/A';
+
             const shortMsg =
               `<b>🔻 CẢNH BÁO SHORT</b>\n` +
               `Coin: <b>${coinName}</b> (5m/1H)\n` +
               `RSI (5m): ${rsiStr}%\n` +
               `BD5: ${bd5Str}%\n` +
               `DiffEMA16 (1H): ${diffema16Pct.toFixed(4)}%\n` +
+              `ATR (14, 5m): <b>${atrText}</b>\n` +
               `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
             const isSent = await sendTelegramMessage(shortMsg);
@@ -482,6 +529,13 @@ async function main() {
           sentLog[longKey] = currentTime;
           saveSentLog(sentLog);
 
+          // Tính ATR 14 chu kỳ trên nến 5m
+          const chronological5m = [...closedCandles].reverse();
+          const atrData = calculateATR(chronological5m, 14);
+          const atrText = atrData 
+            ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
+            : 'N/A';
+
           const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
           const longMsg =
             `<b>🚀 TÍN HIỆU LONG</b>\n` +
@@ -489,6 +543,7 @@ async function main() {
             `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
             `BBM (5m): ${bbmSign}%\n` +
             `DiffEMA16 (1H): +${diffema16Pct.toFixed(4)}%\n` +
+            `ATR (14, 5m): <b>${atrText}</b>\n` +
             `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
           const isLongSent = await sendTelegramMessage(longMsg);
