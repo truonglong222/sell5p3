@@ -566,7 +566,7 @@ async function main() {
     console.log(`- Bị loại ngay do đang Cooldown ở sent_ema    : ${shortStats.skippedCooldown} coin`);
     console.log(`- Còn lại đi tiếp vào bước tải nến & tính RSI : ${shortStats.candidatesAfterCooldown} coin`);
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${shortStats.candlesValid} coin`);
-    console.log(`- Đạt RSI > 72 (lưu vào 24h.json)             : ${shortStats.newRsi72Detected} coin`);
+    console.log(`- Đạt RSI > 68 (lưu vào 24h.json)             : ${shortStats.newRsi72Detected} coin`);
     console.log(`- Thỏa mãn RSI < 60                           : ${shortStats.shortPassedRsi60} coin`);
     console.log(`- Đạt tiếp BD5 > 2.5%                         : ${shortStats.passedBD5} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${shortStats.shortSuccess1H} coin`);
