@@ -163,16 +163,9 @@ function calculateEMA(prices, period = 20) {
   return emaArray;
 }
 
-/**
- * Tính ATR (Average True Range) theo phương pháp Wilder's Smoothing
- * @param {Array} candles - Mảng nến theo thứ tự thời gian tăng dần [cũ -> mới]
- *   Mỗi phần tử: [ts, open, high, low, close, ...]
- * @param {number} period - Chu kỳ tính (mặc định 14)
- */
 function calculateATR(candles, period = 14) {
   if (!candles || candles.length <= period) return null;
 
-  // Tính True Range (TR) cho từng nến
   const trList = [];
   for (let i = 1; i < candles.length; i++) {
     const high = parseFloat(candles[i][2]);
@@ -189,10 +182,8 @@ function calculateATR(candles, period = 14) {
 
   if (trList.length < period) return null;
 
-  // ATR đầu tiên = Trung bình SMA của `period` cây nến đầu tiên
   let atr = trList.slice(0, period).reduce((sum, val) => sum + val, 0) / period;
 
-  // Làm mượt bằng Wilder's smoothing cho các cây nến tiếp theo
   for (let i = period; i < trList.length; i++) {
     atr = (atr * (period - 1) + trList[i]) / period;
   }
@@ -284,7 +275,7 @@ async function main() {
     const currentTime = Date.now();
 
     // ==================================================================
-    // PHẦN 1: QUÉT THỊ TRƯỜNG -> LỌC VOL -> BD5 > 2.5% -> RSI -> SHORT / 24H.JSON
+    // PHẦN 1: QUÉT THỊ TRƯỜNG -> LỌC VOL -> LỌC COOLDOWN SHORT -> BD5 -> RSI -> SHORT / 24H.JSON
     // ==================================================================
     console.log('--- ĐANG QUÉT LUỒNG SHORT & WATCHLIST 24H ---');
     const { allSwaps, passedVol, targetCoins } = await getFilteredMarkets();
@@ -292,6 +283,8 @@ async function main() {
     const shortStats = {
       allSwaps,
       passedVol,
+      skippedCooldown: 0,
+      candidatesAfterCooldown: 0,
       candlesValid: 0,
       passedBD5: 0,
       newRsi70Detected: 0,
@@ -302,9 +295,22 @@ async function main() {
       shortSentSuccess: 0
     };
 
+    // TỐI ƯU: Lọc bỏ ngay các coin đang trong thời gian Cooldown Short
+    const availableShortCoins = targetCoins.filter((coin) => {
+      const shortKey = `${coin.instId}_SHORT`;
+      const lastSent = sentLog[shortKey] || 0;
+      const isInCooldown = (currentTime - lastSent) < COOLDOWN_TIME_SHORT;
+      if (isInCooldown) {
+        shortStats.skippedCooldown++;
+        return false;
+      }
+      return true;
+    });
+
+    shortStats.candidatesAfterCooldown = availableShortCoins.length;
     const newRsiSymbols = [];
 
-    for (const coin of targetCoins) {
+    for (const coin of availableShortCoins) {
       const symbol = coin.instId;
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
@@ -387,32 +393,29 @@ async function main() {
           shortStats.shortPassedDiffEMA16++;
 
           const shortKey = `${symbol}_SHORT`;
-          const lastSentShort = sentLog[shortKey] || 0;
 
-          if (currentTime - lastSentShort >= COOLDOWN_TIME_SHORT) {
-            // LƯU SENT LOG TRƯỚC KHI GỬI TIN TELEGRAM
-            sentLog[shortKey] = currentTime;
-            saveSentLog(sentLog);
+          // Lưu Sent Log trước khi gửi Telegram
+          sentLog[shortKey] = currentTime;
+          saveSentLog(sentLog);
 
-            // Tính ATR 14 chu kỳ trên nến 5m
-            const atrData = calculateATR(chronological5m, 14);
-            const atrText = atrData 
-              ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
-              : 'N/A';
+          // Tính ATR 14 chu kỳ trên nến 5m
+          const atrData = calculateATR(chronological5m, 14);
+          const atrText = atrData 
+            ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
+            : 'N/A';
 
-            const shortMsg =
-              `<b>🔻 CẢNH BÁO SHORT</b>\n` +
-              `Coin: <b>${coinName}</b> (5m/1H)\n` +
-              `RSI (5m): ${rsiStr}%\n` +
-              `BD5: ${bd5Str}%\n` +
-              `DiffEMA16 (1H): ${diffema16Pct.toFixed(4)}%\n` +
-              `ATR (14, 5m): <b>${atrText}</b>\n` +
-              `<a href="${link}">🔗 Giao dịch OKX</a>`;
+          const shortMsg =
+            `<b>🔻 CẢNH BÁO SHORT</b>\n` +
+            `Coin: <b>${coinName}</b> (5m/1H)\n` +
+            `RSI (5m): ${rsiStr}%\n` +
+            `BD5: ${bd5Str}%\n` +
+            `DiffEMA16 (1H): ${diffema16Pct.toFixed(4)}%\n` +
+            `ATR (14, 5m): <b>${atrText}</b>\n` +
+            `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-            const isSent = await sendTelegramMessage(shortMsg);
-            if (isSent) {
-              shortStats.shortSentSuccess++;
-            }
+          const isSent = await sendTelegramMessage(shortMsg);
+          if (isSent) {
+            shortStats.shortSentSuccess++;
           }
         }
       }
@@ -424,13 +427,15 @@ async function main() {
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
 
     // ==================================================================
-    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (CHỈ LẤY COIN TRONG FILE 24H.JSON)
+    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (LỌC COOLDOWN LONG TRƯỚC KHI KÉO NẾN)
     // ==================================================================
     console.log('--- ĐANG QUÉT LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
     const symbolsIn24h = Object.keys(list24h);
 
     const longStats = {
       totalIn24hList: symbolsIn24h.length,
+      skippedCooldown: 0,
+      candidatesAfterCooldown: 0,
       candlesValid: 0,
       passedCandlePattern: 0,
       passedBBM: 0,
@@ -440,7 +445,21 @@ async function main() {
       longSentSuccess: 0
     };
 
-    for (const symbol of symbolsIn24h) {
+    // TỐI ƯU: Loại bỏ ngay coin đang cooldown Long trước khi quét nến
+    const availableLongSymbols = symbolsIn24h.filter((symbol) => {
+      const longKey = `${symbol}_LONG`;
+      const lastSent = sentLog[longKey] || 0;
+      const isInCooldown = (currentTime - lastSent) < COOLDOWN_TIME_LONG;
+      if (isInCooldown) {
+        longStats.skippedCooldown++;
+        return false;
+      }
+      return true;
+    });
+
+    longStats.candidatesAfterCooldown = availableLongSymbols.length;
+
+    for (const symbol of availableLongSymbols) {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
@@ -522,34 +541,31 @@ async function main() {
         longStats.passedDiffEMA16++;
 
         const longKey = `${symbol}_LONG`;
-        const lastSentLong = sentLog[longKey] || 0;
 
-        if (currentTime - lastSentLong >= COOLDOWN_TIME_LONG) {
-          // LƯU SENT LOG TRƯỚC KHI GỬI TIN TELEGRAM
-          sentLog[longKey] = currentTime;
-          saveSentLog(sentLog);
+        // Lưu Sent Log trước khi gửi Telegram
+        sentLog[longKey] = currentTime;
+        saveSentLog(sentLog);
 
-          // Tính ATR 14 chu kỳ trên nến 5m
-          const chronological5m = [...closedCandles].reverse();
-          const atrData = calculateATR(chronological5m, 14);
-          const atrText = atrData 
-            ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
-            : 'N/A';
+        // Tính ATR 14 chu kỳ trên nến 5m
+        const chronological5m = [...closedCandles].reverse();
+        const atrData = calculateATR(chronological5m, 14);
+        const atrText = atrData 
+          ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
+          : 'N/A';
 
-          const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
-          const longMsg =
-            `<b>🚀 TÍN HIỆU LONG</b>\n` +
-            `Coin: <b>${coinName}</b> (5m/1H)\n` +
-            `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
-            `BBM (5m): ${bbmSign}%\n` +
-            `DiffEMA16 (1H): +${diffema16Pct.toFixed(4)}%\n` +
-            `ATR (14, 5m): <b>${atrText}</b>\n` +
-            `<a href="${link}">🔗 Giao dịch OKX</a>`;
+        const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
+        const longMsg =
+          `<b>🚀 TÍN HIỆU LONG</b>\n` +
+          `Coin: <b>${coinName}</b> (5m/1H)\n` +
+          `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
+          `BBM (5m): ${bbmSign}%\n` +
+          `DiffEMA16 (1H): +${diffema16Pct.toFixed(4)}%\n` +
+          `ATR (14, 5m): <b>${atrText}</b>\n` +
+          `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-          const isLongSent = await sendTelegramMessage(longMsg);
-          if (isLongSent) {
-            longStats.longSentSuccess++;
-          }
+        const isLongSent = await sendTelegramMessage(longMsg);
+        if (isLongSent) {
+          longStats.longSentSuccess++;
         }
       }
 
@@ -558,27 +574,30 @@ async function main() {
 
     // ------------------- BÁO CÁO THỐNG KÊ -------------------
     console.log('\n================ BÁO CÁO THỐNG KÊ CHI TIẾT TỪNG BƯỚC ================');
-    console.log(`1. Tổng số cặp SWAP quét được từ OKX    : ${shortStats.allSwaps} coin`);
-    console.log(`2. Số coin qua lọc Volume (> 5M USDT)    : ${shortStats.passedVol} coin`);
-    console.log(`3. Số coin tải đủ dữ liệu nến 5m hợp lệ  : ${shortStats.candlesValid} coin`);
-    console.log(`4. Số coin đạt BD5 > 2.5% (được tính RSI): ${shortStats.passedBD5} coin`);
-    console.log(`5. Số coin đạt RSI > 70 (vào 24h.json)   : ${shortStats.newRsi70Detected} coin`);
+    console.log(`1. Tổng số cặp SWAP quét được từ OKX         : ${shortStats.allSwaps} coin`);
+    console.log(`2. Số coin qua lọc Volume (> 5M USDT)         : ${shortStats.passedVol} coin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG SHORT ---');
-    console.log(`- Thỏa mãn RSI < 60%                     : ${shortStats.shortPassedRsi60} coin`);
-    console.log(`- Gọi nến 1H (Short)                     : ${shortStats.shortCalled1H} coin`);
-    console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)       : ${shortStats.shortSuccess1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA16 (1H) < -0.5%        : ${shortStats.shortPassedDiffEMA16} coin`);
-    console.log(`- Gửi tin SHORT thành công               : ${shortStats.shortSentSuccess} tin`);
+    console.log(`- Bị loại do đang Countdown/Cooldown Short    : ${shortStats.skippedCooldown} coin`);
+    console.log(`- Còn lại đi tiếp vào bước tải nến & tính BD5 : ${shortStats.candidatesAfterCooldown} coin`);
+    console.log(`- Tải đủ nến 5m hợp lệ                        : ${shortStats.candlesValid} coin`);
+    console.log(`- Đạt BD5 > 2.5% (được tính RSI)              : ${shortStats.passedBD5} coin`);
+    console.log(`- Đạt RSI > 70 (vào 24h.json)                 : ${shortStats.newRsi70Detected} coin`);
+    console.log(`- Thỏa mãn RSI < 60%                          : ${shortStats.shortPassedRsi60} coin`);
+    console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${shortStats.shortSuccess1H} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) < -0.5%             : ${shortStats.shortPassedDiffEMA16} coin`);
+    console.log(`- Gửi tin SHORT thành công                    : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
-    console.log(`- Tổng số coin lấy ra từ 24h.json        : ${longStats.totalIn24hList} coin`);
-    console.log(`- Tải đủ nến 5m hợp lệ                   : ${longStats.candlesValid} coin`);
-    console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ             : ${longStats.passedCandlePattern} coin`);
-    console.log(`- Thỏa mãn BBM < 0.5%                    : ${longStats.passedBBM} coin`);
-    console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)       : ${longStats.success1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA16 (1H) > +0.5%        : ${longStats.passedDiffEMA16} coin`);
-    console.log(`- Gửi tin LONG thành công                : ${longStats.longSentSuccess} tin`);
+    console.log(`- Tổng số coin lấy ra từ 24h.json             : ${longStats.totalIn24hList} coin`);
+    console.log(`- Bị loại do đang Countdown/Cooldown Long     : ${longStats.skippedCooldown} coin`);
+    console.log(`- Còn lại đi tiếp vào bước tải nến            : ${longStats.candidatesAfterCooldown} coin`);
+    console.log(`- Tải đủ nến 5m hợp lệ                        : ${longStats.candlesValid} coin`);
+    console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ                  : ${longStats.passedCandlePattern} coin`);
+    console.log(`- Thỏa mãn BBM < 0.5%                         : ${longStats.passedBBM} coin`);
+    console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${longStats.success1H} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) > +0.5%             : ${longStats.passedDiffEMA16} coin`);
+    console.log(`- Gửi tin LONG thành công                     : ${longStats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
