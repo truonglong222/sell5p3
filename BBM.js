@@ -71,12 +71,16 @@ function load24hList() {
   return {};
 }
 
-function updateAndSave24hList(list24h, newRsiSymbols) {
+function updateAndSave24hList(list24h, newRsiItems) {
   try {
     const now = Date.now();
     
-    for (const symbol of newRsiSymbols) {
-      list24h[symbol] = now;
+    // Lưu cả timestamp và rsi lúc quét được
+    for (const item of newRsiItems) {
+      list24h[item.symbol] = {
+        timestamp: now,
+        rsi: item.rsi
+      };
     }
 
     const cleaned24h = {};
@@ -295,7 +299,6 @@ async function main() {
       shortSentSuccess: 0
     };
 
-    // LOẠI BỎ NGAY CÁC COIN ĐANG TRONG COOLDOWN (SENT_EMA.JSON) TRƯỚC KHI KÉO NẾN
     const eligibleCoins = targetCoins.filter((coin) => {
       const shortKey = `${coin.instId}_SHORT`;
       const lastSentShort = sentLog[shortKey] || 0;
@@ -316,7 +319,6 @@ async function main() {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // 1. Chỉ gọi nến 5m cho các coin đã vượt qua bộ lọc Volume và Cooldown
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
         await sleep(60);
@@ -331,7 +333,6 @@ async function main() {
 
       shortStats.candlesValid++;
 
-      // 2. Tính RSI ngay sau khi lấy nến 5m
       const chronological5m = [...closedCandles].reverse();
       const closes5m = chronological5m.map((c) => parseFloat(c[4]));
 
@@ -344,9 +345,12 @@ async function main() {
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
       const rsiStr = currentRsi5m.toFixed(2);
 
-      // Nếu RSI > 68: Lưu vào 24h.json
+      // Nếu RSI > 68: Lưu symbol và giá trị RSI vào 24h.json
       if (currentRsi5m > 68) {
-        newRsiSymbols.push(symbol);
+        newRsiSymbols.push({
+          symbol,
+          rsi: parseFloat(rsiStr)
+        });
         shortStats.newRsi72Detected++;
       }
 
@@ -361,7 +365,6 @@ async function main() {
           bd5 = ((close0 - open4) / open4) * 100;
         }
 
-        // Nếu BD5 > 2.5%: Gọi nến 1H để tính diffema16
         if (bd5 > MIN_BD5) {
           shortStats.passedBD5++;
           shortStats.shortCalled1H++;
@@ -384,7 +387,6 @@ async function main() {
             }
           }
 
-          // Điều kiện DiffEMA16 (1H) < -0.5%
           if (diffema16Pct < -0.5) {
             shortStats.shortPassedDiffEMA16++;
 
@@ -392,7 +394,6 @@ async function main() {
             sentLog[shortKey] = currentTime;
             saveSentLog(sentLog);
 
-            // Tính ATR 14 chu kỳ trên nến 5m
             const atrData = calculateATR(chronological5m, 14);
             const atrText = atrData 
               ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
@@ -440,7 +441,6 @@ async function main() {
       longSentSuccess: 0
     };
 
-    // Loại bỏ coin đang Cooldown Long trước khi gọi nến
     const availableLongSymbols = symbolsIn24h.filter((symbol) => {
       const longKey = `${symbol}_LONG`;
       const lastSent = sentLog[longKey] || 0;
@@ -457,6 +457,12 @@ async function main() {
     for (const symbol of availableLongSymbols) {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
+
+      // Lấy giá trị RSI đã lưu từ 24h.json
+      const record24h = list24h[symbol];
+      const savedRsi = (typeof record24h === 'object' && record24h.rsi !== undefined) 
+        ? `${record24h.rsi}%` 
+        : 'N/A';
 
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
@@ -539,9 +545,12 @@ async function main() {
           : 'N/A';
 
         const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
+        
+        // Bổ sung thông tin RSI (24h Watchlist) vào thông báo Telegram
         const longMsg =
           `<b>🚀 TÍN HIỆU LONG</b>\n` +
           `Coin: <b>${coinName}</b> (5m/1H)\n` +
+          `RSI (24h Watchlist): <b>${savedRsi}</b>\n` +
           `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
           `BBM (5m): ${bbmSign}%\n` +
           `DiffEMA16 (1H): +${diffema16Pct.toFixed(4)}%\n` +
