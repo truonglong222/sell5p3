@@ -17,7 +17,6 @@ const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24h cho Long
 const COOLDOWN_TIME_SHORT = 12 * 60 * 60 * 1000;     // 12h cho Short
 const CLEANUP_TIME_24H_FILE = 8 * 60 * 60 * 1000;    // Xóa coin trong 24h.json sau 8h
 const MIN_VOL_CCY24H = 5_000_000;                     // Volume 24h > 5 triệu USDT
-const MIN_BD3 = 2.5;                                  // BD3 > 2.5%
 const MAX_BBM = 0.5;                                  // BBM < 0.5% cho Long
 
 // Ngưỡng tối thiểu nến 1H để warm-up chuẩn theo sàn OKX
@@ -74,8 +73,6 @@ function load24hList() {
 function updateAndSave24hList(list24h, newRsiItems) {
   try {
     const now = Date.now();
-    
-    // Lưu cả timestamp và rsi lúc quét được
     for (const item of newRsiItems) {
       list24h[item.symbol] = {
         timestamp: now,
@@ -292,10 +289,11 @@ async function main() {
       candlesValid: 0,
       newRsi72Detected: 0,
       shortPassedRsi65: 0,
-      passedBD3: 0,
+      passedBD5PreFilter: 0,
       shortCalled1H: 0,
       shortSuccess1H: 0,
-      shortPassedDiffEMA16: 0,
+      shortPassedBranch1: 0, // BD5 > 2.5% & DiffEMA16 < -0.5%
+      shortPassedBranch2: 0, // BD5 > 4.0% & DiffEMA16 > 3.0%
       shortSentSuccess: 0
     };
 
@@ -326,6 +324,7 @@ async function main() {
       }
 
       const closedCandles = candles5m.slice(1);
+      // Cần tối thiểu 21 nến (để tính RSI) và tối thiểu 5 nến để lấy open4 (index 4)
       if (closedCandles.length < 21) {
         await sleep(60);
         continue;
@@ -359,16 +358,17 @@ async function main() {
         shortStats.shortPassedRsi65++;
 
         const close0 = parseFloat(closedCandles[0][4]); // Nến đóng gần nhất
-        const open2 = parseFloat(closedCandles[2][1]);  // Nến mở thứ 3 tính từ nến gần nhất
-        let bd3 = 0;
-        if (open2 > 0) {
-          bd3 = ((close0 - open2) / open2) * 100;
+        const open4 = parseFloat(closedCandles[4][1]);  // Giá mở cửa nến thứ 5 tính từ nến gần nhất (0, 1, 2, 3, 4)
+        let bd5 = 0;
+        if (open4 > 0) {
+          bd5 = ((close0 - open4) / open4) * 100;
         }
 
-        if (bd3 > MIN_BD3) {
-          shortStats.passedBD3++;
+        // Chỉ cần gọi 1H nếu BD5 > 2.5% (đủ điều kiện tối thiểu để rơi vào 1 trong 2 nhánh)
+        if (bd5 > 2.5) {
+          shortStats.passedBD5PreFilter++;
           shortStats.shortCalled1H++;
-          const bd3Str = `+${bd3.toFixed(2)}`;
+          const bd5Str = `+${bd5.toFixed(2)}`;
 
           const candles1H = await getCandles(symbol, '1H', 100);
           let diffema16Pct = 0;
@@ -387,9 +387,15 @@ async function main() {
             }
           }
 
-          // Điều kiện Short: diffema16 > 3% HOẶC diffema16 < -0.5%
-          if (diffema16Pct > 3 || diffema16Pct < -0.5) {
-            shortStats.shortPassedDiffEMA16++;
+          // Kiểm tra 2 nhánh điều kiện Short:
+          // Nhánh 1: BD5 > 2.5% & diffema16 < -0.5%
+          // Nhánh 2: BD5 > 4.0% & diffema16 > 3.0%
+          const isBranch1 = bd5 > 2.5 && diffema16Pct < -0.5;
+          const isBranch2 = bd5 > 4.0 && diffema16Pct > 3.0;
+
+          if (isBranch1 || isBranch2) {
+            if (isBranch1) shortStats.shortPassedBranch1++;
+            if (isBranch2) shortStats.shortPassedBranch2++;
 
             const shortKey = `${symbol}_SHORT`;
             sentLog[shortKey] = currentTime;
@@ -406,7 +412,7 @@ async function main() {
               `<b>🔻 CẢNH BÁO SHORT</b>\n` +
               `Coin: <b>${coinName}</b> (5m/1H)\n` +
               `RSI (5m): ${rsiStr}%\n` +
-              `BD3: ${bd3Str}%\n` +
+              `BD5: ${bd5Str}%\n` +
               `DiffEMA16 (1H): ${diffEmaSign}%\n` +
               `ATR (14, 5m): <b>${atrText}</b>\n` +
               `<a href="${link}">🔗 Giao dịch OKX</a>`;
@@ -461,7 +467,6 @@ async function main() {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Lấy giá trị RSI đã lưu từ 24h.json
       const record24h = list24h[symbol];
       const savedRsi = (typeof record24h === 'object' && record24h.rsi !== undefined) 
         ? `${record24h.rsi}%` 
@@ -549,7 +554,6 @@ async function main() {
 
         const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
         
-        // Bổ sung thông tin RSI (24h Watchlist) vào thông báo Telegram
         const longMsg =
           `<b>🚀 TÍN HIỆU LONG</b>\n` +
           `Coin: <b>${coinName}</b> (5m/1H)\n` +
@@ -580,9 +584,10 @@ async function main() {
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${shortStats.candlesValid} coin`);
     console.log(`- Đạt RSI > 68 (lưu vào 24h.json)             : ${shortStats.newRsi72Detected} coin`);
     console.log(`- Thỏa mãn RSI < 65                           : ${shortStats.shortPassedRsi65} coin`);
-    console.log(`- Đạt tiếp BD3 > 2.5%                         : ${shortStats.passedBD3} coin`);
+    console.log(`- Lọc sơ bộ BD5 > 2.5%                        : ${shortStats.passedBD5PreFilter} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${shortStats.shortSuccess1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA16 (1H) > 3% hoặc < -0.5%   : ${shortStats.shortPassedDiffEMA16} coin`);
+    console.log(`- Khớp Nhánh 1 (BD5 > 2.5% & Diff < -0.5%)    : ${shortStats.shortPassedBranch1} coin`);
+    console.log(`- Khớp Nhánh 2 (BD5 > 4.0% & Diff > 3.0%)     : ${shortStats.shortPassedBranch2} coin`);
     console.log(`- Gửi tin SHORT thành công                    : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
