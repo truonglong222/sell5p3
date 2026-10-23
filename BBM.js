@@ -292,7 +292,7 @@ async function main() {
       passedBD5PreFilter: 0,
       shortCalled1H: 0,
       shortSuccess1H: 0,
-      shortPassedBranch1: 0, // BD5 > 2.5% & DiffEMA16 < -0.5%
+      shortPassedBranch1: 0, // BD5 > 2.5% & DiffEMA16 < -2.0%
       shortPassedBranch2: 0, // BD5 > 4.0% & DiffEMA16 > 3.0%
       shortSentSuccess: 0
     };
@@ -388,9 +388,9 @@ async function main() {
           }
 
           // Kiểm tra 2 nhánh điều kiện Short:
-          // Nhánh 1: BD5 > 2.5% & diffema16 < -0.5%
+          // Nhánh 1: BD5 > 2.5% & diffema16 < -2.0%
           // Nhánh 2: BD5 > 4.0% & diffema16 > 3.0%
-          const isBranch1 = bd5 > 2.5 && diffema16Pct < -0.5;
+          const isBranch1 = bd5 > 2.5 && diffema16Pct < -2.0;
           const isBranch2 = bd5 > 4.0 && diffema16Pct > 3.0;
 
           if (isBranch1 || isBranch2) {
@@ -539,7 +539,8 @@ async function main() {
         }
       }
 
-      if (diffema16Pct > 0.5) {
+      // Đổi điều kiện Long: diffema16 > 0%
+      if (diffema16Pct > 0) {
         longStats.passedDiffEMA16++;
 
         const longKey = `${symbol}_LONG`;
@@ -586,7 +587,7 @@ async function main() {
     console.log(`- Thỏa mãn RSI < 65                           : ${shortStats.shortPassedRsi65} coin`);
     console.log(`- Lọc sơ bộ BD5 > 2.5%                        : ${shortStats.passedBD5PreFilter} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${shortStats.shortSuccess1H} coin`);
-    console.log(`- Khớp Nhánh 1 (BD5 > 2.5% & Diff < -0.5%)    : ${shortStats.shortPassedBranch1} coin`);
+    console.log(`- Khớp Nhánh 1 (BD5 > 2.5% & Diff < -2.0%)    : ${shortStats.shortPassedBranch1} coin`);
     console.log(`- Khớp Nhánh 2 (BD5 > 4.0% & Diff > 3.0%)     : ${shortStats.shortPassedBranch2} coin`);
     console.log(`- Gửi tin SHORT thành công                    : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
@@ -598,7 +599,7 @@ async function main() {
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ                  : ${longStats.passedCandlePattern} coin`);
     console.log(`- Thỏa mãn BBM < 0.5%                         : ${longStats.passedBBM} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${longStats.success1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA16 (1H) > +0.5%             : ${longStats.passedDiffEMA16} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) > 0%                : ${longStats.passedDiffEMA16} coin`);
     console.log(`- Gửi tin LONG thành công                     : ${longStats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
