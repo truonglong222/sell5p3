@@ -73,11 +73,17 @@ function load24hList() {
 function updateAndSave24hList(list24h, newRsiItems) {
   try {
     const now = Date.now();
+    
     for (const item of newRsiItems) {
-      list24h[item.symbol] = {
-        timestamp: now,
-        rsi: item.rsi
-      };
+      const existing = list24h[item.symbol];
+
+      // Nếu chưa có trong file hoặc rsi mới lớn hơn rsi đang lưu -> cập nhật đè
+      if (!existing || typeof existing !== 'object' || existing.rsi === undefined || item.rsi > existing.rsi) {
+        list24h[item.symbol] = {
+          timestamp: now,
+          rsi: item.rsi
+        };
+      }
     }
 
     const cleaned24h = {};
@@ -287,13 +293,13 @@ async function main() {
       skippedCooldown: 0,
       candidatesAfterCooldown: 0,
       candlesValid: 0,
-      newRsi72Detected: 0,
+      newRsi68Detected: 0,
       passedPreFilterBranch1: 0,
       passedPreFilterBranch2: 0,
       shortCalled1H: 0,
       shortSuccess1H: 0,
-      shortPassedBranch1: 0, // Nhánh 1: RSI < 65 & BD5 > 2.5% & DiffEMA16 < -2.0%
-      shortPassedBranch2: 0, // Nhánh 2: 65 < RSI < 70 & BD5 > 4.0% & DiffEMA16 > 3.0%
+      shortPassedBranch1: 0,
+      shortPassedBranch2: 0,
       shortSentSuccess: 0
     };
 
@@ -324,7 +330,6 @@ async function main() {
       }
 
       const closedCandles = candles5m.slice(1);
-      // Cần tối thiểu 21 nến (để tính RSI) và tối thiểu 5 nến để lấy open4 (index 4)
       if (closedCandles.length < 21) {
         await sleep(60);
         continue;
@@ -344,31 +349,29 @@ async function main() {
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
       const rsiStr = currentRsi5m.toFixed(2);
 
-      // Nếu RSI > 68: Lưu symbol và giá trị RSI vào 24h.json
+      // Nếu RSI > 68: Lưu symbol và giá trị RSI chuẩn bị cập nhật vào 24h.json
       if (currentRsi5m > 68) {
         newRsiSymbols.push({
           symbol,
           rsi: parseFloat(rsiStr)
         });
-        shortStats.newRsi72Detected++;
+        shortStats.newRsi68Detected++;
       }
 
       // ================= LỌC VÀ TÍNH TOÁN SHORT (TÁCH 2 NHÁNH) =================
-      const close0 = parseFloat(closedCandles[0][4]); // Giá đóng nến gần nhất
-      const open4 = parseFloat(closedCandles[4][1]);  // Giá mở nến thứ 5 tính lùi lại
+      const close0 = parseFloat(closedCandles[0][4]);
+      const open4 = parseFloat(closedCandles[4][1]);
       let bd5 = 0;
       if (open4 > 0) {
         bd5 = ((close0 - open4) / open4) * 100;
       }
 
-      // Tiền lọc 5m cho từng nhánh trước khi tốn tài nguyên gọi 1H
       const isCandidateBranch1 = (currentRsi5m < 65) && (bd5 > 2.5);
       const isCandidateBranch2 = (currentRsi5m > 65 && currentRsi5m < 70) && (bd5 > 4.0);
 
       if (isCandidateBranch1) shortStats.passedPreFilterBranch1++;
       if (isCandidateBranch2) shortStats.passedPreFilterBranch2++;
 
-      // Chỉ gọi nến 1H khi nến 5m thỏa mãn ứng viên của ít nhất 1 nhánh
       if (isCandidateBranch1 || isCandidateBranch2) {
         shortStats.shortCalled1H++;
         const bd5Str = `+${bd5.toFixed(2)}`;
@@ -390,7 +393,6 @@ async function main() {
           }
         }
 
-        // Kiểm tra độc lập 2 nhánh điều kiện Short
         const isBranch1 = isCandidateBranch1 && (diffema16Pct < -2.0);
         const isBranch2 = isCandidateBranch2 && (diffema16Pct > 3.0);
 
@@ -435,11 +437,11 @@ async function main() {
       await sleep(100);
     }
 
-    // Cập nhật lại 24h.json
+    // Cập nhật lại 24h.json (chỉ đè nếu RSI mới > RSI cũ)
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
 
     // ==================================================================
-    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (LỌC COOLDOWN LONG TRƯỚC KHI KÉO NẾN)
+    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (LỌC COOLDOWN LONG & RSI TRONG FILE < 78)
     // ==================================================================
     console.log('--- ĐANG QUÉT LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
     const symbolsIn24h = Object.keys(list24h);
@@ -447,6 +449,7 @@ async function main() {
     const longStats = {
       totalIn24hList: symbolsIn24h.length,
       skippedCooldown: 0,
+      skippedRsiOver78: 0,
       candidatesAfterCooldown: 0,
       candlesValid: 0,
       passedCandlePattern: 0,
@@ -458,6 +461,17 @@ async function main() {
     };
 
     const availableLongSymbols = symbolsIn24h.filter((symbol) => {
+      const record = list24h[symbol];
+      const savedRsiVal = (typeof record === 'object' && record.rsi !== undefined) 
+        ? parseFloat(record.rsi) 
+        : null;
+
+      // Điều kiện lọc: RSI đang lưu trong file 24h.json phải < 78
+      if (savedRsiVal === null || savedRsiVal >= 78) {
+        longStats.skippedRsiOver78++;
+        return false;
+      }
+
       const longKey = `${symbol}_LONG`;
       const lastSent = sentLog[longKey] || 0;
       const isInCooldown = (currentTime - lastSent) < COOLDOWN_TIME_LONG;
@@ -590,7 +604,7 @@ async function main() {
     console.log(`- Bị loại ngay do đang Cooldown ở sent_ema    : ${shortStats.skippedCooldown} coin`);
     console.log(`- Còn lại đi tiếp vào bước tải nến & tính RSI : ${shortStats.candidatesAfterCooldown} coin`);
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${shortStats.candlesValid} coin`);
-    console.log(`- Đạt RSI > 68 (lưu vào 24h.json)             : ${shortStats.newRsi72Detected} coin`);
+    console.log(`- Đạt RSI > 68 (lưu vào 24h.json)             : ${shortStats.newRsi68Detected} coin`);
     console.log(`- Đạt chuẩn nến 5m Nhánh 1 (RSI<65 & BD5>2.5%): ${shortStats.passedPreFilterBranch1} coin`);
     console.log(`- Đạt chuẩn nến 5m Nhánh 2 (65<RSI<70 & BD5>4%): ${shortStats.passedPreFilterBranch2} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${shortStats.shortSuccess1H} coin`);
@@ -600,7 +614,8 @@ async function main() {
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
     console.log(`- Tổng số coin lấy ra từ 24h.json             : ${longStats.totalIn24hList} coin`);
-    console.log(`- Bị loại ngay do đang Cooldown Long          : ${longStats.skippedCooldown} coin`);
+    console.log(`- Bị loại do RSI trong file >= 78             : ${longStats.skippedRsiOver78} coin`);
+    console.log(`- Bị loại do đang Cooldown Long               : ${longStats.skippedCooldown} coin`);
     console.log(`- Còn lại đi tiếp vào bước tải nến            : ${longStats.candidatesAfterCooldown} coin`);
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${longStats.candlesValid} coin`);
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ                  : ${longStats.passedCandlePattern} coin`);
