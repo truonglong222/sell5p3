@@ -338,12 +338,12 @@ async function main() {
 
       shortStats.candlesValid++;
 
-      // 1. TÍNH VÀ LỌC BD5 > 2.5% TRƯỚC
-      const close0 = parseFloat(closedCandles[0][4]);
-      const open4 = parseFloat(closedCandles[4][1]);
+      // 1. TÍNH BD5: TỪ GIÁ MỞ CỬA NẾN 0 ĐẾN GIÁ MỞ CỬA NẾN 4
+      const open0 = parseFloat(candles5m[0][1]); // Giá mở cửa nến đang chạy (nến 0)
+      const open4 = parseFloat(candles5m[4][1]); // Giá mở cửa nến số 4
       let bd5 = 0;
       if (open4 > 0) {
-        bd5 = ((close0 - open4) / open4) * 100;
+        bd5 = ((open0 - open4) / open4) * 100;
       }
 
       if (bd5 <= 2.5) {
@@ -451,7 +451,7 @@ async function main() {
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
 
     // ==================================================================
-    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (LỌC COOLDOWN LONG & RSI TRONG FILE < 78) - GIỮ NGUYÊN
+    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (LỌC COOLDOWN LONG & RSI TRONG FILE < 78)
     // ==================================================================
     console.log('--- ĐANG QUÉT LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
     const symbolsIn24h = Object.keys(list24h);
@@ -569,7 +569,8 @@ async function main() {
         }
       }
 
-      if (diffema16Pct > 0) {
+      // ĐIỀU KIỆN LONG MỚI: diffema16Pct > -1.0%
+      if (diffema16Pct > -1.0) {
         longStats.passedDiffEMA16++;
 
         const longKey = `${symbol}_LONG`;
@@ -583,6 +584,7 @@ async function main() {
           : 'N/A';
 
         const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
+        const diffEmaSign = diffema16Pct > 0 ? `+${diffema16Pct.toFixed(4)}` : diffema16Pct.toFixed(4);
         
         const longMsg =
           `<b>🚀 TÍN HIỆU LONG</b>\n` +
@@ -590,7 +592,7 @@ async function main() {
           `RSI (24h Watchlist): <b>${savedRsi}</b>\n` +
           `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
           `BBM (5m): ${bbmSign}%\n` +
-          `DiffEMA16 (1H): +${diffema16Pct.toFixed(4)}%\n` +
+          `DiffEMA16 (1H): ${diffEmaSign}%\n` +
           `ATR (14, 5m): <b>${atrText}</b>\n` +
           `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
@@ -630,7 +632,7 @@ async function main() {
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ                  : ${longStats.passedCandlePattern} coin`);
     console.log(`- Thỏa mãn BBM < 0.5%                         : ${longStats.passedBBM} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${longStats.success1H} coin`);
-    console.log(`- Thỏa mãn DiffEMA16 (1H) > 0%                : ${longStats.passedDiffEMA16} coin`);
+    console.log(`- Thỏa mãn DiffEMA16 (1H) > -1.0%             : ${longStats.passedDiffEMA16} coin`);
     console.log(`- Gửi tin LONG thành công                     : ${longStats.longSentSuccess} tin`);
     console.log('==================================================================\n');
   } catch (err) {
