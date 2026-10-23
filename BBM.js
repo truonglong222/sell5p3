@@ -19,7 +19,7 @@ const CLEANUP_TIME_24H_FILE = 8 * 60 * 60 * 1000;    // Xóa coin trong 24h.json
 const MIN_VOL_CCY24H = 5_000_000;                     // Volume 24h > 5 triệu USDT
 const MAX_BBM = 0.5;                                  // BBM < 0.5% cho Long
 
-// Ngưỡng tối thiểu nến 1H để warm-up chuẩn theo sàn OKX
+// Ngưỡng tối thiểu nến 1H để warm-up chuẩn theo sàn OKX (dùng cho luồng Long)
 const MIN_CANDLES_1H_WARMUP = 90;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -295,10 +295,6 @@ async function main() {
       candlesValid: 0,
       passedBD5: 0,
       newRsi65Detected: 0,
-      passedPreFilterBranch1: 0,
-      passedPreFilterBranch2: 0,
-      shortCalled1H: 0,
-      shortSuccess1H: 0,
       shortPassedBranch1: 0,
       shortPassedBranch2: 0,
       shortSentSuccess: 0
@@ -339,8 +335,8 @@ async function main() {
       shortStats.candlesValid++;
 
       // 1. TÍNH BD5: TỪ GIÁ MỞ CỬA NẾN 0 ĐẾN GIÁ MỞ CỬA NẾN 4
-      const open0 = parseFloat(candles5m[0][1]); // Giá mở cửa nến đang chạy (nến 0)
-      const open4 = parseFloat(candles5m[4][1]); // Giá mở cửa nến số 4
+      const open0 = parseFloat(candles5m[0][1]);
+      const open4 = parseFloat(candles5m[4][1]);
       let bd5 = 0;
       if (open4 > 0) {
         bd5 = ((open0 - open4) / open4) * 100;
@@ -373,66 +369,40 @@ async function main() {
         });
         shortStats.newRsi65Detected++;
       } 
-      // Nhánh B: Nếu RSI < 65% -> Chia ra các nhánh Short (ở đây coin đã thỏa bd5 > 2.5%)
+      // Nhánh B: Nếu không thuộc watchlist RSI > 65 -> Xét điều kiện Short theo ATR
       else {
-        const isCandidateBranch1 = bd5 > 2.5; // Nhánh 1: RSI < 65 & BD5 > 2.5%
-        const isCandidateBranch2 = bd5 > 4.0; // Nhánh 2 dự phòng theo biên độ cao
+        const atrData = calculateATR(chronological5m, 14);
+        const atrPct = atrData ? atrData.atrPct : null;
 
-        if (isCandidateBranch1) shortStats.passedPreFilterBranch1++;
-        if (isCandidateBranch2) shortStats.passedPreFilterBranch2++;
-
-        if (isCandidateBranch1 || isCandidateBranch2) {
-          shortStats.shortCalled1H++;
-          const bd5Str = `+${bd5.toFixed(2)}`;
-
-          const candles1H = await getCandles(symbol, '1H', 100);
-          let diffema16Pct = 0;
-
-          if (candles1H && candles1H.length >= MIN_CANDLES_1H_WARMUP) {
-            shortStats.shortSuccess1H++;
-            const closed1H = candles1H.slice(1);
-            const chronological1H = [...closed1H].reverse();
-            const closes1H = chronological1H.map((c) => parseFloat(c[4]));
-
-            const emaArray1H = calculateEMA(closes1H, 20);
-            if (emaArray1H.length >= 16) {
-              const ema1Val = emaArray1H[emaArray1H.length - 1];
-              const ema16Val = emaArray1H[emaArray1H.length - 16];
-              diffema16Pct = ((ema1Val - ema16Val) / ema16Val) * 100;
-            }
-          }
-
-          const isBranch1 = isCandidateBranch1 && (diffema16Pct < -2.0);
-          const isBranch2 = isCandidateBranch2 && (diffema16Pct > 3.0);
+        if (atrPct !== null) {
+          // Nhánh 1: BD5 > 2.5%, ATR < 1.5%, RSI < 60
+          const isBranch1 = currentRsi5m < 60 && atrPct < 1.5;
+          // Nhánh 2: BD5 > 2.5%, ATR > 1.5%, RSI < 50
+          const isBranch2 = currentRsi5m < 50 && atrPct > 1.5;
 
           if (isBranch1 || isBranch2) {
             let branchName = '';
             if (isBranch1) {
               shortStats.shortPassedBranch1++;
-              branchName = 'Nhánh 1 (RSI < 65 & BD5 > 2.5% & Diff < -2%)';
+              branchName = 'Nhánh 1 (BD5 > 2.5% & RSI < 60 & ATR < 1.5%)';
             } else if (isBranch2) {
               shortStats.shortPassedBranch2++;
-              branchName = 'Nhánh 2 (RSI < 65 & BD5 > 4% & Diff > +3%)';
+              branchName = 'Nhánh 2 (BD5 > 2.5% & RSI < 50 & ATR > 1.5%)';
             }
 
             const shortKey = `${symbol}_SHORT`;
             sentLog[shortKey] = currentTime;
             saveSentLog(sentLog);
 
-            const atrData = calculateATR(chronological5m, 14);
-            const atrText = atrData 
-              ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
-              : 'N/A';
-
-            const diffEmaSign = diffema16Pct > 0 ? `+${diffema16Pct.toFixed(4)}` : diffema16Pct.toFixed(4);
+            const atrText = `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)`;
+            const bd5Str = `+${bd5.toFixed(2)}`;
 
             const shortMsg =
               `<b>🔻 CẢNH BÁO SHORT</b>\n` +
               `Chiến lược: <i>${branchName}</i>\n` +
-              `Coin: <b>${coinName}</b> (5m/1H)\n` +
-              `RSI (5m): ${rsiStr}%\n` +
-              `BD5: ${bd5Str}%\n` +
-              `DiffEMA16 (1H): ${diffEmaSign}%\n` +
+              `Coin: <b>${coinName}</b> (5m)\n` +
+              `RSI (5m): <b>${rsiStr}%</b>\n` +
+              `BD5: <b>${bd5Str}%</b>\n` +
               `ATR (14, 5m): <b>${atrText}</b>\n` +
               `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
@@ -569,7 +539,7 @@ async function main() {
         }
       }
 
-      // ĐIỀU KIỆN LONG MỚI: diffema16Pct > -1.0%
+      // ĐIỀU KIỆN LONG: diffema16Pct > -1.0%
       if (diffema16Pct > -1.0) {
         longStats.passedDiffEMA16++;
 
@@ -616,11 +586,8 @@ async function main() {
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${shortStats.candlesValid} coin`);
     console.log(`- Thỏa mãn BD5 > 2.5%                         : ${shortStats.passedBD5} coin`);
     console.log(`- Đạt RSI > 65% (lưu vào 24h.json)            : ${shortStats.newRsi65Detected} coin`);
-    console.log(`- Đạt chuẩn nến 5m Nhánh 1 (RSI<65 & BD5>2.5%): ${shortStats.passedPreFilterBranch1} coin`);
-    console.log(`- Đạt chuẩn nến 5m Nhánh 2 (RSI<65 & BD5>4% ) : ${shortStats.passedPreFilterBranch2} coin`);
-    console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${shortStats.shortSuccess1H} coin`);
-    console.log(`- Khớp Nhánh 1 (RSI<65 & BD5>2.5% & Diff<-2%) : ${shortStats.shortPassedBranch1} coin`);
-    console.log(`- Khớp Nhánh 2 (RSI<65 & BD5>4% & Diff>+3%)   : ${shortStats.shortPassedBranch2} coin`);
+    console.log(`- Khớp Short Nhánh 1 (RSI < 60 & ATR < 1.5%)  : ${shortStats.shortPassedBranch1} coin`);
+    console.log(`- Khớp Short Nhánh 2 (RSI < 50 & ATR > 1.5%)  : ${shortStats.shortPassedBranch2} coin`);
     console.log(`- Gửi tin SHORT thành công                    : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
