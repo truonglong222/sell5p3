@@ -17,7 +17,7 @@ const COOLDOWN_TIME_LONG = 48 * 60 * 60 * 1000;      // 48h cho Long
 const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;     // 24h cho Short
 const CLEANUP_TIME_24H_FILE = 6 * 60 * 60 * 1000;    // Xóa coin trong 24h.json sau 6h
 const MIN_VOL_CCY24H = 5_000_000;                    // Volume 24h > 5 triệu USDT
-const MAX_BBM = 0.5;                                 // BBM < 0.5% cho Long
+const MAX_BBD = 0.5;                                 // BBD < 0.5% cho Long
 
 // Ngưỡng tối thiểu nến 1H để warm-up chuẩn theo sàn OKX (dùng cho luồng Long)
 const MIN_CANDLES_1H_WARMUP = 90;
@@ -369,7 +369,7 @@ async function main() {
         shortStats.newRsi75Detected++;
       } 
       
-      // ĐIỀU KIỆN 2: LỆNH SHORT (1 NHÁNH DUY NHẤT: BD5 > 4% VÀ RSI < 60)
+      // ĐIỀU KIỆN 2: LỆNH SHORT (BD5 > 4% VÀ RSI < 60)
       if (bd5 > 4 && currentRsi5m < 60) {
         shortStats.passedShortCondition++;
 
@@ -378,13 +378,18 @@ async function main() {
         saveSentLog(sentLog);
 
         const bd5Str = `+${bd5.toFixed(2)}`;
+        const atrData = calculateATR(chronological5m, 14);
+        const atrText = atrData 
+          ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
+          : 'N/A';
 
         const shortMsg =
-          `<b>⚠️ CẢNH BÁO SHORT</b>\n` +
-          `Chiến lược: <i>BD5 > 4% & RSI < 60</i>\n` +
+          `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
           `Coin: <b>${coinName}</b> (5m)\n` +
-          `BD5: <b>${bd5Str}%</b>\n` +
+          `Chiến lược: <b>BD5 &gt; 4% &amp; RSI &lt; 60</b>\n` +
+          `BD5 (5m): <b>${bd5Str}%</b>\n` +
           `RSI (5m): <b>${rsiStr}%</b>\n` +
+          `ATR (14, 5m): <b>${atrText}</b>\n` +
           `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
         const isSent = await sendTelegramMessage(shortMsg);
@@ -400,7 +405,7 @@ async function main() {
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
 
     // ==================================================================
-    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (ĐÃ BỎ ĐIỀU KIỆN RSI < 78 TRONG FILE)
+    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (LỌC BBD THAY CHO BBM)
     // ==================================================================
     console.log('--- ĐANG QUÉT LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
     const symbolsIn24h = Object.keys(list24h);
@@ -411,7 +416,7 @@ async function main() {
       candidatesAfterCooldown: 0,
       candlesValid: 0,
       passedCandlePattern: 0,
-      passedBBM: 0,
+      passedBBD: 0,
       called1H: 0,
       success1H: 0,
       passedDiffEMA16: 0,
@@ -455,10 +460,10 @@ async function main() {
       longStats.candlesValid++;
 
       const open1 = parseFloat(closedCandles[0][1]);
-      const low1 = parseFloat(closedCandles[0][3]);
       const close1 = parseFloat(closedCandles[0][4]);
 
       const open2 = parseFloat(closedCandles[1][1]);
+      const low2 = parseFloat(closedCandles[1][3]);
       const close2 = parseFloat(closedCandles[1][4]);
 
       const isCandle1Green = close1 > open1;
@@ -470,24 +475,26 @@ async function main() {
       }
       longStats.passedCandlePattern++;
 
+      // Tính Bollinger Bands 20, 2
       const closesBB1 = closedCandles.slice(0, 20).map((c) => parseFloat(c[4])).reverse();
       const bb1 = calculateBollingerBands(closesBB1, 20, 2);
 
-      let conditionPassedBBM = false;
-      let bbm = 0;
+      let conditionPassedBBD = false;
+      let bbd = 0;
 
-      if (bb1 && bb1.mid > 0) {
-        bbm = ((low1 - bb1.mid) / bb1.mid) * 100;
-        if (bbm < MAX_BBM) {
-          conditionPassedBBM = true;
+      // Tính BBD: % chênh lệch của giá thấp nhất nến 2 so với Bollinger Band Dưới (bb1.lower)
+      if (bb1 && bb1.lower > 0) {
+        bbd = ((low2 - bb1.lower) / bb1.lower) * 100;
+        if (bbd < MAX_BBD) {
+          conditionPassedBBD = true;
         }
       }
 
-      if (!conditionPassedBBM) {
+      if (!conditionPassedBBD) {
         await sleep(60);
         continue;
       }
-      longStats.passedBBM++;
+      longStats.passedBBD++;
 
       longStats.called1H++;
       const candles1H = await getCandles(symbol, '1H', 100);
@@ -521,7 +528,7 @@ async function main() {
           ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
           : 'N/A';
 
-        const bbmSign = bbm >= 0 ? `+${bbm.toFixed(2)}` : bbm.toFixed(2);
+        const bbdSign = bbd >= 0 ? `+${bbd.toFixed(2)}` : bbd.toFixed(2);
         const diffEmaSign = diffema16Pct > 0 ? `+${diffema16Pct.toFixed(4)}` : diffema16Pct.toFixed(4);
         
         const longMsg =
@@ -529,7 +536,7 @@ async function main() {
           `Coin: <b>${coinName}</b> (5m/1H)\n` +
           `RSI (24h Watchlist): <b>${savedRsi}</b>\n` +
           `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
-          `BBM (5m): ${bbmSign}%\n` +
+          `BBD (5m): ${bbdSign}%\n` +
           `DiffEMA16 (1H): ${diffEmaSign}%\n` +
           `ATR (14, 5m): <b>${atrText}</b>\n` +
           `<a href="${link}">🔗 Giao dịch OKX</a>`;
@@ -563,7 +570,7 @@ async function main() {
     console.log(`- Còn lại đi tiếp vào bước tải nến            : ${longStats.candidatesAfterCooldown} coin`);
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${longStats.candlesValid} coin`);
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ                  : ${longStats.passedCandlePattern} coin`);
-    console.log(`- Thỏa mãn BBM < 0.5%                         : ${longStats.passedBBM} coin`);
+    console.log(`- Thỏa mãn BBD < 0.5%                         : ${longStats.passedBBD} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${longStats.success1H} coin`);
     console.log(`- Thỏa mãn DiffEMA16 (1H) > -1.0%             : ${longStats.passedDiffEMA16} coin`);
     console.log(`- Gửi tin LONG thành công                     : ${longStats.longSentSuccess} tin`);
