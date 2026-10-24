@@ -16,8 +16,8 @@ const FILE_24H = path.join(__dirname, '24h.json');
 const COOLDOWN_TIME_LONG = 24 * 60 * 60 * 1000;      // 24h cho Long
 const COOLDOWN_TIME_SHORT = 12 * 60 * 60 * 1000;     // 12h cho Short
 const CLEANUP_TIME_24H_FILE = 8 * 60 * 60 * 1000;    // Xóa coin trong 24h.json sau 8h
-const MIN_VOL_CCY24H = 5_000_000;                     // Volume 24h > 5 triệu USDT
-const MAX_BBM = 0.5;                                  // BBM < 0.5% cho Long
+const MIN_VOL_CCY24H = 5_000_000;                    // Volume 24h > 5 triệu USDT
+const MAX_BBM = 0.5;                                 // BBM < 0.5% cho Long
 
 // Ngưỡng tối thiểu nến 1H để warm-up chuẩn theo sàn OKX (dùng cho luồng Long)
 const MIN_CANDLES_1H_WARMUP = 90;
@@ -28,8 +28,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
-    .replace(/</g, '')
-    .replace(/>/g, '');
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 // ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
@@ -384,10 +384,10 @@ async function main() {
             let branchName = '';
             if (isBranch1) {
               shortStats.shortPassedBranch1++;
-              branchName = 'Nhánh 1 (BD5 > 2.5% & RSI < 60 & ATR < 1.5%)';
+              branchName = 'Nhánh 1: BD5 trên 2.5%, RSI dưới 60, ATR dưới 1.5%';
             } else if (isBranch2) {
               shortStats.shortPassedBranch2++;
-              branchName = 'Nhánh 2 (BD5 > 2.5% & RSI < 50 & ATR > 1.5%)';
+              branchName = 'Nhánh 2: BD5 trên 2.5%, RSI dưới 50, ATR trên 1.5%';
             }
 
             const shortKey = `${symbol}_SHORT`;
@@ -397,14 +397,16 @@ async function main() {
             const atrText = `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)`;
             const bd5Str = `+${bd5.toFixed(2)}`;
 
+            const safeBranchName = escapeHtml(branchName);
+
             const shortMsg =
-              `<b>🔻 CẢNH BÁO SHORT</b>\n` +
-              `Chiến lược: <i>${branchName}</i>\n` +
+              `<b>CANH BAO SHORT</b>\n` +
+              `Chien luoc: <i>${safeBranchName}</i>\n` +
               `Coin: <b>${coinName}</b> (5m)\n` +
               `RSI (5m): <b>${rsiStr}%</b>\n` +
               `BD5: <b>${bd5Str}%</b>\n` +
               `ATR (14, 5m): <b>${atrText}</b>\n` +
-              `<a href="${link}">🔗 Giao dịch OKX</a>`;
+              `<a href="${link}">Giao dich OKX</a>`;
 
             const isSent = await sendTelegramMessage(shortMsg);
             if (isSent) {
