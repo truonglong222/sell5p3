@@ -14,7 +14,7 @@ const FILE_24H = path.join(__dirname, '24h.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME_LONG = 48 * 60 * 60 * 1000;      // 48h cho Long
-const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;     // 8h cho Short
+const COOLDOWN_TIME_SHORT = 24 * 60 * 60 * 1000;     // 24h cho Short
 const CLEANUP_TIME_24H_FILE = 6 * 60 * 60 * 1000;    // Xóa coin trong 24h.json sau 6h
 const MIN_VOL_CCY24H = 5_000_000;                    // Volume 24h > 5 triệu USDT
 const MAX_BBD = 0.5;                                 // BBD < 0.5% cho Long
@@ -297,6 +297,7 @@ async function main() {
       newRsi75Detected: 0,
       passedPreShortCondition: 0,
       passedRatioX: 0,
+      passedDiffEMA7: 0,
       shortSentSuccess: 0
     };
 
@@ -382,31 +383,50 @@ async function main() {
         if (x > 1.2) {
           shortStats.passedRatioX++;
 
-          const shortKey = `${symbol}_SHORT`;
-          sentLog[shortKey] = currentTime;
-          saveSentLog(sentLog);
+          // TÍNH DIFFEMA7 CỦA NẾN 5M (Dùng EMA20)
+          const emaArray5m = calculateEMA(closes5m, 20);
+          let diffema7 = null;
 
-          const bd5Str = `+${bd5.toFixed(2)}`;
-          const atrText = atrData 
-            ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
-            : 'N/A';
-          const xStr = x.toFixed(2);
+          if (emaArray5m.length >= 7) {
+            const ema1Val = emaArray5m[emaArray5m.length - 1];
+            const ema7Val = emaArray5m[emaArray5m.length - 7];
+            if (ema7Val !== 0) {
+              diffema7 = ((ema1Val - ema7Val) / ema7Val) * 100;
+            }
+          }
 
-          console.log(`[SHORT SIGNAL] ${symbol} | BD5: ${bd5Str}% | ATR%: ${atrPct.toFixed(2)}% | Tỉ số x: ${xStr}`);
+          // ĐIỀU KIỆN SHORT MỚI: diffema7 < 0
+          if (diffema7 !== null && diffema7 < 0) {
+            shortStats.passedDiffEMA7++;
 
-          const shortMsg =
-            `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
-            `Coin: <b>${coinName}</b> (5m)\n` +
-            `Chiến lược: <b>BD5 &gt; 4% &amp; RSI &lt; 60 &amp; x &gt; 1.2</b>\n` +
-            `Tỉ số x (BD5/ATR): <b>${xStr}</b>\n` +
-            `BD5 (5m): <b>${bd5Str}%</b>\n` +
-            `RSI (5m): <b>${rsiStr}%</b>\n` +
-            `ATR (14, 5m): <b>${atrText}</b>\n` +
-            `<a href="${link}">🔗 Giao dịch OKX</a>`;
+            const shortKey = `${symbol}_SHORT`;
+            sentLog[shortKey] = currentTime;
+            saveSentLog(sentLog);
 
-          const isSent = await sendTelegramMessage(shortMsg);
-          if (isSent) {
-            shortStats.shortSentSuccess++;
+            const bd5Str = `+${bd5.toFixed(2)}`;
+            const atrText = atrData 
+              ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
+              : 'N/A';
+            const xStr = x.toFixed(2);
+            const diffema7Str = diffema7.toFixed(4);
+
+            console.log(`[SHORT SIGNAL] ${symbol} | BD5: ${bd5Str}% | ATR%: ${atrPct.toFixed(2)}% | Tỉ số x: ${xStr} | DiffEMA7: ${diffema7Str}%`);
+
+            const shortMsg =
+              `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
+              `Coin: <b>${coinName}</b> (5m)\n` +
+              `Chiến lược: <b>BD5 &gt; 4% &amp; RSI &lt; 60 &amp; x &gt; 1.2 &amp; diffema7 &lt; 0</b>\n` +
+              `Tỉ số x (BD5/ATR): <b>${xStr}</b>\n` +
+              `DiffEMA7 (5m): <b>${diffema7Str}%</b>\n` +
+              `BD5 (5m): <b>${bd5Str}%</b>\n` +
+              `RSI (5m): <b>${rsiStr}%</b>\n` +
+              `ATR (14, 5m): <b>${atrText}</b>\n` +
+              `<a href="${link}">🔗 Giao dịch OKX</a>`;
+
+            const isSent = await sendTelegramMessage(shortMsg);
+            if (isSent) {
+              shortStats.shortSentSuccess++;
+            }
           }
         }
       }
@@ -593,6 +613,7 @@ async function main() {
     console.log(`- Đạt RSI > 75% (lưu vào 24h.json)            : ${shortStats.newRsi75Detected} coin`);
     console.log(`- Khớp điều kiện gốc (BD5 > 4% & RSI < 60)    : ${shortStats.passedPreShortCondition} coin`);
     console.log(`- Khớp tỉ số x = bd5/Atr > 1.2                : ${shortStats.passedRatioX} coin`);
+    console.log(`- Thỏa mãn DiffEMA7 (5m) < 0                  : ${shortStats.passedDiffEMA7} coin`);
     console.log(`- Gửi tin SHORT thành công                    : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
