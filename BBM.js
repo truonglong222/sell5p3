@@ -282,7 +282,7 @@ async function main() {
     const currentTime = Date.now();
 
     // ==================================================================
-    // PHẦN 1: QUÉT THỊ TRƯỜNG -> LỌC VOL -> COOLDOWN -> LỌC BD5 > 2.5% -> LỌC RSI -> SHORT / 24H.JSON
+    // PHẦN 1: QUÉT THỊ TRƯỜNG -> SHORT (bd5/atrPct > 1.2) & WATCHLIST 24H
     // ==================================================================
     console.log('--- ĐANG QUÉT LUỒNG SHORT & WATCHLIST 24H ---');
     const { allSwaps, passedVol, targetCoins } = await getFilteredMarkets();
@@ -295,7 +295,8 @@ async function main() {
       candlesValid: 0,
       passedBD5: 0,
       newRsi75Detected: 0,
-      passedShortCondition: 0,
+      passedPreShortCondition: 0,
+      passedRatioX: 0,
       shortSentSuccess: 0
     };
 
@@ -369,32 +370,44 @@ async function main() {
         shortStats.newRsi75Detected++;
       } 
       
-      // ĐIỀU KIỆN 2: LỆNH SHORT (BD5 > 4% VÀ RSI < 60)
+      // ĐIỀU KIỆN 2: LỆNH SHORT (BD5 > 4% VÀ RSI < 60 -> TÍNH X = BD5 / ATR% > 1.2)
       if (bd5 > 4 && currentRsi5m < 60) {
-        shortStats.passedShortCondition++;
+        shortStats.passedPreShortCondition++;
 
-        const shortKey = `${symbol}_SHORT`;
-        sentLog[shortKey] = currentTime;
-        saveSentLog(sentLog);
-
-        const bd5Str = `+${bd5.toFixed(2)}`;
         const atrData = calculateATR(chronological5m, 14);
-        const atrText = atrData 
-          ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
-          : 'N/A';
+        const atrPct = atrData ? atrData.atrPct : 0;
+        const x = atrPct > 0 ? (bd5 / atrPct) : 0;
 
-        const shortMsg =
-          `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
-          `Coin: <b>${coinName}</b> (5m)\n` +
-          `Chiến lược: <b>BD5 &gt; 4% &amp; RSI &lt; 60</b>\n` +
-          `BD5 (5m): <b>${bd5Str}%</b>\n` +
-          `RSI (5m): <b>${rsiStr}%</b>\n` +
-          `ATR (14, 5m): <b>${atrText}</b>\n` +
-          `<a href="${link}">🔗 Giao dịch OKX</a>`;
+        // Kiểm tra tỉ số x > 1.2
+        if (x > 1.2) {
+          shortStats.passedRatioX++;
 
-        const isSent = await sendTelegramMessage(shortMsg);
-        if (isSent) {
-          shortStats.shortSentSuccess++;
+          const shortKey = `${symbol}_SHORT`;
+          sentLog[shortKey] = currentTime;
+          saveSentLog(sentLog);
+
+          const bd5Str = `+${bd5.toFixed(2)}`;
+          const atrText = atrData 
+            ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
+            : 'N/A';
+          const xStr = x.toFixed(2);
+
+          console.log(`[SHORT SIGNAL] ${symbol} | BD5: ${bd5Str}% | ATR%: ${atrPct.toFixed(2)}% | Tỉ số x: ${xStr}`);
+
+          const shortMsg =
+            `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
+            `Coin: <b>${coinName}</b> (5m)\n` +
+            `Chiến lược: <b>BD5 &gt; 4% &amp; RSI &lt; 60 &amp; x &gt; 1.2</b>\n` +
+            `Tỉ số x (BD5/ATR): <b>${xStr}</b>\n` +
+            `BD5 (5m): <b>${bd5Str}%</b>\n` +
+            `RSI (5m): <b>${rsiStr}%</b>\n` +
+            `ATR (14, 5m): <b>${atrText}</b>\n` +
+            `<a href="${link}">🔗 Giao dịch OKX</a>`;
+
+          const isSent = await sendTelegramMessage(shortMsg);
+          if (isSent) {
+            shortStats.shortSentSuccess++;
+          }
         }
       }
 
@@ -405,7 +418,7 @@ async function main() {
     list24h = updateAndSave24hList(list24h, newRsiSymbols);
 
     // ==================================================================
-    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (LỌC BBD THAY CHO BBM)
+    // PHẦN 2: LUỒNG LONG ĐỘC LẬP (RSI 24h > 80 VÀ ATR > 1%)
     // ==================================================================
     console.log('--- ĐANG QUÉT LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
     const symbolsIn24h = Object.keys(list24h);
@@ -414,7 +427,9 @@ async function main() {
       totalIn24hList: symbolsIn24h.length,
       skippedCooldown: 0,
       candidatesAfterCooldown: 0,
+      passedRsi80: 0,
       candlesValid: 0,
+      passedATR1Pct: 0,
       passedCandlePattern: 0,
       passedBBD: 0,
       called1H: 0,
@@ -441,9 +456,17 @@ async function main() {
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
       const record24h = list24h[symbol];
-      const savedRsi = (typeof record24h === 'object' && record24h.rsi !== undefined) 
-        ? `${record24h.rsi}%` 
-        : 'N/A';
+      const rsi24hVal = (typeof record24h === 'object' && record24h.rsi !== undefined) 
+        ? record24h.rsi 
+        : (typeof record24h === 'number' ? record24h : 0);
+
+      // ĐIỀU KIỆN LONG MỚI 1: RSI trong 24h.json > 80
+      if (rsi24hVal <= 80) {
+        continue;
+      }
+      longStats.passedRsi80++;
+
+      const savedRsi = `${rsi24hVal}%`;
 
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
@@ -458,6 +481,16 @@ async function main() {
       }
 
       longStats.candlesValid++;
+
+      const chronological5m = [...closedCandles].reverse();
+      const atrData = calculateATR(chronological5m, 14);
+
+      // ĐIỀU KIỆN LONG MỚI 2: ATR(%) > 1%
+      if (!atrData || atrData.atrPct <= 1.0) {
+        await sleep(60);
+        continue;
+      }
+      longStats.passedATR1Pct++;
 
       const open1 = parseFloat(closedCandles[0][1]);
       const close1 = parseFloat(closedCandles[0][4]);
@@ -522,23 +555,20 @@ async function main() {
         sentLog[longKey] = currentTime;
         saveSentLog(sentLog);
 
-        const chronological5m = [...closedCandles].reverse();
-        const atrData = calculateATR(chronological5m, 14);
-        const atrText = atrData 
-          ? `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)` 
-          : 'N/A';
-
+        const atrText = `${atrData.atr.toFixed(4)} (~${atrData.atrPct.toFixed(2)}%)`;
         const bbdSign = bbd >= 0 ? `+${bbd.toFixed(2)}` : bbd.toFixed(2);
         const diffEmaSign = diffema16Pct > 0 ? `+${diffema16Pct.toFixed(4)}` : diffema16Pct.toFixed(4);
         
+        console.log(`[LONG SIGNAL] ${symbol} | RSI 24h: ${savedRsi} | ATR%: ${atrData.atrPct.toFixed(2)}%`);
+
         const longMsg =
           `<b>🚀 TÍN HIỆU LONG</b>\n` +
           `Coin: <b>${coinName}</b> (5m/1H)\n` +
-          `RSI (24h Watchlist): <b>${savedRsi}</b>\n` +
+          `RSI (24h Watchlist > 80): <b>${savedRsi}</b>\n` +
+          `ATR (14, 5m > 1%): <b>${atrText}</b>\n` +
           `Pattern: <b>Nến 1 Xanh | Nến 2 Đỏ</b>\n` +
           `BBD (5m): ${bbdSign}%\n` +
           `DiffEMA16 (1H): ${diffEmaSign}%\n` +
-          `ATR (14, 5m): <b>${atrText}</b>\n` +
           `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
         const isLongSent = await sendTelegramMessage(longMsg);
@@ -561,14 +591,17 @@ async function main() {
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${shortStats.candlesValid} coin`);
     console.log(`- Thỏa mãn BD5 > 2.5%                         : ${shortStats.passedBD5} coin`);
     console.log(`- Đạt RSI > 75% (lưu vào 24h.json)            : ${shortStats.newRsi75Detected} coin`);
-    console.log(`- Khớp Short (BD5 > 4% & RSI < 60)            : ${shortStats.passedShortCondition} coin`);
+    console.log(`- Khớp điều kiện gốc (BD5 > 4% & RSI < 60)    : ${shortStats.passedPreShortCondition} coin`);
+    console.log(`- Khớp tỉ số x = bd5/Atr > 1.2                : ${shortStats.passedRatioX} coin`);
     console.log(`- Gửi tin SHORT thành công                    : ${shortStats.shortSentSuccess} tin`);
     console.log('------------------------------------------------------------------');
     console.log('--- LUỒNG LONG ĐỘC LẬP (TỪ 24H.JSON) ---');
     console.log(`- Tổng số coin lấy ra từ 24h.json             : ${longStats.totalIn24hList} coin`);
     console.log(`- Bị loại do đang Cooldown Long               : ${longStats.skippedCooldown} coin`);
-    console.log(`- Còn lại đi tiếp vào bước tải nến            : ${longStats.candidatesAfterCooldown} coin`);
+    console.log(`- Còn lại đi tiếp                             : ${longStats.candidatesAfterCooldown} coin`);
+    console.log(`- Thỏa mãn RSI trong 24h.json > 80            : ${longStats.passedRsi80} coin`);
     console.log(`- Tải đủ nến 5m hợp lệ                        : ${longStats.candlesValid} coin`);
+    console.log(`- Thỏa mãn ATR(5m) > 1%                       : ${longStats.passedATR1Pct} coin`);
     console.log(`- Thỏa nến 1 Xanh & nến 2 Đỏ                  : ${longStats.passedCandlePattern} coin`);
     console.log(`- Thỏa mãn BBD < 0.5%                         : ${longStats.passedBBD} coin`);
     console.log(`- Gọi nến 1H thành công (>= ${MIN_CANDLES_1H_WARMUP} nến)            : ${longStats.success1H} coin`);
