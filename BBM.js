@@ -34,26 +34,49 @@ function escapeHtml(str) {
 
 // ------------------- QUẢN LÝ DỮ LIỆU FILE -------------------
 
+// Hàm phụ trợ lọc bỏ coin đã hết hạn countdown theo từng loại vị thế
+function cleanExpiredLogs(logData) {
+  const now = Date.now();
+  const cleanedLog = {};
+
+  for (const [key, timestamp] of Object.entries(logData)) {
+    const isLong = key.endsWith('_LONG');
+    const cooldownLimit = isLong ? COOLDOWN_TIME_LONG : COOLDOWN_TIME_SHORT;
+
+    // Giữ lại key nếu vẫn còn trong thời gian cooldown
+    if (now - timestamp < cooldownLimit) {
+      cleanedLog[key] = timestamp;
+    }
+  }
+
+  return cleanedLog;
+}
+
 function loadSentLog() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const data = fs.readFileSync(DB_FILE, 'utf8');
-      return data.trim() ? JSON.parse(data) : {};
+      const rawLog = data.trim() ? JSON.parse(data) : {};
+
+      // Tự động dọn sạch các coin quá hạn ngay khi nạp file
+      const cleanedLog = cleanExpiredLogs(rawLog);
+
+      // Nếu có coin bị dọn dẹp, cập nhật đè file ngay
+      if (Object.keys(cleanedLog).length !== Object.keys(rawLog).length) {
+        fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
+      }
+
+      return cleanedLog;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Lỗi khi đọc sent_ema.json:', e.message);
+  }
   return {};
 }
 
 function saveSentLog(logData) {
   try {
-    const now = Date.now();
-    const cleanedLog = {};
-    const maxCooldown = Math.max(COOLDOWN_TIME_LONG, COOLDOWN_TIME_SHORT);
-    for (const [key, timestamp] of Object.entries(logData)) {
-      if (now - timestamp < maxCooldown) {
-        cleanedLog[key] = timestamp;
-      }
-    }
+    const cleanedLog = cleanExpiredLogs(logData);
     fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
   } catch (e) {
     console.error('Lỗi khi lưu sent_ema.json:', e.message);
