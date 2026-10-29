@@ -469,7 +469,6 @@ async function main() {
 
       console.log(`[LONG SIGNAL] ${symbol} | x: ${xDisplay} | BD5: ${bd5Display} | ATR: ${atrDisplay}`);
 
-      // TIN NHẮN TELEGRAM LONG: GỒM X, BD5, ATR VÀ LINK
       const longMsg =
         `<b>🚀 TÍN HIỆU LONG</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
@@ -488,8 +487,9 @@ async function main() {
 
     // ==================================================================
     // BƯỚC 3: LUỒNG SHORT ĐỘC LẬP
+    // Điều kiện: bd5 > 2.5%, ATR > 1%, RSI < 65% -> Gọi nến 15m tính diffema10 < -1%
     // ==================================================================
-    console.log('--- 3. LUỒNG SHORT: BD5 > 4%, ATR > 1%, RSI < 65% & DIFFEMA10(15m) < -1% ---');
+    console.log('--- 3. LUỒNG SHORT: BD5 > 2.5%, ATR > 1%, RSI < 65% & DIFFEMA10(15m) < -1% ---');
 
     const shortStats = {
       candidates: targetCoins.length,
@@ -519,8 +519,8 @@ async function main() {
 
       const { bd5, x, atr, atrPct, chronological5m } = cached;
 
-      // 1. Kiểm tra BD5 > 4% và ATR > 1%
-      if (bd5 <= 4.0 || atrPct <= 1.0) {
+      // 1. Kiểm tra BD5 > 2.5% và ATR > 1%
+      if (bd5 <= 2.5 || atrPct <= 1.0) {
         continue;
       }
 
@@ -574,7 +574,6 @@ async function main() {
 
         console.log(`[SHORT SIGNAL] ${symbol} | x: ${xStr} | BD5: ${bd5Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA10: ${diffema10Str}`);
 
-        // TIN NHẮN TELEGRAM SHORT: GỒM X, BD5, ATR, RSI, DIFFEMA10 VÀ LINK
         const shortMsg =
           `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
           `Coin: <b>${coinName}</b>\n` +
@@ -614,7 +613,7 @@ async function main() {
     console.log('-----------------------------------------------------------');
     console.log('--- LUỒNG SHORT ---');
     console.log(`- Bị loại do Cooldown Short                 : ${shortStats.skippedCooldown} coin`);
-    console.log(`- Thỏa BD5 > 4% & ATR > 1% & RSI < 65%      : ${shortStats.passed5mConditions} coin`);
+    console.log(`- Thỏa BD5 > 2.5% & ATR > 1% & RSI < 65%    : ${shortStats.passed5mConditions} coin`);
     console.log(`- Gọi nến 15m kiểm tra                      : ${shortStats.called15m} coin`);
     console.log(`- Thỏa mãn DiffEMA10 (15m) < -1%            : ${shortStats.passedDiffEMA10} coin`);
     console.log(`- Gửi tin SHORT thành công                  : ${shortStats.shortSentSuccess} tin`);
