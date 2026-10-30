@@ -242,11 +242,11 @@ async function main() {
       candlesValid: 0,
       passed5mConditions: 0,
       called15m: 0,
-      passedDiffEMA20: 0,
+      passedDiffEMA5: 0,
       shortSentSuccess: 0
     };
 
-    console.log(`--- QUÉT SHORT: BD5 > 3%, ATR > 1%, RSI < 65% & DIFFEMA20(15m) < -1% ---`);
+    console.log(`--- QUÉT SHORT: BD5 > 3%, ATR > 1%, RSI < 65% & DIFFEMA5(15m) < -0.5% ---`);
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
@@ -276,12 +276,12 @@ async function main() {
 
       shortStats.candlesValid++;
 
-      // 3. Tính BD5: Biến động giá mở cửa nến 0 so với nến 4
+      // 3. Tính BD5: Chênh lệch % giá mở cửa nến hiện tại (nến 0) và giá thấp nhất nến số 4
       const open0 = parseFloat(candles5m[0][1]);
-      const open4 = parseFloat(candles5m[4][1]);
+      const low4 = parseFloat(candles5m[4][3]); // nến số 4: index 4, cột 3 là low price
       let bd5 = 0;
-      if (open4 > 0) {
-        bd5 = ((open0 - open4) / open4) * 100;
+      if (low4 > 0) {
+        bd5 = ((open0 - low4) / low4) * 100;
       }
 
       // Điều kiện BD5 > 3%
@@ -317,7 +317,7 @@ async function main() {
 
       shortStats.passed5mConditions++;
 
-      // 6. Lấy nến 15m để tính DiffEMA20 (EMA 20 trên nến 15m)
+      // 6. Lấy nến 15m để tính DiffEMA5 (EMA 20 trên nến 15m, so sánh độ biến thiên qua 5 cây nến)
       shortStats.called15m++;
       const candles15m = await getCandles(symbol, '15m', 80);
       if (!candles15m || candles15m.length < 45) {
@@ -330,19 +330,19 @@ async function main() {
       const closes15m = chronological15m.map((c) => parseFloat(c[4]));
 
       const emaArray15m = calculateEMA(closes15m, 20);
-      let diffema20 = null;
+      let diffema5 = null;
 
-      if (emaArray15m.length >= 20) {
+      if (emaArray15m.length >= 6) {
         const ema1 = emaArray15m[emaArray15m.length - 1];
-        const ema20 = emaArray15m[emaArray15m.length - 20];
-        if (ema20 !== 0) {
-          diffema20 = ((ema1 - ema20) / ema20) * 100;
+        const ema5 = emaArray15m[emaArray15m.length - 1 - 5];
+        if (ema5 !== 0) {
+          diffema5 = ((ema1 - ema5) / ema5) * 100;
         }
       }
 
-      // Điều kiện DiffEMA20 < -1%
-      if (diffema20 !== null && diffema20 < -1.0) {
-        shortStats.passedDiffEMA20++;
+      // Điều kiện DiffEMA5 < -0.5%
+      if (diffema5 !== null && diffema5 < -0.5) {
+        shortStats.passedDiffEMA5++;
 
         sentLog[shortKey] = currentTime;
         saveSentLog(sentLog);
@@ -350,9 +350,9 @@ async function main() {
         const bd5Str = `+${bd5.toFixed(2)}%`;
         const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
         const rsiStr = `${currentRsi5m.toFixed(2)}%`;
-        const diffema20Str = `${diffema20.toFixed(4)}%`;
+        const diffema5Str = `${diffema5.toFixed(4)}%`;
 
-        console.log(`[SHORT SIGNAL] ${symbol} | BD5: ${bd5Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA20: ${diffema20Str}`);
+        console.log(`[SHORT SIGNAL] ${symbol} | BD5: ${bd5Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str}`);
 
         const shortMsg =
           `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
@@ -360,7 +360,7 @@ async function main() {
           `• BD5: <b>${bd5Str}</b>\n` +
           `• ATR: <b>${atrStr}</b>\n` +
           `• RSI (5m): <b>${rsiStr}</b>\n` +
-          `• DiffEMA20 (15m): <b>${diffema20Str}</b>\n` +
+          `• DiffEMA5 (15m): <b>${diffema5Str}</b>\n` +
           `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
         const isSent = await sendTelegramMessage(shortMsg);
@@ -380,7 +380,7 @@ async function main() {
     console.log(`- Nến 5m hợp lệ                              : ${shortStats.candlesValid} coin`);
     console.log(`- Thỏa BD5 > 3% & ATR > 1% & RSI < 65%       : ${shortStats.passed5mConditions} coin`);
     console.log(`- Gọi nến 15m kiểm tra                       : ${shortStats.called15m} coin`);
-    console.log(`- Thỏa mãn DiffEMA20 (15m) < -1%             : ${shortStats.passedDiffEMA20} coin`);
+    console.log(`- Thỏa mãn DiffEMA5 (15m) < -0.5%            : ${shortStats.passedDiffEMA5} coin`);
     console.log(`- Gửi tin SHORT thành công                   : ${shortStats.shortSentSuccess} tin`);
     console.log('===========================================================\n');
   } catch (err) {
