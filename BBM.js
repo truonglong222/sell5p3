@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
-const COOLDOWN_TIME_SHORT = 8 * 60 * 60 * 1000;      // 8h cho Short
+const COOLDOWN_TIME_SHORT = 2 * 60 * 60 * 1000;      // 2h cho Short
 const MIN_VOL_CCY24H = 5_000_000;                    // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -246,7 +246,7 @@ async function main() {
       shortSentSuccess: 0
     };
 
-    console.log(`--- QUÉT SHORT: BD5 > 3%, ATR > 1%, RSI < 65% & -6% < DIFFEMA20(15m) < -1% ---`);
+    console.log(`--- QUÉT SHORT: BD5 > 3%, ATR > 1%, RSI < 65% & DIFFEMA20(15m) < -1% ---`);
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
@@ -340,8 +340,8 @@ async function main() {
         }
       }
 
-      // Điều kiện -6% < DiffEMA20 < -1%
-      if (diffema20 !== null && diffema20 > -6.0 && diffema20 < -1.0) {
+      // Điều kiện DiffEMA20 < -1%
+      if (diffema20 !== null && diffema20 < -1.0) {
         shortStats.passedDiffEMA20++;
 
         sentLog[shortKey] = currentTime;
@@ -380,7 +380,7 @@ async function main() {
     console.log(`- Nến 5m hợp lệ                              : ${shortStats.candlesValid} coin`);
     console.log(`- Thỏa BD5 > 3% & ATR > 1% & RSI < 65%       : ${shortStats.passed5mConditions} coin`);
     console.log(`- Gọi nến 15m kiểm tra                       : ${shortStats.called15m} coin`);
-    console.log(`- Thỏa mãn -6% < DiffEMA20 (15m) < -1%       : ${shortStats.passedDiffEMA20} coin`);
+    console.log(`- Thỏa mãn DiffEMA20 (15m) < -1%             : ${shortStats.passedDiffEMA20} coin`);
     console.log(`- Gửi tin SHORT thành công                   : ${shortStats.shortSentSuccess} tin`);
     console.log('===========================================================\n');
   } catch (err) {
