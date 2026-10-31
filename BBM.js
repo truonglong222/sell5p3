@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
-const COOLDOWN_TIME_SHORT = 48 * 60 * 60 * 1000;      // 2h cho Short
+const COOLDOWN_TIME_SHORT = 48 * 60 * 60 * 1000;      // 2h cho Short (nếu muốn 2h sửa thành 2 * 60 * 60 * 1000)
 const MIN_VOL_CCY24H = 5_000_000;                    // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -246,7 +246,7 @@ async function main() {
       shortSentSuccess: 0
     };
 
-    console.log(`--- QUÉT SHORT: BD5 > 3%, ATR > 1%, RSI < 65% & DIFFEMA5(15m) < -0.5% ---`);
+    console.log(`--- QUÉT SHORT: BD5 > 6%, ATR > 1%, RSI < 65% & DIFFEMA5(15m) < -0.5% ---`);
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
@@ -276,16 +276,16 @@ async function main() {
 
       shortStats.candlesValid++;
 
-      // 3. Tính BD5: Chênh lệch % giá mở cửa nến hiện tại (nến 0) và giá thấp nhất nến số 4
-      const open0 = parseFloat(candles5m[0][1]);
-      const low4 = parseFloat(candles5m[4][3]); // nến số 4: index 4, cột 3 là low price
+      // 3. Tính BD5: % chênh lệch giữa giá đóng cửa nến vừa đóng và giá mở cửa nến 5m số 4
+      const closeJustClosed = parseFloat(candles5m[1][4]); // [1]: nến vừa đóng, index [4]: giá đóng cửa
+      const openCandle4 = parseFloat(candles5m[4][1]);     // [4]: nến số 4, index [1]: giá mở cửa
       let bd5 = 0;
-      if (low4 > 0) {
-        bd5 = ((open0 - low4) / low4) * 100;
+      if (openCandle4 > 0) {
+        bd5 = ((closeJustClosed - openCandle4) / openCandle4) * 100;
       }
 
-      // Điều kiện BD5 > 3%
-      if (bd5 <= 3.0) {
+      // Điều kiện BD5 > 6%
+      if (bd5 <= 6.0) {
         await sleep(60);
         continue;
       }
@@ -378,7 +378,7 @@ async function main() {
     console.log(`2. Số coin qua lọc Volume (> 5M USDT)        : ${shortStats.passedVol} coin`);
     console.log(`- Bị loại do Cooldown Short                  : ${shortStats.skippedCooldown} coin`);
     console.log(`- Nến 5m hợp lệ                              : ${shortStats.candlesValid} coin`);
-    console.log(`- Thỏa BD5 > 3% & ATR > 1% & RSI < 65%       : ${shortStats.passed5mConditions} coin`);
+    console.log(`- Thỏa BD5 > 6% & ATR > 1% & RSI < 65%       : ${shortStats.passed5mConditions} coin`);
     console.log(`- Gọi nến 15m kiểm tra                       : ${shortStats.called15m} coin`);
     console.log(`- Thỏa mãn DiffEMA5 (15m) < -0.5%            : ${shortStats.passedDiffEMA5} coin`);
     console.log(`- Gửi tin SHORT thành công                   : ${shortStats.shortSentSuccess} tin`);
