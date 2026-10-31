@@ -237,19 +237,15 @@ async function main() {
     const shortStats = {
       allSwaps,
       passedVol,
-      candidates: targetCoins.length,
       skippedCooldown: 0,
       candlesValid: 0,
-      passedBD5: 0,               // Thỏa BD5 > 4%
-      passedATR: 0,               // Thỏa ATR > 1%
-      passedRSI: 0,               // Thỏa RSI < 65%
-      called15m: 0,               // Gọi nến 15m
-      candles15mValid: 0,         // Nến 15m hợp lệ
-      passedDiffEMA5: 0,          // Thỏa DiffEMA5 < -0.5%
+      passedBD5: 0,
+      passedATR: 0,
+      passedRSI: 0,
+      candles15mValid: 0,
+      passedDiffEMA5: 0,
       shortSentSuccess: 0
     };
-
-    console.log(`--- QUÉT SHORT: BD5 > 4%, ATR > 1%, RSI < 65% & DIFFEMA5(15m) < -0.5% ---`);
 
     for (const coin of targetCoins) {
       const symbol = coin.instId;
@@ -321,8 +317,7 @@ async function main() {
       }
       shortStats.passedRSI++;
 
-      // 6. Lấy nến 15m để tính DiffEMA5 (EMA 20 trên nến 15m, so sánh độ biến thiên qua 5 cây nến)
-      shortStats.called15m++;
+      // 6. Lấy nến 15m để tính DiffEMA5
       const candles15m = await getCandles(symbol, '15m', 80);
       if (!candles15m || candles15m.length < 45) {
         await sleep(60);
@@ -377,20 +372,19 @@ async function main() {
       await sleep(100);
     }
 
-    // ------------------- BÁO CÁO THỐNG KÊ CHI TIẾT DẠNG VĂN BẢN -------------------
-    console.log('\n================ BÁO CÁO THỐNG KÊ CHI TIẾT TỪNG ĐIỀU KIỆN ================');
-    console.log(`- Tổng số cặp SWAP lấy từ OKX: ${shortStats.allSwaps} coin`);
-    console.log(`- Số coin đạt điều kiện Volume 24h (> 5M USDT): ${shortStats.passedVol} coin`);
-    console.log(`- Số coin bị loại do đang trong thời gian Cooldown: ${shortStats.skippedCooldown} coin`);
-    console.log(`- Số coin có dữ liệu nến 5m hợp lệ để tính toán: ${shortStats.candlesValid} coin`);
-    console.log(`- Số coin thỏa mãn điều kiện [1] BD5 > 4%: ${shortStats.passedBD5} coin`);
-    console.log(`- Số coin tiếp tục thỏa mãn điều kiện [2] ATR > 1%: ${shortStats.passedATR} coin`);
-    console.log(`- Số coin tiếp tục thỏa mãn điều kiện [3] RSI < 65%: ${shortStats.passedRSI} coin`);
-    console.log(`- Số coin được gọi kiểm tra thêm nến 15m: ${shortStats.called15m} coin`);
-    console.log(`- Số coin có dữ liệu nến 15m hợp lệ: ${shortStats.candles15mValid} coin`);
-    console.log(`- Số coin thỏa mãn điều kiện [4] DiffEMA5 (15m) < -0.5%: ${shortStats.passedDiffEMA5} coin`);
-    console.log(`- Tổng số tín hiệu SHORT gửi Telegram thành công: ${shortStats.shortSentSuccess} tin`);
-    console.log('==========================================================================\n');
+    // ------------------- BÁO CÁO THỐNG KÊ RÚT GỌN -------------------
+    console.log('\n--- KẾT QUẢ QUÉT SHORT ---');
+    console.log(`Tổng SWAP: ${shortStats.allSwaps}`);
+    console.log(`Volume > 5M: ${shortStats.passedVol}`);
+    console.log(`Chờ cooldown: ${shortStats.skippedCooldown}`);
+    console.log(`Nến 5m hợp lệ: ${shortStats.candlesValid}`);
+    console.log(`BD5 > 4%: ${shortStats.passedBD5}`);
+    console.log(`ATR > 1%: ${shortStats.passedATR}`);
+    console.log(`RSI < 65%: ${shortStats.passedRSI}`);
+    console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
+    console.log(`DiffEMA5 < -0.5%: ${shortStats.passedDiffEMA5}`);
+    console.log(`Gửi Telegram: ${shortStats.shortSentSuccess}`);
+    console.log('---------------------------\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
   }
