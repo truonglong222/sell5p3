@@ -284,8 +284,8 @@ async function main() {
         bd1 = ((closeJustClosed - openJustClosed) / openJustClosed) * 100;
       }
 
-      // Điều kiện BD1 > 3% (nếu <= 3.0 thì bỏ qua)
-      if (bd1 <= 3.0) {
+      // Điều kiện BD1 > 2.8% (nếu <= 2.8 thì bỏ qua)
+      if (bd1 <= 2.8) {
         await sleep(60);
         continue;
       }
