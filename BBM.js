@@ -13,7 +13,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME_SHORT = 2 * 60 * 60 * 1000;
-const MIN_VOL_CCY24H = 5_000_000;                    // Volume 24h > 5 triệu USDT
+const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -87,7 +87,7 @@ function calculateRSIArray(closes, period = 20) {
   let avgLoss = losses / period;
 
   let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-  rsiArray.push(100 - (100 / (1 + rs)));
+  rsiArray.push(100 - 100 / (1 + rs));
 
   for (let i = period + 1; i < closes.length; i++) {
     const diff = closes[i] - closes[i - 1];
@@ -98,7 +98,7 @@ function calculateRSIArray(closes, period = 20) {
     avgLoss = (avgLoss * (period - 1) + loss) / period;
 
     rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-    rsiArray.push(100 - (100 / (1 + rs)));
+    rsiArray.push(100 - 100 / (1 + rs));
   }
 
   return rsiArray;
@@ -167,7 +167,9 @@ async function getFilteredMarkets() {
       return { allSwaps, passedVol, targetCoins };
     }
 
-    const tickers = res.data.data.filter((item) => item.instId.endsWith('-USDT-SWAP'));
+    const tickers = res.data.data.filter((item) =>
+      item.instId.endsWith('-USDT-SWAP')
+    );
     allSwaps = tickers.length;
 
     for (const item of tickers) {
@@ -176,7 +178,7 @@ async function getFilteredMarkets() {
         passedVol++;
         targetCoins.push({
           instId: item.instId,
-          volCcy24h: vol
+          volCcy24h: vol,
         });
       }
     }
@@ -210,15 +212,22 @@ async function sendTelegramMessage(message) {
 
   try {
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    await axios.post(url, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true
-    }, { timeout: 8000 });
+    await axios.post(
+      url,
+      {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      },
+      { timeout: 8000 }
+    );
     return true;
   } catch (err) {
-    console.error('Lỗi gửi Telegram:', err.response ? JSON.stringify(err.response.data) : err.message);
+    console.error(
+      'Lỗi gửi Telegram:',
+      err.response ? JSON.stringify(err.response.data) : err.message
+    );
     return false;
   }
 }
@@ -239,12 +248,12 @@ async function main() {
       passedVol,
       skippedCooldown: 0,
       candlesValid: 0,
-      passedBD1: 0,
+      passedBD5: 0,
       passedATR: 0,
       passedRSI: 0,
       candles15mValid: 0,
       passedDiffEMA5: 0,
-      shortSentSuccess: 0
+      shortSentSuccess: 0,
     };
 
     for (const coin of targetCoins) {
@@ -275,20 +284,20 @@ async function main() {
 
       shortStats.candlesValid++;
 
-      // 3. Tính BD1: % chênh lệch giữa giá đóng cửa và mở cửa của nến vừa đóng [1]
-      const openJustClosed = parseFloat(candles5m[1][1]);
+      // 3. Tính BD5: % chênh lệch giữa giá đóng nến vừa đóng [1] so với mở cửa của 5 nến trước [5]
+      const open5CandlesAgo = parseFloat(candles5m[5][1]);
       const closeJustClosed = parseFloat(candles5m[1][4]);
-      let bd1 = 0;
-      if (openJustClosed > 0) {
-        bd1 = ((closeJustClosed - openJustClosed) / openJustClosed) * 100;
+      let bd5 = 0;
+      if (open5CandlesAgo > 0) {
+        bd5 = ((closeJustClosed - open5CandlesAgo) / open5CandlesAgo) * 100;
       }
 
-      // Điều kiện BD1 > 2.8%
-      if (bd1 <= 2.8) {
+      // Điều kiện BD5 > 3.0%
+      if (bd5 <= 3.0) {
         await sleep(60);
         continue;
       }
-      shortStats.passedBD1++;
+      shortStats.passedBD5++;
 
       // 4. Tính ATR (14, 5m) và kiểm tra ATR > 0.5%
       const chronological5m = [...closedCandles].reverse();
@@ -302,7 +311,7 @@ async function main() {
       }
       shortStats.passedATR++;
 
-      // 5. Tính RSI (20, 5m) và kiểm tra RSI < 65%
+      // 5. Tính RSI (20, 5m) và kiểm tra RSI < 72%
       const closes5m = chronological5m.map((c) => parseFloat(c[4]));
       const rsiSeries5m = calculateRSIArray(closes5m, 20);
       if (rsiSeries5m.length === 0) {
@@ -311,7 +320,7 @@ async function main() {
       }
 
       const currentRsi5m = rsiSeries5m[rsiSeries5m.length - 1];
-      if (currentRsi5m >= 65.0) {
+      if (currentRsi5m >= 72.0) {
         await sleep(60);
         continue;
       }
@@ -347,17 +356,19 @@ async function main() {
         sentLog[shortKey] = currentTime;
         saveSentLog(sentLog);
 
-        const bd1Str = `+${bd1.toFixed(2)}%`;
+        const bd5Str = `+${bd5.toFixed(2)}%`;
         const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
         const rsiStr = `${currentRsi5m.toFixed(2)}%`;
         const diffema5Str = `${diffema5.toFixed(4)}%`;
 
-        console.log(`[SHORT SIGNAL] ${symbol} | BD1: ${bd1Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str}`);
+        console.log(
+          `[SHORT SIGNAL] ${symbol} | BD5: ${bd5Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str}`
+        );
 
         const shortMsg =
           `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
           `Coin: <b>${coinName}</b>\n` +
-          `• BD1: <b>${bd1Str}</b>\n` +
+          `• BD5: <b>${bd5Str}</b>\n` +
           `• ATR: <b>${atrStr}</b>\n` +
           `• RSI (5m): <b>${rsiStr}</b>\n` +
           `• DiffEMA5 (15m): <b>${diffema5Str}</b>\n` +
@@ -378,9 +389,9 @@ async function main() {
     console.log(`Volume > 5M: ${shortStats.passedVol}`);
     console.log(`Chờ cooldown: ${shortStats.skippedCooldown}`);
     console.log(`Nến 5m hợp lệ: ${shortStats.candlesValid}`);
-    console.log(`BD1 > 2.8%: ${shortStats.passedBD1}`);
+    console.log(`BD5 > 3.0%: ${shortStats.passedBD5}`);
     console.log(`ATR > 0.5%: ${shortStats.passedATR}`);
-    console.log(`RSI < 65%: ${shortStats.passedRSI}`);
+    console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
     console.log(`DiffEMA5 < -0.3%: ${shortStats.passedDiffEMA5}`);
     console.log(`Gửi Telegram: ${shortStats.shortSentSuccess}`);
