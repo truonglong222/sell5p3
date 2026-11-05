@@ -260,7 +260,7 @@ async function main() {
       passedVol,
       skippedCooldown: 0,
       candlesValid: 0,
-      passedBD1: 0,
+      passedBD2: 0,
       passedATR: 0,
       passedRSI: 0,
       candles15mValid: 0,
@@ -297,20 +297,20 @@ async function main() {
 
       shortStats.candlesValid++;
 
-      // 3. Tính BD1: % chênh lệch giữa giá đóng cửa và mở cửa của nến vừa đóng [1]
-      const openJustClosed = parseFloat(candles5m[1][1]);
-      const closeJustClosed = parseFloat(candles5m[1][4]);
-      let bd1 = 0;
-      if (openJustClosed > 0) {
-        bd1 = ((closeJustClosed - openJustClosed) / openJustClosed) * 100;
+      // 3. Tính BD2: % chênh lệch giữa giá đóng nến vừa đóng [1] và mở cửa của nến trước đó [2]
+      const openCandle2 = parseFloat(candles5m[2][1]);
+      const closeCandle1 = parseFloat(candles5m[1][4]);
+      let bd2 = 0;
+      if (openCandle2 > 0) {
+        bd2 = ((closeCandle1 - openCandle2) / openCandle2) * 100;
       }
 
-      // Điều kiện BD1 > 2%
-      if (bd1 <= 2.0) {
+      // Điều kiện BD2 > 4%
+      if (bd2 <= 4.0) {
         await sleep(60);
         continue;
       }
-      shortStats.passedBD1++;
+      shortStats.passedBD2++;
 
       // 4. Tính ATR (14, 5m) và kiểm tra ATR > 0.7%
       const chronological5m = [...closedCandles].reverse();
@@ -318,7 +318,6 @@ async function main() {
       const atrPct = atrData ? atrData.atrPct : 0;
       const atrVal = atrData ? atrData.atr : 0;
 
-      // Điều kiện ATR > 0.7%
       if (atrPct <= 0.7) {
         await sleep(60);
         continue;
@@ -370,14 +369,14 @@ async function main() {
       }
       shortStats.passedDiffEMA5++;
 
-      // 7. Thêm điều kiện: Hbb của nến 1h hiện tại > 6%
+      // 7. Điều kiện: Hbb của nến 1h hiện tại > 6%
       const candles1h = await getCandles(symbol, '1H', 50);
       if (!candles1h || candles1h.length < 20) {
         await sleep(60);
         continue;
       }
 
-      // Giữ nguyên nến index 0 (nến 1h hiện tại) và sắp xếp tăng dần theo thời gian
+      // Giữ nguyên nến index 0 (nến 1h đang chạy)
       const chronological1h = [...candles1h].reverse();
       const closes1h = chronological1h.map((c) => parseFloat(c[4]));
 
@@ -392,18 +391,18 @@ async function main() {
       sentLog[shortKey] = currentTime;
       saveSentLog(sentLog);
 
-      const bd1Str = `+${bd1.toFixed(2)}%`;
+      const bd2Str = `+${bd2.toFixed(2)}%`;
       const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
       const rsiStr = `${currentRsi5m.toFixed(2)}%`;
       const diffema5Str = `${diffema5.toFixed(4)}%`;
       const hbb1hStr = `${bb1h.hbb.toFixed(2)}%`;
 
-      console.log(`[SHORT SIGNAL] ${symbol} | BD1: ${bd1Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str} | Hbb(1h): ${hbb1hStr}`);
+      console.log(`[SHORT SIGNAL] ${symbol} | BD2: ${bd2Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str} | Hbb(1h): ${hbb1hStr}`);
 
       const shortMsg =
         `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
-        `• BD1: <b>${bd1Str}</b>\n` +
+        `• BD2: <b>${bd2Str}</b>\n` +
         `• ATR: <b>${atrStr}</b>\n` +
         `• RSI (5m): <b>${rsiStr}</b>\n` +
         `• DiffEMA5 (15m): <b>${diffema5Str}</b>\n` +
@@ -424,7 +423,7 @@ async function main() {
     console.log(`Volume > 5M: ${shortStats.passedVol}`);
     console.log(`Chờ cooldown: ${shortStats.skippedCooldown}`);
     console.log(`Nến 5m hợp lệ: ${shortStats.candlesValid}`);
-    console.log(`BD1 > 2%: ${shortStats.passedBD1}`);
+    console.log(`BD2 > 4%: ${shortStats.passedBD2}`);
     console.log(`ATR > 0.7%: ${shortStats.passedATR}`);
     console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
