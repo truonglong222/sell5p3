@@ -153,6 +153,27 @@ function calculateATR(candles, period = 14) {
   return { atr, atrPct };
 }
 
+// Tính Bollinger Bands (Mặc định: Chu kỳ 20, độ lệch chuẩn 2)
+function calculateBollingerBands(closes, period = 20, multiplier = 2) {
+  if (!closes || closes.length < period) return null;
+
+  const slice = closes.slice(-period);
+  const sma = slice.reduce((acc, val) => acc + val, 0) / period;
+
+  const variance = slice.reduce((acc, val) => acc + Math.pow(val - sma, 2), 0) / period;
+  const stdDev = Math.sqrt(variance);
+
+  const upper = sma + (multiplier * stdDev);
+  const lower = sma - (multiplier * stdDev);
+
+  let hbb = 0;
+  if (lower > 0) {
+    hbb = ((upper - lower) / lower) * 100;
+  }
+
+  return { upper, lower, sma, hbb };
+}
+
 // ------------------- LỌC THỊ TRƯỜNG & LẤY NẾN -------------------
 
 async function getFilteredMarkets() {
@@ -244,6 +265,7 @@ async function main() {
       passedRSI: 0,
       candles15mValid: 0,
       passedDiffEMA5: 0,
+      passedHbb1h: 0,
       shortSentSuccess: 0
     };
 
@@ -296,7 +318,7 @@ async function main() {
       const atrPct = atrData ? atrData.atrPct : 0;
       const atrVal = atrData ? atrData.atr : 0;
 
-      // Điều kiện ATR > 0.7% (bỏ qua nếu atrPct <= 0.7)
+      // Điều kiện ATR > 0.7%
       if (atrPct <= 0.7) {
         await sleep(60);
         continue;
@@ -342,32 +364,55 @@ async function main() {
       }
 
       // Điều kiện DiffEMA5 < -0.3%
-      if (diffema5 !== null && diffema5 < -0.3) {
-        shortStats.passedDiffEMA5++;
+      if (diffema5 === null || diffema5 >= -0.3) {
+        await sleep(60);
+        continue;
+      }
+      shortStats.passedDiffEMA5++;
 
-        sentLog[shortKey] = currentTime;
-        saveSentLog(sentLog);
+      // 7. Thêm điều kiện: Hbb của nến 1h hiện tại > 6%
+      const candles1h = await getCandles(symbol, '1H', 50);
+      if (!candles1h || candles1h.length < 20) {
+        await sleep(60);
+        continue;
+      }
 
-        const bd1Str = `+${bd1.toFixed(2)}%`;
-        const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
-        const rsiStr = `${currentRsi5m.toFixed(2)}%`;
-        const diffema5Str = `${diffema5.toFixed(4)}%`;
+      // Giữ nguyên nến index 0 (nến 1h hiện tại) và sắp xếp tăng dần theo thời gian
+      const chronological1h = [...candles1h].reverse();
+      const closes1h = chronological1h.map((c) => parseFloat(c[4]));
 
-        console.log(`[SHORT SIGNAL] ${symbol} | BD1: ${bd1Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str}`);
+      const bb1h = calculateBollingerBands(closes1h, 20, 2);
+      if (!bb1h || bb1h.hbb <= 6.0) {
+        await sleep(60);
+        continue;
+      }
+      shortStats.passedHbb1h++;
 
-        const shortMsg =
-          `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
-          `Coin: <b>${coinName}</b>\n` +
-          `• BD1: <b>${bd1Str}</b>\n` +
-          `• ATR: <b>${atrStr}</b>\n` +
-          `• RSI (5m): <b>${rsiStr}</b>\n` +
-          `• DiffEMA5 (15m): <b>${diffema5Str}</b>\n` +
-          `<a href="${link}">🔗 Giao dịch OKX</a>`;
+      // Ghi nhận và gửi tín hiệu Telegram
+      sentLog[shortKey] = currentTime;
+      saveSentLog(sentLog);
 
-        const isSent = await sendTelegramMessage(shortMsg);
-        if (isSent) {
-          shortStats.shortSentSuccess++;
-        }
+      const bd1Str = `+${bd1.toFixed(2)}%`;
+      const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
+      const rsiStr = `${currentRsi5m.toFixed(2)}%`;
+      const diffema5Str = `${diffema5.toFixed(4)}%`;
+      const hbb1hStr = `${bb1h.hbb.toFixed(2)}%`;
+
+      console.log(`[SHORT SIGNAL] ${symbol} | BD1: ${bd1Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str} | Hbb(1h): ${hbb1hStr}`);
+
+      const shortMsg =
+        `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
+        `Coin: <b>${coinName}</b>\n` +
+        `• BD1: <b>${bd1Str}</b>\n` +
+        `• ATR: <b>${atrStr}</b>\n` +
+        `• RSI (5m): <b>${rsiStr}</b>\n` +
+        `• DiffEMA5 (15m): <b>${diffema5Str}</b>\n` +
+        `• Hbb (1h): <b>${hbb1hStr}</b>\n` +
+        `<a href="${link}">🔗 Giao dịch OKX</a>`;
+
+      const isSent = await sendTelegramMessage(shortMsg);
+      if (isSent) {
+        shortStats.shortSentSuccess++;
       }
 
       await sleep(100);
@@ -384,6 +429,7 @@ async function main() {
     console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
     console.log(`DiffEMA5 < -0.3%: ${shortStats.passedDiffEMA5}`);
+    console.log(`Hbb (1h) > 6%: ${shortStats.passedHbb1h}`);
     console.log(`Gửi Telegram: ${shortStats.shortSentSuccess}`);
     console.log('---------------------------\n');
   } catch (err) {
