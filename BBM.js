@@ -283,20 +283,21 @@ async function main() {
         bd1 = ((closeJustClosed - openJustClosed) / openJustClosed) * 100;
       }
 
-      // Điều kiện BD1 > 2% (bỏ qua nếu bd1 <= 2)
+      // Điều kiện BD1 > 2%
       if (bd1 <= 2.0) {
         await sleep(60);
         continue;
       }
       shortStats.passedBD1++;
 
-      // 4. Tính ATR (14, 5m) và kiểm tra ATR > 1%
+      // 4. Tính ATR (14, 5m) và kiểm tra ATR > 0.7%
       const chronological5m = [...closedCandles].reverse();
       const atrData = calculateATR(chronological5m, 14);
       const atrPct = atrData ? atrData.atrPct : 0;
       const atrVal = atrData ? atrData.atr : 0;
 
-      if (atrPct <= 1.0) {
+      // Điều kiện ATR > 0.7% (bỏ qua nếu atrPct <= 0.7)
+      if (atrPct <= 0.7) {
         await sleep(60);
         continue;
       }
@@ -379,7 +380,7 @@ async function main() {
     console.log(`Chờ cooldown: ${shortStats.skippedCooldown}`);
     console.log(`Nến 5m hợp lệ: ${shortStats.candlesValid}`);
     console.log(`BD1 > 2%: ${shortStats.passedBD1}`);
-    console.log(`ATR > 1%: ${shortStats.passedATR}`);
+    console.log(`ATR > 0.7%: ${shortStats.passedATR}`);
     console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
     console.log(`DiffEMA5 < -0.3%: ${shortStats.passedDiffEMA5}`);
