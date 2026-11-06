@@ -153,7 +153,7 @@ function calculateATR(candles, period = 14) {
   return { atr, atrPct };
 }
 
-// Tính Bollinger Bands (chu kỳ 20, độ lệch chuẩn 2)
+// Tính Bollinger Bands (Mặc định: Chu kỳ 20, độ lệch chuẩn 2)
 function calculateBollingerBands(closes, period = 20, multiplier = 2) {
   if (!closes || closes.length < period) return null;
 
@@ -265,7 +265,7 @@ async function main() {
       passedRSI: 0,
       candles15mValid: 0,
       passedDiffEMA5: 0,
-      passedHbb1h: 0,
+      candles1hValid: 0,
       shortSentSuccess: 0
     };
 
@@ -318,6 +318,7 @@ async function main() {
       const atrPct = atrData ? atrData.atrPct : 0;
       const atrVal = atrData ? atrData.atr : 0;
 
+      // Điều kiện ATR > 0.7%
       if (atrPct <= 0.7) {
         await sleep(60);
         continue;
@@ -369,23 +370,41 @@ async function main() {
       }
       shortStats.passedDiffEMA5++;
 
-      // 7. Điều kiện: Hbb nến 1h hiện tại > 6%
+      // 7. Lấy nến 1h để tính Hbb và ATR 1h
       const candles1h = await getCandles(symbol, '1H', 50);
       if (!candles1h || candles1h.length < 20) {
         await sleep(60);
         continue;
       }
+      shortStats.candles1hValid++;
 
-      // Giữ nến index 0 (nến 1h đang chạy hiện tại)
+      // Giữ nguyên nến index 0 (nến 1h hiện tại) và sắp xếp tăng dần theo thời gian
       const chronological1h = [...candles1h].reverse();
       const closes1h = chronological1h.map((c) => parseFloat(c[4]));
 
       const bb1h = calculateBollingerBands(closes1h, 20, 2);
-      if (!bb1h || bb1h.hbb <= 6.0) {
-        await sleep(60);
-        continue;
+
+      // ------------------- TÍNH TOÁN TỈ SỐ x VÀ y -------------------
+      // 1. Tính x = Hbb(15m) / ATR(15m)
+      const bb15m = calculateBollingerBands(closes15m, 20, 2);
+      const atrData15m = calculateATR(chronological15m, 14);
+
+      let xVal = null;
+      let xStr = 'N/A';
+      if (bb15m && atrData15m && atrData15m.atrPct > 0) {
+        xVal = bb15m.hbb / atrData15m.atrPct;
+        xStr = xVal.toFixed(2);
       }
-      shortStats.passedHbb1h++;
+
+      // 2. Tính y = Hbb(1h) / ATR(1h)
+      const atrData1h = calculateATR(chronological1h, 14);
+
+      let yVal = null;
+      let yStr = 'N/A';
+      if (bb1h && atrData1h && atrData1h.atrPct > 0) {
+        yVal = bb1h.hbb / atrData1h.atrPct;
+        yStr = yVal.toFixed(2);
+      }
 
       // Ghi nhận và gửi tín hiệu Telegram
       sentLog[shortKey] = currentTime;
@@ -395,18 +414,20 @@ async function main() {
       const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
       const rsiStr = `${currentRsi5m.toFixed(2)}%`;
       const diffema5Str = `${diffema5.toFixed(4)}%`;
-      const hbb1hStr = `${bb1h.hbb.toFixed(2)}%`;
+      const hbb1hStr = bb1h ? `${bb1h.hbb.toFixed(2)}%` : 'N/A';
 
-      console.log(`[SHORT SIGNAL] ${symbol} | BD1: ${bd1Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str} | Hbb(1h): ${hbb1hStr}`);
+      console.log(`[SHORT SIGNAL] ${symbol} | BD1: ${bd1Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str} | Hbb(1h): ${hbb1hStr} | x: ${xStr} | y: ${yStr}`);
 
       const shortMsg =
         `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
         `• BD1: <b>${bd1Str}</b>\n` +
-        `• ATR: <b>${atrStr}</b>\n` +
+        `• ATR (5m): <b>${atrStr}</b>\n` +
         `• RSI (5m): <b>${rsiStr}</b>\n` +
         `• DiffEMA5 (15m): <b>${diffema5Str}</b>\n` +
         `• Hbb (1h): <b>${hbb1hStr}</b>\n` +
+        `• Tỉ số x (Hbb/ATR 15m): <b>${xStr}</b>\n` +
+        `• Tỉ số y (Hbb/ATR 1h): <b>${yStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
       const isSent = await sendTelegramMessage(shortMsg);
@@ -428,7 +449,7 @@ async function main() {
     console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
     console.log(`DiffEMA5 < -0.3%: ${shortStats.passedDiffEMA5}`);
-    console.log(`Hbb (1h) > 6%: ${shortStats.passedHbb1h}`);
+    console.log(`Nến 1h hợp lệ: ${shortStats.candles1hValid}`);
     console.log(`Gửi Telegram: ${shortStats.shortSentSuccess}`);
     console.log('---------------------------\n');
   } catch (err) {
