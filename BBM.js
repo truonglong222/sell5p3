@@ -363,8 +363,8 @@ async function main() {
         }
       }
 
-      // Điều kiện DiffEMA5 < -0.3%
-      if (diffema5 === null || diffema5 >= -0.3) {
+      // Điều kiện DiffEMA5 < 0
+      if (diffema5 === null || diffema5 >= 0) {
         await sleep(60);
         continue;
       }
@@ -448,7 +448,7 @@ async function main() {
     console.log(`ATR > 0.7%: ${shortStats.passedATR}`);
     console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
-    console.log(`DiffEMA5 < -0.3%: ${shortStats.passedDiffEMA5}`);
+    console.log(`DiffEMA5 < 0: ${shortStats.passedDiffEMA5}`);
     console.log(`Nến 1h hợp lệ: ${shortStats.candles1hValid}`);
     console.log(`Gửi Telegram: ${shortStats.shortSentSuccess}`);
     console.log('---------------------------\n');
