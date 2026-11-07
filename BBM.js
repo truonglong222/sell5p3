@@ -305,8 +305,8 @@ async function main() {
         bd1 = ((closeJustClosed - openJustClosed) / openJustClosed) * 100;
       }
 
-      // Điều kiện BD1 > 2.5%
-      if (bd1 <= 2.5) {
+      // Điều kiện BD1 > 2.2%
+      if (bd1 <= 2.2) {
         await sleep(60);
         continue;
       }
@@ -444,7 +444,7 @@ async function main() {
     console.log(`Volume > 5M: ${shortStats.passedVol}`);
     console.log(`Chờ cooldown: ${shortStats.skippedCooldown}`);
     console.log(`Nến 5m hợp lệ: ${shortStats.candlesValid}`);
-    console.log(`BD1 > 2.5%: ${shortStats.passedBD1}`);
+    console.log(`BD1 > 2.2%: ${shortStats.passedBD1}`);
     console.log(`ATR > 0.7%: ${shortStats.passedATR}`);
     console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
