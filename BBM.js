@@ -260,7 +260,7 @@ async function main() {
       passedVol,
       skippedCooldown: 0,
       candlesValid: 0,
-      passedBD1: 0,
+      passedBD5: 0,
       passedATR: 0,
       passedRSI: 0,
       candles15mValid: 0,
@@ -297,20 +297,20 @@ async function main() {
 
       shortStats.candlesValid++;
 
-      // 3. Tính BD1: % chênh lệch giữa giá đóng cửa và mở cửa của nến vừa đóng [1]
-      const openJustClosed = parseFloat(candles5m[1][1]);
+      // 3. Tính BD5: % chênh lệch giữa giá mở cửa nến thứ 5 trước đó [5] và giá đóng cửa nến vừa đóng [1]
+      const open5CandlesAgo = parseFloat(candles5m[5][1]);
       const closeJustClosed = parseFloat(candles5m[1][4]);
-      let bd1 = 0;
-      if (openJustClosed > 0) {
-        bd1 = ((closeJustClosed - openJustClosed) / openJustClosed) * 100;
+      let bd5 = 0;
+      if (open5CandlesAgo > 0) {
+        bd5 = ((closeJustClosed - open5CandlesAgo) / open5CandlesAgo) * 100;
       }
 
-      // Điều kiện BD1 > 2%
-      if (bd1 <= 2.0) {
+      // Điều kiện BD5 > 3%
+      if (bd5 <= 3.0) {
         await sleep(60);
         continue;
       }
-      shortStats.passedBD1++;
+      shortStats.passedBD5++;
 
       // 4. Tính ATR (14, 5m) và kiểm tra ATR > 0.7%
       const chronological5m = [...closedCandles].reverse();
@@ -410,18 +410,18 @@ async function main() {
       sentLog[shortKey] = currentTime;
       saveSentLog(sentLog);
 
-      const bd1Str = `+${bd1.toFixed(2)}%`;
+      const bd5Str = `+${bd5.toFixed(2)}%`;
       const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
       const rsiStr = `${currentRsi5m.toFixed(2)}%`;
       const diffema5Str = `${diffema5.toFixed(4)}%`;
       const hbb1hStr = bb1h ? `${bb1h.hbb.toFixed(2)}%` : 'N/A';
 
-      console.log(`[SHORT SIGNAL] ${symbol} | BD1: ${bd1Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str} | Hbb(1h): ${hbb1hStr} | x: ${xStr} | y: ${yStr}`);
+      console.log(`[SHORT SIGNAL] ${symbol} | BD5: ${bd5Str} | ATR: ${atrStr} | RSI: ${rsiStr} | DiffEMA5: ${diffema5Str} | Hbb(1h): ${hbb1hStr} | x: ${xStr} | y: ${yStr}`);
 
       const shortMsg =
         `<b>⚠️ TÍN HIỆU SHORT</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
-        `• BD1: <b>${bd1Str}</b>\n` +
+        `• BD5: <b>${bd5Str}</b>\n` +
         `• ATR (5m): <b>${atrStr}</b>\n` +
         `• RSI (5m): <b>${rsiStr}</b>\n` +
         `• DiffEMA5 (15m): <b>${diffema5Str}</b>\n` +
@@ -444,7 +444,7 @@ async function main() {
     console.log(`Volume > 5M: ${shortStats.passedVol}`);
     console.log(`Chờ cooldown: ${shortStats.skippedCooldown}`);
     console.log(`Nến 5m hợp lệ: ${shortStats.candlesValid}`);
-    console.log(`BD1 > 2%: ${shortStats.passedBD1}`);
+    console.log(`BD5 > 3%: ${shortStats.passedBD5}`);
     console.log(`ATR > 0.7%: ${shortStats.passedATR}`);
     console.log(`RSI < 72%: ${shortStats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${shortStats.candles15mValid}`);
