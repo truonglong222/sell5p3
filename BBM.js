@@ -267,6 +267,9 @@ async function main() {
       passedDiffEMA5Long: 0,
       passedDiffEMA5Short: 0,
       candles1hValid: 0,
+      passedXYCalc: 0,
+      passedXYLong: 0,  // Số coin thỏa mãn x < 3 || y < 3
+      passedXYShort: 0, // Số coin thỏa mãn x > 3 && y > 3
       longSentSuccess: 0,
       shortSentSuccess: 0
     };
@@ -276,7 +279,7 @@ async function main() {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // 1. KIỂM TRA COOLDOWN ĐẦU TIÊN (Tránh gọi API nến khi cả 2 nhánh đều đang cooldown)
+      // 1. KIỂM TRA COOLDOWN ĐẦU TIÊN
       const longKey = `${symbol}_LONG`;
       const shortKey = `${symbol}_SHORT`;
       const lastSentLong = sentLog[longKey] || 0;
@@ -315,7 +318,6 @@ async function main() {
         bd3 = ((openJustClosed - open3CandlesAgo) / open3CandlesAgo) * 100;
       }
 
-      // Điều kiện bd3 > 2.5%
       if (bd3 <= 2.5) {
         await sleep(60);
         continue;
@@ -378,14 +380,12 @@ async function main() {
       }
       stats.passedDiffEMA5Calc++;
 
-      // Ghi nhận thống kê theo điều kiện diffema5 của từng chiều
       const isDiffLong = diffema5 > -1.0 && diffema5 < 1.0;
       const isDiffShort = diffema5 < -1.0;
 
       if (isDiffLong) stats.passedDiffEMA5Long++;
       if (isDiffShort) stats.passedDiffEMA5Short++;
 
-      // Nếu không thỏa mãn diffema5 của cả 2 nhánh thì bỏ qua
       if (!isDiffLong && !isDiffShort) {
         await sleep(60);
         continue;
@@ -426,16 +426,23 @@ async function main() {
         await sleep(60);
         continue;
       }
+      stats.passedXYCalc++;
 
-      // Chuỗi thông số gửi Telegram
+      // Kiểm tra điều kiện x, y cho từng nhánh
+      const isXYLong = (xVal < 3 || yVal < 3);
+      const isXYShort = (xVal > 3 && yVal > 3);
+
+      if (isXYLong) stats.passedXYLong++;
+      if (isXYShort) stats.passedXYShort++;
+
+      // Chuỗi thông số hiển thị
       const bd3Str = `+${bd3.toFixed(2)}%`;
       const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
       const rsiStr = `${currentRsi5m.toFixed(2)}%`;
       const diffema5Str = `${diffema5.toFixed(4)}%`;
 
       // ================== NHÁNH LONG ==================
-      // Điều kiện: Chưa cooldown VÀ -1% < diffema5 < 1% VÀ (x < 3 HOẶC y < 3)
-      const isLongCondition = !isLongCooling && isDiffLong && (xVal < 3 || yVal < 3);
+      const isLongCondition = !isLongCooling && isDiffLong && isXYLong;
 
       if (isLongCondition) {
         sentLog[longKey] = currentTime;
@@ -459,9 +466,8 @@ async function main() {
       }
 
       // ================== NHÁNH SHORT ==================
-      // Điều kiện: Chưa cooldown VÀ diffema5 < -1% VÀ nến 5m đỏ VÀ (x > 3 VÀ y > 3)
       const isRedCandle = closeJustClosed < openJustClosed;
-      const isShortCondition = !isShortCooling && isDiffShort && isRedCandle && (xVal > 3 && yVal > 3);
+      const isShortCondition = !isShortCooling && isDiffShort && isRedCandle && isXYShort;
 
       if (isShortCondition) {
         sentLog[shortKey] = currentTime;
@@ -501,6 +507,9 @@ async function main() {
     console.log(`- Thỏa Long (-1% < DiffEMA5 < 1%): ${stats.passedDiffEMA5Long}`);
     console.log(`- Thỏa Short (DiffEMA5 < -1%): ${stats.passedDiffEMA5Short}`);
     console.log(`Nến 1h hợp lệ: ${stats.candles1hValid}`);
+    console.log(`Tính toán x, y hợp lệ: ${stats.passedXYCalc}`);
+    console.log(`- Thỏa x, y Long (x < 3 hoặc y < 3): ${stats.passedXYLong}`);
+    console.log(`- Thỏa x, y Short (x > 3 và y > 3): ${stats.passedXYShort}`);
     console.log(`Gửi Telegram LONG: ${stats.longSentSuccess}`);
     console.log(`Gửi Telegram SHORT: ${stats.shortSentSuccess}`);
     console.log('-------------------------------\n');
