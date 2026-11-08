@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
-const COOLDOWN_TIME = 4 * 60 * 60 * 1000;
+const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Cooldown 1 giờ
 const MIN_VOL_CCY24H = 5_000_000; // Volume 24h > 5 triệu USDT
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -153,7 +153,6 @@ function calculateATR(candles, period = 14) {
   return { atr, atrPct };
 }
 
-// Tính Bollinger Bands (Mặc định: Chu kỳ 20, độ lệch chuẩn 2)
 function calculateBollingerBands(closes, period = 20, multiplier = 2) {
   if (!closes || closes.length < period) return null;
 
@@ -258,12 +257,15 @@ async function main() {
     const stats = {
       allSwaps,
       passedVol,
+      skippedCooldown: 0,
       candlesValid: 0,
       passedBD3: 0,
       passedATR: 0,
       passedRSI: 0,
       candles15mValid: 0,
       passedDiffEMA5Calc: 0,
+      passedDiffEMA5Long: 0,
+      passedDiffEMA5Short: 0,
       candles1hValid: 0,
       longSentSuccess: 0,
       shortSentSuccess: 0
@@ -274,7 +276,21 @@ async function main() {
       const coinName = escapeHtml(symbol.replace('-USDT-SWAP', ''));
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // 1. Lấy nến 5m
+      // 1. KIỂM TRA COOLDOWN ĐẦU TIÊN (Tránh gọi API nến khi cả 2 nhánh đều đang cooldown)
+      const longKey = `${symbol}_LONG`;
+      const shortKey = `${symbol}_SHORT`;
+      const lastSentLong = sentLog[longKey] || 0;
+      const lastSentShort = sentLog[shortKey] || 0;
+
+      const isLongCooling = (currentTime - lastSentLong < COOLDOWN_TIME);
+      const isShortCooling = (currentTime - lastSentShort < COOLDOWN_TIME);
+
+      if (isLongCooling && isShortCooling) {
+        stats.skippedCooldown++;
+        continue;
+      }
+
+      // 2. Lấy nến 5m
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
         await sleep(60);
@@ -289,7 +305,7 @@ async function main() {
 
       stats.candlesValid++;
 
-      // 2. Tính bd3: % chênh lệch giá mở cửa nến vừa đóng [1] và giá mở cửa nến số 3 [3]
+      // 3. Tính bd3: % chênh lệch giá mở cửa nến vừa đóng [1] và giá mở cửa nến số 3 [3]
       const openJustClosed = parseFloat(candles5m[1][1]);
       const closeJustClosed = parseFloat(candles5m[1][4]);
       const open3CandlesAgo = parseFloat(candles5m[3][1]);
@@ -306,7 +322,7 @@ async function main() {
       }
       stats.passedBD3++;
 
-      // 3. Tính ATR (14, 5m) và kiểm tra ATR > 0.7%
+      // 4. Tính ATR (14, 5m) và kiểm tra ATR > 0.7%
       const chronological5m = [...closedCandles].reverse();
       const atrData = calculateATR(chronological5m, 14);
       const atrPct = atrData ? atrData.atrPct : 0;
@@ -318,7 +334,7 @@ async function main() {
       }
       stats.passedATR++;
 
-      // 4. Tính RSI (20, 5m) và kiểm tra RSI < 72%
+      // 5. Tính RSI (20, 5m) và kiểm tra RSI < 72%
       const closes5m = chronological5m.map((c) => parseFloat(c[4]));
       const rsiSeries5m = calculateRSIArray(closes5m, 20);
       if (rsiSeries5m.length === 0) {
@@ -333,7 +349,7 @@ async function main() {
       }
       stats.passedRSI++;
 
-      // 5. Lấy nến 15m để tính DiffEMA5
+      // 6. Lấy nến 15m để tính DiffEMA5
       const candles15m = await getCandles(symbol, '15m', 80);
       if (!candles15m || candles15m.length < 45) {
         await sleep(60);
@@ -356,14 +372,26 @@ async function main() {
         }
       }
 
-      // Kiểm tra tính được diffema5
       if (diffema5 === null) {
         await sleep(60);
         continue;
       }
       stats.passedDiffEMA5Calc++;
 
-      // 6. Lấy nến 1h để tính Hbb và ATR 1h
+      // Ghi nhận thống kê theo điều kiện diffema5 của từng chiều
+      const isDiffLong = diffema5 > -1.0 && diffema5 < 1.0;
+      const isDiffShort = diffema5 < -1.0;
+
+      if (isDiffLong) stats.passedDiffEMA5Long++;
+      if (isDiffShort) stats.passedDiffEMA5Short++;
+
+      // Nếu không thỏa mãn diffema5 của cả 2 nhánh thì bỏ qua
+      if (!isDiffLong && !isDiffShort) {
+        await sleep(60);
+        continue;
+      }
+
+      // 7. Lấy nến 1h để tính Hbb và ATR 1h
       const candles1h = await getCandles(symbol, '1H', 50);
       if (!candles1h || candles1h.length < 20) {
         await sleep(60);
@@ -375,7 +403,7 @@ async function main() {
       const closes1h = chronological1h.map((c) => parseFloat(c[4]));
       const bb1h = calculateBollingerBands(closes1h, 20, 2);
 
-      // 7. Tính tỉ số x = Hbb(15m) / ATR(15m) & y = Hbb(1h) / ATR(1h)
+      // 8. Tính tỉ số x = Hbb(15m) / ATR(15m) & y = Hbb(1h) / ATR(1h)
       const bb15m = calculateBollingerBands(closes15m, 20, 2);
       const atrData15m = calculateATR(chronological15m, 14);
 
@@ -394,25 +422,22 @@ async function main() {
         yStr = yVal.toFixed(2);
       }
 
-      // Bỏ qua nếu không tính được x hoặc y
       if (xVal === null || yVal === null) {
         await sleep(60);
         continue;
       }
 
-      // Định dạng chuỗi hiển thị
+      // Chuỗi thông số gửi Telegram
       const bd3Str = `+${bd3.toFixed(2)}%`;
       const atrStr = `${atrVal.toFixed(4)} (~${atrPct.toFixed(2)}%)`;
       const rsiStr = `${currentRsi5m.toFixed(2)}%`;
       const diffema5Str = `${diffema5.toFixed(4)}%`;
 
       // ================== NHÁNH LONG ==================
-      // Điều kiện Long: -1% < diffema5 < 1% VÀ (x < 3 HOẶC y < 3)
-      const isLongCondition = (diffema5 > -1.0 && diffema5 < 1.0) && (xVal < 3 || yVal < 3);
-      const longKey = `${symbol}_LONG`;
-      const lastSentLong = sentLog[longKey] || 0;
+      // Điều kiện: Chưa cooldown VÀ -1% < diffema5 < 1% VÀ (x < 3 HOẶC y < 3)
+      const isLongCondition = !isLongCooling && isDiffLong && (xVal < 3 || yVal < 3);
 
-      if (isLongCondition && (currentTime - lastSentLong >= COOLDOWN_TIME)) {
+      if (isLongCondition) {
         sentLog[longKey] = currentTime;
         saveSentLog(sentLog);
 
@@ -434,13 +459,11 @@ async function main() {
       }
 
       // ================== NHÁNH SHORT ==================
-      // Điều kiện Short: diffema5 < -1% VÀ nến 5m vừa đóng là nến đỏ VÀ x > 3 VÀ y > 3
+      // Điều kiện: Chưa cooldown VÀ diffema5 < -1% VÀ nến 5m đỏ VÀ (x > 3 VÀ y > 3)
       const isRedCandle = closeJustClosed < openJustClosed;
-      const isShortCondition = (diffema5 < -1.0) && isRedCandle && (xVal > 3 && yVal > 3);
-      const shortKey = `${symbol}_SHORT`;
-      const lastSentShort = sentLog[shortKey] || 0;
+      const isShortCondition = !isShortCooling && isDiffShort && isRedCandle && (xVal > 3 && yVal > 3);
 
-      if (isShortCondition && (currentTime - lastSentShort >= COOLDOWN_TIME)) {
+      if (isShortCondition) {
         sentLog[shortKey] = currentTime;
         saveSentLog(sentLog);
 
@@ -468,12 +491,15 @@ async function main() {
     console.log('\n--- KẾT QUẢ QUÉT THỊ TRƯỜNG ---');
     console.log(`Tổng SWAP: ${stats.allSwaps}`);
     console.log(`Volume > 5M: ${stats.passedVol}`);
+    console.log(`Bỏ qua do Cooldown: ${stats.skippedCooldown}`);
     console.log(`Nến 5m hợp lệ: ${stats.candlesValid}`);
     console.log(`BD3 > 2.5%: ${stats.passedBD3}`);
     console.log(`ATR > 0.7%: ${stats.passedATR}`);
     console.log(`RSI < 72%: ${stats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${stats.candles15mValid}`);
     console.log(`DiffEMA5 hợp lệ: ${stats.passedDiffEMA5Calc}`);
+    console.log(`- Thỏa Long (-1% < DiffEMA5 < 1%): ${stats.passedDiffEMA5Long}`);
+    console.log(`- Thỏa Short (DiffEMA5 < -1%): ${stats.passedDiffEMA5Short}`);
     console.log(`Nến 1h hợp lệ: ${stats.candles1hValid}`);
     console.log(`Gửi Telegram LONG: ${stats.longSentSuccess}`);
     console.log(`Gửi Telegram SHORT: ${stats.shortSentSuccess}`);
