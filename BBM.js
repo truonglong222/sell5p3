@@ -263,7 +263,7 @@ async function main() {
       passedATR: 0,
       passedRSI: 0,
       candles15mValid: 0,
-      passedDiffEMA5: 0,
+      passedDiffEMA5Calc: 0,
       candles1hValid: 0,
       longSentSuccess: 0,
       shortSentSuccess: 0
@@ -356,12 +356,12 @@ async function main() {
         }
       }
 
-      // Điều kiện DiffEMA5 < 0
-      if (diffema5 === null || diffema5 >= 0) {
+      // Kiểm tra tính được diffema5
+      if (diffema5 === null) {
         await sleep(60);
         continue;
       }
-      stats.passedDiffEMA5++;
+      stats.passedDiffEMA5Calc++;
 
       // 6. Lấy nến 1h để tính Hbb và ATR 1h
       const candles1h = await getCandles(symbol, '1H', 50);
@@ -407,8 +407,8 @@ async function main() {
       const diffema5Str = `${diffema5.toFixed(4)}%`;
 
       // ================== NHÁNH LONG ==================
-      // Điều kiện Long: x < 3 hoặc y < 3
-      const isLongCondition = (xVal < 3 || yVal < 3);
+      // Điều kiện Long: -1% < diffema5 < 1% VÀ (x < 3 HOẶC y < 3)
+      const isLongCondition = (diffema5 > -1.0 && diffema5 < 1.0) && (xVal < 3 || yVal < 3);
       const longKey = `${symbol}_LONG`;
       const lastSentLong = sentLog[longKey] || 0;
 
@@ -434,9 +434,9 @@ async function main() {
       }
 
       // ================== NHÁNH SHORT ==================
-      // Điều kiện Short: nến 5m vừa đóng là nến đỏ (close < open) VÀ x > 3 VÀ y > 3
+      // Điều kiện Short: diffema5 < -1% VÀ nến 5m vừa đóng là nến đỏ VÀ x > 3 VÀ y > 3
       const isRedCandle = closeJustClosed < openJustClosed;
-      const isShortCondition = isRedCandle && (xVal > 3 && yVal > 3);
+      const isShortCondition = (diffema5 < -1.0) && isRedCandle && (xVal > 3 && yVal > 3);
       const shortKey = `${symbol}_SHORT`;
       const lastSentShort = sentLog[shortKey] || 0;
 
@@ -473,7 +473,7 @@ async function main() {
     console.log(`ATR > 0.7%: ${stats.passedATR}`);
     console.log(`RSI < 72%: ${stats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${stats.candles15mValid}`);
-    console.log(`DiffEMA5 < 0: ${stats.passedDiffEMA5}`);
+    console.log(`DiffEMA5 hợp lệ: ${stats.passedDiffEMA5Calc}`);
     console.log(`Nến 1h hợp lệ: ${stats.candles1hValid}`);
     console.log(`Gửi Telegram LONG: ${stats.longSentSuccess}`);
     console.log(`Gửi Telegram SHORT: ${stats.shortSentSuccess}`);
