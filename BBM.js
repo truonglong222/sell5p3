@@ -212,7 +212,7 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT THEO LOGIC MỚI ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT (BD3 > 1.5%) ===\n');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -244,7 +244,7 @@ async function main() {
         continue;
       }
 
-      // 2. Lấy nến 5m (OKX trả nến mới nhất ở index 0 - nến đang chạy)
+      // 2. Lấy nến 5m
       const candles5m = await getCandles(symbol, '5m', 80);
       if (!candles5m || candles5m.length < 35) {
         await sleep(60);
@@ -259,10 +259,9 @@ async function main() {
       }
       stats.candles5mValid++;
 
-      // 3. Tính bd3: % chênh lệch giá mở cửa nến vừa đóng [1] và nến [3] (tính từ candles5m gốc)
+      // 3. Tính bd3: % chênh lệch giá mở cửa nến vừa đóng [1] và nến [3]
       const openJustClosed = parseFloat(candles5m[1][1]);
       const highJustClosed = parseFloat(candles5m[1][2]);
-      const closeJustClosed = parseFloat(candles5m[1][4]);
       const open3CandlesAgo = parseFloat(candles5m[3][1]);
 
       let bd3 = 0;
@@ -270,8 +269,8 @@ async function main() {
         bd3 = ((openJustClosed - open3CandlesAgo) / open3CandlesAgo) * 100;
       }
 
-      // Điều kiện 1: bd3 > 2%
-      if (bd3 <= 2.0) {
+      // Điều kiện 1: bd3 > 1.5%
+      if (bd3 <= 1.5) {
         await sleep(60);
         continue;
       }
@@ -389,7 +388,7 @@ async function main() {
     console.log(`Volume > 5M: ${stats.passedVol}`);
     console.log(`Bỏ qua do Cooldown: ${stats.skippedCooldown}`);
     console.log(`Nến 5m hợp lệ: ${stats.candles5mValid}`);
-    console.log(`BD3 > 2%: ${stats.passedBD3}`);
+    console.log(`BD3 > 1.5%: ${stats.passedBD3}`);
     console.log(`ATR > 0.7%: ${stats.passedATR}`);
     console.log(`Thỏa BBM > 0 & DiffEMA5(5m) < -0.2%: ${stats.passedTrigger5m}`);
     console.log(`Nến 15m hợp lệ: ${stats.candles15mValid}`);
