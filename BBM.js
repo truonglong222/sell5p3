@@ -268,8 +268,8 @@ async function main() {
       passedDiffEMA5Short: 0,
       candles1hValid: 0,
       passedXYCalc: 0,
-      passedXYLong: 0,  // Số coin thỏa mãn x < 3 || y < 3
-      passedXYShort: 0, // Số coin thỏa mãn x > 3 && y > 3
+      passedXYLong: 0,
+      passedXYShort: 0,
       longSentSuccess: 0,
       shortSentSuccess: 0
     };
@@ -380,8 +380,9 @@ async function main() {
       }
       stats.passedDiffEMA5Calc++;
 
-      const isDiffLong = diffema5 > -1.0 && diffema5 < 1.0;
-      const isDiffShort = diffema5 < -1.0;
+      // Cập nhật ngưỡng: -0.5% < DiffEMA5 < 1% cho Long và DiffEMA5 < -0.5% cho Short
+      const isDiffLong = diffema5 > -0.5 && diffema5 < 1.0;
+      const isDiffShort = diffema5 < -0.5;
 
       if (isDiffLong) stats.passedDiffEMA5Long++;
       if (isDiffShort) stats.passedDiffEMA5Short++;
@@ -504,8 +505,8 @@ async function main() {
     console.log(`RSI < 72%: ${stats.passedRSI}`);
     console.log(`Nến 15m hợp lệ: ${stats.candles15mValid}`);
     console.log(`DiffEMA5 hợp lệ: ${stats.passedDiffEMA5Calc}`);
-    console.log(`- Thỏa Long (-1% < DiffEMA5 < 1%): ${stats.passedDiffEMA5Long}`);
-    console.log(`- Thỏa Short (DiffEMA5 < -1%): ${stats.passedDiffEMA5Short}`);
+    console.log(`- Thỏa Long (-0.5% < DiffEMA5 < 1%): ${stats.passedDiffEMA5Long}`);
+    console.log(`- Thỏa Short (DiffEMA5 < -0.5%): ${stats.passedDiffEMA5Short}`);
     console.log(`Nến 1h hợp lệ: ${stats.candles1hValid}`);
     console.log(`Tính toán x, y hợp lệ: ${stats.passedXYCalc}`);
     console.log(`- Thỏa x, y Long (x < 3 hoặc y < 3): ${stats.passedXYLong}`);
