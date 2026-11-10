@@ -13,8 +13,9 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 giờ
-const CHANGE_24H_THRESHOLD = -3.0; // Biến động 24h < -3%
-const DIFF_EMA5_1H_THRESHOLD = -2.0; // diffema5 1H < -2%
+const MIN_CHANGE_24H = -10.0; // Giới hạn dưới: -10%
+const MAX_CHANGE_24H = -3.0;  // Giới hạn trên: -3%
+const DIFF_EMA3_1H_THRESHOLD = -1.0; // diffema3 1H < -1%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -130,13 +131,14 @@ async function getFilteredMarkets() {
       const lastPrice = parseFloat(item.last || 0);
 
       if (open24h > 0) {
-        const change24h = ((lastPrice - open24h) / open24h) * 100;
-        // Lọc các coin biến động 24h < -3%
-        if (change24h < CHANGE_24H_THRESHOLD) {
+        const bd24 = ((lastPrice - open24h) / open24h) * 100;
+        
+        // Điều kiện: -10% < bd24 < -3%
+        if (bd24 > MIN_CHANGE_24H && bd24 < MAX_CHANGE_24H) {
           passedChange24h++;
           targetCoins.push({
             instId: item.instId,
-            change24h: change24h
+            bd24: bd24
           });
         }
       }
@@ -188,7 +190,7 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT (24h < -3%, DiffEMA5 1H < -2%, BBM 5m > 0) ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT (-10% < bd24 < -3%, DiffEMA3 1H < -1%, BBM 5m > 0) ===\n');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -199,7 +201,7 @@ async function main() {
       allSwaps,
       passedChange24h,
       skippedCooldown: 0,
-      passedDiffEMA5_1H: 0,
+      passedDiffEMA3_1H: 0,
       passedBBM_5m: 0,
       shortSentSuccess: 0
     };
@@ -217,7 +219,7 @@ async function main() {
         continue;
       }
 
-      // 2. Lấy nến 1H và tính diffema5 (1H)
+      // 2. Lấy nến 1H và tính diffema3 (1H)
       const candles1H = await getCandles(symbol, '1H', 50);
       if (!candles1H || candles1H.length < 30) {
         await sleep(60);
@@ -230,22 +232,23 @@ async function main() {
       const closes1H = chronological1H.map((c) => parseFloat(c[4]));
 
       const emaArray1H = calculateEMA(closes1H, 20);
-      let diffema5_1h = null;
+      let diffema3_1h = null;
 
-      if (emaArray1H.length >= 6) {
+      // Cần tối thiểu 4 giá trị EMA để so sánh cây hiện tại với 3 cây trước
+      if (emaArray1H.length >= 4) {
         const emaLatest1H = emaArray1H[emaArray1H.length - 1];
-        const ema5BarsAgo1H = emaArray1H[emaArray1H.length - 1 - 5];
-        if (ema5BarsAgo1H !== 0) {
-          diffema5_1h = ((emaLatest1H - ema5BarsAgo1H) / ema5BarsAgo1H) * 100;
+        const ema3BarsAgo1H = emaArray1H[emaArray1H.length - 1 - 3];
+        if (ema3BarsAgo1H !== 0) {
+          diffema3_1h = ((emaLatest1H - ema3BarsAgo1H) / ema3BarsAgo1H) * 100;
         }
       }
 
-      // Điều kiện: diffema5 1H < -2%
-      if (diffema5_1h === null || diffema5_1h >= DIFF_EMA5_1H_THRESHOLD) {
+      // Điều kiện: diffema3 1H < -1%
+      if (diffema3_1h === null || diffema3_1h >= DIFF_EMA3_1H_THRESHOLD) {
         await sleep(60);
         continue;
       }
-      stats.passedDiffEMA5_1H++;
+      stats.passedDiffEMA3_1H++;
 
       // 3. Lấy nến 5m và tính BBM (5m)
       const candles5m = await getCandles(symbol, '5m', 50);
@@ -279,17 +282,17 @@ async function main() {
       sentLog[shortKey] = currentTime;
       saveSentLog(sentLog);
 
-      const change24hStr = `${coin.change24h.toFixed(2)}%`;
-      const diffema5_1hStr = `${diffema5_1h.toFixed(4)}%`;
+      const bd24Str = `${coin.bd24.toFixed(2)}%`;
+      const diffema3_1hStr = `${diffema3_1h.toFixed(4)}%`;
       const bbmStr = bbm.toFixed(4);
 
-      console.log(`[SHORT SIGNAL] ${symbol} | 24h: ${change24hStr} | DiffEMA5(1H): ${diffema5_1hStr} | BBM(5m): ${bbmStr}`);
+      console.log(`[SHORT SIGNAL] ${symbol} | 24h: ${bd24Str} | DiffEMA3(1H): ${diffema3_1hStr} | BBM(5m): ${bbmStr}`);
 
       const shortMsg =
         `<b>🔴 TÍN HIỆU SHORT</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
-        `• Biến động 24h: <b>${change24hStr}</b>\n` +
-        `• DiffEMA5 (1H): <b>${diffema5_1hStr}</b>\n` +
+        `• Biến động 24h: <b>${bd24Str}</b>\n` +
+        `• DiffEMA3 (1H): <b>${diffema3_1hStr}</b>\n` +
         `• BBM 5m (High - BB Mid): <b>${bbmStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
@@ -302,9 +305,9 @@ async function main() {
     // ------------------- BÁO CÁO THỐNG KÊ -------------------
     console.log('\n--- KẾT QUẢ QUÉT THỊ TRƯỜNG ---');
     console.log(`Tổng SWAP: ${stats.allSwaps}`);
-    console.log(`Biến động 24h < -3%: ${stats.passedChange24h}`);
+    console.log(`Biến động (-10% < 24h < -3%): ${stats.passedChange24h}`);
     console.log(`Bỏ qua do Cooldown: ${stats.skippedCooldown}`);
-    console.log(`Thỏa DiffEMA5 (1H) < -2%: ${stats.passedDiffEMA5_1H}`);
+    console.log(`Thỏa DiffEMA3 (1H) < -1%: ${stats.passedDiffEMA3_1H}`);
     console.log(`Thỏa BBM (5m) > 0: ${stats.passedBBM_5m}`);
     console.log(`Gửi Telegram SHORT thành công: ${stats.shortSentSuccess}`);
     console.log('-------------------------------\n');
