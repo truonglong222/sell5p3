@@ -15,9 +15,9 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 giờ
 const MIN_CHANGE_24H = -10.0;             // -10% < bd24
 const MAX_CHANGE_24H = -3.0;              // bd24 < -3%
-const DIFF_EMA3_1H_THRESHOLD = -1.0;      // diffema3 1H < -1%
+const DIFF_EMA3_1H_THRESHOLD = -1.5;      // diffema3 1H < -1.5% (Mới)
 const BBT_5M_THRESHOLD = -0.5;            // bbt 5m > -0.5%
-const DIFF_EMA5_15M_THRESHOLD = -0.7;     // diffema5 15m < -0.7%
+const DIFF_EMA5_15M_THRESHOLD = -1.0;     // diffema5 15m < -1.0% (Mới)
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -192,7 +192,7 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT (-10% < bd24 < -3%, DiffEMA3 1H < -1%, BBT 5m > -0.5%, DiffEMA5 15m < -0.7%) ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT (-10% < bd24 < -3%, DiffEMA3 1H < -1.5%, BBT 5m > -0.5%, DiffEMA5 15m < -1.0%) ===\n');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -245,7 +245,7 @@ async function main() {
         }
       }
 
-      // Điều kiện 1: diffema3 1H < -1%
+      // Điều kiện 1: diffema3 1H < -1.5%
       if (diffema3_1h === null || diffema3_1h >= DIFF_EMA3_1H_THRESHOLD) {
         await sleep(60);
         continue;
@@ -302,7 +302,7 @@ async function main() {
         }
       }
 
-      // Điều kiện 3: diffema5 15m < -0.7%
+      // Điều kiện 3: diffema5 15m < -1.0%
       if (diffema5_15m === null || diffema5_15m >= DIFF_EMA5_15M_THRESHOLD) {
         await sleep(60);
         continue;
@@ -340,9 +340,9 @@ async function main() {
     console.log(`Tổng SWAP: ${stats.allSwaps}`);
     console.log(`Biến động (-10% < 24h < -3%): ${stats.passedChange24h}`);
     console.log(`Bỏ qua do Cooldown: ${stats.skippedCooldown}`);
-    console.log(`Thỏa DiffEMA3 (1H) < -1%: ${stats.passedDiffEMA3_1H}`);
+    console.log(`Thỏa DiffEMA3 (1H) < -1.5%: ${stats.passedDiffEMA3_1H}`);
     console.log(`Thỏa BBT (5m) > -0.5%: ${stats.passedBBT_5m}`);
-    console.log(`Thỏa DiffEMA5 (15m) < -0.7%: ${stats.passedDiffEMA5_15m}`);
+    console.log(`Thỏa DiffEMA5 (15m) < -1.0%: ${stats.passedDiffEMA5_15m}`);
     console.log(`Gửi Telegram SHORT thành công: ${stats.shortSentSuccess}`);
     console.log('-------------------------------\n');
   } catch (err) {
