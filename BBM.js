@@ -13,9 +13,11 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình Cooldown & Ngưỡng lọc
 const COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 giờ
-const MIN_CHANGE_24H = -10.0; // Giới hạn dưới: -10%
-const MAX_CHANGE_24H = -3.0;  // Giới hạn trên: -3%
-const DIFF_EMA3_1H_THRESHOLD = -1.0; // diffema3 1H < -1%
+const MIN_CHANGE_24H = -10.0;             // -10% < bd24
+const MAX_CHANGE_24H = -3.0;              // bd24 < -3%
+const DIFF_EMA3_1H_THRESHOLD = -1.0;      // diffema3 1H < -1%
+const BBT_5M_THRESHOLD = -0.5;            // bbt 5m > -0.5%
+const DIFF_EMA5_15M_THRESHOLD = -0.7;     // diffema5 15m < -0.7%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -132,7 +134,7 @@ async function getFilteredMarkets() {
 
       if (open24h > 0) {
         const bd24 = ((lastPrice - open24h) / open24h) * 100;
-        
+
         // Điều kiện: -10% < bd24 < -3%
         if (bd24 > MIN_CHANGE_24H && bd24 < MAX_CHANGE_24H) {
           passedChange24h++;
@@ -190,7 +192,7 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT (-10% < bd24 < -3%, DiffEMA3 1H < -1%, BBM 5m > 0) ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG SHORT (-10% < bd24 < -3%, DiffEMA3 1H < -1%, BBT 5m > -0.5%, DiffEMA5 15m < -0.7%) ===\n');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -202,7 +204,8 @@ async function main() {
       passedChange24h,
       skippedCooldown: 0,
       passedDiffEMA3_1H: 0,
-      passedBBM_5m: 0,
+      passedBBT_5m: 0,
+      passedDiffEMA5_15m: 0,
       shortSentSuccess: 0
     };
 
@@ -234,7 +237,6 @@ async function main() {
       const emaArray1H = calculateEMA(closes1H, 20);
       let diffema3_1h = null;
 
-      // Cần tối thiểu 4 giá trị EMA để so sánh cây hiện tại với 3 cây trước
       if (emaArray1H.length >= 4) {
         const emaLatest1H = emaArray1H[emaArray1H.length - 1];
         const ema3BarsAgo1H = emaArray1H[emaArray1H.length - 1 - 3];
@@ -243,14 +245,14 @@ async function main() {
         }
       }
 
-      // Điều kiện: diffema3 1H < -1%
+      // Điều kiện 1: diffema3 1H < -1%
       if (diffema3_1h === null || diffema3_1h >= DIFF_EMA3_1H_THRESHOLD) {
         await sleep(60);
         continue;
       }
       stats.passedDiffEMA3_1H++;
 
-      // 3. Lấy nến 5m và tính BBM (5m)
+      // 3. Lấy nến 5m và tính BBT (5m)
       const candles5m = await getCandles(symbol, '5m', 50);
       if (!candles5m || candles5m.length < 25) {
         await sleep(60);
@@ -262,38 +264,69 @@ async function main() {
       const closes5m = chronological5m.map((c) => parseFloat(c[4]));
 
       const bb5m = calculateBollingerBands(closes5m, 20, 2);
-      if (!bb5m) {
+      if (!bb5m || bb5m.upper <= 0) {
         await sleep(60);
         continue;
       }
 
-      // bbm = High của nến vừa đóng - Middle Band (SMA 20) nến 5m
+      // bbt = % chênh lệch giữa High nến vừa đóng và Upper Band (BB trên 5m)
       const highJustClosed5m = parseFloat(candles5m[1][2]);
-      const bbm = highJustClosed5m - bb5m.sma;
+      const bbt = ((highJustClosed5m - bb5m.upper) / bb5m.upper) * 100;
 
-      // Điều kiện: bbm > 0
-      if (bbm <= 0) {
+      // Điều kiện 2: bbt > -0.5%
+      if (bbt <= BBT_5M_THRESHOLD) {
         await sleep(60);
         continue;
       }
-      stats.passedBBM_5m++;
+      stats.passedBBT_5m++;
 
-      // 4. Thỏa mãn toàn bộ điều kiện -> Gửi cảnh báo SHORT
+      // 4. Lấy nến 15m và tính diffema5 (15m)
+      const candles15m = await getCandles(symbol, '15m', 50);
+      if (!candles15m || candles15m.length < 30) {
+        await sleep(60);
+        continue;
+      }
+
+      const closedCandles15m = candles15m.slice(1);
+      const chronological15m = [...closedCandles15m].reverse();
+      const closes15m = chronological15m.map((c) => parseFloat(c[4]));
+
+      const emaArray15m = calculateEMA(closes15m, 20);
+      let diffema5_15m = null;
+
+      if (emaArray15m.length >= 6) {
+        const emaLatest15m = emaArray15m[emaArray15m.length - 1];
+        const ema5BarsAgo15m = emaArray15m[emaArray15m.length - 1 - 5];
+        if (ema5BarsAgo15m !== 0) {
+          diffema5_15m = ((emaLatest15m - ema5BarsAgo15m) / ema5BarsAgo15m) * 100;
+        }
+      }
+
+      // Điều kiện 3: diffema5 15m < -0.7%
+      if (diffema5_15m === null || diffema5_15m >= DIFF_EMA5_15M_THRESHOLD) {
+        await sleep(60);
+        continue;
+      }
+      stats.passedDiffEMA5_15m++;
+
+      // 5. Thỏa mãn toàn bộ điều kiện -> Gửi cảnh báo SHORT
       sentLog[shortKey] = currentTime;
       saveSentLog(sentLog);
 
       const bd24Str = `${coin.bd24.toFixed(2)}%`;
       const diffema3_1hStr = `${diffema3_1h.toFixed(4)}%`;
-      const bbmStr = bbm.toFixed(4);
+      const bbtStr = `${bbt.toFixed(4)}%`;
+      const diffema5_15mStr = `${diffema5_15m.toFixed(4)}%`;
 
-      console.log(`[SHORT SIGNAL] ${symbol} | 24h: ${bd24Str} | DiffEMA3(1H): ${diffema3_1hStr} | BBM(5m): ${bbmStr}`);
+      console.log(`[SHORT SIGNAL] ${symbol} | 24h: ${bd24Str} | DiffEMA3(1H): ${diffema3_1hStr} | BBT(5m): ${bbtStr} | DiffEMA5(15m): ${diffema5_15mStr}`);
 
       const shortMsg =
         `<b>🔴 TÍN HIỆU SHORT</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
         `• Biến động 24h: <b>${bd24Str}</b>\n` +
         `• DiffEMA3 (1H): <b>${diffema3_1hStr}</b>\n` +
-        `• BBM 5m (High - BB Mid): <b>${bbmStr}</b>\n` +
+        `• BBT (High vs BB Upper 5m): <b>${bbtStr}</b>\n` +
+        `• DiffEMA5 (15m): <b>${diffema5_15mStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
       const isSent = await sendTelegramMessage(shortMsg);
@@ -308,7 +341,8 @@ async function main() {
     console.log(`Biến động (-10% < 24h < -3%): ${stats.passedChange24h}`);
     console.log(`Bỏ qua do Cooldown: ${stats.skippedCooldown}`);
     console.log(`Thỏa DiffEMA3 (1H) < -1%: ${stats.passedDiffEMA3_1H}`);
-    console.log(`Thỏa BBM (5m) > 0: ${stats.passedBBM_5m}`);
+    console.log(`Thỏa BBT (5m) > -0.5%: ${stats.passedBBT_5m}`);
+    console.log(`Thỏa DiffEMA5 (15m) < -0.7%: ${stats.passedDiffEMA5_15m}`);
     console.log(`Gửi Telegram SHORT thành công: ${stats.shortSentSuccess}`);
     console.log('-------------------------------\n');
   } catch (err) {
