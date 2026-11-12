@@ -77,6 +77,17 @@ function calculateEMA(prices, period = 20) {
   return emaArray;
 }
 
+function calculateDiffEMA10(closes, period = 20) {
+  const emaArray = calculateEMA(closes, period);
+  if (emaArray.length < 11) return null;
+
+  const emaCurrent = emaArray[emaArray.length - 1];
+  const ema10Ago = emaArray[emaArray.length - 1 - 10];
+  if (ema10Ago === 0) return null;
+
+  return ((emaCurrent - ema10Ago) / ema10Ago) * 100;
+}
+
 function calculateBollingerBandMid(closes, period = 20) {
   if (!closes || closes.length < period) return null;
   const slice = closes.slice(-period);
@@ -164,9 +175,11 @@ async function main() {
       total: totalSwaps,
       afterBd24: targetCoins.length,
       afterCooldown: 0,
-      afterCandles: 0,
-      afterDiffEMA: 0,
-      afterBBM: 0,
+      afterCandles15m: 0,
+      afterDiffEMA15m: 0,
+      afterBBM15m: 0,
+      afterCandles1h: 0,
+      afterDiffEMA1h: 0,
       telegramSent: 0
     };
 
@@ -189,60 +202,74 @@ async function main() {
         await sleep(60);
         continue;
       }
-      counts.afterCandles++;
+      counts.afterCandles15m++;
 
-      const highJustClosed = parseFloat(candles15m[1][2]);
+      const highJustClosed15m = parseFloat(candles15m[1][2]);
       const closed15m = candles15m.slice(1);
       const chronological15m = [...closed15m].reverse();
       const closes15m = chronological15m.map((c) => parseFloat(c[4]));
 
-      // 3. Điều kiện diffema10 < -0.7%
-      const emaArray15m = calculateEMA(closes15m, 20);
-      let diffema10 = null;
-      if (emaArray15m.length >= 11) {
-        const emaCurrent = emaArray15m[emaArray15m.length - 1];
-        const ema10Ago = emaArray15m[emaArray15m.length - 1 - 10];
-        if (ema10Ago !== 0) {
-          diffema10 = ((emaCurrent - ema10Ago) / ema10Ago) * 100;
-        }
-      }
-
-      if (diffema10 === null || diffema10 >= -0.7) {
+      // 3. Điều kiện diffema10 (15m) < -0.7%
+      const diffema10_15m = calculateDiffEMA10(closes15m, 20);
+      if (diffema10_15m === null || diffema10_15m >= -0.7) {
         await sleep(60);
         continue;
       }
-      counts.afterDiffEMA++;
+      counts.afterDiffEMA15m++;
 
-      // 4. Điều kiện -0.5% < bbm < 3%
-      const bbMid = calculateBollingerBandMid(closes15m, 20);
-      if (!bbMid || bbMid <= 0) {
+      // 4. Điều kiện -0.5% < bbm (15m) < 3%
+      const bbMid15m = calculateBollingerBandMid(closes15m, 20);
+      if (!bbMid15m || bbMid15m <= 0) {
         await sleep(60);
         continue;
       }
 
-      const bbm = ((highJustClosed - bbMid) / bbMid) * 100;
+      const bbm = ((highJustClosed15m - bbMid15m) / bbMid15m) * 100;
       if (bbm <= -0.5 || bbm >= 3.0) {
         await sleep(60);
         continue;
       }
-      counts.afterBBM++;
+      counts.afterBBM15m++;
 
-      // Gửi Telegram
+      // 5. Lấy nến 1H & kiểm tra điều kiện diffema10 (1H) < -1%
+      const candles1h = await getCandles(symbol, '1H', 80);
+      if (!candles1h || candles1h.length < 35) {
+        await sleep(60);
+        continue;
+      }
+      counts.afterCandles1h++;
+
+      const closed1h = candles1h.slice(1);
+      const chronological1h = [...closed1h].reverse();
+      const closes1h = chronological1h.map((c) => parseFloat(c[4]));
+
+      const diffema10_1h = calculateDiffEMA10(closes1h, 20);
+      if (diffema10_1h === null || diffema10_1h >= -1.0) {
+        await sleep(60);
+        continue;
+      }
+      counts.afterDiffEMA1h++;
+
+      // 6. Thỏa mãn tất cả điều kiện -> Lưu log & Gửi Telegram
       sentLog[shortKey] = currentTime;
       saveSentLog(sentLog);
 
       const bd24Str = `${coin.bd24 >= 0 ? '+' : ''}${coin.bd24.toFixed(2)}%`;
-      const diffema10Str = `${diffema10.toFixed(4)}%`;
+      const diffema10_15mStr = `${diffema10_15m.toFixed(4)}%`;
+      const diffema10_1hStr = `${diffema10_1h.toFixed(4)}%`;
       const bbmStr = `${bbm.toFixed(4)}%`;
 
-      console.log(`[SHORT SIGNAL] ${symbol} | BD24: ${bd24Str} | DiffEMA10: ${diffema10Str} | BBM: ${bbmStr}`);
+      console.log(
+        `[SHORT SIGNAL] ${symbol} | BD24: ${bd24Str} | DiffEMA10(15m): ${diffema10_15mStr} | BBM(15m): ${bbmStr} | DiffEMA10(1H): ${diffema10_1hStr}`
+      );
 
       const shortMsg =
         `<b>🔴 TÍN HIỆU SHORT</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
         `• BD24: <b>${bd24Str}</b>\n` +
-        `• DiffEMA10: <b>${diffema10Str}</b>\n` +
-        `• BBM: <b>${bbmStr}</b>\n` +
+        `• DiffEMA10 (15m): <b>${diffema10_15mStr}</b>\n` +
+        `• BBM (15m): <b>${bbmStr}</b>\n` +
+        `• DiffEMA10 (1H): <b>${diffema10_1hStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
       const isSent = await sendTelegramMessage(shortMsg);
@@ -256,9 +283,11 @@ async function main() {
     console.log(`• Tổng USDT-SWAP: ${counts.total}`);
     console.log(`• Sau lọc bd24 > 5%: ${counts.afterBd24}`);
     console.log(`• Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
-    console.log(`• Sau kiểm tra nến 15m đủ điều kiện: ${counts.afterCandles}`);
-    console.log(`• Sau lọc diffema10 < -0.7%: ${counts.afterDiffEMA}`);
-    console.log(`• Sau lọc -0.5% < bbm < 3%: ${counts.afterBBM}`);
+    console.log(`• Sau kiểm tra nến 15m đủ điều kiện: ${counts.afterCandles15m}`);
+    console.log(`• Sau lọc diffema10 (15m) < -0.7%: ${counts.afterDiffEMA15m}`);
+    console.log(`• Sau lọc -0.5% < bbm < 3%: ${counts.afterBBM15m}`);
+    console.log(`• Sau kiểm tra nến 1H đủ điều kiện: ${counts.afterCandles1h}`);
+    console.log(`• Sau lọc diffema10 (1H) < -1%: ${counts.afterDiffEMA1h}`);
     console.log(`• Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('-----------------------------------------\n');
   } catch (err) {
