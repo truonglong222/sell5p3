@@ -179,7 +179,7 @@ async function main() {
       afterDiffEMA10_15m: 0,
       afterBBM15m: 0,
       afterCandles1h: 0,
-      afterDiffEMA5_1h: 0,
+      afterDiffEMA30_1h: 0,
       telegramSent: 0
     };
 
@@ -231,9 +231,10 @@ async function main() {
       }
       counts.afterBBM15m++;
 
-      // 5. Lấy nến 1H & kiểm tra điều kiện diffema5 (1H) < -0.5%
-      const candles1h = await getCandles(symbol, '1H', 80);
-      if (!candles1h || candles1h.length < 30) {
+      // 5. Lấy nến 1H & kiểm tra điều kiện diffema30 (1H) < -1%
+      // Cần tối thiểu 52 nến 1H (1 nến đang chạy + 20 nến tính EMA đầu + 30 nến lùi)
+      const candles1h = await getCandles(symbol, '1H', 100);
+      if (!candles1h || candles1h.length < 55) {
         await sleep(60);
         continue;
       }
@@ -243,12 +244,12 @@ async function main() {
       const chronological1h = [...closed1h].reverse();
       const closes1h = chronological1h.map((c) => parseFloat(c[4]));
 
-      const diffema5_1h = calculateDiffEMA(closes1h, 5, 20);
-      if (diffema5_1h === null || diffema5_1h >= -0.5) {
+      const diffema30_1h = calculateDiffEMA(closes1h, 30, 20);
+      if (diffema30_1h === null || diffema30_1h >= -1.0) {
         await sleep(60);
         continue;
       }
-      counts.afterDiffEMA5_1h++;
+      counts.afterDiffEMA30_1h++;
 
       // 6. Thỏa mãn tất cả điều kiện -> Lưu log & Gửi Telegram
       sentLog[shortKey] = currentTime;
@@ -256,11 +257,11 @@ async function main() {
 
       const bd24Str = `${coin.bd24 >= 0 ? '+' : ''}${coin.bd24.toFixed(2)}%`;
       const diffema10_15mStr = `${diffema10_15m.toFixed(4)}%`;
-      const diffema5_1hStr = `${diffema5_1h.toFixed(4)}%`;
+      const diffema30_1hStr = `${diffema30_1h.toFixed(4)}%`;
       const bbmStr = `${bbm.toFixed(4)}%`;
 
       console.log(
-        `[SHORT SIGNAL] ${symbol} | BD24: ${bd24Str} | DiffEMA10(15m): ${diffema10_15mStr} | BBM(15m): ${bbmStr} | DiffEMA5(1H): ${diffema5_1hStr}`
+        `[SHORT SIGNAL] ${symbol} | BD24: ${bd24Str} | DiffEMA10(15m): ${diffema10_15mStr} | BBM(15m): ${bbmStr} | DiffEMA30(1H): ${diffema30_1hStr}`
       );
 
       const shortMsg =
@@ -269,7 +270,7 @@ async function main() {
         `• BD24: <b>${bd24Str}</b>\n` +
         `• DiffEMA10 (15m): <b>${diffema10_15mStr}</b>\n` +
         `• BBM (15m): <b>${bbmStr}</b>\n` +
-        `• DiffEMA5 (1H): <b>${diffema5_1hStr}</b>\n` +
+        `• DiffEMA30 (1H): <b>${diffema30_1hStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
       const isSent = await sendTelegramMessage(shortMsg);
@@ -287,7 +288,7 @@ async function main() {
     console.log(`• Sau lọc diffema10 (15m) < -0.7%: ${counts.afterDiffEMA10_15m}`);
     console.log(`• Sau lọc -0.5% < bbm < 3%: ${counts.afterBBM15m}`);
     console.log(`• Sau kiểm tra nến 1H đủ điều kiện: ${counts.afterCandles1h}`);
-    console.log(`• Sau lọc diffema5 (1H) < -0.5%: ${counts.afterDiffEMA5_1h}`);
+    console.log(`• Sau lọc diffema30 (1H) < -1%: ${counts.afterDiffEMA30_1h}`);
     console.log(`• Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('-----------------------------------------\n');
   } catch (err) {
