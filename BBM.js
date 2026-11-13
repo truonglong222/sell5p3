@@ -109,7 +109,6 @@ async function getFilteredMarketsByVolume() {
 
     for (const item of tickers) {
       const last = parseFloat(item.last || 0);
-      // Trên OKX SWAP, volCcy24h là khối lượng theo đồng coin cơ sở -> nhân giá last để ra USDT
       const volCoin = parseFloat(item.volCcy24h || 0);
       const volUsdt = volCoin * last;
 
@@ -173,15 +172,15 @@ async function main() {
     // Bước 1: Lọc Volume 24h > 5 triệu USDT
     const { totalSwaps, targetCoins } = await getFilteredMarketsByVolume();
 
-    // Lưu danh sách coin qua từng bước lọc
-    const filterSteps = {
+    // Biến đếm số lượng coin còn lại sau mỗi bước lọc
+    const counts = {
       totalSwaps,
-      afterVol24h: targetCoins.map((c) => c.instId.replace('-USDT-SWAP', '')),
-      afterCooldown: [],
-      afterBD5_5m: [],
-      afterDiffEMA5_15m: [],
-      afterDiffEMA5_1h: [],
-      telegramSent: []
+      afterVol24h: targetCoins.length,
+      afterCooldown: 0,
+      afterBD5_5m: 0,
+      afterDiffEMA5_15m: 0,
+      afterDiffEMA5_1h: 0,
+      telegramSent: 0
     };
 
     for (const coin of targetCoins) {
@@ -196,7 +195,7 @@ async function main() {
       if (currentTime - lastSent < COOLDOWN_TIME) {
         continue;
       }
-      filterSteps.afterCooldown.push(shortName);
+      counts.afterCooldown++;
 
       // Bước 3: Lấy nến 5m và kiểm tra bd5 > 3%
       const candles5m = await getCandles(symbol, '5m', 10);
@@ -205,10 +204,9 @@ async function main() {
         continue;
       }
 
-      // Nến index 0 là nến đang chạy; index 1 -> 5 là 5 nến 5m đã đóng gần nhất
       const closed5m = candles5m.slice(1);
-      const closeLatest5m = parseFloat(closed5m[0][4]); // Giá đóng của nến 5m vừa đóng
-      const open5CandlesAgo = parseFloat(closed5m[4][1]); // Giá mở của nến cách đây 5 cây
+      const closeLatest5m = parseFloat(closed5m[0][4]);
+      const open5CandlesAgo = parseFloat(closed5m[4][1]);
 
       if (open5CandlesAgo <= 0) {
         await sleep(50);
@@ -220,9 +218,9 @@ async function main() {
         await sleep(50);
         continue;
       }
-      filterSteps.afterBD5_5m.push(shortName);
+      counts.afterBD5_5m++;
 
-      // Bước 4: Gọi song song nến 15m và 1h (cần tối thiểu 26 nến: 1 đang chạy + 20 tính EMA + 5 lùi)
+      // Bước 4: Gọi song song nến 15m và 1h
       const [candles15m, candles1h] = await Promise.all([
         getCandles(symbol, '15m', 40),
         getCandles(symbol, '1h', 40)
@@ -240,7 +238,7 @@ async function main() {
         await sleep(50);
         continue;
       }
-      filterSteps.afterDiffEMA5_15m.push(shortName);
+      counts.afterDiffEMA5_15m++;
 
       // Kiểm tra diffema5 của nến 1h < -1%
       const closes1h = [...candles1h.slice(1)].reverse().map((c) => parseFloat(c[4]));
@@ -249,7 +247,7 @@ async function main() {
         await sleep(50);
         continue;
       }
-      filterSteps.afterDiffEMA5_1h.push(shortName);
+      counts.afterDiffEMA5_1h++;
 
       // Bước 5: Thỏa mãn toàn bộ -> Lưu log Cooldown 4h & Gửi Telegram
       sentLog[shortKey] = currentTime;
@@ -275,36 +273,22 @@ async function main() {
 
       const isSent = await sendTelegramMessage(shortMsg);
       if (isSent) {
-        filterSteps.telegramSent.push(shortName);
+        counts.telegramSent++;
       }
 
       await sleep(100);
     }
 
-    // In thống kê số lượng & danh sách coin còn lại sau mỗi bước lọc
-    const formatList = (arr) => (arr.length > 0 ? `[${arr.join(', ')}]` : '[]');
-
-    console.log('\n--- THỐNG KÊ SỐ LƯỢNG & DANH SÁCH COIN SAU MỖI BƯỚC LỌC ---');
-    console.log(`1. Tổng cặp USDT-SWAP: ${filterSteps.totalSwaps}`);
-    console.log(
-      `2. Sau lọc Vol 24h > 5M (${filterSteps.afterVol24h.length}): ${formatList(filterSteps.afterVol24h)}`
-    );
-    console.log(
-      `3. Sau lọc Cooldown 4h (${filterSteps.afterCooldown.length}): ${formatList(filterSteps.afterCooldown)}`
-    );
-    console.log(
-      `4. Sau lọc bd5 (5m) > ${MIN_BD5_5M}% (${filterSteps.afterBD5_5m.length}): ${formatList(filterSteps.afterBD5_5m)}`
-    );
-    console.log(
-      `5. Sau lọc diffema5 (15m) < ${MAX_DIFFEMA5_15M}% (${filterSteps.afterDiffEMA5_15m.length}): ${formatList(filterSteps.afterDiffEMA5_15m)}`
-    );
-    console.log(
-      `6. Sau lọc diffema5 (1h) < ${MAX_DIFFEMA5_1H}% (${filterSteps.afterDiffEMA5_1h.length}): ${formatList(filterSteps.afterDiffEMA5_1h)}`
-    );
-    console.log(
-      `7. Đã gửi Telegram (${filterSteps.telegramSent.length}): ${formatList(filterSteps.telegramSent)}`
-    );
-    console.log('-----------------------------------------------------------\n');
+    // In thống kê số lượng coin còn lại sau mỗi bước lọc
+    console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN SAU MỖI BƯỚC LỌC ---');
+    console.log(`1. Tổng cặp USDT-SWAP: ${counts.totalSwaps}`);
+    console.log(`2. Sau lọc Vol 24h > 5M: ${counts.afterVol24h}`);
+    console.log(`3. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
+    console.log(`4. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBD5_5m}`);
+    console.log(`5. Sau lọc diffema5 (15m) < ${MAX_DIFFEMA5_15M}%: ${counts.afterDiffEMA5_15m}`);
+    console.log(`6. Sau lọc diffema5 (1h) < ${MAX_DIFFEMA5_1H}%: ${counts.afterDiffEMA5_1h}`);
+    console.log(`7. Đã gửi Telegram: ${counts.telegramSent}`);
+    console.log('----------------------------------------------\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
   }
