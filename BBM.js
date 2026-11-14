@@ -16,6 +16,7 @@ const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Countdown 4 giờ
 const MIN_VOL_24H = 5_000_000; // Volume 24h > 5 triệu USDT
 const MIN_BD5_5M = 3.0; // Biến động 5 nến 5m > 3%
 const MAX_DIFFEMA5_1H = -0.3; // diffema5 (1H) < -0.3%
+const ATR_PERIOD = 14; // Chu kỳ tính ATR%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -89,6 +90,49 @@ function calculateDiffEMA(closes, lookbackCandles = 5, period = 20) {
   if (emaPrev === 0) return null;
 
   return ((emaCurrent - emaPrev) / emaPrev) * 100;
+}
+
+/**
+ * Tính ATR% theo chuẩn Wilder's Smoothing từ mảng nến đã sắp xếp từ cũ -> mới
+ * Cấu trúc mỗi nến OKX: [ts, open, high, low, close, ...]
+ */
+function calculateATRPercent(chronologicalCandles, period = 14) {
+  if (!chronologicalCandles || chronologicalCandles.length < period + 1) {
+    return null;
+  }
+
+  const trueRanges = [];
+  for (let i = 1; i < chronologicalCandles.length; i++) {
+    const high = parseFloat(chronologicalCandles[i][2]);
+    const low = parseFloat(chronologicalCandles[i][3]);
+    const prevClose = parseFloat(chronologicalCandles[i - 1][4]);
+
+    const tr = Math.max(
+      high - low,
+      Math.abs(high - prevClose),
+      Math.abs(low - prevClose)
+    );
+    trueRanges.push(tr);
+  }
+
+  if (trueRanges.length < period) return null;
+
+  // ATR khởi tạo = trung bình cộng `period` giá trị TR đầu tiên
+  let atr = 0;
+  for (let i = 0; i < period; i++) {
+    atr += trueRanges[i];
+  }
+  atr /= period;
+
+  // Làm mượt theo công thức Wilder
+  for (let i = period; i < trueRanges.length; i++) {
+    atr = (atr * (period - 1) + trueRanges[i]) / period;
+  }
+
+  const lastClose = parseFloat(chronologicalCandles[chronologicalCandles.length - 1][4]);
+  if (lastClose <= 0) return null;
+
+  return (atr / lastClose) * 100;
 }
 
 // 1. Lấy danh sách cặp USDT-SWAP và lọc Volume 24h > 5 triệu USDT
@@ -203,11 +247,9 @@ async function main() {
         continue;
       }
 
-      // candles5m[0] là nến đang chạy -> bỏ qua
-      // closed5m[0] là nến số 1 (vừa đóng), closed5m[4] là nến số 5
       const closed5m = candles5m.slice(1);
-      const closeCandle1 = parseFloat(closed5m[0][4]); // Giá đóng của nến 5m vừa đóng
-      const openCandle5 = parseFloat(closed5m[4][1]);  // Giá mở của nến số 5
+      const closeCandle1 = parseFloat(closed5m[0][4]);
+      const openCandle5 = parseFloat(closed5m[4][1]);
 
       if (openCandle5 <= 0) {
         await sleep(50);
@@ -229,7 +271,10 @@ async function main() {
       }
       counts.fetchedCandles1H++;
 
-      const closes1H = [...candles1H.slice(1)].reverse().map((c) => parseFloat(c[4]));
+      // Sắp xếp lại danh sách nến đã đóng từ cũ -> mới
+      const closedCandles1H = [...candles1H.slice(1)].reverse();
+      const closes1H = closedCandles1H.map((c) => parseFloat(c[4]));
+
       const diffema5_1H = calculateDiffEMA(closes1H, 5, 20);
       if (diffema5_1H === null || diffema5_1H >= MAX_DIFFEMA5_1H) {
         await sleep(50);
@@ -237,7 +282,11 @@ async function main() {
       }
       counts.afterDiffEMA5_1H++;
 
-      // Bước 5: Thỏa mãn toàn bộ -> Lưu log Cooldown 4h & Gửi Telegram
+      // Bước 5: Tính ATR% (1H) khi coin đã thỏa mãn toàn bộ điều kiện
+      const atrPercent1H = calculateATRPercent(closedCandles1H, ATR_PERIOD);
+      const atrStr = atrPercent1H !== null ? `${atrPercent1H.toFixed(2)}%` : 'N/A';
+
+      // Bước 6: Lưu log Cooldown 4h & Gửi Telegram
       sentLog[shortKey] = currentTime;
       saveSentLog(sentLog);
 
@@ -246,7 +295,7 @@ async function main() {
       const diff1HStr = `${diffema5_1H.toFixed(2)}%`;
 
       console.log(
-        `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | bd5(5m): ${bd5Str} | diffema5(1H): ${diff1HStr}`
+        `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | bd5(5m): ${bd5Str} | diffema5(1H): ${diff1HStr} | ATR%(1H): ${atrStr}`
       );
 
       const shortMsg =
@@ -255,6 +304,7 @@ async function main() {
         `• Vol 24h: <b>${volStr}</b>\n` +
         `• bd5 (5m): <b>${bd5Str}</b>\n` +
         `• diffema5 (1H): <b>${diff1HStr}</b>\n` +
+        `• ATR% (1H): <b>${atrStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
       const isSent = await sendTelegramMessage(shortMsg);
