@@ -15,7 +15,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Countdown 4 giờ
 const MIN_VOL_24H = 5_000_000; // Volume 24h > 5 triệu USDT
 const MIN_BD5_5M = 3.0; // Biến động 5 nến 5m > 3%
-const MAX_DIFFEMA5_1H = -1.0; // diffema5 (1h) < -1%
+const MAX_DIFFEMA5_1H = -0.3; // diffema5 (1h) < -0.3%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -220,7 +220,7 @@ async function main() {
       }
       counts.afterBD5_5m++;
 
-      // Bước 4: Gọi nến 1h và kiểm tra diffema5 < -1%
+      // Bước 4: Gọi nến 1h và kiểm tra diffema5 < -0.3%
       const candles1h = await getCandles(symbol, '1h', 40);
       if (!candles1h || candles1h.length < 27) {
         await sleep(50);
