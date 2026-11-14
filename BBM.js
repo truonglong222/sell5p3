@@ -202,17 +202,19 @@ async function main() {
         continue;
       }
 
+      // candles5m[0] là nến đang chạy -> bỏ qua
+      // closed5m[0] là nến số 1 (vừa đóng), closed5m[4] là nến số 5
       const closed5m = candles5m.slice(1);
-      const closeLatest5m = parseFloat(closed5m[0][4]);
-      const open5CandlesAgo = parseFloat(closed5m[4][1]);
+      const closeCandle1 = parseFloat(closed5m[0][4]); // Giá đóng của nến 5m vừa đóng
+      const openCandle5 = parseFloat(closed5m[4][1]);  // Giá mở của nến số 5
 
-      if (open5CandlesAgo <= 0) {
+      if (openCandle5 <= 0) {
         await sleep(50);
         continue;
       }
 
-      const bd5_5m = ((closeLatest5m - open5CandlesAgo) / open5CandlesAgo) * 100;
-      if (bd5_5m <= MIN_BD5_5M) {
+      const bd5 = ((closeCandle1 - openCandle5) / openCandle5) * 100;
+      if (bd5 <= MIN_BD5_5M) {
         await sleep(50);
         continue;
       }
@@ -238,7 +240,7 @@ async function main() {
       saveSentLog(sentLog);
 
       const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M USDT`;
-      const bd5Str = `+${bd5_5m.toFixed(2)}%`;
+      const bd5Str = `+${bd5.toFixed(2)}%`;
       const diff1hStr = `${diffema5_1h.toFixed(2)}%`;
 
       console.log(
