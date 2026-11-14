@@ -15,7 +15,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Countdown 4 giờ
 const MIN_VOL_24H = 5_000_000; // Volume 24h > 5 triệu USDT
 const MIN_BD5_5M = 3.0; // Biến động 5 nến 5m > 3%
-const MAX_DIFFEMA5_1H = -0.3; // diffema5 (1h) < -0.3%
+const MAX_DIFFEMA5_1H = -0.3; // diffema5 (1H) < -0.3%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -123,7 +123,7 @@ async function getFilteredMarketsByVolume() {
   }
 }
 
-async function getCandles(symbol, bar = '1h', limit = 40) {
+async function getCandles(symbol, bar = '1H', limit = 40) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 10000 });
@@ -177,7 +177,8 @@ async function main() {
       afterVol24h: targetCoins.length,
       afterCooldown: 0,
       afterBD5_5m: 0,
-      afterDiffEMA5_1h: 0,
+      fetchedCandles1H: 0,
+      afterDiffEMA5_1H: 0,
       telegramSent: 0
     };
 
@@ -220,20 +221,21 @@ async function main() {
       }
       counts.afterBD5_5m++;
 
-      // Bước 4: Gọi nến 1h và kiểm tra diffema5 < -0.3%
-      const candles1h = await getCandles(symbol, '1h', 40);
-      if (!candles1h || candles1h.length < 27) {
+      // Bước 4: Gọi nến 1H và kiểm tra diffema5 < -0.3%
+      const candles1H = await getCandles(symbol, '1H', 40);
+      if (!candles1H || candles1H.length < 27) {
         await sleep(50);
         continue;
       }
+      counts.fetchedCandles1H++;
 
-      const closes1h = [...candles1h.slice(1)].reverse().map((c) => parseFloat(c[4]));
-      const diffema5_1h = calculateDiffEMA(closes1h, 5, 20);
-      if (diffema5_1h === null || diffema5_1h >= MAX_DIFFEMA5_1H) {
+      const closes1H = [...candles1H.slice(1)].reverse().map((c) => parseFloat(c[4]));
+      const diffema5_1H = calculateDiffEMA(closes1H, 5, 20);
+      if (diffema5_1H === null || diffema5_1H >= MAX_DIFFEMA5_1H) {
         await sleep(50);
         continue;
       }
-      counts.afterDiffEMA5_1h++;
+      counts.afterDiffEMA5_1H++;
 
       // Bước 5: Thỏa mãn toàn bộ -> Lưu log Cooldown 4h & Gửi Telegram
       sentLog[shortKey] = currentTime;
@@ -241,10 +243,10 @@ async function main() {
 
       const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M USDT`;
       const bd5Str = `+${bd5.toFixed(2)}%`;
-      const diff1hStr = `${diffema5_1h.toFixed(2)}%`;
+      const diff1HStr = `${diffema5_1H.toFixed(2)}%`;
 
       console.log(
-        `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | bd5(5m): ${bd5Str} | diffema5(1h): ${diff1hStr}`
+        `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | bd5(5m): ${bd5Str} | diffema5(1H): ${diff1HStr}`
       );
 
       const shortMsg =
@@ -252,7 +254,7 @@ async function main() {
         `Coin: <b>${coinName}</b>\n` +
         `• Vol 24h: <b>${volStr}</b>\n` +
         `• bd5 (5m): <b>${bd5Str}</b>\n` +
-        `• diffema5 (1h): <b>${diff1hStr}</b>\n` +
+        `• diffema5 (1H): <b>${diff1HStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
       const isSent = await sendTelegramMessage(shortMsg);
@@ -269,8 +271,9 @@ async function main() {
     console.log(`2. Sau lọc Vol 24h > 5M: ${counts.afterVol24h}`);
     console.log(`3. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
     console.log(`4. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBD5_5m}`);
-    console.log(`5. Sau lọc diffema5 (1h) < ${MAX_DIFFEMA5_1H}%: ${counts.afterDiffEMA5_1h}`);
-    console.log(`6. Đã gửi Telegram: ${counts.telegramSent}`);
+    console.log(`5. Gọi nến 1H thành công: ${counts.fetchedCandles1H}`);
+    console.log(`6. Sau lọc diffema5 (1H) < ${MAX_DIFFEMA5_1H}%: ${counts.afterDiffEMA5_1H}`);
+    console.log(`7. Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('----------------------------------------------\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
