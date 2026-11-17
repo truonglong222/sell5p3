@@ -17,8 +17,8 @@ const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD5_5M = 2.0; // Biến động 5 nến 5m > 2%
 const MAX_DIFFEMA5_1H = -0.3; // diffema5 (1H) < -0.3%
 const MIN_ATR_1H = 2.0; // ATR% (1H) > 2.0%
-const MIN_DIFFEMA30_15M = -5.0; // diffema30 (15m) > -5.0%
-const MAX_DIFFEMA30_15M = 0.0; // diffema30 (15m) < 0.0%
+const MIN_DIFFEMA30_15M = -3.0; // diffema30 (15m) > -3.0%
+const MAX_DIFFEMA30_15M = 3.0; // diffema30 (15m) < 3.0%
 const ATR_PERIOD = 14; // Chu kỳ tính ATR%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -296,7 +296,7 @@ async function main() {
       }
       counts.afterATR_1H++;
 
-      // Bước 5: Gọi 100 nến 15m và kiểm tra -5.0% < diffema30 < 0.0%
+      // Bước 5: Gọi 100 nến 15m và kiểm tra -3.0% < diffema30 < 3.0%
       // (Cần tối thiểu: 1 nến chưa đóng + 20 nến EMA20 + 30 nến lookback = 51 nến)
       const candles15m = await getCandles(symbol, '15m', 100);
       if (!candles15m || candles15m.length < 52) {
