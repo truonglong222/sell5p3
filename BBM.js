@@ -13,7 +13,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // Countdown 24 giờ
-const MIN_VOL_24H = 5_000_000; // Volume 24h > 5 triệu USDT
+const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD5_5M = 3.0; // Biến động 5 nến 5m > 3%
 const MAX_DIFFEMA5_1H = -0.3; // diffema5 (1H) < -0.3%
 const MIN_DIFFEMA30_15M = -5.0; // diffema30 (15m) > -5.0%
@@ -137,7 +137,7 @@ function calculateATRPercent(chronologicalCandles, period = 14) {
   return (atr / lastClose) * 100;
 }
 
-// 1. Lấy danh sách cặp USDT-SWAP và lọc Volume 24h > 5 triệu USDT
+// 1. Lấy danh sách cặp USDT-SWAP và lọc Volume 24h > 2 triệu USDT
 async function getFilteredMarketsByVolume() {
   let totalSwaps = 0;
   const targetCoins = [];
@@ -214,7 +214,7 @@ async function main() {
     const sentLog = loadSentLog();
     const currentTime = Date.now();
 
-    // Bước 1: Lọc Volume 24h > 5 triệu USDT
+    // Bước 1: Lọc Volume 24h > 2 triệu USDT
     const { totalSwaps, targetCoins } = await getFilteredMarketsByVolume();
 
     // Biến đếm số lượng coin còn lại sau mỗi bước lọc
@@ -348,7 +348,7 @@ async function main() {
     // In thống kê số lượng coin còn lại sau mỗi bước lọc
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN SAU MỖI BƯỚC LỌC ---');
     console.log(`1. Tổng cặp USDT-SWAP: ${counts.totalSwaps}`);
-    console.log(`2. Sau lọc Vol 24h > 5M: ${counts.afterVol24h}`);
+    console.log(`2. Sau lọc Vol 24h > ${(MIN_VOL_24H / 1_000_000)}M: ${counts.afterVol24h}`);
     console.log(`3. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
     console.log(`4. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBD5_5m}`);
     console.log(`5. Gọi nến 1H thành công: ${counts.fetchedCandles1H}`);
