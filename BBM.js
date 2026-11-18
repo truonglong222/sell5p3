@@ -16,7 +16,7 @@ const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // Countdown 24 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD5_5M = 3.0; // Biến động 5 nến 5m > 3%
 const MIN_ATR_5M = 0.7; // ATR% (5m) > 0.7%
-const MAX_DIFFEMA10_15M = 0; // diffema10 (15m) < 0%
+const DIFFEMA10_THRESHOLD = 2.0; // Ngưỡng |diffema10| > 2% (cho cả 15m và 1H)
 const ATR_PERIOD = 14; // Chu kỳ tính ATR%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -220,11 +220,13 @@ async function main() {
     const counts = {
       totalSwaps,
       afterVol24h: targetCoins.length,
-      afterCooldown: 0,
       afterBD5_5m: 0,
       afterATR_5m: 0,
       fetchedCandles15m: 0,
       afterDiffEMA10_15m: 0,
+      fetchedCandles1H: 0,
+      matchedSignal1H: 0,
+      afterCooldown: 0,
       telegramSent: 0
     };
 
@@ -234,15 +236,7 @@ async function main() {
       const coinName = escapeHtml(shortName);
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Bước 2: Kiểm tra Cooldown
-      const shortKey = `${symbol}_SHORT`;
-      const lastSent = sentLog[shortKey] || 0;
-      if (currentTime - lastSent < COOLDOWN_TIME) {
-        continue;
-      }
-      counts.afterCooldown++;
-
-      // Bước 3: Lấy 40 nến 5m, kiểm tra bd5 > 3% và ATR% (5m) > 0.7%
+      // Bước 2: Lấy 40 nến 5m, kiểm tra bd5 > 3% và ATR% (5m) > 0.7%
       const candles5m = await getCandles(symbol, '5m', 40);
       if (!candles5m || candles5m.length < ATR_PERIOD + 2) {
         await sleep(50);
@@ -274,8 +268,7 @@ async function main() {
       }
       counts.afterATR_5m++;
 
-      // Bước 4: Gọi nến 15m và kiểm tra diffema10 < 0%
-      // (Cần tối thiểu: 1 nến chưa đóng + 20 nến EMA20 + 10 nến lookback = 31 nến)
+      // Bước 3: Gọi nến 15m và kiểm tra diffema10 > 2% hoặc diffema10 < -2%
       const candles15m = await getCandles(symbol, '15m', 50);
       if (!candles15m || candles15m.length < 32) {
         await sleep(50);
@@ -283,40 +276,83 @@ async function main() {
       }
       counts.fetchedCandles15m++;
 
-      // Sắp xếp lại danh sách nến 15m đã đóng từ cũ -> mới
       const closedCandles15m = [...candles15m.slice(1)].reverse();
       const closes15m = closedCandles15m.map((c) => parseFloat(c[4]));
 
       const diffema10_15m = calculateDiffEMA(closes15m, 10, 20);
-      if (diffema10_15m === null || diffema10_15m >= MAX_DIFFEMA10_15M) {
+      if (
+        diffema10_15m === null ||
+        (diffema10_15m <= DIFFEMA10_THRESHOLD && diffema10_15m >= -DIFFEMA10_THRESHOLD)
+      ) {
         await sleep(50);
         continue;
       }
       counts.afterDiffEMA10_15m++;
 
-      // Bước 5: Lưu log Cooldown & Gửi Telegram
-      sentLog[shortKey] = currentTime;
+      // Bước 4: Gọi nến 1H để xác định tín hiệu LONG (> 2%) hoặc SHORT (< -2%)
+      const candles1H = await getCandles(symbol, '1H', 50);
+      if (!candles1H || candles1H.length < 32) {
+        await sleep(50);
+        continue;
+      }
+      counts.fetchedCandles1H++;
+
+      const closedCandles1H = [...candles1H.slice(1)].reverse();
+      const closes1H = closedCandles1H.map((c) => parseFloat(c[4]));
+
+      const diffema10_1H = calculateDiffEMA(closes1H, 10, 20);
+      if (diffema10_1H === null) {
+        await sleep(50);
+        continue;
+      }
+
+      let signalSide = null;
+      if (diffema10_1H > DIFFEMA10_THRESHOLD) {
+        signalSide = 'LONG';
+      } else if (diffema10_1H < -DIFFEMA10_THRESHOLD) {
+        signalSide = 'SHORT';
+      } else {
+        await sleep(50);
+        continue;
+      }
+      counts.matchedSignal1H++;
+
+      // Bước 5: Kiểm tra Cooldown theo đúng chiều tín hiệu (LONG / SHORT)
+      const signalKey = `${symbol}_${signalSide}`;
+      const lastSent = sentLog[signalKey] || 0;
+      if (currentTime - lastSent < COOLDOWN_TIME) {
+        await sleep(50);
+        continue;
+      }
+      counts.afterCooldown++;
+
+      // Bước 6: Lưu log Cooldown & Gửi Telegram
+      sentLog[signalKey] = currentTime;
       saveSentLog(sentLog);
 
       const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M USDT`;
       const bd5Str = `+${bd5.toFixed(2)}%`;
       const atr5mStr = `${atrPercent5m.toFixed(2)}%`;
-      const diff10_15mStr = `${diffema10_15m.toFixed(2)}%`;
+      const diff10_15mStr = `${diffema10_15m > 0 ? '+' : ''}${diffema10_15m.toFixed(2)}%`;
+      const diff10_1HStr = `${diffema10_1H > 0 ? '+' : ''}${diffema10_1H.toFixed(2)}%`;
+
+      const headerBadge = signalSide === 'LONG' ? '🟢 TÍN HIỆU LONG' : '🔴 TÍN HIỆU SHORT';
 
       console.log(
-        `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | bd5(5m): ${bd5Str} | ATR%(5m): ${atr5mStr} | diffema10(15m): ${diff10_15mStr}`
+        `[${signalSide} SIGNAL] ${symbol} | Vol24h: ${volStr} | bd5(5m): ${bd5Str} | ATR%(5m): ${atr5mStr} | diffema10(15m): ${diff10_15mStr} | diffema10(1H): ${diff10_1HStr}`
       );
 
-      const shortMsg =
-        `<b>🔴 TÍN HIỆU SHORT</b>\n` +
+      const msg =
+        `<b>${headerBadge}</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
         `• Vol 24h: <b>${volStr}</b>\n` +
         `• bd5 (5m): <b>${bd5Str}</b>\n` +
         `• ATR% (5m): <b>${atr5mStr}</b>\n` +
         `• diffema10 (15m): <b>${diff10_15mStr}</b>\n` +
+        `• diffema10 (1H): <b>${diff10_1HStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
-      const isSent = await sendTelegramMessage(shortMsg);
+      const isSent = await sendTelegramMessage(msg);
       if (isSent) {
         counts.telegramSent++;
       }
@@ -328,12 +364,14 @@ async function main() {
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN SAU MỖI BƯỚC LỌC ---');
     console.log(`1. Tổng cặp USDT-SWAP: ${counts.totalSwaps}`);
     console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
-    console.log(`3. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
-    console.log(`4. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBD5_5m}`);
-    console.log(`5. Sau lọc ATR% (5m) > ${MIN_ATR_5M}%: ${counts.afterATR_5m}`);
-    console.log(`6. Gọi nến 15m thành công: ${counts.fetchedCandles15m}`);
-    console.log(`7. Sau lọc diffema10 (15m) < ${MAX_DIFFEMA10_15M}%: ${counts.afterDiffEMA10_15m}`);
-    console.log(`8. Đã gửi Telegram: ${counts.telegramSent}`);
+    console.log(`3. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBD5_5m}`);
+    console.log(`4. Sau lọc ATR% (5m) > ${MIN_ATR_5M}%: ${counts.afterATR_5m}`);
+    console.log(`5. Gọi nến 15m thành công: ${counts.fetchedCandles15m}`);
+    console.log(`6. Sau lọc |diffema10 (15m)| > ${DIFFEMA10_THRESHOLD}%: ${counts.afterDiffEMA10_15m}`);
+    console.log(`7. Gọi nến 1H thành công: ${counts.fetchedCandles1H}`);
+    console.log(`8. Đạt tín hiệu LONG/SHORT (|diffema10 1H| > ${DIFFEMA10_THRESHOLD}%): ${counts.matchedSignal1H}`);
+    console.log(`9. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
+    console.log(`10. Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('----------------------------------------------\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
