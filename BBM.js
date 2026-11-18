@@ -15,7 +15,6 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // Countdown 24 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD3_15M = 3.0; // Biến động 3 nến 15m > 3%
-const MIN_DIFFEMA5_15M = 0.0; // Ngưỡng diffema5 (15m): > 0%
 const MAX_DIFFEMA10_1H = -1.0; // Ngưỡng diffema10 (1H): < -1%
 const MAX_DIFFEMA10_4H = -1.0; // Ngưỡng diffema10 (4H): < -1%
 
@@ -178,7 +177,6 @@ async function main() {
       totalSwaps,
       afterVol24h: targetCoins.length,
       afterBD3_15m: 0,
-      afterDiffEMA5_15m: 0,
       fetchedCandles1H_4H: 0,
       matchedShort1H_4H: 0,
       afterCooldown: 0,
@@ -191,9 +189,9 @@ async function main() {
       const coinName = escapeHtml(shortName);
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Bước 2: Lấy nến 15m, kiểm tra bd3 > 3% và diffema5 (15m) > 0%
-      const candles15m = await getCandles(symbol, '15m', 50);
-      if (!candles15m || candles15m.length < 27) {
+      // Bước 2: Lấy nến 15m, kiểm tra bd3 > 3% (chỉ cần lấy 5 nến là đủ)
+      const candles15m = await getCandles(symbol, '15m', 5);
+      if (!candles15m || candles15m.length < 4) {
         await sleep(50);
         continue;
       }
@@ -214,17 +212,6 @@ async function main() {
         continue;
       }
       counts.afterBD3_15m++;
-
-      // Đảo ngược mảng nến 15m đã đóng (cũ -> mới) để tính diffema5
-      const chronological15m = [...closed15m].reverse();
-      const closes15m = chronological15m.map((c) => parseFloat(c[4]));
-
-      const diffema5_15m = calculateDiffEMA(closes15m, 5, 20);
-      if (diffema5_15m === null || diffema5_15m <= MIN_DIFFEMA5_15M) {
-        await sleep(50);
-        continue;
-      }
-      counts.afterDiffEMA5_15m++;
 
       // Bước 3: Gọi nến 1H và 4H để kiểm tra diffema10 đều < -1%
       const [candles1H, candles4H] = await Promise.all([
@@ -270,12 +257,11 @@ async function main() {
 
       const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M USDT`;
       const bd3Str = `+${bd3.toFixed(2)}%`;
-      const diff5_15mStr = `+${diffema5_15m.toFixed(2)}%`;
       const diff10_1HStr = `${diffema10_1H.toFixed(2)}%`;
       const diff10_4HStr = `${diffema10_4H.toFixed(2)}%`;
 
       console.log(
-        `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | bd3(15m): ${bd3Str} | diffema5(15m): ${diff5_15mStr} | diffema10(1H): ${diff10_1HStr} | diffema10(4H): ${diff10_4HStr}`
+        `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | bd3(15m): ${bd3Str} | diffema10(1H): ${diff10_1HStr} | diffema10(4H): ${diff10_4HStr}`
       );
 
       const msg =
@@ -283,7 +269,6 @@ async function main() {
         `Coin: <b>${coinName}</b>\n` +
         `• Vol 24h: <b>${volStr}</b>\n` +
         `• bd3 (15m): <b>${bd3Str}</b>\n` +
-        `• diffema5 (15m): <b>${diff5_15mStr}</b>\n` +
         `• diffema10 (1H): <b>${diff10_1HStr}</b>\n` +
         `• diffema10 (4H): <b>${diff10_4HStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
@@ -301,11 +286,10 @@ async function main() {
     console.log(`1. Tổng cặp USDT-SWAP: ${counts.totalSwaps}`);
     console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
     console.log(`3. Sau lọc bd3 (15m) > ${MIN_BD3_15M}%: ${counts.afterBD3_15m}`);
-    console.log(`4. Sau lọc diffema5 (15m) > ${MIN_DIFFEMA5_15M}%: ${counts.afterDiffEMA5_15m}`);
-    console.log(`5. Gọi nến 1H & 4H thành công: ${counts.fetchedCandles1H_4H}`);
-    console.log(`6. Đạt tín hiệu SHORT (diffema10 1H & 4H < -1%): ${counts.matchedShort1H_4H}`);
-    console.log(`7. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
-    console.log(`8. Đã gửi Telegram: ${counts.telegramSent}`);
+    console.log(`4. Gọi nến 1H & 4H thành công: ${counts.fetchedCandles1H_4H}`);
+    console.log(`5. Đạt tín hiệu SHORT (diffema10 1H & 4H < -1%): ${counts.matchedShort1H_4H}`);
+    console.log(`6. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
+    console.log(`7. Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('----------------------------------------------\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
