@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_5m_short.json');
 
 // Cấu hình các ngưỡng điều kiện
-const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // Cooldown 24 giờ
+const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD5_5M = 3.0; // Biến động 5 nến 5m > 3%
 const MAX_RSI_5M = 70.0; // RSI(20) nến 5m vừa đóng < 70
@@ -267,7 +267,7 @@ async function main() {
         continue;
       }
 
-      // Bước 4: Kiểm tra Cooldown 24h cho tín hiệu SHORT
+      // Bước 4: Kiểm tra Cooldown 4h cho tín hiệu SHORT
       const signalKey = `${symbol}_SHORT_5M`;
       const lastSent = sentLog[signalKey] || 0;
       if (currentTime - lastSent < COOLDOWN_TIME) {
@@ -314,7 +314,7 @@ async function main() {
     console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
     console.log(`3. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBD5_5m}`);
     console.log(`4. Sau lọc RSI(${RSI_PERIOD}) (5m) < ${MAX_RSI_5M}: ${counts.afterRSI_5m}`);
-    console.log(`5. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
+    console.log(`5. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
     console.log(`6. Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('----------------------------------------------\n');
   } catch (err) {
