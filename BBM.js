@@ -16,7 +16,9 @@ const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // Countdown 24 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD5_5M = 3.0; // Biến động 5 nến 5m > 3%
 const MIN_ATR_5M = 0.7; // ATR% (5m) > 0.7%
-const DIFFEMA10_THRESHOLD = 2.0; // Ngưỡng |diffema10| > 2% (cho cả 15m và 1H)
+const DIFFEMA10_15M_MIN = -2.0; // Ngưỡng dưới diffema10 (15m): > -2%
+const DIFFEMA10_15M_MAX = 2.0;  // Ngưỡng trên diffema10 (15m): < 2%
+const DIFFEMA10_1H_THRESHOLD = 2.0; // Ngưỡng diffema10 (1H): > 2% LONG, < -2% SHORT
 const ATR_PERIOD = 14; // Chu kỳ tính ATR%
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -118,14 +120,12 @@ function calculateATRPercent(chronologicalCandles, period = 14) {
 
   if (trueRanges.length < period) return null;
 
-  // ATR khởi tạo = trung bình cộng `period` giá trị TR đầu tiên
   let atr = 0;
   for (let i = 0; i < period; i++) {
     atr += trueRanges[i];
   }
   atr /= period;
 
-  // Làm mượt theo công thức Wilder
   for (let i = period; i < trueRanges.length; i++) {
     atr = (atr * (period - 1) + trueRanges[i]) / period;
   }
@@ -268,7 +268,7 @@ async function main() {
       }
       counts.afterATR_5m++;
 
-      // Bước 3: Gọi nến 15m và kiểm tra diffema10 > 2% hoặc diffema10 < -2%
+      // Bước 3: Gọi nến 15m và kiểm tra -2% < diffema10 < 2%
       const candles15m = await getCandles(symbol, '15m', 50);
       if (!candles15m || candles15m.length < 32) {
         await sleep(50);
@@ -280,9 +280,11 @@ async function main() {
       const closes15m = closedCandles15m.map((c) => parseFloat(c[4]));
 
       const diffema10_15m = calculateDiffEMA(closes15m, 10, 20);
+      // Bỏ qua nếu nằm ngoài khoảng (-2%, 2%)
       if (
         diffema10_15m === null ||
-        (diffema10_15m <= DIFFEMA10_THRESHOLD && diffema10_15m >= -DIFFEMA10_THRESHOLD)
+        diffema10_15m <= DIFFEMA10_15M_MIN ||
+        diffema10_15m >= DIFFEMA10_15M_MAX
       ) {
         await sleep(50);
         continue;
@@ -307,9 +309,9 @@ async function main() {
       }
 
       let signalSide = null;
-      if (diffema10_1H > DIFFEMA10_THRESHOLD) {
+      if (diffema10_1H > DIFFEMA10_1H_THRESHOLD) {
         signalSide = 'LONG';
-      } else if (diffema10_1H < -DIFFEMA10_THRESHOLD) {
+      } else if (diffema10_1H < -DIFFEMA10_1H_THRESHOLD) {
         signalSide = 'SHORT';
       } else {
         await sleep(50);
@@ -367,9 +369,9 @@ async function main() {
     console.log(`3. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBD5_5m}`);
     console.log(`4. Sau lọc ATR% (5m) > ${MIN_ATR_5M}%: ${counts.afterATR_5m}`);
     console.log(`5. Gọi nến 15m thành công: ${counts.fetchedCandles15m}`);
-    console.log(`6. Sau lọc |diffema10 (15m)| > ${DIFFEMA10_THRESHOLD}%: ${counts.afterDiffEMA10_15m}`);
+    console.log(`6. Sau lọc ${DIFFEMA10_15M_MIN}% < diffema10 (15m) < ${DIFFEMA10_15M_MAX}%: ${counts.afterDiffEMA10_15m}`);
     console.log(`7. Gọi nến 1H thành công: ${counts.fetchedCandles1H}`);
-    console.log(`8. Đạt tín hiệu LONG/SHORT (|diffema10 1H| > ${DIFFEMA10_THRESHOLD}%): ${counts.matchedSignal1H}`);
+    console.log(`8. Đạt tín hiệu LONG/SHORT (|diffema10 1H| > ${DIFFEMA10_1H_THRESHOLD}%): ${counts.matchedSignal1H}`);
     console.log(`9. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
     console.log(`10. Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('----------------------------------------------\n');
