@@ -9,7 +9,7 @@ const OKX_BASE_URL = 'https://www.okx.com';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_FILE = path.join(__dirname, 'sent_5m_short.json');
+const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
@@ -51,7 +51,7 @@ function loadSentLog() {
       return cleanedLog;
     }
   } catch (e) {
-    console.error('Lỗi khi đọc file log:', e.message);
+    console.error('Lỗi khi đọc sent_ema.json:', e.message);
   }
   return {};
 }
@@ -61,7 +61,7 @@ function saveSentLog(logData) {
     const cleanedLog = cleanExpiredLogs(logData);
     fs.writeFileSync(DB_FILE, JSON.stringify(cleanedLog, null, 2), 'utf8');
   } catch (e) {
-    console.error('Lỗi khi lưu file log:', e.message);
+    console.error('Lỗi khi lưu sent_ema.json:', e.message);
   }
 }
 
@@ -267,7 +267,7 @@ async function main() {
         continue;
       }
 
-      // Bước 4: Kiểm tra Cooldown 4h cho tín hiệu SHORT
+      // Bước 4: Kiểm tra Cooldown 4h trong sent_ema.json
       const signalKey = `${symbol}_SHORT_5M`;
       const lastSent = sentLog[signalKey] || 0;
       if (currentTime - lastSent < COOLDOWN_TIME) {
@@ -276,7 +276,7 @@ async function main() {
       }
       counts.afterCooldown++;
 
-      // Bước 5: Lưu log Cooldown & Gửi Telegram
+      // Bước 5: Lưu coin thỏa điều kiện vào sent_ema.json để tính cooldown trước khi gửi tin nhắn
       sentLog[signalKey] = currentTime;
       saveSentLog(sentLog);
 
@@ -290,7 +290,7 @@ async function main() {
         `[SHORT SIGNAL 5M] ${symbol} | bd5: ${bd5Str} | RSI(20): ${rsiStr} | ATR: ${atrStr} | Vol: ${volStr}`
       );
 
-      // Tin Telegram theo thứ tự: bd5, rsi(20), atr (%), volume, link
+      // Bước 6: Gửi tin Telegram theo thứ tự: bd5, rsi(20), atr (%), volume, link
       const msg =
         `<b>🔴 TÍN HIỆU SHORT (5M)</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
