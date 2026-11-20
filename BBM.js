@@ -14,8 +14,9 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
-const MIN_BD3_5M = 2.0;        // Biến động 3 nến 5m > 2%
-const MIN_Y_RATIO = 5.0;       // Tỉ số y = bd10 / atr > 5
+const MIN_BD3_5M = 1.0;        // Biến động 3 nến 5m > 1%
+const MIN_ATR_PERCENT = 1.0;   // ATR (5m) > 1%
+const MIN_Y_RATIO = 4.0;       // Tỉ số y = bd10 / atr > 4
 const RSI_PERIOD = 20;
 const ATR_PERIOD = 14;
 
@@ -215,6 +216,7 @@ async function main() {
       totalSwaps,
       afterVol24h: targetCoins.length,
       afterBD3_5m: 0,
+      afterATR_5m: 0,
       afterY_5m: 0,
       afterX_15m: 0,
       afterCooldown: 0,
@@ -245,7 +247,7 @@ async function main() {
         continue;
       }
 
-      // Bước 2: Lọc bd3 nến 5m > 2%
+      // Bước 2: Lọc bd3 nến 5m > 1%
       const bd3 = ((closeCandle1 - openCandle3) / openCandle3) * 100;
       if (bd3 <= MIN_BD3_5M) {
         await sleep(50);
@@ -253,8 +255,7 @@ async function main() {
       }
       counts.afterBD3_5m++;
 
-      // Tính bd10 (%) và ATR(14) (%) khung 5m
-      const bd10 = ((closeCandle1 - openCandle10) / openCandle10) * 100;
+      // Tính ATR(14) (%) khung 5m và lọc atr > 1%
       const chronological5m = [...closed5m].reverse();
       const atr5m = calculateATR(chronological5m, ATR_PERIOD);
 
@@ -264,12 +265,14 @@ async function main() {
       }
 
       const atrPercent = (atr5m / closeCandle1) * 100;
-      if (atrPercent <= 0) {
+      if (atrPercent <= MIN_ATR_PERCENT) {
         await sleep(50);
         continue;
       }
+      counts.afterATR_5m++;
 
-      // Bước 3: Tính tỉ số y = bd10 / atr và lọc y > 5
+      // Bước 3: Tính bd10 (%), tỉ số y = bd10 / atr và lọc y > 4
+      const bd10 = ((closeCandle1 - openCandle10) / openCandle10) * 100;
       const y = bd10 / atrPercent;
       if (y <= MIN_Y_RATIO) {
         await sleep(50);
@@ -362,10 +365,11 @@ async function main() {
     console.log(`1. Tổng cặp USDT-SWAP: ${counts.totalSwaps}`);
     console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
     console.log(`3. Sau lọc bd3 (5m) > ${MIN_BD3_5M}%: ${counts.afterBD3_5m}`);
-    console.log(`4. Sau lọc y (bd10/atr) > ${MIN_Y_RATIO}: ${counts.afterY_5m}`);
-    console.log(`5. Sau lọc x > 0 (RSI 15m): ${counts.afterX_15m}`);
-    console.log(`6. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
-    console.log(`7. Đã gửi Telegram: ${counts.telegramSent}`);
+    console.log(`4. Sau lọc atr (5m) > ${MIN_ATR_PERCENT}%: ${counts.afterATR_5m}`);
+    console.log(`5. Sau lọc y (bd10/atr) > ${MIN_Y_RATIO}: ${counts.afterY_5m}`);
+    console.log(`6. Sau lọc x > 0 (RSI 15m): ${counts.afterX_15m}`);
+    console.log(`7. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
+    console.log(`8. Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('----------------------------------------------\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
