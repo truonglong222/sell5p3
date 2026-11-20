@@ -15,7 +15,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD20_5M = 10.0; // Biến động 20 nến 5m > 10%
-const MIN_BD3_5M = 3.0; // Biến động 3 nến 5m > 3%
+const MIN_BD3_5M = 2.0; // Biến động 3 nến 5m > 2%
 const RSI_PERIOD = 20;
 const ATR_PERIOD = 14;
 
@@ -253,7 +253,7 @@ async function main() {
       }
       counts.afterBD20_5m++;
 
-      // Bước 3: Lọc bd3 nến 5m > 3%
+      // Bước 3: Lọc bd3 nến 5m > 2%
       const bd3 = ((closeCandle1 - openCandle3) / openCandle3) * 100;
       if (bd3 <= MIN_BD3_5M) {
         await sleep(50);
