@@ -280,39 +280,43 @@ async function main() {
       }
       counts.afterY_5m++;
 
-      // Bước 4: Gọi nến 15m để tính x và kiểm tra x > 0
+      // Bước 4: Gọi nến 15m để tính x dựa trên RSI nến 15m hiện tại (đang chạy)
       const candles15m = await getCandles(symbol, '15m', 100);
       if (!candles15m || candles15m.length < 60) {
         await sleep(50);
         continue;
       }
 
-      const closed15m = candles15m.slice(1);
-      const chronological15m = [...closed15m].reverse();
+      // Giữ nguyên candles15m[0] (nến 15m hiện tại đang chạy)
+      const chronological15m = [...candles15m].reverse();
       const closes15m = chronological15m.map((c) => parseFloat(c[4]));
 
       const rsiSeries15m = calculateRSIArray(closes15m, RSI_PERIOD);
-      const recent30Rsi15m = [...rsiSeries15m].reverse().slice(0, 30);
+      // Đảo ngược (mới -> cũ):
+      // index 0: nến 15m hiện tại (đang chạy)
+      // index 1..30: các nến 15m đã đóng từ số 1 đến số 30
+      const recent35Rsi15m = [...rsiSeries15m].reverse().slice(0, 35);
 
-      const currentRsi15m = recent30Rsi15m[0];
+      const currentRsi15m = recent35Rsi15m[0];
       if (currentRsi15m === null) {
         await sleep(50);
         continue;
       }
 
-      let maxRsi15m_10To20 = -Infinity;
-      for (let i = 9; i <= 19; i++) {
-        if (recent30Rsi15m[i] !== null && recent30Rsi15m[i] > maxRsi15m_10To20) {
-          maxRsi15m_10To20 = recent30Rsi15m[i];
+      // Tìm RSI max của nến 15m đã đóng từ nến số 5 (index 5) đến nến số 30 (index 30)
+      let maxRsi15m_5To30 = -Infinity;
+      for (let i = 5; i <= 30; i++) {
+        if (recent35Rsi15m[i] !== null && recent35Rsi15m[i] > maxRsi15m_5To30) {
+          maxRsi15m_5To30 = recent35Rsi15m[i];
         }
       }
 
-      if (maxRsi15m_10To20 === -Infinity) {
+      if (maxRsi15m_5To30 === -Infinity) {
         await sleep(50);
         continue;
       }
 
-      const x = maxRsi15m_10To20 - currentRsi15m;
+      const x = maxRsi15m_5To30 - currentRsi15m;
       if (x <= 0) {
         await sleep(50);
         continue;
