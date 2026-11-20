@@ -16,7 +16,6 @@ const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD10_5M = 5.0; // Biến động 10 nến 5m > 5%
 const MIN_BD3_5M = 1.5; // Biến động 3 nến 5m > 1.5%
-const MAX_RSI_5M = 75.0; // RSI(20) nến 5m vừa đóng < 75
 const RSI_PERIOD = 20;
 const ATR_PERIOD = 14;
 
@@ -164,7 +163,7 @@ async function getFilteredMarketsByVolume() {
   }
 }
 
-async function getCandles(symbol, bar = '5m', limit = 150) {
+async function getCandles(symbol, bar = '5m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 10000 });
@@ -204,7 +203,7 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG (KHUNG 5M) ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG (5M + 15M) ===\n');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -217,8 +216,7 @@ async function main() {
       afterVol24h: targetCoins.length,
       afterBD10_5m: 0,
       afterBD3_5m: 0,
-      afterRSI_5m: 0,
-      afterMaxRSI_10_40: 0,
+      afterX_15m: 0,
       afterCooldown: 0,
       telegramSent: 0
     };
@@ -229,19 +227,18 @@ async function main() {
       const coinName = escapeHtml(shortName);
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Lấy 150 nến 5m để tính RSI(20) chuẩn xác tới nến lùi thứ 40
-      const candles5m = await getCandles(symbol, '5m', 150);
-      if (!candles5m || candles5m.length < 80) {
+      // Lấy 50 nến 5m (đủ để tính bd10, bd3 và ATR 14)
+      const candles5m = await getCandles(symbol, '5m', 50);
+      if (!candles5m || candles5m.length < 30) {
         await sleep(50);
         continue;
       }
 
-      // Bỏ nến đang chạy (index 0), lấy danh sách nến đã đóng từ mới -> cũ
-      // closed5m[0] = nến số 1 (vừa đóng), closed5m[9] = nến số 10, closed5m[39] = nến số 40
+      // Bỏ nến 5m đang chạy (index 0), lấy danh sách nến đã đóng từ mới -> cũ
       const closed5m = candles5m.slice(1);
       const closeCandle1 = parseFloat(closed5m[0][4]); // Giá đóng cửa nến 5m vừa đóng
-      const openCandle10 = parseFloat(closed5m[9][1]); // Giá mở cửa nến thứ 10
-      const openCandle3 = parseFloat(closed5m[2][1]);  // Giá mở cửa nến thứ 3
+      const openCandle10 = parseFloat(closed5m[9][1]); // Giá mở cửa nến 5m thứ 10
+      const openCandle3 = parseFloat(closed5m[2][1]);  // Giá mở cửa nến 5m thứ 3
 
       if (openCandle10 <= 0 || openCandle3 <= 0) {
         await sleep(50);
@@ -264,44 +261,62 @@ async function main() {
       }
       counts.afterBD3_5m++;
 
-      // Đảo ngược mảng nến 5m đã đóng (cũ -> mới) để tính chuỗi RSI(20) và ATR
+      // Tính ATR(14) khung 5m
       const chronological5m = [...closed5m].reverse();
-      const closes5m = chronological5m.map((c) => parseFloat(c[4]));
-
-      const rsiSeries = calculateRSIArray(closes5m, RSI_PERIOD);
-      // Đảo lại mảng RSI theo thứ tự mới -> cũ để khớp với index của closed5m (0 = nến vừa đóng)
-      const rsiNewestFirst = [...rsiSeries].reverse();
-
-      // Bước 4: Kiểm tra RSI(20) của nến 5m vừa đóng < 75
-      const rsi5m = rsiNewestFirst[0];
-      if (rsi5m === null || rsi5m >= MAX_RSI_5M) {
-        await sleep(50);
-        continue;
-      }
-      counts.afterRSI_5m++;
-
-      // Bước 5: Tìm Max RSI trong khoảng từ nến số 10 (index 9) đến nến số 40 (index 39)
-      let maxRsi10To40 = -Infinity;
-      for (let i = 9; i <= 39; i++) {
-        if (rsiNewestFirst[i] !== null && rsiNewestFirst[i] > maxRsi10To40) {
-          maxRsi10To40 = rsiNewestFirst[i];
-        }
-      }
-
-      if (maxRsi10To40 === -Infinity || maxRsi10To40 <= rsi5m) {
-        await sleep(50);
-        continue;
-      }
-      counts.afterMaxRSI_10_40++;
-
-      // Tính ATR(14) của nến 5m vừa đóng và quy đổi sang %
       const atr5m = calculateATR(chronological5m, ATR_PERIOD);
       if (atr5m === null) {
         await sleep(50);
         continue;
       }
 
-      // Bước 6: Kiểm tra Cooldown 4h trong sent_ema.json
+      // Bước 4: Gọi nến 15m của coin đạt điều kiện bd10 và bd3
+      // Lấy 100 nến để tính Wilder's RSI(20) chính xác cho 30 nến đã đóng gần nhất
+      const candles15m = await getCandles(symbol, '15m', 100);
+      if (!candles15m || candles15m.length < 60) {
+        await sleep(50);
+        continue;
+      }
+
+      // Bỏ nến 15m đang chạy (index 0), lấy danh sách nến đã đóng từ mới -> cũ
+      const closed15m = candles15m.slice(1);
+      const chronological15m = [...closed15m].reverse();
+      const closes15m = chronological15m.map((c) => parseFloat(c[4]));
+
+      const rsiSeries15m = calculateRSIArray(closes15m, RSI_PERIOD);
+      // Đảo lại theo thứ tự mới -> cũ và lấy 30 nến 15m vừa đóng gần nhất
+      // recent30Rsi15m[0] = nến 15m vừa đóng (nến số 1)
+      // recent30Rsi15m[9] = nến 15m số 10
+      // recent30Rsi15m[19] = nến 15m số 20
+      const recent30Rsi15m = [...rsiSeries15m].reverse().slice(0, 30);
+
+      const currentRsi15m = recent30Rsi15m[0];
+      if (currentRsi15m === null) {
+        await sleep(50);
+        continue;
+      }
+
+      // Tìm RSI max của nến 15m trong khoảng từ nến số 10 (index 9) đến nến số 20 (index 19)
+      let maxRsi15m_10To20 = -Infinity;
+      for (let i = 9; i <= 19; i++) {
+        if (recent30Rsi15m[i] !== null && recent30Rsi15m[i] > maxRsi15m_10To20) {
+          maxRsi15m_10To20 = recent30Rsi15m[i];
+        }
+      }
+
+      if (maxRsi15m_10To20 === -Infinity) {
+        await sleep(50);
+        continue;
+      }
+
+      // Tính x = rsi max (10..20) - rsi nến 15m vừa đóng
+      const x = maxRsi15m_10To20 - currentRsi15m;
+      if (x <= 0) {
+        await sleep(50);
+        continue;
+      }
+      counts.afterX_15m++;
+
+      // Bước 5: Kiểm tra Cooldown 4h trong sent_ema.json
       const signalKey = `${symbol}_SHORT_5M`;
       const lastSent = sentLog[signalKey] || 0;
       if (currentTime - lastSent < COOLDOWN_TIME) {
@@ -310,29 +325,30 @@ async function main() {
       }
       counts.afterCooldown++;
 
-      // Bước 7: Lưu coin thỏa điều kiện vào sent_ema.json
+      // Bước 6: Lưu coin thỏa điều kiện vào sent_ema.json
       sentLog[signalKey] = currentTime;
       saveSentLog(sentLog);
 
       const bd10Str = `+${bd10.toFixed(2)}%`;
       const bd3Str = `+${bd3.toFixed(2)}%`;
-      const rsiStr = `${rsi5m.toFixed(2)}`;
-      const maxRsiStr = `${maxRsi10To40.toFixed(2)}`;
+      const xStr = `${x.toFixed(2)}`;
+      const rsi15mStr = `${currentRsi15m.toFixed(2)} (Max 10-20: ${maxRsi15m_10To20.toFixed(2)})`;
       const atrPercent = (atr5m / closeCandle1) * 100;
       const atrStr = `${atrPercent.toFixed(2)}%`;
       const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M USDT`;
 
       console.log(
-        `[SHORT SIGNAL 5M] ${symbol} | bd10: ${bd10Str} | bd3: ${bd3Str} | RSI(20): ${rsiStr} (Max 10-40: ${maxRsiStr}) | ATR: ${atrStr} | Vol: ${volStr}`
+        `[SHORT SIGNAL] ${symbol} | bd10: ${bd10Str} | bd3: ${bd3Str} | x: ${xStr} | RSI(20) 15m: ${rsi15mStr} | ATR: ${atrStr} | Vol: ${volStr}`
       );
 
-      // Bước 8: Gửi tin Telegram
+      // Bước 7: Gửi tin Telegram kèm thông số x
       const msg =
-        `<b>🔴 TÍN HIỆU SHORT (5M)</b>\n` +
+        `<b>🔴 TÍN HIỆU SHORT (5M - 15M)</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
         `• bd10 (5m): <b>${bd10Str}</b>\n` +
         `• bd3 (5m): <b>${bd3Str}</b>\n` +
-        `• RSI(20) (5m): <b>${rsiStr}</b> (Max 10-40: <b>${maxRsiStr}</b>)\n` +
+        `• Chỉ số x (15m): <b>${xStr}</b>\n` +
+        `• RSI(20) (15m): <b>${rsi15mStr}</b>\n` +
         `• ATR (5m): <b>${atrStr}</b>\n` +
         `• Vol 24h: <b>${volStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
@@ -351,10 +367,9 @@ async function main() {
     console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
     console.log(`3. Sau lọc bd10 (5m) > ${MIN_BD10_5M}%: ${counts.afterBD10_5m}`);
     console.log(`4. Sau lọc bd3 (5m) > ${MIN_BD3_5M}%: ${counts.afterBD3_5m}`);
-    console.log(`5. Sau lọc RSI(${RSI_PERIOD}) (5m) < ${MAX_RSI_5M}: ${counts.afterRSI_5m}`);
-    console.log(`6. Sau lọc Max RSI (nến 10-40) > RSI hiện tại: ${counts.afterMaxRSI_10_40}`);
-    console.log(`7. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
-    console.log(`8. Đã gửi Telegram: ${counts.telegramSent}`);
+    console.log(`5. Sau lọc x > 0 (RSI 15m): ${counts.afterX_15m}`);
+    console.log(`6. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
+    console.log(`7. Đã gửi Telegram: ${counts.telegramSent}`);
     console.log('----------------------------------------------\n');
   } catch (err) {
     console.error('Lỗi trong hàm main():', err.message);
