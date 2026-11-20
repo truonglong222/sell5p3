@@ -14,8 +14,8 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
-const MIN_BD10_5M = 5.0; // Biến động 10 nến 5m > 5%
-const MIN_BD3_5M = 1.5; // Biến động 3 nến 5m > 1.5%
+const MIN_BD20_5M = 10.0; // Biến động 20 nến 5m > 10%
+const MIN_BD3_5M = 3.0; // Biến động 3 nến 5m > 3%
 const RSI_PERIOD = 20;
 const ATR_PERIOD = 14;
 
@@ -214,7 +214,7 @@ async function main() {
     const counts = {
       totalSwaps,
       afterVol24h: targetCoins.length,
-      afterBD10_5m: 0,
+      afterBD20_5m: 0,
       afterBD3_5m: 0,
       afterX_15m: 0,
       afterCooldown: 0,
@@ -227,7 +227,7 @@ async function main() {
       const coinName = escapeHtml(shortName);
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Lấy 50 nến 5m (đủ để tính bd10, bd3 và ATR 14)
+      // Lấy 50 nến 5m (đủ để tính bd20, bd3 và ATR 14)
       const candles5m = await getCandles(symbol, '5m', 50);
       if (!candles5m || candles5m.length < 30) {
         await sleep(50);
@@ -236,24 +236,24 @@ async function main() {
 
       // Bỏ nến 5m đang chạy (index 0), lấy danh sách nến đã đóng từ mới -> cũ
       const closed5m = candles5m.slice(1);
-      const closeCandle1 = parseFloat(closed5m[0][4]); // Giá đóng cửa nến 5m vừa đóng
-      const openCandle10 = parseFloat(closed5m[9][1]); // Giá mở cửa nến 5m thứ 10
-      const openCandle3 = parseFloat(closed5m[2][1]);  // Giá mở cửa nến 5m thứ 3
+      const closeCandle1 = parseFloat(closed5m[0][4]);  // Giá đóng cửa nến 5m vừa đóng
+      const openCandle20 = parseFloat(closed5m[19][1]); // Giá mở cửa nến 5m thứ 20
+      const openCandle3 = parseFloat(closed5m[2][1]);   // Giá mở cửa nến 5m thứ 3
 
-      if (openCandle10 <= 0 || openCandle3 <= 0) {
+      if (openCandle20 <= 0 || openCandle3 <= 0) {
         await sleep(50);
         continue;
       }
 
-      // Bước 2: Lọc bd10 nến 5m > 5%
-      const bd10 = ((closeCandle1 - openCandle10) / openCandle10) * 100;
-      if (bd10 <= MIN_BD10_5M) {
+      // Bước 2: Lọc bd20 nến 5m > 10%
+      const bd20 = ((closeCandle1 - openCandle20) / openCandle20) * 100;
+      if (bd20 <= MIN_BD20_5M) {
         await sleep(50);
         continue;
       }
-      counts.afterBD10_5m++;
+      counts.afterBD20_5m++;
 
-      // Bước 3: Lọc bd3 nến 5m > 1.5%
+      // Bước 3: Lọc bd3 nến 5m > 3%
       const bd3 = ((closeCandle1 - openCandle3) / openCandle3) * 100;
       if (bd3 <= MIN_BD3_5M) {
         await sleep(50);
@@ -269,7 +269,7 @@ async function main() {
         continue;
       }
 
-      // Bước 4: Gọi nến 15m của coin đạt điều kiện bd10 và bd3
+      // Bước 4: Gọi nến 15m của coin đạt điều kiện bd20 và bd3
       // Lấy 100 nến để tính Wilder's RSI(20) chính xác cho 30 nến đã đóng gần nhất
       const candles15m = await getCandles(symbol, '15m', 100);
       if (!candles15m || candles15m.length < 60) {
@@ -284,9 +284,6 @@ async function main() {
 
       const rsiSeries15m = calculateRSIArray(closes15m, RSI_PERIOD);
       // Đảo lại theo thứ tự mới -> cũ và lấy 30 nến 15m vừa đóng gần nhất
-      // recent30Rsi15m[0] = nến 15m vừa đóng (nến số 1)
-      // recent30Rsi15m[9] = nến 15m số 10
-      // recent30Rsi15m[19] = nến 15m số 20
       const recent30Rsi15m = [...rsiSeries15m].reverse().slice(0, 30);
 
       const currentRsi15m = recent30Rsi15m[0];
@@ -329,7 +326,7 @@ async function main() {
       sentLog[signalKey] = currentTime;
       saveSentLog(sentLog);
 
-      const bd10Str = `+${bd10.toFixed(2)}%`;
+      const bd20Str = `+${bd20.toFixed(2)}%`;
       const bd3Str = `+${bd3.toFixed(2)}%`;
       const xStr = `${x.toFixed(2)}`;
       const rsi15mStr = `${currentRsi15m.toFixed(2)} (Max 10-20: ${maxRsi15m_10To20.toFixed(2)})`;
@@ -338,14 +335,14 @@ async function main() {
       const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M USDT`;
 
       console.log(
-        `[SHORT SIGNAL] ${symbol} | bd10: ${bd10Str} | bd3: ${bd3Str} | x: ${xStr} | RSI(20) 15m: ${rsi15mStr} | ATR: ${atrStr} | Vol: ${volStr}`
+        `[SHORT SIGNAL] ${symbol} | bd20: ${bd20Str} | bd3: ${bd3Str} | x: ${xStr} | RSI(20) 15m: ${rsi15mStr} | ATR: ${atrStr} | Vol: ${volStr}`
       );
 
       // Bước 7: Gửi tin Telegram kèm thông số x
       const msg =
         `<b>🔴 TÍN HIỆU SHORT (5M - 15M)</b>\n` +
         `Coin: <b>${coinName}</b>\n` +
-        `• bd10 (5m): <b>${bd10Str}</b>\n` +
+        `• bd20 (5m): <b>${bd20Str}</b>\n` +
         `• bd3 (5m): <b>${bd3Str}</b>\n` +
         `• Chỉ số x (15m): <b>${xStr}</b>\n` +
         `• RSI(20) (15m): <b>${rsi15mStr}</b>\n` +
@@ -365,7 +362,7 @@ async function main() {
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN SAU MỖI BƯỚC LỌC ---');
     console.log(`1. Tổng cặp USDT-SWAP: ${counts.totalSwaps}`);
     console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
-    console.log(`3. Sau lọc bd10 (5m) > ${MIN_BD10_5M}%: ${counts.afterBD10_5m}`);
+    console.log(`3. Sau lọc bd20 (5m) > ${MIN_BD20_5M}%: ${counts.afterBD20_5m}`);
     console.log(`4. Sau lọc bd3 (5m) > ${MIN_BD3_5M}%: ${counts.afterBD3_5m}`);
     console.log(`5. Sau lọc x > 0 (RSI 15m): ${counts.afterX_15m}`);
     console.log(`6. Sau lọc Cooldown 4h: ${counts.afterCooldown}`);
