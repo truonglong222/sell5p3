@@ -14,7 +14,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
-const MIN_BD3_5M = 2.0;        // Biến động 3 nến 5m > 2%
+const MIN_BD3_5M = 1.0;        // Biến động 3 nến 5m > 1%
 const LOOKBACK_CANDLES = 20;   // Xét 20 nến 5m đã đóng gần nhất
 const RSI_PERIOD = 20;
 const ATR_PERIOD = 14;
@@ -244,7 +244,7 @@ async function main() {
         continue;
       }
 
-      // Bước 2: Lọc bd3 nến 5m > 2%
+      // Bước 2: Lọc bd3 nến 5m > 1%
       const bd3 = ((closeCandle1 - openCandle3) / openCandle3) * 100;
       if (bd3 <= MIN_BD3_5M) {
         await sleep(50);
