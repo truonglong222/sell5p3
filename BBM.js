@@ -15,7 +15,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD3_5M = 2.0;        // Biến động 3 nến 5m > 2%
-const MIN_X_RATIO = 3.0;       // Tỉ số x = bd3 / atr > 3
+const MIN_X_RATIO = 2.0;       // Tỉ số x = bd3 / atr > 2
 const LOOKBACK_CANDLES = 20;   // Xét 20 nến 5m gần nhất (bao gồm nến đang chạy)
 const RSI_PERIOD = 20;
 const ATR_PERIOD = 14;
@@ -253,7 +253,7 @@ async function main() {
       }
       counts.afterBD3_5m++;
 
-      // Bước 3: Tính ATR(14) (%) khung 5m và lọc tỉ số x = bd3 / atr > 3
+      // Bước 3: Tính ATR(14) (%) khung 5m và lọc tỉ số x = bd3 / atr > 2
       const chronologicalClosed5m = [...closed5m].reverse();
       const atr5m = calculateATR(chronologicalClosed5m, ATR_PERIOD);
 
@@ -272,7 +272,6 @@ async function main() {
       counts.afterX_5m++;
 
       // Bước 4: Xét 20 nến 5m gần nhất (BAO GỒM cả nến đang chạy ở index 0)
-      // Sắp xếp từ cũ -> mới để tính chuỗi RSI chuẩn xác đến nến hiện tại
       const chronologicalAll5m = [...candles5m].reverse();
       const closesAll5m = chronologicalAll5m.map((c) => parseFloat(c[4]));
       const rsiSeries5m = calculateRSIArray(closesAll5m, RSI_PERIOD);
