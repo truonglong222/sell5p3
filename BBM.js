@@ -16,7 +16,7 @@ const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000; // Volume 24h > 2 triệu USDT
 const MIN_BD10_5M = 3.0;       // Biến động 10 nến 5m > 3%
 const MIN_ATR_PERCENT = 0.7;   // ATR (5m) > 0.7%
-const MIN_Y_RATIO = 4.0;       // Tỉ số y = bd10 / atr > 4
+const MIN_Y_RATIO = 3.0;       // Tỉ số y = bd10 / atr > 3
 const RSI_PERIOD = 20;
 const ATR_PERIOD = 14;
 
@@ -271,7 +271,7 @@ async function main() {
       }
       counts.afterATR_5m++;
 
-      // Bước 3: Tính tỉ số y = bd10 / atr và lọc y > 4
+      // Bước 3: Tính tỉ số y = bd10 / atr và lọc y > 3
       const y = bd10 / atrPercent;
       if (y <= MIN_Y_RATIO) {
         await sleep(50);
