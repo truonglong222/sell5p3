@@ -14,8 +14,8 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // Cooldown 24 giờ
 const MIN_VOL_24H = 2_000_000;             // Volume 24h > 2 triệu USDT
-const MIN_BD5_5M = 3.0;                    // bd5 nến 5m > 3%
-const MIN_X_RATIO = 3.0;                   // Tỷ số x = bd5 / atr > 3
+const MIN_BD3_5M = 2.0;                    // bd3 nến 5m > 2% (giá tăng hơn 2%)
+const MIN_X_RATIO = 3.0;                   // Tỷ số x = bd3 / atr > 3
 const MAX_DIFF_EMA10_1H = -1.0;            // diffema10 (1H) < -1%
 const MAX_DIFF_EMA10_4H = -1.0;            // diffema10 (4H) < -1%
 const EMA_PERIOD = 10;                     // Chu kỳ EMA 10
@@ -211,7 +211,7 @@ async function sendTelegramMessage(message) {
 
 async function main() {
   try {
-    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG (5M BD5 + X=BD5/ATR + 1H/4H EMA10) ===\n');
+    console.log('=== BẮT ĐẦU QUÉT THỊ TRƯỜNG (5M BD3 > 2% + X=BD3/ATR + 1H/4H EMA10) ===\n');
 
     const sentLog = loadSentLog();
     const currentTime = Date.now();
@@ -222,7 +222,7 @@ async function main() {
     const counts = {
       totalSwaps,
       afterVol24h: targetCoins.length,
-      afterBd5_5m: 0,
+      afterBd3_5m: 0,
       afterRatioX: 0,
       afterDiffEma10_1H_4H: 0,
       afterCooldown: 0,
@@ -235,7 +235,7 @@ async function main() {
       const coinName = escapeHtml(shortName);
       const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-      // Bước 2: Lấy 100 nến 5m để tính bd5 và ATR(14) chính xác
+      // Bước 2: Lấy 100 nến 5m để tính bd3 và ATR(14) chính xác
       const candles5m = await getCandles(symbol, '5m', 100);
       if (!candles5m || candles5m.length < 30) {
         await sleep(50);
@@ -244,29 +244,23 @@ async function main() {
 
       // Bỏ nến đang chạy (index 0), lấy danh sách nến đã đóng
       const closed5mNewestFirst = candles5m.slice(1);
-      const last5Closed5m = closed5mNewestFirst.slice(0, 5);
+      const closeCandle1 = parseFloat(closed5mNewestFirst[0][4]); // Giá đóng cửa nến vừa đóng
+      const closeCandle3 = parseFloat(closed5mNewestFirst[2][4]); // Giá đóng cửa nến số 3
 
-      const highs = last5Closed5m.map((c) => parseFloat(c[2]));
-      const lows = last5Closed5m.map((c) => parseFloat(c[3]));
-      const closeCandle1 = parseFloat(closed5mNewestFirst[0][4]);
-
-      const maxHigh = Math.max(...highs);
-      const minLow = Math.min(...lows);
-
-      if (minLow <= 0 || closeCandle1 <= 0) {
+      if (closeCandle1 <= 0 || closeCandle3 <= 0) {
         await sleep(50);
         continue;
       }
 
-      // Lọc bd5 > 3%
-      const bd5 = ((maxHigh - minLow) / minLow) * 100;
-      if (bd5 <= MIN_BD5_5M) {
+      // Tính bd3 = % tăng giá đóng cửa từ nến số 3 đến nến vừa đóng
+      const bd3 = ((closeCandle1 - closeCandle3) / closeCandle3) * 100;
+      if (bd3 <= MIN_BD3_5M) {
         await sleep(50);
         continue;
       }
-      counts.afterBd5_5m++;
+      counts.afterBd3_5m++;
 
-      // Bước 3: Tính ATR(14) khung 5m và lọc tỷ số x = bd5 / atr > 3
+      // Bước 3: Tính ATR(14) khung 5m và lọc tỷ số x = bd3 / atr > 3
       const closed5mChronological = [...closed5mNewestFirst].reverse();
       const atr5m = calculateLatestATR(closed5mChronological, ATR_PERIOD);
 
@@ -275,9 +269,9 @@ async function main() {
         continue;
       }
 
-      // Quy đổi ATR sang % để cùng đơn vị với bd5 (%)
+      // Quy đổi ATR sang % để cùng đơn vị với bd3 (%)
       const atrPercent = (atr5m / closeCandle1) * 100;
-      const xRatio = bd5 / atrPercent;
+      const xRatio = bd3 / atrPercent;
 
       if (xRatio <= MIN_X_RATIO) {
         await sleep(50);
@@ -315,7 +309,7 @@ async function main() {
       counts.afterDiffEma10_1H_4H++;
 
       // Bước 5: Kiểm tra Cooldown 24h trong sent_ema.json
-      const signalKey = `${symbol}_SHORT_BD5_EMA10`;
+      const signalKey = `${symbol}_SHORT_BD3_EMA10`;
       const lastSent = sentLog[signalKey] || 0;
       if (currentTime - lastSent < COOLDOWN_TIME) {
         await sleep(50);
@@ -327,19 +321,19 @@ async function main() {
       sentLog[signalKey] = currentTime;
       saveSentLog(sentLog);
 
-      const bd5Str = `${bd5.toFixed(2)}%`;
+      const bd3Str = `+${bd3.toFixed(2)}%`;
       const xRatioStr = xRatio.toFixed(2);
       const diff1HStr = `${diffema10_1H >= 0 ? '+' : ''}${diffema10_1H.toFixed(2)}%`;
       const diff4HStr = `${diffema10_4H >= 0 ? '+' : ''}${diffema10_4H.toFixed(2)}%`;
 
       console.log(
-        `[SHORT SIGNAL] ${symbol} | bd5: ${bd5Str} | x (bd5/atr): ${xRatioStr} | diffema10 (1H): ${diff1HStr} | diffema10 (4H): ${diff4HStr}`
+        `[SHORT SIGNAL] ${symbol} | bd3: ${bd3Str} | x (bd3/atr): ${xRatioStr} | diffema10 (1H): ${diff1HStr} | diffema10 (4H): ${diff4HStr}`
       );
 
       // Bước 7: Gửi tin Telegram
       const msg =
         `<b>🔴 SHORT ${coinName}</b>\n` +
-        `• bd5 (5m): <b>${bd5Str}</b> (x = <b>${xRatioStr}</b>)\n` +
+        `• bd3 (5m): <b>${bd3Str}</b> (x = <b>${xRatioStr}</b>)\n` +
         `• diffema10 (1H): <b>${diff1HStr}</b>\n` +
         `• diffema10 (4H): <b>${diff4HStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
@@ -356,8 +350,8 @@ async function main() {
     console.log('\n--- THỐNG KÊ SỐ LƯỢNG COIN SAU MỖI BƯỚC LỌC ---');
     console.log(`1. Tổng cặp USDT-SWAP: ${counts.totalSwaps}`);
     console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
-    console.log(`3. Sau lọc bd5 (5m) > ${MIN_BD5_5M}%: ${counts.afterBd5_5m}`);
-    console.log(`4. Sau lọc tỷ số x (bd5/atr) > ${MIN_X_RATIO}: ${counts.afterRatioX}`);
+    console.log(`3. Sau lọc bd3 (5m) > +${MIN_BD3_5M}%: ${counts.afterBd3_5m}`);
+    console.log(`4. Sau lọc tỷ số x (bd3/atr) > ${MIN_X_RATIO}: ${counts.afterRatioX}`);
     console.log(`5. Sau lọc diffema10 1H < ${MAX_DIFF_EMA10_1H}% & 4H < ${MAX_DIFF_EMA10_4H}%: ${counts.afterDiffEma10_1H_4H}`);
     console.log(`6. Sau lọc Cooldown 24h: ${counts.afterCooldown}`);
     console.log(`7. Đã gửi Telegram: ${counts.telegramSent}`);
