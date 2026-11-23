@@ -14,7 +14,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000;            // Volume 24h > 2 triệu USDT
-const MAX_DIFF_EMA20_5M = -3.0;           // diffema20 (5m) < -3%
+const MAX_DIFF_EMA20_5M = -2.0;           // diffema20 (5m) < -2%
 const EMA_PERIOD = 20;                    // Chu kỳ EMA 20
 const BB_PERIOD = 20;                     // Chu kỳ Bollinger Bands Mid (SMA 20)
 
@@ -209,7 +209,7 @@ async function main() {
       const closed5mChronological = [...closed5mNewestFirst].reverse();
       const closedCloses5m = closed5mChronological.map((c) => parseFloat(c[4]));
 
-      // Bước 2: Tính diffema20 (5m) và lọc diffema20 < -3%
+      // Bước 2: Tính diffema20 (5m) và lọc diffema20 < -2%
       const emaSeries5m = calculateEMAArray(closedCloses5m, EMA_PERIOD);
       const emaNewestFirst = [...emaSeries5m].reverse();
 
