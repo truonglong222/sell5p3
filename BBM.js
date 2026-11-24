@@ -14,7 +14,7 @@ const DB_FILE = path.join(__dirname, 'sent_ema.json');
 // Cấu hình các ngưỡng điều kiện
 const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000;             // Volume 24h > 2 triệu USDT
-const MIN_HBB_15M = 3.0;                   // Hbb (15m) > 3%
+const MIN_HBB_15M = 5.0;                   // Hbb (15m) > 5%
 const MAX_DIFF_EMA10_15M = 0.5;            // diffema10 (15m) < 0.5%
 const MIN_BBT_15M = -0.5;                  // bbt (15m) > -0.5%
 const MAX_BBT_15M = 0.5;                   // bbt (15m) < +0.5%
@@ -239,7 +239,7 @@ async function runShortScanner() {
       continue;
     }
 
-    // 1. Lọc Hbb (15m) > 3%
+    // 1. Lọc Hbb (15m) > 5%
     const hbbPercent = ((bb15M.upper - bb15M.lower) / bb15M.lower) * 100;
     if (hbbPercent <= MIN_HBB_15M) {
       await sleep(50);
