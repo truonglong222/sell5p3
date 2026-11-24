@@ -16,11 +16,10 @@ const COOLDOWN_TIME = 8 * 60 * 60 * 1000; // Cooldown 8 giờ
 const MIN_VOL_24H = 2_000_000;             // Volume 24h > 2 triệu USDT
 const MAX_BD24 = -2.0;                     // Biến động 24h (bd24) < -2%
 const MAX_DIFF_EMA10_4H = -1.0;            // diffema10 (4H) < -1%
-const MAX_DIFF_EMA20_15M = -1.0;           // diffema20 (15m) < -1%
-const MIN_BBT_5M = -0.5;                   // bbt (5m) > -0.5%
-const MAX_BBT_5M = 0.5;                    // bbt (5m) < +0.5%
-const MIN_HBB_5M = 2.0;                    // Hbb (5m) > 2%
-const MAX_BBD_5M = -0.5;                   // bbd (5m) < -0.5% (điều kiện đóng lệnh)
+const MAX_DIFF_EMA20_15M = 1.0;            // diffema20 (15m) < 1%
+const MIN_BBT_15M = -0.5;                  // bbt (15m) > -0.5%
+const MAX_BBT_15M = 0.5;                   // bbt (15m) < +0.5%
+const MAX_BBD_15M = -0.5;                  // bbd (15m) < -0.5% (điều kiện đóng lệnh)
 
 const EMA10_PERIOD = 10;                   // Chu kỳ EMA 10 (khung 4H)
 const EMA20_PERIOD = 20;                   // Chu kỳ EMA 20 (khung 15m)
@@ -170,7 +169,7 @@ async function getFilteredMarkets() {
   }
 }
 
-async function getCandles(symbol, bar = '5m', limit = 100) {
+async function getCandles(symbol, bar = '15m', limit = 100) {
   try {
     const url = `${OKX_BASE_URL}/api/v5/market/candles?instId=${symbol}&bar=${bar}&limit=${limit}`;
     const res = await axios.get(url, { timeout: 10000 });
@@ -214,9 +213,7 @@ async function sendTelegramMessage(message) {
 async function runShortScanner() {
   console.log('=== [NHÁNH 1] BẮT ĐẦU QUÉT TÍN HIỆU SHORT ===\n');
 
-  const sentLog = loadSentLog();
   const currentTime = Date.now();
-
   const { totalSwaps, afterVolCount, targetCoins } = await getFilteredMarkets();
 
   const counts = {
@@ -225,8 +222,7 @@ async function runShortScanner() {
     afterBd24: targetCoins.length,
     afterDiffEma10_4H: 0,
     afterDiffEma20_15M: 0,
-    afterBbt_5M: 0,
-    afterHbb_5M: 0,
+    afterBbt_15M: 0,
     afterCooldown: 0,
     telegramSent: 0
   };
@@ -237,7 +233,7 @@ async function runShortScanner() {
     const coinName = escapeHtml(shortName);
     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-    // Lọc diffema10 (4H) < -1%
+    // 1. Lọc diffema10 (4H) < -1%
     const candles4H = await getCandles(symbol, '4H', 100);
     if (!candles4H || candles4H.length < 30) {
       await sleep(50);
@@ -253,14 +249,15 @@ async function runShortScanner() {
     }
     counts.afterDiffEma10_4H++;
 
-    // Lọc diffema20 (15m) < -1%
+    // 2. Lọc diffema20 (15m) < 1%
     const candles15M = await getCandles(symbol, '15m', 100);
     if (!candles15M || candles15M.length < 50) {
       await sleep(50);
       continue;
     }
 
-    const closed15MChronological = candles15M.slice(1).reverse();
+    const closed15MNewestFirst = candles15M.slice(1);
+    const closed15MChronological = [...closed15MNewestFirst].reverse();
     const diffema20_15M = getDiffEma(closed15MChronological, EMA20_PERIOD);
 
     if (diffema20_15M === null || diffema20_15M >= MAX_DIFF_EMA20_15M) {
@@ -269,39 +266,23 @@ async function runShortScanner() {
     }
     counts.afterDiffEma20_15M++;
 
-    // Kiểm tra nến 5m: -0.5% < bbt < 0.5% và Hbb > 2%
-    const candles5M = await getCandles(symbol, '5m', 100);
-    if (!candles5M || candles5M.length < BB_PERIOD + 5) {
+    // 3. Kiểm tra nến 15m: -0.5% < bbt (15m) < 0.5%
+    const highCandle1 = parseFloat(closed15MNewestFirst[0][2]); // Giá cao nhất nến 15m vừa đóng
+    const bb15M = calculateLatestBB(closed15MChronological, BB_PERIOD, BB_STD_DEV);
+
+    if (!bb15M || bb15M.upper <= 0 || highCandle1 <= 0) {
       await sleep(50);
       continue;
     }
 
-    const closed5MNewestFirst = candles5M.slice(1);
-    const highCandle1 = parseFloat(closed5MNewestFirst[0][2]); // Giá cao nhất nến 5m vừa đóng
-
-    const closed5MChronological = [...closed5MNewestFirst].reverse();
-    const bb5M = calculateLatestBB(closed5MChronological, BB_PERIOD, BB_STD_DEV);
-
-    if (!bb5M || bb5M.upper <= 0 || bb5M.middle <= 0 || highCandle1 <= 0) {
+    const bbtPercent = ((highCandle1 - bb15M.upper) / bb15M.upper) * 100;
+    if (bbtPercent <= MIN_BBT_15M || bbtPercent >= MAX_BBT_15M) {
       await sleep(50);
       continue;
     }
+    counts.afterBbt_15M++;
 
-    const bbtPercent = ((highCandle1 - bb5M.upper) / bb5M.upper) * 100;
-    if (bbtPercent <= MIN_BBT_5M || bbtPercent >= MAX_BBT_5M) {
-      await sleep(50);
-      continue;
-    }
-    counts.afterBbt_5M++;
-
-    const hbbPercent = ((bb5M.upper - bb5M.lower) / bb5M.middle) * 100;
-    if (hbbPercent <= MIN_HBB_5M) {
-      await sleep(50);
-      continue;
-    }
-    counts.afterHbb_5M++;
-
-    // Kiểm tra Cooldown 12h
+    // 4. Kiểm tra Cooldown 8h
     const signalKey = `${symbol}_SHORT_BBT_EMA20`;
     const latestLog = loadSentLog();
     const lastSent = latestLog[signalKey] || 0;
@@ -319,10 +300,9 @@ async function runShortScanner() {
     const diff4HStr = `${diffema10_4H >= 0 ? '+' : ''}${diffema10_4H.toFixed(2)}%`;
     const diff15MStr = `${diffema20_15M >= 0 ? '+' : ''}${diffema20_15M.toFixed(2)}%`;
     const bbtStr = `${bbtPercent >= 0 ? '+' : ''}${bbtPercent.toFixed(2)}%`;
-    const hbbStr = `${hbbPercent.toFixed(2)}%`;
 
     console.log(
-      `[SHORT SIGNAL] ${symbol} | bd24: ${bd24Str} | diffema10 (4H): ${diff4HStr} | diffema20 (15m): ${diff15MStr} | bbt (5m): ${bbtStr} | Hbb (5m): ${hbbStr}`
+      `[SHORT SIGNAL] ${symbol} | bd24: ${bd24Str} | diffema10 (4H): ${diff4HStr} | diffema20 (15m): ${diff15MStr} | bbt (15m): ${bbtStr}`
     );
 
     const msg =
@@ -330,8 +310,7 @@ async function runShortScanner() {
       `• Biến động 24h (bd24): <b>${bd24Str}</b>\n` +
       `• diffema10 (4H): <b>${diff4HStr}</b>\n` +
       `• diffema20 (15m): <b>${diff15MStr}</b>\n` +
-      `• bbt (5m): <b>${bbtStr}</b>\n` +
-      `• Hbb (5m): <b>${hbbStr}</b>\n` +
+      `• bbt (15m): <b>${bbtStr}</b>\n` +
       `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
     const isSent = await sendTelegramMessage(msg);
@@ -348,10 +327,9 @@ async function runShortScanner() {
   console.log(`3. Sau lọc bd24 < ${MAX_BD24}%: ${counts.afterBd24}`);
   console.log(`4. Sau lọc diffema10 (4H) < ${MAX_DIFF_EMA10_4H}%: ${counts.afterDiffEma10_4H}`);
   console.log(`5. Sau lọc diffema20 (15m) < ${MAX_DIFF_EMA20_15M}%: ${counts.afterDiffEma20_15M}`);
-  console.log(`6. Sau lọc bbt (5m) (${MIN_BBT_5M}%, +${MAX_BBT_5M}%): ${counts.afterBbt_5M}`);
-  console.log(`7. Sau lọc Hbb (5m) > ${MIN_HBB_5M}%: ${counts.afterHbb_5M}`);
-  console.log(`8. Sau lọc Cooldown 12h: ${counts.afterCooldown}`);
-  console.log(`9. Đã gửi Telegram SHORT: ${counts.telegramSent}`);
+  console.log(`6. Sau lọc bbt (15m) (${MIN_BBT_15M}%, +${MAX_BBT_15M}%): ${counts.afterBbt_15M}`);
+  console.log(`7. Sau lọc Cooldown 8h: ${counts.afterCooldown}`);
+  console.log(`8. Đã gửi Telegram SHORT: ${counts.telegramSent}`);
   console.log('----------------------------\n');
 }
 
@@ -378,51 +356,48 @@ async function runCloseScanner() {
     const coinName = escapeHtml(shortName);
     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-    // Kiểm tra xem coin này đã báo đóng lệnh trong đợt cooldown hiện tại chưa (tránh spam mỗi lần chạy)
+    // Kiểm tra xem coin này đã báo đóng lệnh trong đợt cooldown hiện tại chưa
     const closeAlertKey = `${symbol}_CLOSE_ALERT`;
     const shortSentTime = sentLog[`${symbol}_SHORT_BBT_EMA20`] || 0;
     const lastCloseAlertTime = sentLog[closeAlertKey] || 0;
 
-    // Nếu đã gửi cảnh báo đóng lệnh sau thời điểm mở lệnh SHORT gần nhất thì bỏ qua
     if (lastCloseAlertTime >= shortSentTime && lastCloseAlertTime > 0) {
       continue;
     }
 
-    // Lấy nến 5m của coin đang countdown
-    const candles5M = await getCandles(symbol, '5m', 100);
-    if (!candles5M || candles5M.length < BB_PERIOD + 5) {
+    // Lấy nến 15m của coin đang countdown
+    const candles15M = await getCandles(symbol, '15m', 100);
+    if (!candles15M || candles15M.length < BB_PERIOD + 5) {
       await sleep(50);
       continue;
     }
 
-    const closed5MNewestFirst = candles5M.slice(1);
-    const lowCandle1 = parseFloat(closed5MNewestFirst[0][3]); // Giá thấp nhất (low) của nến 5m vừa đóng
+    const closed15MNewestFirst = candles15M.slice(1);
+    const lowCandle1 = parseFloat(closed15MNewestFirst[0][3]); // Giá thấp nhất (low) của nến 15m vừa đóng
 
-    const closed5MChronological = [...closed5MNewestFirst].reverse();
-    const bb5M = calculateLatestBB(closed5MChronological, BB_PERIOD, BB_STD_DEV);
+    const closed15MChronological = [...closed15MNewestFirst].reverse();
+    const bb15M = calculateLatestBB(closed15MChronological, BB_PERIOD, BB_STD_DEV);
 
-    if (!bb5M || bb5M.lower <= 0 || lowCandle1 <= 0) {
+    if (!bb15M || bb15M.lower <= 0 || lowCandle1 <= 0) {
       await sleep(50);
       continue;
     }
 
-    // bbd = chênh lệch % giá thấp nhất của nến vừa đóng và giá trị Bollinger band dưới
-    const bbdPercent = ((lowCandle1 - bb5M.lower) / bb5M.lower) * 100;
+    // bbd (15m) = chênh lệch % giá thấp nhất của nến 15m vừa đóng và giá trị Bollinger band dưới
+    const bbdPercent = ((lowCandle1 - bb15M.lower) / bb15M.lower) * 100;
 
-    if (bbdPercent < MAX_BBD_5M) {
-      // Lưu dấu vết đã báo đóng lệnh vào sent_ema.json
+    if (bbdPercent < MAX_BBD_15M) {
       const latestLog = loadSentLog();
       latestLog[closeAlertKey] = currentTime;
       saveSentLog(latestLog);
 
       const bbdStr = `${bbdPercent >= 0 ? '+' : ''}${bbdPercent.toFixed(2)}%`;
 
-      console.log(`[CLOSE SIGNAL] ${symbol} | bbd (5m): ${bbdStr}`);
+      console.log(`[CLOSE SIGNAL] ${symbol} | bbd (15m): ${bbdStr}`);
 
-      // Tin nhắn Telegram: Đóng lệnh + tên coin + bbd + link
       const msg =
         `<b>🟢 Đóng lệnh ${coinName}</b>\n` +
-        `• bbd (5m): <b>${bbdStr}</b>\n` +
+        `• bbd (15m): <b>${bbdStr}</b>\n` +
         `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
       const isSent = await sendTelegramMessage(msg);
@@ -446,7 +421,6 @@ async function runCloseScanner() {
 // =========================================================================
 async function main() {
   try {
-    // Chạy song song & độc lập cả 2 nhánh (nếu 1 nhánh lỗi không ảnh hưởng nhánh kia)
     await Promise.allSettled([
       runShortScanner(),
       runCloseScanner()
