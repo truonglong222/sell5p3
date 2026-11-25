@@ -18,10 +18,11 @@ const MIN_HBB_15M = 5.0;                   // Hbb (15m) > 5%
 const MAX_DIFF_EMA10_15M = 0.5;            // diffema10 (15m) < 0.5%
 const MIN_BBT_15M = -0.5;                  // bbt (15m) > -0.5%
 const MAX_BBT_15M = 0.5;                   // bbt (15m) < +0.5%
-const MAX_DIFF_EMA10_1H = 2.0;             // diffema10 (1H) < 2%
+const MAX_DIFF_EMA20_1H = -1.0;            // diffema20 (1H) < -1%
 const MAX_BBD_15M = -0.5;                  // bbd (15m) < -0.5% (điều kiện đóng lệnh)
 
-const EMA10_PERIOD = 10;                   // Chu kỳ EMA 10
+const EMA10_PERIOD = 10;                   // Chu kỳ EMA 10 (khung 15m)
+const EMA20_PERIOD = 20;                   // Chu kỳ EMA 20 (khung 1H)
 const BB_PERIOD = 20;                      // Chu kỳ Bollinger Bands 20
 const BB_STD_DEV = 2;                      // Độ lệch chuẩn Bollinger Bands 2
 
@@ -214,7 +215,7 @@ async function runShortScanner() {
     afterDiffEma10_15M: 0,
     afterBbt_15M: 0,
     afterCooldown: 0,
-    afterDiffEma10_1H: 0,
+    afterDiffEma20_1H: 0,
     telegramSent: 0
   };
 
@@ -281,22 +282,22 @@ async function runShortScanner() {
     }
     counts.afterCooldown++;
 
-    // 5. Gọi nến 1H và kiểm tra diffema10 (1H) < 2%
+    // 5. Gọi nến 1H và kiểm tra diffema20 (1H) < -1%
     const candles1H = await getCandles(symbol, '1H', 100);
-    if (!candles1H || candles1H.length < EMA10_PERIOD + 5) {
+    if (!candles1H || candles1H.length < EMA20_PERIOD + 5) {
       await sleep(50);
       continue;
     }
 
     const closed1HNewestFirst = candles1H.slice(1);
     const closed1HChronological = [...closed1HNewestFirst].reverse();
-    const diffema10_1H = getDiffEma(closed1HChronological, EMA10_PERIOD);
+    const diffema20_1H = getDiffEma(closed1HChronological, EMA20_PERIOD);
 
-    if (diffema10_1H === null || diffema10_1H >= MAX_DIFF_EMA10_1H) {
+    if (diffema20_1H === null || diffema20_1H >= MAX_DIFF_EMA20_1H) {
       await sleep(50);
       continue;
     }
-    counts.afterDiffEma10_1H++;
+    counts.afterDiffEma20_1H++;
 
     // Lưu vào sent_ema.json sau khi đã thỏa mãn toàn bộ điều kiện (bao gồm nến 1H)
     latestLog[signalKey] = currentTime;
@@ -306,10 +307,10 @@ async function runShortScanner() {
     const hbbStr = `${hbbPercent.toFixed(2)}%`;
     const diff15MStr = `${diffema10_15M >= 0 ? '+' : ''}${diffema10_15M.toFixed(2)}%`;
     const bbtStr = `${bbtPercent >= 0 ? '+' : ''}${bbtPercent.toFixed(2)}%`;
-    const diff1HStr = `${diffema10_1H >= 0 ? '+' : ''}${diffema10_1H.toFixed(2)}%`;
+    const diff1HStr = `${diffema20_1H >= 0 ? '+' : ''}${diffema20_1H.toFixed(2)}%`;
 
     console.log(
-      `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | Hbb (15m): ${hbbStr} | diffema10 (15m): ${diff15MStr} | bbt (15m): ${bbtStr} | diffema10 (1H): ${diff1HStr}`
+      `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | Hbb (15m): ${hbbStr} | diffema10 (15m): ${diff15MStr} | bbt (15m): ${bbtStr} | diffema20 (1H): ${diff1HStr}`
     );
 
     const msg =
@@ -318,7 +319,7 @@ async function runShortScanner() {
       `• Hbb (15m): <b>${hbbStr}</b>\n` +
       `• diffema10 (15m): <b>${diff15MStr}</b>\n` +
       `• bbt (15m): <b>${bbtStr}</b>\n` +
-      `• diffema10 (1H): <b>${diff1HStr}</b>\n` +
+      `• diffema20 (1H): <b>${diff1HStr}</b>\n` +
       `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
     const isSent = await sendTelegramMessage(msg);
@@ -336,7 +337,7 @@ async function runShortScanner() {
   console.log(`4. Sau lọc diffema10 (15m) < ${MAX_DIFF_EMA10_15M}%: ${counts.afterDiffEma10_15M}`);
   console.log(`5. Sau lọc bbt (15m) (${MIN_BBT_15M}%, +${MAX_BBT_15M}%): ${counts.afterBbt_15M}`);
   console.log(`6. Sau lọc Cooldown: ${counts.afterCooldown}`);
-  console.log(`7. Sau lọc diffema10 (1H) < ${MAX_DIFF_EMA10_1H}%: ${counts.afterDiffEma10_1H}`);
+  console.log(`7. Sau lọc diffema20 (1H) < ${MAX_DIFF_EMA20_1H}%: ${counts.afterDiffEma20_1H}`);
   console.log(`8. Đã gửi Telegram SHORT: ${counts.telegramSent}`);
   console.log('----------------------------\n');
 }
