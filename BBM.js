@@ -16,6 +16,7 @@ const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000;             // Volume 24h > 2 triệu USDT
 const MIN_HBB_15M = 3.0;                   // Hbb (15m) > 3%
 const MAX_DIFF_EMA10_15M = 0.5;            // diffema10 (15m) < 0.5%
+const MAX_CANDLE_CHANGE_HBB_RATIO = 0.4;   // Biến động nến 15m < 0.4 * Hbb (15m)
 const MIN_BBT_15M = -0.5;                  // bbt (15m) > -0.5%
 const MAX_BBT_15M = 0.5;                   // bbt (15m) < +0.5%
 const MAX_DIFF_EMA20_1H = -1.0;            // diffema20 (1H) < -1%
@@ -213,6 +214,7 @@ async function runShortScanner() {
     afterVol24h: targetCoins.length,
     afterHbb_15M: 0,
     afterDiffEma10_15M: 0,
+    afterCandleChange_15M: 0,
     afterBbt_15M: 0,
     afterCooldown: 0,
     afterDiffEma20_1H: 0,
@@ -258,13 +260,25 @@ async function runShortScanner() {
     }
     counts.afterDiffEma10_15M++;
 
-    // 3. Kiểm tra nến 15m: -0.5% < bbt (15m) < 0.5%
-    const highCandle1 = parseFloat(closed15MNewestFirst[0][2]); // Giá cao nhất nến 15m vừa đóng
-    if (highCandle1 <= 0) {
+    // 3. Lọc biến động nến 15m vừa đóng (có dấu âm/dương) < 0.4 * Hbb (15m)
+    const latestCandle15M = closed15MNewestFirst[0];
+    const openCandle1 = parseFloat(latestCandle15M[1]);
+    const highCandle1 = parseFloat(latestCandle15M[2]);
+    const closeCandle1 = parseFloat(latestCandle15M[4]);
+
+    if (openCandle1 <= 0 || highCandle1 <= 0 || closeCandle1 <= 0) {
       await sleep(50);
       continue;
     }
 
+    const candleChangePercent = ((closeCandle1 - openCandle1) / openCandle1) * 100;
+    if (candleChangePercent >= MAX_CANDLE_CHANGE_HBB_RATIO * hbbPercent) {
+      await sleep(50);
+      continue;
+    }
+    counts.afterCandleChange_15M++;
+
+    // 4. Kiểm tra nến 15m: -0.5% < bbt (15m) < 0.5%
     const bbtPercent = ((highCandle1 - bb15M.upper) / bb15M.upper) * 100;
     if (bbtPercent <= MIN_BBT_15M || bbtPercent >= MAX_BBT_15M) {
       await sleep(50);
@@ -272,7 +286,7 @@ async function runShortScanner() {
     }
     counts.afterBbt_15M++;
 
-    // 4. Kiểm tra Cooldown
+    // 5. Kiểm tra Cooldown
     const signalKey = `${symbol}_SHORT_BBT_EMA20`;
     const latestLog = loadSentLog();
     const lastSent = latestLog[signalKey] || 0;
@@ -282,7 +296,7 @@ async function runShortScanner() {
     }
     counts.afterCooldown++;
 
-    // 5. Gọi nến 1H và kiểm tra diffema20 (1H) < -1%
+    // 6. Gọi nến 1H và kiểm tra diffema20 (1H) < -1%
     const candles1H = await getCandles(symbol, '1H', 100);
     if (!candles1H || candles1H.length < EMA20_PERIOD + 5) {
       await sleep(50);
@@ -306,11 +320,12 @@ async function runShortScanner() {
     const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M`;
     const hbbStr = `${hbbPercent.toFixed(2)}%`;
     const diff15MStr = `${diffema10_15M >= 0 ? '+' : ''}${diffema10_15M.toFixed(2)}%`;
+    const change15MStr = `${candleChangePercent >= 0 ? '+' : ''}${candleChangePercent.toFixed(2)}%`;
     const bbtStr = `${bbtPercent >= 0 ? '+' : ''}${bbtPercent.toFixed(2)}%`;
     const diff1HStr = `${diffema20_1H >= 0 ? '+' : ''}${diffema20_1H.toFixed(2)}%`;
 
     console.log(
-      `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | Hbb (15m): ${hbbStr} | diffema10 (15m): ${diff15MStr} | bbt (15m): ${bbtStr} | diffema20 (1H): ${diff1HStr}`
+      `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | Hbb (15m): ${hbbStr} | diffema10 (15m): ${diff15MStr} | Biên độ nến (15m): ${change15MStr} | bbt (15m): ${bbtStr} | diffema20 (1H): ${diff1HStr}`
     );
 
     const msg =
@@ -318,6 +333,7 @@ async function runShortScanner() {
       `• Vol 24h: <b>${volStr} USDT</b>\n` +
       `• Hbb (15m): <b>${hbbStr}</b>\n` +
       `• diffema10 (15m): <b>${diff15MStr}</b>\n` +
+      `• Biên độ nến (15m): <b>${change15MStr}</b>\n` +
       `• bbt (15m): <b>${bbtStr}</b>\n` +
       `• diffema20 (1H): <b>${diff1HStr}</b>\n` +
       `<a href="${link}">🔗 Giao dịch OKX</a>`;
@@ -335,10 +351,11 @@ async function runShortScanner() {
   console.log(`2. Sau lọc Vol 24h > ${MIN_VOL_24H / 1_000_000}M: ${counts.afterVol24h}`);
   console.log(`3. Sau lọc Hbb (15m) > ${MIN_HBB_15M}%: ${counts.afterHbb_15M}`);
   console.log(`4. Sau lọc diffema10 (15m) < ${MAX_DIFF_EMA10_15M}%: ${counts.afterDiffEma10_15M}`);
-  console.log(`5. Sau lọc bbt (15m) (${MIN_BBT_15M}%, +${MAX_BBT_15M}%): ${counts.afterBbt_15M}`);
-  console.log(`6. Sau lọc Cooldown: ${counts.afterCooldown}`);
-  console.log(`7. Sau lọc diffema20 (1H) < ${MAX_DIFF_EMA20_1H}%: ${counts.afterDiffEma20_1H}`);
-  console.log(`8. Đã gửi Telegram SHORT: ${counts.telegramSent}`);
+  console.log(`5. Sau lọc Biến động nến (15m) < ${MAX_CANDLE_CHANGE_HBB_RATIO} * Hbb: ${counts.afterCandleChange_15M}`);
+  console.log(`6. Sau lọc bbt (15m) (${MIN_BBT_15M}%, +${MAX_BBT_15M}%): ${counts.afterBbt_15M}`);
+  console.log(`7. Sau lọc Cooldown: ${counts.afterCooldown}`);
+  console.log(`8. Sau lọc diffema20 (1H) < ${MAX_DIFF_EMA20_1H}%: ${counts.afterDiffEma20_1H}`);
+  console.log(`9. Đã gửi Telegram SHORT: ${counts.telegramSent}`);
   console.log('----------------------------\n');
 }
 
