@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình các ngưỡng điều kiện
-const COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Cooldown 1 giờ
+const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000;             // Volume 24h > 2 triệu USDT
 const MIN_DIFF_EMA20_15M = -3.0;           // diffema20 (15m) > -3%
 const MAX_DIFF_EMA20_15M = 1.0;            // diffema20 (15m) < 1%
