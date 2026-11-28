@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình thời gian Cooldown tách riêng cho 2 nhánh
-const SHORT_COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Nhánh SHORT: Cooldown 1 giờ
+const SHORT_COOLDOWN_TIME = 2 * 60 * 60 * 1000; // Nhánh SHORT: Cooldown 2 giờ
 const CLOSE_COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Nhánh Đóng lệnh: Cooldown 4 giờ
 
 // Cấu hình các ngưỡng điều kiện
