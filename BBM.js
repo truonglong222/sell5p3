@@ -12,19 +12,20 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
 // Cấu hình thời gian Cooldown tách riêng cho 2 nhánh
-const SHORT_COOLDOWN_TIME = 2 * 60 * 60 * 1000; // Nhánh SHORT: Cooldown 2 giờ
+const SHORT_COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Nhánh SHORT: Cooldown 1 giờ
 const CLOSE_COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Nhánh Đóng lệnh: Cooldown 4 giờ
 
 // Cấu hình các ngưỡng điều kiện
 const MIN_VOL_24H = 2_000_000;             // Volume 24h > 2 triệu USDT
 const MIN_DIFF_EMA20_15M = -3.0;           // diffema20 (15m) > -3%
 const MAX_DIFF_EMA20_15M = 1.0;            // diffema20 (15m) < 1%
-const MIN_HBB_5M = 4.0;                    // Hbb (5m) > 4%
+const MIN_HBB_5M = 3.0;                    // Hbb (5m) > 3%
 const MIN_ATR_5M = 0.7;                    // ATR% (5m) > 0.7%
+const MAX_DIFF_EMA20_5M = 1.0;             // diffema20 (5m) < 1%
 const MIN_BBT_5M = -0.5;                   // bbt (5m) > -0.5%
 const MAX_BBD_5M = 0.0;                    // bbd (5m) < 0% (điều kiện đóng lệnh)
 
-const EMA20_PERIOD = 20;                   // Chu kỳ EMA 20 (khung 15m)
+const EMA20_PERIOD = 20;                   // Chu kỳ EMA 20
 const BB_PERIOD = 20;                      // Chu kỳ Bollinger Bands 20
 const BB_STD_DEV = 2;                      // Độ lệch chuẩn Bollinger Bands 2
 const ATR_PERIOD = 14;                     // Chu kỳ ATR 14
@@ -264,6 +265,7 @@ async function runShortScanner() {
     afterDiffEma20_15M: 0,
     afterHbb_5M: 0,
     afterAtr_5M: 0,
+    afterDiffEma20_5M: 0,
     afterBbt_5M: 0,
     afterCooldown: 0,
     telegramSent: 0
@@ -312,7 +314,7 @@ async function runShortScanner() {
       continue;
     }
 
-    // 3. Lọc Hbb (5m) > 4%
+    // 3. Lọc Hbb (5m) > 3%
     const hbbPercent5M = ((bb5M.upper - bb5M.lower) / bb5M.lower) * 100;
     if (hbbPercent5M <= MIN_HBB_5M) {
       await sleep(50);
@@ -320,7 +322,7 @@ async function runShortScanner() {
     }
     counts.afterHbb_5M++;
 
-    // 4. Lọc ATR (5m) > 0.7% ngay sau khi tính Hbb
+    // 4. Lọc ATR (5m) > 0.7%
     const atrPercent5M = calculateLatestATRPercent(closed5MChronological, ATR_PERIOD);
     if (atrPercent5M === null || atrPercent5M <= MIN_ATR_5M) {
       await sleep(50);
@@ -328,7 +330,15 @@ async function runShortScanner() {
     }
     counts.afterAtr_5M++;
 
-    // 5. Lọc bbt (5m) > -0.5%
+    // 5. Lọc diffema20 (5m) < 1%
+    const diffema20_5M = getDiffEma(closed5MChronological, EMA20_PERIOD);
+    if (diffema20_5M === null || diffema20_5M >= MAX_DIFF_EMA20_5M) {
+      await sleep(50);
+      continue;
+    }
+    counts.afterDiffEma20_5M++;
+
+    // 6. Lọc bbt (5m) > -0.5%
     const highCandle1_5M = parseFloat(closed5MNewestFirst[0][2]);
     if (highCandle1_5M <= 0) {
       await sleep(50);
@@ -342,7 +352,7 @@ async function runShortScanner() {
     }
     counts.afterBbt_5M++;
 
-    // 6. Kiểm tra Cooldown riêng của nhánh SHORT (1H)
+    // 7. Kiểm tra Cooldown riêng của nhánh SHORT (1H)
     const shortSignalKey = `${symbol}_SHORT_BBT_EMA20`;
     const closeTrackerKey = `${symbol}_CLOSE_TRACKER`;
     const latestLog = loadSentLog();
@@ -363,10 +373,11 @@ async function runShortScanner() {
     const diff15MStr = `${diffema20_15M >= 0 ? '+' : ''}${diffema20_15M.toFixed(2)}%`;
     const hbb5MStr = `${hbbPercent5M.toFixed(2)}%`;
     const atr5MStr = `${atrPercent5M.toFixed(2)}%`;
+    const diff5MStr = `${diffema20_5M >= 0 ? '+' : ''}${diffema20_5M.toFixed(2)}%`;
     const bbt5MStr = `${bbtPercent5M >= 0 ? '+' : ''}${bbtPercent5M.toFixed(2)}%`;
 
     console.log(
-      `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | diffema20 (15m): ${diff15MStr} | Hbb (5m): ${hbb5MStr} | ATR (5m): ${atr5MStr} | bbt (5m): ${bbt5MStr}`
+      `[SHORT SIGNAL] ${symbol} | Vol24h: ${volStr} | diffema20 (15m): ${diff15MStr} | Hbb (5m): ${hbb5MStr} | ATR (5m): ${atr5MStr} | diffema20 (5m): ${diff5MStr} | bbt (5m): ${bbt5MStr}`
     );
 
     const msg =
@@ -375,6 +386,7 @@ async function runShortScanner() {
       `• diffema20 (15m): <b>${diff15MStr}</b>\n` +
       `• Hbb (5m): <b>${hbb5MStr}</b>\n` +
       `• ATR (5m): <b>${atr5MStr}</b>\n` +
+      `• diffema20 (5m): <b>${diff5MStr}</b>\n` +
       `• bbt (5m): <b>${bbt5MStr}</b>\n` +
       `<a href="${link}">🔗 Giao dịch OKX</a>`;
 
@@ -392,9 +404,10 @@ async function runShortScanner() {
   console.log(`3. Sau lọc ${MIN_DIFF_EMA20_15M}% < diffema20 (15m) < ${MAX_DIFF_EMA20_15M}%: ${counts.afterDiffEma20_15M}`);
   console.log(`4. Sau lọc Hbb (5m) > ${MIN_HBB_5M}%: ${counts.afterHbb_5M}`);
   console.log(`5. Sau lọc ATR (5m) > ${MIN_ATR_5M}%: ${counts.afterAtr_5M}`);
-  console.log(`6. Sau lọc bbt (5m) > ${MIN_BBT_5M}%: ${counts.afterBbt_5M}`);
-  console.log(`7. Sau lọc Cooldown (1H): ${counts.afterCooldown}`);
-  console.log(`8. Đã gửi Telegram SHORT: ${counts.telegramSent}`);
+  console.log(`6. Sau lọc diffema20 (5m) < ${MAX_DIFF_EMA20_5M}%: ${counts.afterDiffEma20_5M}`);
+  console.log(`7. Sau lọc bbt (5m) > ${MIN_BBT_5M}%: ${counts.afterBbt_5M}`);
+  console.log(`8. Sau lọc Cooldown (1H): ${counts.afterCooldown}`);
+  console.log(`9. Đã gửi Telegram SHORT: ${counts.telegramSent}`);
   console.log('----------------------------\n');
 }
 
