@@ -11,8 +11,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'sent_ema.json');
 
+// Cấu hình thời gian Cooldown tách riêng cho 2 nhánh
+const SHORT_COOLDOWN_TIME = 1 * 60 * 60 * 1000; // Nhánh SHORT: Cooldown 1 giờ
+const CLOSE_COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Nhánh Đóng lệnh: Cooldown 4 giờ
+
 // Cấu hình các ngưỡng điều kiện
-const COOLDOWN_TIME = 4 * 60 * 60 * 1000; // Cooldown 4 giờ
 const MIN_VOL_24H = 2_000_000;             // Volume 24h > 2 triệu USDT
 const MIN_DIFF_EMA20_15M = -3.0;           // diffema20 (15m) > -3%
 const MAX_DIFF_EMA20_15M = 1.0;            // diffema20 (15m) < 1%
@@ -35,14 +38,23 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
+// Dọn dẹp log hết hạn theo từng mốc thời gian của mỗi nhánh
 function cleanExpiredLogs(logData) {
   const now = Date.now();
   const cleanedLog = {};
+
   for (const [key, timestamp] of Object.entries(logData)) {
-    if (now - timestamp < COOLDOWN_TIME) {
-      cleanedLog[key] = timestamp;
+    if (key.endsWith('_SHORT_BBT_EMA20')) {
+      if (now - timestamp < SHORT_COOLDOWN_TIME) {
+        cleanedLog[key] = timestamp;
+      }
+    } else if (key.endsWith('_CLOSE_TRACKER') || key.endsWith('_CLOSE_ALERT')) {
+      if (now - timestamp < CLOSE_COOLDOWN_TIME) {
+        cleanedLog[key] = timestamp;
+      }
     }
   }
+
   return cleanedLog;
 }
 
@@ -149,14 +161,12 @@ function calculateLatestATRPercent(closedCandlesChronological, period = 14) {
 
   if (trList.length < period) return null;
 
-  // SMA của `period` giá trị TR đầu tiên
   let atr = 0;
   for (let i = 0; i < period; i++) {
     atr += trList[i];
   }
   atr /= period;
 
-  // Làm mượt theo công thức Wilder cho các nến tiếp theo
   for (let i = period; i < trList.length; i++) {
     atr = (atr * (period - 1) + trList[i]) / period;
   }
@@ -240,7 +250,7 @@ async function sendTelegramMessage(message) {
 }
 
 // =========================================================================
-// NHÁNH 1: QUÉT TÍN HIỆU VÀO LỆNH SHORT
+// NHÁNH 1: QUÉT TÍN HIỆU VÀO LỆNH SHORT (COOLDOWN 1H)
 // =========================================================================
 async function runShortScanner() {
   console.log('=== [NHÁNH 1] BẮT ĐẦU QUÉT TÍN HIỆU SHORT ===\n');
@@ -319,7 +329,7 @@ async function runShortScanner() {
     counts.afterAtr_5M++;
 
     // 5. Lọc bbt (5m) > -0.5%
-    const highCandle1_5M = parseFloat(closed5MNewestFirst[0][2]); // Giá cao nhất nến 5m vừa đóng
+    const highCandle1_5M = parseFloat(closed5MNewestFirst[0][2]);
     if (highCandle1_5M <= 0) {
       await sleep(50);
       continue;
@@ -332,18 +342,21 @@ async function runShortScanner() {
     }
     counts.afterBbt_5M++;
 
-    // 6. Kiểm tra Cooldown (1H)
-    const signalKey = `${symbol}_SHORT_BBT_EMA20`;
+    // 6. Kiểm tra Cooldown riêng của nhánh SHORT (1H)
+    const shortSignalKey = `${symbol}_SHORT_BBT_EMA20`;
+    const closeTrackerKey = `${symbol}_CLOSE_TRACKER`;
     const latestLog = loadSentLog();
-    const lastSent = latestLog[signalKey] || 0;
-    if (currentTime - lastSent < COOLDOWN_TIME) {
+    const lastShortSent = latestLog[shortSignalKey] || 0;
+
+    if (currentTime - lastShortSent < SHORT_COOLDOWN_TIME) {
       await sleep(50);
       continue;
     }
     counts.afterCooldown++;
 
-    // Lưu vào sent_ema.json sau khi thỏa mãn toàn bộ điều kiện
-    latestLog[signalKey] = currentTime;
+    // Lưu cả mốc countdown 1H cho nhánh SHORT và mốc countdown 4H cho nhánh Đóng lệnh
+    latestLog[shortSignalKey] = currentTime;
+    latestLog[closeTrackerKey] = currentTime;
     saveSentLog(latestLog);
 
     const volStr = `${(coin.volUsdt / 1_000_000).toFixed(2)}M`;
@@ -386,7 +399,7 @@ async function runShortScanner() {
 }
 
 // =========================================================================
-// NHÁNH 2: QUÉT TÍN HIỆU ĐÓNG LỆNH (CÁC COIN ĐANG COUNTDOWN 1H TRONG sent_ema.json)
+// NHÁNH 2: QUÉT TÍN HIỆU ĐÓNG LỆNH (COOLDOWN 4H RIÊNG BIỆT)
 // =========================================================================
 async function runCloseScanner() {
   console.log('=== [NHÁNH 2] BẮT ĐẦU QUÉT TÍN HIỆU ĐÓNG LỆNH ===\n');
@@ -394,30 +407,33 @@ async function runCloseScanner() {
   const sentLog = loadSentLog();
   const currentTime = Date.now();
 
-  // Lấy danh sách các coin đang trong thời gian countdown của lệnh SHORT
-  const activeShortSymbols = Object.keys(sentLog)
-    .filter((key) => key.endsWith('_SHORT_BBT_EMA20'))
-    .map((key) => key.replace('_SHORT_BBT_EMA20', ''));
+  // Lấy danh sách các coin đang trong thời gian countdown 4H của nhánh đóng lệnh
+  const activeCloseSymbols = Object.keys(sentLog)
+    .filter((key) => key.endsWith('_CLOSE_TRACKER'))
+    .map((key) => key.replace('_CLOSE_TRACKER', ''));
 
   let checkedCount = 0;
   let closeAlertSent = 0;
 
-  for (const symbol of activeShortSymbols) {
+  for (const symbol of activeCloseSymbols) {
     checkedCount++;
     const shortName = symbol.replace('-USDT-SWAP', '');
     const coinName = escapeHtml(shortName);
     const link = `https://www.okx.com/trade-swap/${symbol.toLowerCase()}`;
 
-    // Kiểm tra xem coin này đã báo đóng lệnh trong đợt cooldown hiện tại chưa
+    const trackerTime = sentLog[`${symbol}_CLOSE_TRACKER`] || 0;
     const closeAlertKey = `${symbol}_CLOSE_ALERT`;
-    const shortSentTime = sentLog[`${symbol}_SHORT_BBT_EMA20`] || 0;
     const lastCloseAlertTime = sentLog[closeAlertKey] || 0;
 
-    if (lastCloseAlertTime >= shortSentTime && lastCloseAlertTime > 0) {
+    // Bỏ qua nếu đã báo đóng lệnh cho tín hiệu SHORT này rồi (và vẫn nằm trong cooldown 4H)
+    if (
+      lastCloseAlertTime >= trackerTime &&
+      currentTime - lastCloseAlertTime < CLOSE_COOLDOWN_TIME
+    ) {
       continue;
     }
 
-    // Lấy nến 5m của coin đang countdown
+    // Lấy nến 5m của coin đang countdown 4H
     const candles5M = await getCandles(symbol, '5m', 100);
     if (!candles5M || candles5M.length < BB_PERIOD + 5) {
       await sleep(50);
@@ -425,7 +441,7 @@ async function runCloseScanner() {
     }
 
     const closed5MNewestFirst = candles5M.slice(1);
-    const lowCandle1_5M = parseFloat(closed5MNewestFirst[0][3]); // Giá thấp nhất (low) của nến 5m vừa đóng
+    const lowCandle1_5M = parseFloat(closed5MNewestFirst[0][3]);
 
     const closed5MChronological = [...closed5MNewestFirst].reverse();
     const bb5M = calculateLatestBB(closed5MChronological, BB_PERIOD, BB_STD_DEV);
@@ -462,7 +478,7 @@ async function runCloseScanner() {
   }
 
   console.log('\n--- THỐNG KÊ NHÁNH ĐÓNG LỆNH ---');
-  console.log(`1. Số coin đang countdown (1H): ${activeShortSymbols.length}`);
+  console.log(`1. Số coin đang countdown (4H): ${activeCloseSymbols.length}`);
   console.log(`2. Số coin đã kiểm tra: ${checkedCount}`);
   console.log(`3. Đã gửi Telegram Đóng lệnh: ${closeAlertSent}`);
   console.log('--------------------------------\n');
